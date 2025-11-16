@@ -14,6 +14,45 @@ const router = Router();
 
 // ==== PUBLIC ROUTES ====
 
+// API info endpoint
+router.get('/', (req, res) => {
+  res.json({
+    name: 'GoldenMunch POS API',
+    version: '1.0.0',
+    status: 'running',
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/api/health',
+      auth: {
+        adminLogin: 'POST /api/auth/admin/login',
+        cashierLogin: 'POST /api/auth/cashier/login',
+        verify: 'GET /api/auth/verify',
+      },
+      kiosk: {
+        menu: 'GET /api/kiosk/menu',
+        categories: 'GET /api/kiosk/categories',
+        promotions: 'GET /api/kiosk/promotions',
+        createOrder: 'POST /api/kiosk/orders',
+        getOrder: 'GET /api/kiosk/orders/:code',
+      },
+      cashier: {
+        orders: 'GET /api/cashier/orders',
+        verifyOrder: 'POST /api/cashier/orders/verify',
+        verifyPayment: 'POST /api/cashier/payment/verify',
+      },
+      admin: {
+        menu: '/api/admin/menu/*',
+        categories: '/api/admin/categories/*',
+        inventory: '/api/admin/inventory/*',
+        analytics: '/api/admin/analytics/*',
+        promotions: '/api/admin/promotions',
+        feedback: '/api/admin/feedback',
+        orders: '/api/admin/orders',
+      },
+    },
+  });
+});
+
 // Health check
 router.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
