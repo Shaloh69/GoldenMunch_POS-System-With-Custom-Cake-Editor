@@ -1,0 +1,146 @@
+import { Response } from 'express';
+import { AuthRequest } from '../models/types';
+import { query, callProcedure } from '../config/database';
+import { successResponse } from '../utils/helpers';
+import { AppError } from '../middleware/error.middleware';
+
+// Get all available menu items for kiosk
+export const getMenuItems = async (req: AuthRequest, res: Response) => {
+  const {
+    category_id,
+    item_type,
+    is_featured,
+    search,
+    page = 1,
+    limit = 50,
+  } = req.query;
+
+  let sql = `
+    SELECT
+      mi.*,
+      (SELECT price FROM menu_item_price
+       WHERE menu_item_id = mi.menu_item_id
+       AND is_active = TRUE
+       AND CURDATE() BETWEEN start_date AND end_date
+       ORDER BY price_type = 'regular' DESC, created_at DESC
+       LIMIT 1) as current_price
+    FROM menu_item mi
+    WHERE mi.is_deleted = FALSE
+      AND mi.status = 'available'
+      AND (mi.is_infinite_stock = TRUE OR mi.stock_quantity > 0)
+  `;
+
+  const params: any[] = [];
+
+  if (category_id) {
+    sql += ` AND EXISTS (
+      SELECT 1 FROM category_has_menu_item
+      WHERE menu_item_id = mi.menu_item_id
+      AND category_id = ?
+    )`;
+    params.push(category_id);
+  }
+
+  if (item_type) {
+    sql += ` AND mi.item_type = ?`;
+    params.push(item_type);
+  }
+
+  if (is_featured === 'true') {
+    sql += ` AND mi.is_featured = TRUE`;
+  }
+
+  if (search) {
+    sql += ` AND (mi.name LIKE ? OR mi.description LIKE ?)`;
+    params.push(`%${search}%`, `%${search}%`);
+  }
+
+  sql += ` ORDER BY mi.display_order ASC, mi.popularity_score DESC`;
+  sql += ` LIMIT ? OFFSET ?`;
+  params.push(Number(limit), (Number(page) - 1) * Number(limit));
+
+  const items = await query(sql, params);
+
+  res.json(successResponse('Menu items retrieved', items));
+};
+
+// Get categories
+export const getCategories = async (req: AuthRequest, res: Response) => {
+  const sql = `
+    SELECT * FROM category
+    WHERE is_active = TRUE
+    ORDER BY display_order ASC
+  `;
+
+  const categories = await query(sql);
+  res.json(successResponse('Categories retrieved', categories));
+};
+
+// Get item details with customization options
+export const getItemDetails = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+
+  const [item] = await query(
+    `SELECT mi.*,
+      (SELECT price FROM menu_item_price
+       WHERE menu_item_id = mi.menu_item_id
+       AND is_active = TRUE
+       AND CURDATE() BETWEEN start_date AND end_date
+       ORDER BY price_type = 'regular' DESC
+       LIMIT 1) as current_price
+     FROM menu_item mi
+     WHERE mi.menu_item_id = ? AND mi.is_deleted = FALSE`,
+    [id]
+  );
+
+  if (!item) {
+    throw new AppError('Item not found', 404);
+  }
+
+  // If customizable, get flavors and sizes
+  if (item.can_customize) {
+    const flavors = await query(
+      'SELECT * FROM cake_flavors WHERE is_available = TRUE ORDER BY display_order'
+    );
+    const sizes = await query(
+      'SELECT * FROM cake_sizes WHERE is_available = TRUE ORDER BY display_order'
+    );
+    const themes = await query(
+      'SELECT * FROM custom_cake_theme WHERE is_available = TRUE ORDER BY display_order'
+    );
+
+    item.flavors = flavors;
+    item.sizes = sizes;
+    item.themes = themes;
+  }
+
+  res.json(successResponse('Item details retrieved', item));
+};
+
+// Check custom cake capacity
+export const checkCapacity = async (req: AuthRequest, res: Response) => {
+  const { pickup_date, complexity } = req.query;
+
+  const result = await callProcedure('CheckCustomCakeCapacity', [
+    pickup_date,
+    complexity,
+  ]);
+
+  res.json(successResponse('Capacity checked', result[0][0]));
+};
+
+// Get active promotions
+export const getActivePromotions = async (req: AuthRequest, res: Response) => {
+  const sql = `
+    SELECT * FROM promotion_rules
+    WHERE is_active = TRUE
+      AND display_on_kiosk = TRUE
+      AND CURDATE() BETWEEN start_date AND end_date
+      AND CURTIME() BETWEEN start_time AND end_time
+      AND (total_usage_limit IS NULL OR current_usage_count < total_usage_limit)
+    ORDER BY discount_percentage DESC, discount_amount DESC
+  `;
+
+  const promotions = await query(sql);
+  res.json(successResponse('Active promotions retrieved', promotions));
+};
