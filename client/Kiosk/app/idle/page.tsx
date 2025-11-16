@@ -607,7 +607,8 @@ export default function IdlePage() {
           }
         } else if (newBehavior === 'wander' && !newOnCooldown) {
           // Enter aggression mode if ghost can see Pacman (line of sight)
-          if (distance < 40 && hasLineOfSight({ x: ghost.x, y: ghost.y }, pacPos) && Math.random() < 0.05) {
+          // Much smaller detection range (20 instead of 40)
+          if (distance < 20 && hasLineOfSight({ x: ghost.x, y: ghost.y }, pacPos) && Math.random() < 0.05) {
             newBehavior = 'aggression';
             newAggressionTimer = 5; // 5 second aggression
           }
@@ -646,8 +647,9 @@ export default function IdlePage() {
             }
           }
         } else {
-          // WANDER BEHAVIOR: Random wandering
-          if (Math.random() < 0.03) {
+          // WANDER BEHAVIOR: Random wandering (farther distances)
+          // Reduced frequency of direction change to make ghosts wander farther
+          if (Math.random() < 0.01) {
             const angle = Math.random() * Math.PI * 2;
             newDirection = { x: Math.cos(angle), y: Math.sin(angle) };
           }
