@@ -347,7 +347,7 @@ router.get('/', (req, res) => {
 </html>
   `;
 
-  res.send(html);
+  return res.send(html);
 });
 
 // Health check
