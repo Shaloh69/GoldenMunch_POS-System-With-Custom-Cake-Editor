@@ -57,7 +57,8 @@ interface PathNode {
 }
 
 export default function IdlePage() {
-  const [pacmanPosition, setPacmanPosition] = useState<Position>({ x: 50, y: 50 });
+  // Start Pacman in a safe position away from walls (15, 15 is in top-left area)
+  const [pacmanPosition, setPacmanPosition] = useState<Position>({ x: 15, y: 15 });
   const [pacmanDirection, setPacmanDirection] = useState<Position>({ x: 1, y: 0 });
   const [pacmanPath, setPacmanPath] = useState<Position[]>([]);
   const [pacmanBehavior, setPacmanBehavior] = useState<'cake_hunting' | 'run' | 'hunting_ghosts'>('cake_hunting');
@@ -76,10 +77,10 @@ export default function IdlePage() {
   const ghostIdRef = useRef(0);
   const particleIdRef = useRef(0);
   const obstacleIdRef = useRef(0);
-  const lastPacmanPos = useRef<Position>({ x: 50, y: 50 });
+  const lastPacmanPos = useRef<Position>({ x: 15, y: 15 });
   const powerModeRef = useRef(false);
   const obstaclesRef = useRef<Obstacle[]>([]);
-  const pacmanPosRef = useRef<Position>({ x: 50, y: 50 });
+  const pacmanPosRef = useRef<Position>({ x: 15, y: 15 });
   const pacmanDirRef = useRef<Position>({ x: 1, y: 0 });
   const pacmanBehaviorRef = useRef<'cake_hunting' | 'run' | 'hunting_ghosts'>('cake_hunting');
   const cakesRef = useRef<Cake[]>([]);
@@ -170,7 +171,7 @@ export default function IdlePage() {
     // Validate inputs
     if (!start || !goal) {
       console.log('  ❌ INVALID INPUT - Returning default position');
-      return [start || { x: 50, y: 50 }];
+      return [start || { x: 15, y: 15 }];
     }
 
     const distance = Math.sqrt(Math.pow(goal.x - start.x, 2) + Math.pow(goal.y - start.y, 2));
@@ -365,7 +366,8 @@ export default function IdlePage() {
       }
       attempts++;
     }
-    return { x: 50, y: 50 };
+    // Fallback to safe position in top-left area (away from walls at 25, 50, 75)
+    return { x: 15, y: 15 };
   }, [isInsideObstacle]);
 
   // Initialize - Only runs once on mount
@@ -420,7 +422,7 @@ export default function IdlePage() {
 
     // Create maze corridors - vertical and horizontal walls with gaps
     const corridorWidth = 2;
-    const gapSize = 12; // Size of openings in walls
+    const gapSize = 20; // Size of openings in walls - increased for easier navigation
 
     // Vertical walls creating corridors
     const verticalWalls = [25, 50, 75];
@@ -558,7 +560,8 @@ export default function IdlePage() {
         }
         attempts++;
       }
-      return { x: 50, y: 50 };
+      // Fallback to safe position in top-left area (away from walls at 25, 50, 75)
+      return { x: 15, y: 15 };
     };
 
     const initialCakes: Cake[] = [];
