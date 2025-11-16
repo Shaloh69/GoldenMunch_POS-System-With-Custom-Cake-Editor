@@ -162,13 +162,22 @@ export default function IdlePage() {
 
   // A* Pathfinding Algorithm - Simplified and working
   const findPath = useCallback((start: Position, goal: Position, avoidPoints: Position[] = []): Position[] => {
+    console.log('\n🔍 FINDPATH CALLED:');
+    console.log('  Start:', { x: start?.x?.toFixed(1), y: start?.y?.toFixed(1) });
+    console.log('  Goal:', { x: goal?.x?.toFixed(1), y: goal?.y?.toFixed(1) });
+    console.log('  Avoid Points:', avoidPoints.length);
+
     // Validate inputs
     if (!start || !goal) {
+      console.log('  ❌ INVALID INPUT - Returning default position');
       return [start || { x: 50, y: 50 }];
     }
 
     const distance = Math.sqrt(Math.pow(goal.x - start.x, 2) + Math.pow(goal.y - start.y, 2));
+    console.log('  Direct Distance:', distance.toFixed(2));
+
     if (distance < 3) {
+      console.log('  ✅ ALREADY AT GOAL - Returning start position');
       return [start];
     }
 
@@ -254,7 +263,12 @@ export default function IdlePage() {
           path.unshift({ x: node.x, y: node.y });
           node = node.parent;
         }
-        return path.length > 2 ? [path[0], path[Math.floor(path.length / 2)], path[path.length - 1]] : path;
+        const simplifiedPath = path.length > 2 ? [path[0], path[Math.floor(path.length / 2)], path[path.length - 1]] : path;
+        console.log('  ✅ PATH FOUND!');
+        console.log('    Full path length:', path.length);
+        console.log('    Simplified path length:', simplifiedPath.length);
+        console.log('    Iterations used:', iterations);
+        return simplifiedPath;
       }
 
       // Explore neighbors
@@ -294,6 +308,10 @@ export default function IdlePage() {
     }
 
     // No path found - return direct line
+    console.log('  ⚠️  NO PATH FOUND - Returning direct line');
+    console.log('    Iterations used:', iterations);
+    console.log('    Open set size:', openSet.length);
+    console.log('    Closed set size:', closedSet.size);
     return [start, goal];
   }, []);
 
@@ -863,6 +881,14 @@ export default function IdlePage() {
             .map(g => ({ x: g.x, y: g.y }));
         }
 
+        // Find dangerous ghosts to avoid
+        console.log('\n⚠️  DANGER ANALYSIS:');
+        console.log('  Dangerous Ghosts:', avoidPoints.length);
+        avoidPoints.forEach((pt, i) => {
+          const dist = Math.sqrt(Math.pow(pt.x - prev.x, 2) + Math.pow(pt.y - prev.y, 2));
+          console.log(`    Danger ${i + 1}: Ghost at (${pt.x.toFixed(1)}, ${pt.y.toFixed(1)}) - Distance: ${dist.toFixed(1)}`);
+        });
+
         // Recalculate path if needed
         const shouldRecalculate = currentPath.length === 0 || currentStuckCounter > 15 || shouldClearPath || Math.random() < 0.1;
 
@@ -895,6 +921,11 @@ export default function IdlePage() {
             }, { target: null, score: Infinity });
 
             if (bestTarget.target && bestTarget.score < 100) {
+              console.log('\n📍 CALCULATING PATH TO TARGET...');
+              console.log('  From:', { x: prev.x.toFixed(1), y: prev.y.toFixed(1) });
+              console.log('  To:', { x: bestTarget.target.x.toFixed(1), y: bestTarget.target.y.toFixed(1) });
+              console.log('  Avoid Points:', avoidPoints.length);
+
               const calculatedPath = findPath(prev, { x: bestTarget.target.x, y: bestTarget.target.y }, avoidPoints);
               newPathToSet = calculatedPath.slice(1);
               shouldResetStuck = true;
@@ -906,14 +937,24 @@ export default function IdlePage() {
               y: Math.random() * 80 + 10
             };
             const calculatedPath = findPath(prev, randomTarget, avoidPoints);
+            console.log('  Random Path Length:', calculatedPath.length);
             newPathToSet = calculatedPath.slice(1);
             shouldResetStuck = true;
+          } else {
+            console.log('\n⏸️  NO RECALCULATION NEEDED - Using existing path');
           }
+        } else {
+          console.log('\n⏸️  SKIPPING PATH RECALCULATION');
         }
 
-        // Follow the calculated path
-        if (currentPath.length > 0) {
-          const nextWaypoint = currentPath[0];
+        // Follow the calculated path (use newly calculated path if available)
+        console.log('\n🚶 PATH FOLLOWING:');
+        const pathToFollow = newPathToSet !== null ? newPathToSet : currentPath;
+        console.log('  Using path:', newPathToSet !== null ? 'NEWLY CALCULATED' : 'EXISTING');
+        console.log('  Path length:', pathToFollow.length);
+
+        if (pathToFollow.length > 0) {
+          const nextWaypoint = pathToFollow[0];
           const dx = nextWaypoint.x - prev.x;
           const dy = nextWaypoint.y - prev.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
@@ -933,6 +974,7 @@ export default function IdlePage() {
           const dist = Math.sqrt(dx * dx + dy * dy);
           if (dist > 0) {
             newDirectionToSet = { x: dx / dist, y: dy / dist };
+            console.log('  ➡️  Flee Direction:', { x: newDirectionToSet.x.toFixed(2), y: newDirectionToSet.y.toFixed(2) });
           }
         }
 
@@ -952,16 +994,24 @@ export default function IdlePage() {
         if (testX > 5 && testX < 95 && testY > 5 && testY < 95 && !wouldHitObstacle) {
           newX = testX;
           newY = testY;
+          console.log('  ✅ MOVEMENT ALLOWED - Moving to:', { x: newX.toFixed(2), y: newY.toFixed(2) });
         } else if (!wouldHitObstacle) {
           if (testX > 5 && testX < 95 && !isInsideObstacle(testX, prev.y, 1)) {
             newX = testX;
+            console.log('  ➡️  Partial X movement allowed');
           }
           if (testY > 5 && testY < 95 && !isInsideObstacle(prev.x, testY, 1)) {
             newY = testY;
+            console.log('  ⬆️  Partial Y movement allowed');
           }
+          console.log('  ⚠️  PARTIAL MOVEMENT - New pos:', { x: newX.toFixed(2), y: newY.toFixed(2) });
         } else {
           shouldClearPath = true;
         }
+
+        // Update position ref immediately
+        pacmanPosRef.current = { x: newX, y: newY };
+        console.log('  ✅ POSITION REF UPDATED:', { x: pacmanPosRef.current.x.toFixed(2), y: pacmanPosRef.current.y.toFixed(2) });
 
         return { x: newX, y: newY };
       });
@@ -969,18 +1019,26 @@ export default function IdlePage() {
       // Apply deferred state updates
       if (shouldIncrementStuck) {
         setPacmanStuckCounter(c => c + 1);
+        pacmanStuckCounterRef.current += 1;
       } else if (shouldResetStuck) {
         setPacmanStuckCounter(0);
+        pacmanStuckCounterRef.current = 0;
       }
 
       if (newPathToSet !== null) {
         setPacmanPath(newPathToSet);
+        pacmanPathRef.current = newPathToSet; // Update ref immediately
+        console.log('  ✅ REF UPDATED - pacmanPathRef length:', pacmanPathRef.current.length);
       } else if (shouldClearPath) {
         setPacmanPath([]);
+        pacmanPathRef.current = [];
+        console.log('  🗑️  REF CLEARED - pacmanPathRef');
       }
 
       if (newDirectionToSet !== null) {
         setPacmanDirection(newDirectionToSet);
+        pacmanDirRef.current = newDirectionToSet; // Update ref immediately
+        console.log('  ✅ REF UPDATED - pacmanDirRef:', { x: pacmanDirRef.current.x.toFixed(2), y: pacmanDirRef.current.y.toFixed(2) });
       }
 
       if (newBehaviorToSet !== null) {
@@ -1001,7 +1059,7 @@ export default function IdlePage() {
           Math.pow(cake.y - pacmanPosition.y, 2)
         );
 
-        if (distance < 5) {
+        if (distance < 3) {
           if (cake.isSpecial) {
             setPowerMode(true);
             setPowerTimeLeft(10);
@@ -1084,7 +1142,8 @@ export default function IdlePage() {
   }, [handleKeyPress]);
 
   const getRotation = () => {
-    const angle = Math.atan2(pacmanDirection.y, pacmanDirection.x) * (180 / Math.PI);
+    // Use ref for immediate direction updates (not lagging state)
+    const angle = Math.atan2(pacmanDirRef.current.y, pacmanDirRef.current.x) * (180 / Math.PI);
     return angle;
   };
 
@@ -1098,7 +1157,7 @@ export default function IdlePage() {
       <div className="absolute inset-0 opacity-10"
         style={{
           backgroundImage: 'linear-gradient(#D97706 1px, transparent 1px), linear-gradient(90deg, #D97706 1px, transparent 1px)',
-          backgroundSize: '60px 60px'
+          backgroundSize: '40px 40px'
         }}
       />
 
@@ -1140,7 +1199,7 @@ export default function IdlePage() {
       {particles.map(particle => (
         <div
           key={particle.id}
-          className="absolute text-xl pointer-events-none"
+          className="absolute text-base pointer-events-none"
           style={{
             left: `${particle.x}%`,
             top: `${particle.y}%`,
@@ -1168,7 +1227,7 @@ export default function IdlePage() {
         }}
       >
         <div
-          className={`w-10 h-10 relative transition-all duration-300`}
+          className={`w-6 h-6 relative transition-all duration-300`}
           style={{
             background: powerMode
               ? 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%)'
@@ -1178,13 +1237,13 @@ export default function IdlePage() {
               ? 'polygon(100% 70%, 40% 50%, 100% 30%, 100% 0%, 0% 0%, 0% 100%, 100% 100%)'
               : 'circle(50%)',
             boxShadow: powerMode
-              ? '0 0 40px rgba(255, 215, 0, 0.8), 0 0 80px rgba(255, 215, 0, 0.4)'
-              : '0 8px 20px rgba(249, 160, 63, 0.4)',
+              ? '0 0 30px rgba(255, 215, 0, 0.8), 0 0 60px rgba(255, 215, 0, 0.4)'
+              : '0 6px 15px rgba(249, 160, 63, 0.4)',
             filter: powerMode ? 'brightness(1.3)' : 'none'
           }}
         >
-          <div className="absolute w-2 h-2 bg-chocolate-brown rounded-full top-2.5 left-2.5 shadow-inner">
-            <div className="absolute w-0.5 h-0.5 bg-white rounded-full top-0.5 left-0.5"></div>
+          <div className="absolute w-1.5 h-1.5 bg-chocolate-brown rounded-full top-1.5 left-1.5 shadow-inner">
+            <div className="absolute w-0.5 h-0.5 bg-white rounded-full top-0 left-0"></div>
           </div>
           {powerMode && (
             <div className="absolute inset-0 rounded-full bg-golden-orange/30 animate-pulse-slow"></div>
@@ -1215,7 +1274,7 @@ export default function IdlePage() {
             }}
           >
             <div
-              className="text-3xl"
+              className="text-xl"
               style={{
                 color: ghost.behavior === 'scared' ? '#9CA3AF' : ghost.color,
               }}
@@ -1224,7 +1283,12 @@ export default function IdlePage() {
             </div>
             {ghost.behavior === 'scared' && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-lg">😱</div>
+                <div className="text-sm">😱</div>
+              </div>
+            )}
+            {ghost.aggressive && !ghost.scared && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-sm">😠</div>
               </div>
             )}
             {ghost.onCooldown && ghost.behavior === 'wander' && (
@@ -1259,7 +1323,7 @@ export default function IdlePage() {
               : 'drop-shadow(0 4px 10px rgba(217, 119, 6, 0.3))'
           }}
         >
-          <div className={`text-2xl ${cake.isSpecial ? 'scale-125' : ''}`}>
+          <div className={`text-lg ${cake.isSpecial ? 'scale-125' : ''}`}>
             {cake.emoji}
           </div>
         </div>
