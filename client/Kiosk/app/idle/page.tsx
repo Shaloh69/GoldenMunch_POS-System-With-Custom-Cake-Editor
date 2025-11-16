@@ -653,6 +653,15 @@ export default function IdlePage() {
         const currentStuckCounter = pacmanStuckCounterRef.current;
         const currentDirection = pacmanDirRef.current;
 
+        console.log('🎮 PACMAN MOVEMENT DEBUG:', {
+          position: prev,
+          cakesCount: currentCakes.length,
+          ghostsCount: currentGhosts.length,
+          currentPathLength: currentPath.length,
+          stuckCounter: currentStuckCounter,
+          direction: currentDirection
+        });
+
         // Stuck detection
         if (Math.abs(prev.x - lastPacmanPos.current.x) < 0.1 &&
             Math.abs(prev.y - lastPacmanPos.current.y) < 0.1) {
@@ -681,6 +690,11 @@ export default function IdlePage() {
           });
         }
 
+        console.log('🎯 TARGETS:', {
+          count: targets.length,
+          firstThree: targets.slice(0, 3).map(t => ({ x: t.x, y: t.y, type: t.type }))
+        });
+
         // Find dangerous ghosts to avoid
         const dangerGhosts = currentGhosts.filter(g => !g.scared);
         const avoidPoints: Position[] = dangerGhosts
@@ -691,7 +705,15 @@ export default function IdlePage() {
           .map(g => ({ x: g.x, y: g.y }));
 
         // Recalculate path if needed
-        if (currentPath.length === 0 || currentStuckCounter > 15 || Math.random() < 0.1) {
+        const shouldRecalculate = currentPath.length === 0 || currentStuckCounter > 15 || Math.random() < 0.1;
+        console.log('🔄 PATH RECALCULATION CHECK:', {
+          shouldRecalculate,
+          reason: currentPath.length === 0 ? 'no path' : currentStuckCounter > 15 ? 'stuck' : 'random',
+          pathLength: currentPath.length,
+          stuckCounter: currentStuckCounter
+        });
+
+        if (shouldRecalculate) {
           if (targets.length > 0) {
             const bestTarget = targets.reduce((best, target) => {
               const distance = Math.sqrt(
@@ -701,10 +723,23 @@ export default function IdlePage() {
               return score < best.score ? { target, score } : best;
             }, { target: null, score: Infinity });
 
+            console.log('🎯 BEST TARGET:', {
+              target: bestTarget.target ? { x: bestTarget.target.x, y: bestTarget.target.y, type: bestTarget.target.type } : null,
+              score: bestTarget.score
+            });
+
             if (bestTarget.target && bestTarget.score < 100) {
               const calculatedPath = findPath(prev, { x: bestTarget.target.x, y: bestTarget.target.y }, avoidPoints);
+              console.log('📍 CALCULATED PATH:', {
+                from: prev,
+                to: { x: bestTarget.target.x, y: bestTarget.target.y },
+                pathLength: calculatedPath.length,
+                path: calculatedPath
+              });
               newPathToSet = calculatedPath.slice(1);
               shouldResetStuck = true;
+            } else {
+              console.log('❌ NO VALID TARGET (score too high or no target)');
             }
           } else if (currentStuckCounter > 10) {
             // No targets available and stuck - move to random position
@@ -712,6 +747,7 @@ export default function IdlePage() {
               x: Math.random() * 80 + 10,
               y: Math.random() * 80 + 10
             };
+            console.log('🎲 MOVING TO RANDOM TARGET:', randomTarget);
             const calculatedPath = findPath(prev, randomTarget, avoidPoints);
             newPathToSet = calculatedPath.slice(1);
             shouldResetStuck = true;
@@ -725,21 +761,32 @@ export default function IdlePage() {
           const dy = nextWaypoint.y - prev.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
+          console.log('🚶 FOLLOWING PATH:', {
+            currentWaypoint: nextWaypoint,
+            distance: dist,
+            willAdvance: dist < 3
+          });
+
           if (dist < 3) {
             newPathToSet = currentPath.slice(1);
+            console.log('✅ REACHED WAYPOINT, advancing to next');
           }
 
           if (dist > 0) {
             newDirectionToSet = { x: dx / dist, y: dy / dist };
+            console.log('➡️ NEW DIRECTION SET:', newDirectionToSet);
           }
         } else if (avoidPoints.length > 0) {
           const nearestDanger = avoidPoints[0];
           const dx = prev.x - nearestDanger.x;
           const dy = prev.y - nearestDanger.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
+          console.log('⚠️ FLEEING FROM DANGER:', { danger: nearestDanger, distance: dist });
           if (dist > 0) {
             newDirectionToSet = { x: dx / dist, y: dy / dist };
           }
+        } else {
+          console.log('🤷 NO PATH AND NO DANGER - continuing current direction');
         }
 
         // Apply movement
@@ -748,6 +795,15 @@ export default function IdlePage() {
         const testY = prev.y + currentDirection.y * speed;
 
         const wouldHitObstacle = isInsideObstacle(testX, testY, 1);
+
+        console.log('🏃 MOVEMENT:', {
+          currentPos: prev,
+          currentDirection,
+          speed,
+          testPos: { x: testX, y: testY },
+          wouldHitObstacle,
+          willMove: testX > 2 && testX < 98 && testY > 2 && testY < 98 && !wouldHitObstacle
+        });
 
         if (testX > 2 && testX < 98 && testY > 2 && testY < 98 && !wouldHitObstacle) {
           newX = testX;
@@ -761,12 +817,21 @@ export default function IdlePage() {
           }
         } else {
           shouldClearPath = true;
+          console.log('🚧 HIT OBSTACLE - clearing path');
         }
 
         return { x: newX, y: newY };
       });
 
       // Apply deferred state updates
+      console.log('📝 DEFERRED STATE UPDATES:', {
+        shouldIncrementStuck,
+        shouldResetStuck,
+        newPathLength: newPathToSet ? newPathToSet.length : 'null',
+        shouldClearPath,
+        newDirection: newDirectionToSet
+      });
+
       if (shouldIncrementStuck) {
         setPacmanStuckCounter(c => c + 1);
       } else if (shouldResetStuck) {
@@ -782,6 +847,8 @@ export default function IdlePage() {
       if (newDirectionToSet !== null) {
         setPacmanDirection(newDirectionToSet);
       }
+
+      console.log('─────────────────────────────────────────────');
     };
 
     const interval = setInterval(movePacman, 30);
