@@ -1,0 +1,1 @@
+CASHIER and ADMIN is a next.js website with log in
