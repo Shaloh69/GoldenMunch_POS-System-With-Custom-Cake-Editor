@@ -427,6 +427,7 @@ export default function IdlePage() {
       });
     }
     setCakes(initialCakes);
+    cakesRef.current = initialCakes; // Sync ref immediately to prevent race condition
 
     const initialGhosts: Ghost[] = [];
     const ghostStartPositions = [
@@ -452,6 +453,7 @@ export default function IdlePage() {
       });
     }
     setGhosts(initialGhosts);
+    ghostsRef.current = initialGhosts; // Sync ref immediately to prevent race condition
   }, []); // Only run once on mount
 
   // Mouth animation
@@ -704,6 +706,15 @@ export default function IdlePage() {
               newPathToSet = calculatedPath.slice(1);
               shouldResetStuck = true;
             }
+          } else if (currentStuckCounter > 10) {
+            // No targets available and stuck - move to random position
+            const randomTarget = {
+              x: Math.random() * 80 + 10,
+              y: Math.random() * 80 + 10
+            };
+            const calculatedPath = findPath(prev, randomTarget, avoidPoints);
+            newPathToSet = calculatedPath.slice(1);
+            shouldResetStuck = true;
           }
         }
 
