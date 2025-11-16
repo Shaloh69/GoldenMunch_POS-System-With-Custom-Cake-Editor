@@ -78,15 +78,45 @@ export default function IdlePage() {
   const lastPacmanPos = useRef<Position>({ x: 50, y: 50 });
   const powerModeRef = useRef(false);
   const obstaclesRef = useRef<Obstacle[]>([]);
+  const pacmanPosRef = useRef<Position>({ x: 50, y: 50 });
+  const pacmanDirRef = useRef<Position>({ x: 1, y: 0 });
+  const cakesRef = useRef<Cake[]>([]);
+  const ghostsRef = useRef<Ghost[]>([]);
+  const pacmanPathRef = useRef<Position[]>([]);
+  const pacmanStuckCounterRef = useRef(0);
 
   const cakeEmojis = ['🎂', '🧁', '🍰', '🍪', '🍩', '🥧'];
   const specialCakeEmoji = '⭐';
   const ghostColors = ['#FF69B4', '#00CED1', '#FF6347', '#98FB98'];
 
-  // Sync obstacles ref
+  // Sync refs with state
   useEffect(() => {
     obstaclesRef.current = obstacles;
   }, [obstacles]);
+
+  useEffect(() => {
+    pacmanPosRef.current = pacmanPosition;
+  }, [pacmanPosition]);
+
+  useEffect(() => {
+    pacmanDirRef.current = pacmanDirection;
+  }, [pacmanDirection]);
+
+  useEffect(() => {
+    cakesRef.current = cakes;
+  }, [cakes]);
+
+  useEffect(() => {
+    ghostsRef.current = ghosts;
+  }, [ghosts]);
+
+  useEffect(() => {
+    pacmanPathRef.current = pacmanPath;
+  }, [pacmanPath]);
+
+  useEffect(() => {
+    pacmanStuckCounterRef.current = pacmanStuckCounter;
+  }, [pacmanStuckCounter]);
 
   // Helper function to check if a position collides with any obstacle
   const isInsideObstacle = useCallback((x: number, y: number, margin: number = 2): boolean => {
@@ -101,53 +131,63 @@ export default function IdlePage() {
     });
   }, []);
 
-  // Completely rewritten A* Pathfinding Algorithm
+  // A* Pathfinding Algorithm - Simplified and working
   const findPath = useCallback((start: Position, goal: Position, avoidPoints: Position[] = []): Position[] => {
     // Validate inputs
-    if (!start || !goal || start.x === goal.x && start.y === goal.y) {
+    if (!start || !goal) {
+      return [start || { x: 50, y: 50 }];
+    }
+
+    const distance = Math.sqrt(Math.pow(goal.x - start.x, 2) + Math.pow(goal.y - start.y, 2));
+    if (distance < 3) {
       return [start];
     }
 
-    const GRID_SIZE = 4;
-    const MAX_ITERATIONS = 200;
+    const GRID_SIZE = 5;
+    const MAX_ITERATIONS = 100;
     const BOUNDS = { min: 2, max: 98 };
 
-    const openSet: PathNode[] = [];
-    const closedSet = new Set<string>();
-
-    // Manhattan + Euclidean hybrid heuristic
-    const heuristic = (a: Position, b: Position): number => {
-      const dx = Math.abs(a.x - b.x);
-      const dy = Math.abs(a.y - b.y);
-      const euclidean = Math.sqrt(dx * dx + dy * dy);
-      const manhattan = dx + dy;
-      return euclidean * 0.7 + manhattan * 0.3;
-    };
-
-    const getKey = (pos: Position): string =>
-      `${Math.floor(pos.x / GRID_SIZE)},${Math.floor(pos.y / GRID_SIZE)}`;
-
+    // Helper: Check if position is walkable
     const isWalkable = (x: number, y: number): boolean => {
-      // Bounds check
       if (x < BOUNDS.min || x > BOUNDS.max || y < BOUNDS.min || y > BOUNDS.max) {
         return false;
       }
 
-      // Obstacle check
-      if (isInsideObstacle(x, y, 1.5)) {
-        return false;
+      // Check obstacles
+      const obstacles = obstaclesRef.current;
+      for (const obstacle of obstacles) {
+        const obstacleLeft = obstacle.x - 2;
+        const obstacleRight = obstacle.x + obstacle.width + 2;
+        const obstacleTop = obstacle.y - 2;
+        const obstacleBottom = obstacle.y + obstacle.height + 2;
+
+        if (x >= obstacleLeft && x <= obstacleRight && y >= obstacleTop && y <= obstacleBottom) {
+          return false;
+        }
       }
 
-      // Avoid danger zones
+      // Check danger zones
       for (const avoid of avoidPoints) {
         const dist = Math.sqrt(Math.pow(x - avoid.x, 2) + Math.pow(y - avoid.y, 2));
-        if (dist < 12) return false;
+        if (dist < 10) return false;
       }
 
       return true;
     };
 
-    // Initialize start node
+    // Helper: Calculate heuristic
+    const heuristic = (a: Position, b: Position): number => {
+      return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
+    };
+
+    // Helper: Get key for position
+    const getKey = (pos: Position): string => {
+      return `${Math.floor(pos.x / GRID_SIZE)},${Math.floor(pos.y / GRID_SIZE)}`;
+    };
+
+    const openSet: PathNode[] = [];
+    const closedSet = new Set<string>();
+
     const startNode: PathNode = {
       x: start.x,
       y: start.y,
@@ -159,16 +199,9 @@ export default function IdlePage() {
 
     openSet.push(startNode);
 
-    // 8 directions: N, S, E, W, NE, NW, SE, SW
     const directions = [
-      { x: GRID_SIZE, y: 0 },
-      { x: -GRID_SIZE, y: 0 },
-      { x: 0, y: GRID_SIZE },
-      { x: 0, y: -GRID_SIZE },
-      { x: GRID_SIZE * 0.707, y: GRID_SIZE * 0.707 },
-      { x: -GRID_SIZE * 0.707, y: GRID_SIZE * 0.707 },
-      { x: GRID_SIZE * 0.707, y: -GRID_SIZE * 0.707 },
-      { x: -GRID_SIZE * 0.707, y: -GRID_SIZE * 0.707 }
+      { x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 },
+      { x: 0.7, y: 0.7 }, { x: -0.7, y: 0.7 }, { x: 0.7, y: -0.7 }, { x: -0.7, y: -0.7 }
     ];
 
     let iterations = 0;
@@ -176,121 +209,64 @@ export default function IdlePage() {
     while (openSet.length > 0 && iterations < MAX_ITERATIONS) {
       iterations++;
 
-      // Get node with lowest f score
-      let currentIndex = 0;
-      for (let i = 1; i < openSet.length; i++) {
-        if (openSet[i].f < openSet[currentIndex].f) {
-          currentIndex = i;
-        }
-      }
-
-      const current = openSet[currentIndex];
-      openSet.splice(currentIndex, 1);
+      // Find node with lowest f score
+      openSet.sort((a, b) => a.f - b.f);
+      const current = openSet.shift()!;
 
       const currentKey = getKey(current);
       if (closedSet.has(currentKey)) continue;
       closedSet.add(currentKey);
 
-      // Check if we reached the goal
-      const distToGoal = heuristic(current, goal);
-      if (distToGoal < GRID_SIZE * 1.5) {
-        // Reconstruct path
+      // Check if reached goal
+      if (heuristic(current, goal) < GRID_SIZE * 2) {
         const path: Position[] = [];
         let node: PathNode | null = current;
         while (node) {
           path.unshift({ x: node.x, y: node.y });
           node = node.parent;
         }
-
-        // Smooth and optimize path
-        return smoothPath(path);
+        return path.length > 2 ? [path[0], path[Math.floor(path.length / 2)], path[path.length - 1]] : path;
       }
 
       // Explore neighbors
       for (const dir of directions) {
-        const newX = current.x + dir.x;
-        const newY = current.y + dir.y;
+        const newX = current.x + dir.x * GRID_SIZE;
+        const newY = current.y + dir.y * GRID_SIZE;
 
         if (!isWalkable(newX, newY)) continue;
 
         const neighborKey = getKey({ x: newX, y: newY });
         if (closedSet.has(neighborKey)) continue;
 
-        const moveCost = Math.sqrt(dir.x * dir.x + dir.y * dir.y);
-        const g = current.g + moveCost;
+        const g = current.g + GRID_SIZE;
         const h = heuristic({ x: newX, y: newY }, goal);
         const f = g + h;
 
-        // Check if this path to neighbor is better
-        const existingIndex = openSet.findIndex(n => getKey(n) === neighborKey);
-
-        if (existingIndex === -1) {
-          openSet.push({
+        const existing = openSet.find(n => getKey(n) === neighborKey);
+        if (!existing || g < existing.g) {
+          const neighbor: PathNode = {
             x: newX,
             y: newY,
             g,
             h,
             f,
             parent: current
-          });
-        } else if (g < openSet[existingIndex].g) {
-          openSet[existingIndex].g = g;
-          openSet[existingIndex].f = f;
-          openSet[existingIndex].parent = current;
+          };
+
+          if (!existing) {
+            openSet.push(neighbor);
+          } else {
+            existing.g = g;
+            existing.f = f;
+            existing.parent = current;
+          }
         }
       }
     }
 
-    // No path found, return direct path if goal is reachable
-    if (isWalkable(goal.x, goal.y)) {
-      return [start, goal];
-    }
-
-    // Return just start position if no path possible
-    return [start];
-  }, [isInsideObstacle]);
-
-  // Smooth path by removing unnecessary waypoints
-  const smoothPath = (path: Position[]): Position[] => {
-    if (path.length <= 2) return path;
-
-    const smoothed: Position[] = [path[0]];
-    let currentIndex = 0;
-
-    while (currentIndex < path.length - 1) {
-      let farthestIndex = currentIndex + 1;
-
-      // Try to skip as many waypoints as possible with line-of-sight check
-      for (let i = path.length - 1; i > currentIndex + 1; i--) {
-        if (hasLineOfSight(path[currentIndex], path[i])) {
-          farthestIndex = i;
-          break;
-        }
-      }
-
-      smoothed.push(path[farthestIndex]);
-      currentIndex = farthestIndex;
-    }
-
-    return smoothed;
-  };
-
-  // Line of sight check between two points
-  const hasLineOfSight = (from: Position, to: Position): boolean => {
-    const steps = Math.ceil(Math.sqrt(Math.pow(to.x - from.x, 2) + Math.pow(to.y - from.y, 2)) / 2);
-
-    for (let i = 0; i <= steps; i++) {
-      const t = i / steps;
-      const x = from.x + (to.x - from.x) * t;
-      const y = from.y + (to.y - from.y) * t;
-
-      if (isInsideObstacle(x, y, 1)) {
-        return false;
-      }
-    }
-
-    return true;
-  };
+    // No path found - return direct line
+    return [start, goal];
+  }, []);
 
   // Create particles
   const createParticles = (x: number, y: number, color: string, count: number = 8, emoji?: string) => {
@@ -527,7 +503,7 @@ export default function IdlePage() {
 
   // Advanced Ghost AI
   useEffect(() => {
-    const moveGhosts = () => {
+    const interval = setInterval(() => {
       setGhosts(prev => prev.map(ghost => {
         let newX = ghost.x;
         let newY = ghost.y;
@@ -561,14 +537,17 @@ export default function IdlePage() {
           }
         }
 
+        const pacPos = pacmanPosRef.current;
+        const pacDir = pacmanDirRef.current;
+
         const distance = Math.sqrt(
-          Math.pow(ghost.x - pacmanPosition.x, 2) +
-          Math.pow(ghost.y - pacmanPosition.y, 2)
+          Math.pow(ghost.x - pacPos.x, 2) +
+          Math.pow(ghost.y - pacPos.y, 2)
         );
 
         // Use pathfinding for chase mode
         if (newMode === 'chase' && !ghost.scared && distance < 50) {
-          const path = findPath({ x: ghost.x, y: ghost.y }, pacmanPosition);
+          const path = findPath({ x: ghost.x, y: ghost.y }, pacPos);
           if (path.length > 1) {
             const nextPos = path[1];
             const dx = nextPos.x - ghost.x;
@@ -579,8 +558,8 @@ export default function IdlePage() {
             }
           }
         } else if (newMode === 'ambush' && !ghost.scared) {
-          const predictedX = pacmanPosition.x + pacmanDirection.x * 20;
-          const predictedY = pacmanPosition.y + pacmanDirection.y * 20;
+          const predictedX = pacPos.x + pacDir.x * 20;
+          const predictedY = pacPos.y + pacDir.y * 20;
           const clampedX = Math.max(10, Math.min(90, predictedX));
           const clampedY = Math.max(10, Math.min(90, predictedY));
 
@@ -598,8 +577,8 @@ export default function IdlePage() {
           }
         } else if (newMode === 'flee' || ghost.scared) {
           if (distance < 35) {
-            const fleeX = ghost.x + (ghost.x - pacmanPosition.x) * 2;
-            const fleeY = ghost.y + (ghost.y - pacmanPosition.y) * 2;
+            const fleeX = ghost.x + (ghost.x - pacPos.x) * 2;
+            const fleeY = ghost.y + (ghost.y - pacPos.y) * 2;
             const clampedFleeX = Math.max(10, Math.min(90, fleeX));
             const clampedFleeY = Math.max(10, Math.min(90, fleeY));
 
@@ -646,11 +625,10 @@ export default function IdlePage() {
           modeTimer: newModeTimer
         };
       }));
-    };
+    }, 50);
 
-    const interval = setInterval(moveGhosts, 50);
     return () => clearInterval(interval);
-  }, [pacmanPosition, pacmanDirection, findPath, isInsideObstacle]);
+  }, []);
 
   // Improved Pacman AI with A* pathfinding
   useEffect(() => {
@@ -665,6 +643,14 @@ export default function IdlePage() {
         let newX = prev.x;
         let newY = prev.y;
 
+        // Get current values from refs
+        const currentCakes = cakesRef.current;
+        const currentGhosts = ghostsRef.current;
+        const currentPowerMode = powerModeRef.current;
+        const currentPath = pacmanPathRef.current;
+        const currentStuckCounter = pacmanStuckCounterRef.current;
+        const currentDirection = pacmanDirRef.current;
+
         // Stuck detection
         if (Math.abs(prev.x - lastPacmanPos.current.x) < 0.1 &&
             Math.abs(prev.y - lastPacmanPos.current.y) < 0.1) {
@@ -676,14 +662,14 @@ export default function IdlePage() {
         lastPacmanPos.current = { x: prev.x, y: prev.y };
 
         // Build target list
-        const targets: any[] = cakes.map(c => ({
+        const targets: any[] = currentCakes.map(c => ({
           ...c,
           type: 'cake',
           priority: c.isSpecial ? 3 : 1
         }));
 
-        if (powerMode) {
-          ghosts.filter(g => g.scared).forEach(g => {
+        if (currentPowerMode) {
+          currentGhosts.filter(g => g.scared).forEach(g => {
             targets.push({
               x: g.x,
               y: g.y,
@@ -694,7 +680,7 @@ export default function IdlePage() {
         }
 
         // Find dangerous ghosts to avoid
-        const dangerGhosts = ghosts.filter(g => !g.scared);
+        const dangerGhosts = currentGhosts.filter(g => !g.scared);
         const avoidPoints: Position[] = dangerGhosts
           .filter(g => {
             const dist = Math.sqrt(Math.pow(g.x - prev.x, 2) + Math.pow(g.y - prev.y, 2));
@@ -703,7 +689,7 @@ export default function IdlePage() {
           .map(g => ({ x: g.x, y: g.y }));
 
         // Recalculate path if needed
-        if (pacmanPath.length === 0 || pacmanStuckCounter > 15 || Math.random() < 0.1) {
+        if (currentPath.length === 0 || currentStuckCounter > 15 || Math.random() < 0.1) {
           if (targets.length > 0) {
             const bestTarget = targets.reduce((best, target) => {
               const distance = Math.sqrt(
@@ -722,14 +708,14 @@ export default function IdlePage() {
         }
 
         // Follow the calculated path
-        if (pacmanPath.length > 0) {
-          const nextWaypoint = pacmanPath[0];
+        if (currentPath.length > 0) {
+          const nextWaypoint = currentPath[0];
           const dx = nextWaypoint.x - prev.x;
           const dy = nextWaypoint.y - prev.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
           if (dist < 3) {
-            newPathToSet = pacmanPath.slice(1);
+            newPathToSet = currentPath.slice(1);
           }
 
           if (dist > 0) {
@@ -746,9 +732,9 @@ export default function IdlePage() {
         }
 
         // Apply movement
-        const speed = powerMode ? 1.8 : 1.4;
-        const testX = prev.x + pacmanDirection.x * speed;
-        const testY = prev.y + pacmanDirection.y * speed;
+        const speed = currentPowerMode ? 1.8 : 1.4;
+        const testX = prev.x + currentDirection.x * speed;
+        const testY = prev.y + currentDirection.y * speed;
 
         const wouldHitObstacle = isInsideObstacle(testX, testY, 1);
 
@@ -789,7 +775,7 @@ export default function IdlePage() {
 
     const interval = setInterval(movePacman, 30);
     return () => clearInterval(interval);
-  }, [pacmanDirection, cakes, ghosts, powerMode, pacmanStuckCounter, pacmanPath, findPath, isInsideObstacle]);
+  }, [findPath, isInsideObstacle]);
 
   // Collision detection - cakes
   useEffect(() => {
