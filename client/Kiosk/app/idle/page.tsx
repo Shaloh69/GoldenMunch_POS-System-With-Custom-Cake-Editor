@@ -20,6 +20,10 @@ interface Ghost {
   mode: 'random' | 'chase' | 'flee' | 'ambush';
   modeTimer: number;
   personality: 'aggressive' | 'smart' | 'random' | 'ambusher';
+  aggressive: boolean;
+  aggressionTimer: number;
+  aggressionCooldown: number;
+  sightRange: number;
 }
 
 interface Position {
@@ -467,7 +471,11 @@ export default function IdlePage() {
         scared: false,
         mode: 'random',
         modeTimer: Math.floor(Math.random() * 100) + 50,
-        personality: personalities[i]
+        personality: personalities[i],
+        aggressive: false,
+        aggressionTimer: 0,
+        aggressionCooldown: 0,
+        sightRange: personalities[i] === 'aggressive' ? 35 : 25
       });
     }
     setGhosts(initialGhosts);
@@ -530,9 +538,56 @@ export default function IdlePage() {
         let newDirection = { ...ghost.direction };
         let newMode = ghost.mode;
         let newModeTimer = ghost.modeTimer - 1;
+        let newAggressive = ghost.aggressive;
+        let newAggressionTimer = ghost.aggressionTimer;
+        let newAggressionCooldown = ghost.aggressionCooldown;
 
-        // Update mode based on personality and timer
-        if (newModeTimer <= 0) {
+        const pacPos = pacmanPosRef.current;
+        const pacDir = pacmanDirRef.current;
+
+        const distance = Math.sqrt(
+          Math.pow(ghost.x - pacPos.x, 2) +
+          Math.pow(ghost.y - pacPos.y, 2)
+        );
+
+        // Aggression System
+        if (!ghost.scared) {
+          // Decrease cooldown
+          if (newAggressionCooldown > 0) {
+            newAggressionCooldown--;
+          }
+
+          // Check if Pacman is in sight range
+          const canSeePacman = distance <= ghost.sightRange;
+
+          if (newAggressive) {
+            // Currently aggressive - decrease timer
+            newAggressionTimer--;
+            if (newAggressionTimer <= 0) {
+              // Aggression ends - enter cooldown
+              newAggressive = false;
+              newAggressionTimer = 0;
+              newAggressionCooldown = 200; // 10 seconds at 50ms intervals
+              console.log(`👻 Ghost ${ghost.id} aggression ended - entering cooldown`);
+            }
+          } else if (canSeePacman && newAggressionCooldown === 0) {
+            // Spot Pacman and not on cooldown - become aggressive!
+            newAggressive = true;
+            newAggressionTimer = 300; // 15 seconds of aggression at 50ms intervals
+            console.log(`👻 Ghost ${ghost.id} spotted Pacman! AGGRESSION ACTIVATED!`);
+          }
+        } else {
+          // Scared ghosts can't be aggressive
+          newAggressive = false;
+          newAggressionTimer = 0;
+        }
+
+        // Update mode based on personality and timer (or aggression)
+        if (newAggressive) {
+          // Aggressive mode overrides normal behavior
+          newMode = 'chase';
+          newModeTimer = 50;
+        } else if (newModeTimer <= 0) {
           if (ghost.scared) {
             newMode = 'flee';
             newModeTimer = 100;
@@ -556,14 +611,6 @@ export default function IdlePage() {
             }
           }
         }
-
-        const pacPos = pacmanPosRef.current;
-        const pacDir = pacmanDirRef.current;
-
-        const distance = Math.sqrt(
-          Math.pow(ghost.x - pacPos.x, 2) +
-          Math.pow(ghost.y - pacPos.y, 2)
-        );
 
         // Use pathfinding for chase mode
         if (newMode === 'chase' && !ghost.scared && distance < 50) {
@@ -621,7 +668,11 @@ export default function IdlePage() {
           }
         }
 
-        const baseSpeed = ghost.scared ? 0.4 : ghost.personality === 'aggressive' ? 0.8 : 0.6;
+        // Aggressive ghosts are much faster!
+        let baseSpeed = ghost.scared ? 0.4 : ghost.personality === 'aggressive' ? 0.8 : 0.6;
+        if (newAggressive) {
+          baseSpeed = 1.2; // Very fast when aggressive!
+        }
         const speed = baseSpeed * (0.9 + Math.random() * 0.2);
         const testX = ghost.x + newDirection.x * speed;
         const testY = ghost.y + newDirection.y * speed;
@@ -642,7 +693,10 @@ export default function IdlePage() {
           y: newY,
           direction: newDirection,
           mode: newMode,
-          modeTimer: newModeTimer
+          modeTimer: newModeTimer,
+          aggressive: newAggressive,
+          aggressionTimer: newAggressionTimer,
+          aggressionCooldown: newAggressionCooldown
         };
       }));
     }, 50);
@@ -699,22 +753,45 @@ export default function IdlePage() {
 
         lastPacmanPos.current = { x: prev.x, y: prev.y };
 
-        // Build target list
-        const targets: any[] = currentCakes.map(c => ({
-          ...c,
-          type: 'cake',
-          priority: c.isSpecial ? 3 : 1
-        }));
+        // Check for aggressive ghosts
+        const aggressiveGhosts = currentGhosts.filter(g => g.aggressive && !g.scared);
+        const underAttack = aggressiveGhosts.length > 0;
 
-        if (currentPowerMode) {
-          currentGhosts.filter(g => g.scared).forEach(g => {
+        if (underAttack) {
+          console.log('\n⚠️  UNDER ATTACK!');
+          console.log('  Aggressive Ghosts:', aggressiveGhosts.length);
+          aggressiveGhosts.forEach((g, i) => {
+            const dist = Math.sqrt(Math.pow(g.x - prev.x, 2) + Math.pow(g.y - prev.y, 2));
+            console.log(`    Aggressive Ghost ${i + 1}: at (${g.x.toFixed(1)}, ${g.y.toFixed(1)}) - Distance: ${dist.toFixed(1)} - Timer: ${g.aggressionTimer}`);
+          });
+        }
+
+        // Build target list (IGNORE CAKES when under attack!)
+        const targets: any[] = [];
+
+        if (!underAttack) {
+          // Safe - can hunt cakes
+          currentCakes.forEach(c => {
             targets.push({
-              x: g.x,
-              y: g.y,
-              type: 'ghost',
-              priority: 2
+              ...c,
+              type: 'cake',
+              priority: c.isSpecial ? 3 : 1
             });
           });
+
+          if (currentPowerMode) {
+            currentGhosts.filter(g => g.scared).forEach(g => {
+              targets.push({
+                x: g.x,
+                y: g.y,
+                type: 'ghost',
+                priority: 2
+              });
+            });
+          }
+        } else {
+          // Under attack - forget cakes, just survive!
+          console.log('  🚨 FORGETTING CAKES - SURVIVAL MODE!');
         }
 
         console.log('\n🎯 TARGET ANALYSIS:');
@@ -729,12 +806,13 @@ export default function IdlePage() {
           console.log('  ⚠️  NO TARGETS AVAILABLE!');
         }
 
-        // Find dangerous ghosts to avoid
+        // Find dangerous ghosts to avoid (aggressive ghosts have wider danger zone!)
         const dangerGhosts = currentGhosts.filter(g => !g.scared);
         const avoidPoints: Position[] = dangerGhosts
           .filter(g => {
             const dist = Math.sqrt(Math.pow(g.x - prev.x, 2) + Math.pow(g.y - prev.y, 2));
-            return dist < 30;
+            const dangerRadius = g.aggressive ? 50 : 30; // Aggressive ghosts are more dangerous!
+            return dist < dangerRadius;
           })
           .map(g => ({ x: g.x, y: g.y }));
 
@@ -862,7 +940,13 @@ export default function IdlePage() {
 
         // Apply movement (use newly calculated direction if available)
         const directionToUse = newDirectionToSet !== null ? newDirectionToSet : currentDirection;
-        const speed = currentPowerMode ? 1.8 : 1.4;
+
+        // Speed calculation: faster when fleeing from aggressive ghosts!
+        let speed = currentPowerMode ? 1.8 : 1.4;
+        if (underAttack) {
+          speed = 1.6; // Run faster when being chased!
+        }
+
         const testX = prev.x + directionToUse.x * speed;
         const testY = prev.y + directionToUse.y * speed;
 
@@ -1005,7 +1089,11 @@ export default function IdlePage() {
                 scared: powerModeRef.current,
                 mode: 'flee',
                 modeTimer: 100,
-                personality: ghostData.personality
+                personality: ghostData.personality,
+                aggressive: false,
+                aggressionTimer: 0,
+                aggressionCooldown: 0,
+                sightRange: ghostData.personality === 'aggressive' ? 35 : 25
               }]);
             }, 4000);
 
@@ -1157,17 +1245,19 @@ export default function IdlePage() {
           }}
         >
           <div
-            className={`relative ${ghost.scared ? 'animate-pulse' : ''}`}
+            className={`relative ${ghost.scared ? 'animate-pulse' : ghost.aggressive ? 'animate-bounce' : ''}`}
             style={{
               filter: ghost.scared
                 ? 'saturate(0.3) brightness(1.8) drop-shadow(0 0 15px rgba(138, 43, 226, 0.6))'
+                : ghost.aggressive
+                ? 'brightness(1.3) drop-shadow(0 0 20px rgba(255, 0, 0, 1)) drop-shadow(0 0 40px rgba(255, 0, 0, 0.8))'
                 : `drop-shadow(0 4px 12px ${ghost.color}40)`,
             }}
           >
             <div
               className="text-xl"
               style={{
-                color: ghost.scared ? '#9CA3AF' : ghost.color,
+                color: ghost.scared ? '#9CA3AF' : ghost.aggressive ? '#FF0000' : ghost.color,
               }}
             >
               👻
@@ -1175,6 +1265,11 @@ export default function IdlePage() {
             {ghost.scared && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-sm">😱</div>
+              </div>
+            )}
+            {ghost.aggressive && !ghost.scared && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-sm">😠</div>
               </div>
             )}
           </div>
