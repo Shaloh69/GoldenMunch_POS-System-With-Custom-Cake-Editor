@@ -89,12 +89,12 @@ CREATE TABLE menu_item (
     name VARCHAR(100) NOT NULL,
     description TEXT,
     image_url VARCHAR(255) COMMENT 'Product image for kiosk display',
-    item_type ENUM('CAKE', 'PASTRY', 'BEVERAGE', 'SNACK', 'MAIN_DISH', 'APPETIZER', 'DESSERT', 'BREAD', 'OTHER') NOT NULL DEFAULT 'OTHER',
-    unit_of_measure ENUM('PIECE', 'DOZEN', 'HALF_DOZEN', 'KILOGRAM', 'GRAM', 'LITER', 'MILLILITER', 'SERVING', 'BOX', 'PACK') DEFAULT 'PIECE',
+    item_type ENUM('cake', 'pastry', 'beverage', 'snack', 'main_dish', 'appetizer', 'dessert', 'bread', 'other') NOT NULL DEFAULT 'other',
+    unit_of_measure ENUM('piece', 'dozen', 'half_dozen', 'kilogram', 'gram', 'liter', 'milliliter', 'serving', 'box', 'pack') DEFAULT 'piece',
     stock_quantity INT NOT NULL DEFAULT 0,
     is_infinite_stock BOOLEAN DEFAULT FALSE,
     min_stock_level INT DEFAULT 5,
-    status ENUM('AVAILABLE', 'SOLD_OUT', 'DISCONTINUED') NOT NULL DEFAULT 'AVAILABLE',
+    status ENUM('available', 'sold_out', 'discontinued') NOT NULL DEFAULT 'available',
     can_customize BOOLEAN DEFAULT FALSE,
     can_preorder BOOLEAN DEFAULT FALSE,
     preparation_time_minutes INT DEFAULT 0,
@@ -133,7 +133,7 @@ CREATE TABLE menu_item_price (
     price DECIMAL(10,2) NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
-    price_type ENUM('REGULAR', 'PROMOTION', 'SEASONAL', 'BULK') DEFAULT 'REGULAR',
+    price_type ENUM('regular', 'promotion', 'seasonal', 'bulk') DEFAULT 'regular',
     is_active BOOLEAN DEFAULT TRUE,
     created_by INT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -164,7 +164,7 @@ CREATE TABLE promotion_rules (
     promotion_id INT AUTO_INCREMENT PRIMARY KEY,
     promotion_name VARCHAR(100) NOT NULL,
     description TEXT,
-    promotion_type ENUM('PERCENTAGE', 'FIXED_AMOUNT', 'BUY_X_GET_Y', 'BUNDLE', 'SEASONAL') NOT NULL,
+    promotion_type ENUM('percentage', 'fixed_amount', 'buy_x_get_y', 'bundle', 'seasonal') NOT NULL,
     discount_percentage DECIMAL(5,2) DEFAULT 0.00 COMMENT 'For percentage-based discounts',
     discount_amount DECIMAL(10,2) DEFAULT 0.00 COMMENT 'For fixed amount discounts',
     min_purchase_amount DECIMAL(10,2) DEFAULT 0.00 COMMENT 'Minimum purchase required',
@@ -231,7 +231,7 @@ CREATE TABLE promotion_usage_log (
 CREATE TABLE tax_rules (
     tax_id INT AUTO_INCREMENT PRIMARY KEY,
     tax_name VARCHAR(50) NOT NULL COMMENT 'e.g., VAT, Sales Tax, Service Charge',
-    tax_type ENUM('PERCENTAGE', 'FIXED') NOT NULL DEFAULT 'PERCENTAGE',
+    tax_type ENUM('percentage', 'fixed') NOT NULL DEFAULT 'percentage',
     tax_rate DECIMAL(5,2) NOT NULL COMMENT 'Percentage rate (e.g., 12.00 for 12%)',
     fixed_amount DECIMAL(10,2) DEFAULT 0.00 COMMENT 'For fixed tax type',
     is_inclusive BOOLEAN DEFAULT FALSE COMMENT 'Tax included in price or added on top',
@@ -302,11 +302,11 @@ CREATE TABLE custom_cake_design (
     design_id INT AUTO_INCREMENT PRIMARY KEY,
     theme_id INT NULL,
     frosting_color VARCHAR(50),
-    frosting_type ENUM('BUTTERCREAM', 'FONDANT', 'WHIPPED_CREAM', 'GANACHE', 'CREAM_CHEESE') DEFAULT 'BUTTERCREAM',
+    frosting_type ENUM('buttercream', 'fondant', 'whipped_cream', 'ganache', 'cream_cheese') DEFAULT 'buttercream',
     decoration_details TEXT COMMENT 'Customer specified decorations',
     cake_text VARCHAR(255) COMMENT 'Text to write on cake',
     special_instructions TEXT,
-    design_complexity ENUM('SIMPLE', 'MODERATE', 'COMPLEX', 'INTRICATE') DEFAULT 'SIMPLE',
+    design_complexity ENUM('simple', 'moderate', 'complex', 'intricate') DEFAULT 'simple',
     additional_cost DECIMAL(10,2) DEFAULT 0.00,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (theme_id) REFERENCES custom_cake_theme(theme_id),
@@ -374,8 +374,8 @@ CREATE TABLE customer_order (
     order_datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     scheduled_pickup_datetime TIMESTAMP NULL,
     actual_pickup_datetime TIMESTAMP NULL,
-    order_type ENUM('WALK_IN', 'PICKUP', 'PRE_ORDER', 'CUSTOM_ORDER') NOT NULL DEFAULT 'WALK_IN',
-    order_source ENUM('KIOSK', 'CASHIER', 'ADMIN') NOT NULL DEFAULT 'KIOSK',
+    order_type ENUM('walk_in', 'pickup', 'pre_order', 'custom_order') NOT NULL DEFAULT 'walk_in',
+    order_source ENUM('kiosk', 'cashier', 'admin') NOT NULL DEFAULT 'kiosk',
     is_preorder BOOLEAN DEFAULT FALSE,
     advance_payment_required BOOLEAN DEFAULT FALSE,
     advance_payment_amount DECIMAL(10,2) DEFAULT 0.00,
@@ -384,9 +384,9 @@ CREATE TABLE customer_order (
     tax_amount DECIMAL(10,2) DEFAULT 0.00,
     final_amount DECIMAL(10,2) NOT NULL,
     cashier_id INT NULL COMMENT 'Cashier who validated the order',
-    payment_method ENUM('CASH', 'GCASH', 'PAYMAYA', 'CARD', 'BANK_TRANSFER') NOT NULL,
-    payment_status ENUM('PENDING', 'PARTIAL_PAID', 'PAID', 'FAILED', 'REFUNDED') NOT NULL DEFAULT 'PENDING',
-    order_status ENUM('PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'COMPLETED', 'CANCELLED') NOT NULL DEFAULT 'PENDING',
+    payment_method ENUM('cash', 'gcash', 'paymaya', 'card', 'bank_transfer') NOT NULL,
+    payment_status ENUM('pending', 'partial_paid', 'paid', 'failed', 'refunded') NOT NULL DEFAULT 'pending',
+    order_status ENUM('pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled') NOT NULL DEFAULT 'pending',
     gcash_reference_number VARCHAR(100) NULL COMMENT 'GCash transaction reference',
     paymaya_reference_number VARCHAR(100) NULL COMMENT 'PayMaya transaction reference',
     card_transaction_ref VARCHAR(100) NULL COMMENT 'Card payment reference',
@@ -457,7 +457,7 @@ CREATE TABLE order_item (
 CREATE TABLE order_timeline (
     timeline_id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NOT NULL,
-    status ENUM('PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'COMPLETED', 'CANCELLED') NOT NULL,
+    status ENUM('pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled') NOT NULL,
     changed_by INT NULL COMMENT 'Cashier or admin who made the change',
     change_reason VARCHAR(255),
     notes TEXT,
@@ -476,10 +476,10 @@ CREATE TABLE order_timeline (
 CREATE TABLE payment_transaction (
     transaction_id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NOT NULL,
-    payment_method ENUM('CASH', 'GCASH', 'PAYMAYA', 'CARD', 'BANK_TRANSFER') NOT NULL,
+    payment_method ENUM('cash', 'gcash', 'paymaya', 'card', 'bank_transfer') NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
     reference_number VARCHAR(100) COMMENT 'External payment reference',
-    payment_status ENUM('PENDING', 'VERIFIED', 'FAILED', 'REFUNDED') NOT NULL DEFAULT 'PENDING',
+    payment_status ENUM('pending', 'verified', 'failed', 'refunded') NOT NULL DEFAULT 'pending',
     verified_by INT NULL COMMENT 'Cashier who verified payment',
     verified_at TIMESTAMP NULL,
     payment_notes TEXT,
@@ -501,14 +501,14 @@ CREATE TABLE refund_request (
     refund_id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NOT NULL,
     order_item_id INT NULL COMMENT 'Specific item being refunded, NULL for full order refund',
-    refund_type ENUM('FULL', 'PARTIAL', 'ITEM') NOT NULL,
+    refund_type ENUM('full', 'partial', 'item') NOT NULL,
     refund_amount DECIMAL(10,2) NOT NULL,
-    refund_reason ENUM('CUSTOMER_REQUEST', 'WRONG_ITEM', 'QUALITY_ISSUE', 'DELAY', 'CANCELLATION', 'OTHER') NOT NULL,
+    refund_reason ENUM('customer_request', 'wrong_item', 'quality_issue', 'delay', 'cancellation', 'other') NOT NULL,
     reason_details TEXT,
-    refund_method ENUM('CASH', 'GCASH', 'PAYMAYA', 'CARD', 'BANK_TRANSFER', 'STORE_CREDIT') NOT NULL,
+    refund_method ENUM('cash', 'gcash', 'paymaya', 'card', 'bank_transfer', 'store_credit') NOT NULL,
     requested_by INT NOT NULL COMMENT 'Cashier who initiated refund',
     approved_by INT NULL COMMENT 'Admin who approved refund',
-    refund_status ENUM('PENDING', 'APPROVED', 'REJECTED', 'COMPLETED') NOT NULL DEFAULT 'PENDING',
+    refund_status ENUM('pending', 'approved', 'rejected', 'completed') NOT NULL DEFAULT 'pending',
     processed_at TIMESTAMP NULL,
     reference_number VARCHAR(100) COMMENT 'Refund transaction reference',
     notes TEXT,
@@ -537,7 +537,7 @@ CREATE TABLE customer_feedback (
     food_rating INT NULL COMMENT 'Food quality rating 1-5',
     cleanliness_rating INT NULL COMMENT 'Cleanliness rating 1-5',
     feedback_text TEXT,
-    feedback_type ENUM('POSITIVE', 'NEUTRAL', 'NEGATIVE') NOT NULL,
+    feedback_type ENUM('positive', 'neutral', 'negative') NOT NULL,
     is_anonymous BOOLEAN DEFAULT FALSE,
     responded_by INT NULL COMMENT 'Admin who responded',
     response_text TEXT,
@@ -572,7 +572,7 @@ CREATE TABLE stock_adjustment_reason (
 CREATE TABLE inventory_transaction (
     transaction_id INT AUTO_INCREMENT PRIMARY KEY,
     menu_item_id INT NOT NULL,
-    transaction_type ENUM('IN', 'OUT', 'ADJUSTMENT', 'RETURN', 'WASTE', 'TRANSFER') NOT NULL,
+    transaction_type ENUM('in', 'out', 'adjustment', 'return', 'waste', 'transfer') NOT NULL,
     quantity INT NOT NULL,
     previous_quantity INT NOT NULL,
     new_quantity INT NOT NULL,
@@ -592,7 +592,7 @@ CREATE TABLE inventory_transaction (
 CREATE TABLE inventory_alert (
     alert_id INT AUTO_INCREMENT PRIMARY KEY,
     menu_item_id INT NOT NULL,
-    alert_type ENUM('LOW_STOCK', 'OUT_OF_STOCK', 'EXPIRING_SOON', 'OVERSTOCKED') NOT NULL,
+    alert_type ENUM('low_stock', 'out_of_stock', 'expiring_soon', 'overstocked') NOT NULL,
     alert_message VARCHAR(255),
     threshold_value INT,
     current_value INT,
@@ -615,7 +615,7 @@ CREATE TABLE waste_tracking (
     waste_id INT AUTO_INCREMENT PRIMARY KEY,
     menu_item_id INT NOT NULL,
     quantity_wasted INT NOT NULL,
-    waste_reason ENUM('EXPIRED', 'DAMAGED', 'OVERPRODUCTION', 'QUALITY_ISSUE', 'CUSTOMER_RETURN', 'OTHER') NOT NULL,
+    waste_reason ENUM('expired', 'damaged', 'overproduction', 'quality_issue', 'customer_return', 'other') NOT NULL,
     waste_cost DECIMAL(10,2) NOT NULL COMMENT 'Cost value of wasted items',
     reason_details TEXT,
     reported_by INT NOT NULL,
@@ -653,7 +653,7 @@ CREATE TABLE popularity_history (
     menu_item_id INT NOT NULL,
     old_popularity_score DECIMAL(8,2),
     new_popularity_score DECIMAL(8,2),
-    change_reason ENUM('ORDER_PLACED', 'DAILY_DECAY', 'SYSTEM_RECALCULATION', 'MANUAL_ADJUSTMENT') NOT NULL,
+    change_reason ENUM('order_placed', 'daily_decay', 'system_recalculation', 'manual_adjustment') NOT NULL,
     change_details VARCHAR(255),
     changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (menu_item_id) REFERENCES menu_item(menu_item_id) ON DELETE CASCADE,
@@ -669,7 +669,7 @@ CREATE TABLE kiosk_settings (
     setting_id INT AUTO_INCREMENT PRIMARY KEY,
     setting_key VARCHAR(100) NOT NULL UNIQUE,
     setting_value TEXT NOT NULL,
-    setting_type ENUM('STRING', 'NUMBER', 'BOOLEAN', 'JSON') NOT NULL DEFAULT 'STRING',
+    setting_type ENUM('string', 'number', 'boolean', 'json') NOT NULL DEFAULT 'string',
     description VARCHAR(255),
     updated_by INT NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -750,7 +750,7 @@ BEGIN
                 current_value
             ) VALUES (
                 NEW.menu_item_id,
-                IF((SELECT stock_quantity FROM menu_item WHERE menu_item_id = NEW.menu_item_id) = 0, 'OUT_OF_STOCK', 'LOW_STOCK'),
+                IF((SELECT stock_quantity FROM menu_item WHERE menu_item_id = NEW.menu_item_id) = 0, 'out_of_stock', 'low_stock'),
                 CONCAT('Item is running low on stock'),
                 (SELECT min_stock_level FROM menu_item WHERE menu_item_id = NEW.menu_item_id),
                 (SELECT stock_quantity FROM menu_item WHERE menu_item_id = NEW.menu_item_id)
@@ -790,7 +790,7 @@ BEGIN
     END IF;
     
     -- Update customer stats when order completed
-    IF NEW.order_status = 'COMPLETED' AND OLD.order_status != 'COMPLETED' AND NEW.customer_id IS NOT NULL THEN
+    IF NEW.order_status = 'completed' AND OLD.order_status != 'completed' AND NEW.customer_id IS NOT NULL THEN
         UPDATE customer 
         SET total_orders = total_orders + 1,
             total_spent = total_spent + NEW.final_amount,
@@ -799,24 +799,24 @@ BEGIN
     END IF;
     
     -- Update capacity when custom cake order confirmed
-    IF NEW.order_status = 'CONFIRMED' AND NEW.order_type = 'CUSTOM_ORDER' AND NEW.scheduled_pickup_datetime IS NOT NULL THEN
+    IF NEW.order_status = 'confirmed' AND NEW.order_type = 'custom_order' AND NEW.scheduled_pickup_datetime IS NOT NULL THEN
         UPDATE custom_cake_daily_capacity
-        SET current_simple_count = current_simple_count + 
-            (SELECT COUNT(*) FROM order_item oi 
+        SET current_simple_count = current_simple_count +
+            (SELECT COUNT(*) FROM order_item oi
              JOIN custom_cake_design ccd ON oi.custom_cake_design_id = ccd.design_id
-             WHERE oi.order_id = NEW.order_id AND ccd.design_complexity = 'SIMPLE'),
-            current_moderate_count = current_moderate_count + 
-            (SELECT COUNT(*) FROM order_item oi 
+             WHERE oi.order_id = NEW.order_id AND ccd.design_complexity = 'simple'),
+            current_moderate_count = current_moderate_count +
+            (SELECT COUNT(*) FROM order_item oi
              JOIN custom_cake_design ccd ON oi.custom_cake_design_id = ccd.design_id
-             WHERE oi.order_id = NEW.order_id AND ccd.design_complexity = 'MODERATE'),
-            current_complex_count = current_complex_count + 
-            (SELECT COUNT(*) FROM order_item oi 
+             WHERE oi.order_id = NEW.order_id AND ccd.design_complexity = 'moderate'),
+            current_complex_count = current_complex_count +
+            (SELECT COUNT(*) FROM order_item oi
              JOIN custom_cake_design ccd ON oi.custom_cake_design_id = ccd.design_id
-             WHERE oi.order_id = NEW.order_id AND ccd.design_complexity = 'COMPLEX'),
-            current_intricate_count = current_intricate_count + 
-            (SELECT COUNT(*) FROM order_item oi 
+             WHERE oi.order_id = NEW.order_id AND ccd.design_complexity = 'complex'),
+            current_intricate_count = current_intricate_count +
+            (SELECT COUNT(*) FROM order_item oi
              JOIN custom_cake_design ccd ON oi.custom_cake_design_id = ccd.design_id
-             WHERE oi.order_id = NEW.order_id AND ccd.design_complexity = 'INTRICATE')
+             WHERE oi.order_id = NEW.order_id AND ccd.design_complexity = 'intricate')
         WHERE capacity_date = DATE(NEW.scheduled_pickup_datetime);
     END IF;
 END;
@@ -828,7 +828,7 @@ AFTER INSERT ON inventory_transaction
 FOR EACH ROW
 BEGIN
     -- Check if adjustment brings stock below minimum
-    IF NEW.transaction_type IN ('OUT', 'ADJUSTMENT', 'WASTE') THEN
+    IF NEW.transaction_type IN ('out', 'adjustment', 'waste') THEN
         IF NEW.new_quantity <= (SELECT min_stock_level FROM menu_item WHERE menu_item_id = NEW.menu_item_id) THEN
             INSERT INTO inventory_alert (
                 menu_item_id, 
@@ -838,7 +838,7 @@ BEGIN
                 current_value
             ) VALUES (
                 NEW.menu_item_id,
-                IF(NEW.new_quantity = 0, 'OUT_OF_STOCK', 'LOW_STOCK'),
+                IF(NEW.new_quantity = 0, 'out_of_stock', 'low_stock'),
                 CONCAT('Stock adjustment resulted in low inventory'),
                 (SELECT min_stock_level FROM menu_item WHERE menu_item_id = NEW.menu_item_id),
                 NEW.new_quantity
@@ -873,20 +873,20 @@ BEGIN
     LIMIT 1;
     
     IF v_order_id IS NOT NULL THEN
-        IF v_order_status = 'PENDING' THEN
-            UPDATE customer_order 
-            SET order_status = 'CONFIRMED',
+        IF v_order_status = 'pending' THEN
+            UPDATE customer_order
+            SET order_status = 'confirmed',
                 cashier_id = p_cashier_id,
                 updated_at = NOW()
             WHERE order_id = v_order_id;
-            
-            SELECT 'SUCCESS' as result, v_order_id as order_id, 'Order confirmed' as message;
+
+            SELECT 'success' as result, v_order_id as order_id, 'Order confirmed' as message;
         ELSE
-            SELECT 'INFO' as result, v_order_id as order_id, 
+            SELECT 'info' as result, v_order_id as order_id,
                    CONCAT('Order already ', v_order_status) as message;
         END IF;
     ELSE
-        SELECT 'ERROR' as result, NULL as order_id, 'Invalid verification code' as message;
+        SELECT 'error' as result, NULL as order_id, 'Invalid verification code' as message;
     END IF;
 END;
 //
@@ -901,41 +901,41 @@ BEGIN
     DECLARE v_exists INT;
     
     -- Check if reference already used
-    SELECT COUNT(*) INTO v_exists 
-    FROM customer_order 
-    WHERE gcash_reference_number = p_gcash_reference 
+    SELECT COUNT(*) INTO v_exists
+    FROM customer_order
+    WHERE gcash_reference_number = p_gcash_reference
     AND order_id != p_order_id
-    AND payment_status = 'PAID';
-    
+    AND payment_status = 'paid';
+
     IF v_exists > 0 THEN
-        SELECT 'ERROR' as result, 'Reference number already used' as message;
+        SELECT 'error' as result, 'Reference number already used' as message;
     ELSE
-        UPDATE customer_order 
-        SET payment_status = 'PAID',
+        UPDATE customer_order
+        SET payment_status = 'paid',
             gcash_reference_number = p_gcash_reference,
             payment_verified_by = p_cashier_id,
             payment_verified_at = NOW()
         WHERE order_id = p_order_id;
-        
+
         INSERT INTO payment_transaction (
-            order_id, 
-            payment_method, 
-            amount, 
+            order_id,
+            payment_method,
+            amount,
             reference_number,
             payment_status,
             verified_by,
             verified_at
-        ) SELECT 
+        ) SELECT
             order_id,
-            'GCASH',
+            'gcash',
             final_amount,
             p_gcash_reference,
-            'VERIFIED',
+            'verified',
             p_cashier_id,
             NOW()
         FROM customer_order WHERE order_id = p_order_id;
-        
-        SELECT 'SUCCESS' as result, 'Payment verified successfully' as message;
+
+        SELECT 'success' as result, 'Payment verified successfully' as message;
     END IF;
 END;
 //
@@ -943,7 +943,7 @@ END;
 -- Check custom cake capacity
 CREATE PROCEDURE CheckCustomCakeCapacity(
     IN p_pickup_date DATE,
-    IN p_complexity ENUM('SIMPLE', 'MODERATE', 'COMPLEX', 'INTRICATE')
+    IN p_complexity ENUM('simple', 'moderate', 'complex', 'intricate')
 )
 BEGIN
     DECLARE v_available_slots INT DEFAULT 0;
@@ -956,26 +956,26 @@ BEGIN
     ON DUPLICATE KEY UPDATE capacity_date = capacity_date;
     
     -- Get capacity info
-    SELECT 
+    SELECT
         CASE p_complexity
-            WHEN 'SIMPLE' THEN max_simple_cakes - current_simple_count
-            WHEN 'MODERATE' THEN max_moderate_cakes - current_moderate_count
-            WHEN 'COMPLEX' THEN max_complex_cakes - current_complex_count
-            WHEN 'INTRICATE' THEN max_intricate_cakes - current_intricate_count
+            WHEN 'simple' THEN max_simple_cakes - current_simple_count
+            WHEN 'moderate' THEN max_moderate_cakes - current_moderate_count
+            WHEN 'complex' THEN max_complex_cakes - current_complex_count
+            WHEN 'intricate' THEN max_intricate_cakes - current_intricate_count
         END as available_slots,
         is_available
     INTO v_available_slots, @is_day_available
-    FROM custom_cake_daily_capacity 
+    FROM custom_cake_daily_capacity
     WHERE capacity_date = p_pickup_date;
-    
+
     IF @is_day_available = TRUE AND v_available_slots > 0 THEN
-        SELECT 'AVAILABLE' as status, v_available_slots as slots_available, 
+        SELECT 'available' as status, v_available_slots as slots_available,
                CONCAT(v_available_slots, ' slots available for ', p_complexity, ' cakes') as message;
     ELSEIF @is_day_available = FALSE THEN
-        SELECT 'UNAVAILABLE' as status, 0 as slots_available, 
+        SELECT 'unavailable' as status, 0 as slots_available,
                'Shop not accepting custom orders on this date' as message;
     ELSE
-        SELECT 'FULL' as status, 0 as slots_available, 
+        SELECT 'full' as status, 0 as slots_available,
                CONCAT('No slots available for ', p_complexity, ' cakes on this date') as message;
     END IF;
 END;
@@ -996,10 +996,10 @@ BEGIN
         pr.discount_amount,
         pr.min_purchase_amount,
         pr.is_stackable,
-        CASE 
-            WHEN pr.promotion_type = 'PERCENTAGE' THEN 
+        CASE
+            WHEN pr.promotion_type = 'percentage' THEN
                 ROUND(p_order_total * pr.discount_percentage / 100, 2)
-            WHEN pr.promotion_type = 'FIXED_AMOUNT' THEN 
+            WHEN pr.promotion_type = 'fixed_amount' THEN
                 pr.discount_amount
             ELSE 0.00
         END as calculated_discount
@@ -1065,16 +1065,16 @@ BEGIN
         WHERE menu_item_id = item_id;
         
         INSERT INTO popularity_history (
-            menu_item_id, 
-            old_popularity_score, 
-            new_popularity_score, 
+            menu_item_id,
+            old_popularity_score,
+            new_popularity_score,
             change_reason,
             change_details
         ) VALUES (
-            item_id, 
-            old_score, 
-            new_score, 
-            'SYSTEM_RECALCULATION',
+            item_id,
+            old_score,
+            new_score,
+            'system_recalculation',
             CONCAT('Recalculated using ', calculation_days, ' days of data')
         );
         
@@ -1100,18 +1100,18 @@ BEGIN
     SET items_updated = ROW_COUNT();
     
     INSERT INTO popularity_history (
-        menu_item_id, 
-        old_popularity_score, 
-        new_popularity_score, 
+        menu_item_id,
+        old_popularity_score,
+        new_popularity_score,
         change_reason
     )
-    SELECT 
+    SELECT
         menu_item_id,
         popularity_score / 0.995 as old_score,
         popularity_score as new_score,
-        'DAILY_DECAY'
+        'daily_decay'
     FROM menu_item
-    WHERE last_ordered_date != CURDATE() 
+    WHERE last_ordered_date != CURDATE()
         AND popularity_score > 0
         AND is_deleted = FALSE;
     
@@ -1140,9 +1140,9 @@ BEGIN
         COALESCE(recent.total_quantity, 0) as recent_quantity,
         COALESCE(recent.total_revenue, 0) as recent_revenue,
         COALESCE(previous.total_orders, 0) as previous_orders,
-        CASE 
-            WHEN previous.total_orders = 0 AND recent.total_orders > 0 THEN 'NEW_TRENDING'
-            WHEN previous.total_orders > 0 THEN 
+        CASE
+            WHEN previous.total_orders = 0 AND recent.total_orders > 0 THEN 'new_trending'
+            WHEN previous.total_orders > 0 THEN
                 CONCAT(ROUND(((recent.total_orders - previous.total_orders) / previous.total_orders * 100), 1), '%')
             ELSE '0%'
         END as growth_rate
@@ -1230,12 +1230,12 @@ BEGIN
     
     SELECT stock_quantity, status, is_infinite_stock
     INTO current_stock, item_status, is_infinite
-    FROM menu_item 
+    FROM menu_item
     WHERE menu_item_id = item_id AND is_deleted = FALSE;
-    
-    IF is_infinite = TRUE AND item_status = 'AVAILABLE' THEN
+
+    IF is_infinite = TRUE AND item_status = 'available' THEN
         RETURN TRUE;
-    ELSEIF is_infinite = FALSE AND item_status = 'AVAILABLE' AND current_stock >= required_quantity THEN
+    ELSEIF is_infinite = FALSE AND item_status = 'available' AND current_stock >= required_quantity THEN
         RETURN TRUE;
     ELSE
         RETURN FALSE;
@@ -1273,7 +1273,7 @@ DETERMINISTIC
 BEGIN
     DECLARE recent_avg DECIMAL(8,2) DEFAULT 0;
     DECLARE previous_avg DECIMAL(8,2) DEFAULT 0;
-    DECLARE trend_result VARCHAR(20) DEFAULT 'STABLE';
+    DECLARE trend_result VARCHAR(20) DEFAULT 'stable';
     DECLARE period_to_use INT DEFAULT 7;
     
     IF days_period IS NULL OR days_period <= 0 THEN
@@ -1295,18 +1295,18 @@ BEGIN
         AND stats_date < DATE_SUB(CURDATE(), INTERVAL period_to_use DAY);
     
     IF previous_avg = 0 AND recent_avg > 0 THEN
-        SET trend_result = 'NEW_TRENDING';
+        SET trend_result = 'new_trending';
     ELSEIF previous_avg > 0 THEN
         IF recent_avg >= previous_avg * 1.5 THEN
-            SET trend_result = 'HOT_TRENDING';
+            SET trend_result = 'hot_trending';
         ELSEIF recent_avg >= previous_avg * 1.2 THEN
-            SET trend_result = 'TRENDING_UP';
+            SET trend_result = 'trending_up';
         ELSEIF recent_avg <= previous_avg * 0.5 THEN
-            SET trend_result = 'DECLINING';
+            SET trend_result = 'declining';
         ELSEIF recent_avg <= previous_avg * 0.8 THEN
-            SET trend_result = 'TRENDING_DOWN';
+            SET trend_result = 'trending_down';
         ELSE
-            SET trend_result = 'STABLE';
+            SET trend_result = 'stable';
         END IF;
     END IF;
     
@@ -1322,10 +1322,10 @@ DELIMITER ;
 
 -- Insert default roles
 INSERT INTO roles (role_name, description) VALUES
-('SUPER_ADMIN', 'Full system access'),
-('ADMIN', 'Administrative access'),
-('MANAGER', 'Store management access'),
-('VIEWER', 'Read-only access');
+('super_admin', 'Full system access'),
+('admin', 'Administrative access'),
+('manager', 'Store management access'),
+('viewer', 'Read-only access');
 
 -- Insert default admin user (CHANGE PASSWORD AFTER FIRST LOGIN!)
 INSERT INTO admin (username, password_hash, name, email, role_id, is_active) VALUES
@@ -1341,35 +1341,35 @@ INSERT INTO cashier (name, cashier_code, pin_hash, phone, email, is_active) VALU
 
 -- Insert default stock adjustment reasons
 INSERT INTO stock_adjustment_reason (reason_code, reason_description) VALUES
-('RESTOCK', 'Inventory restocking from supplier'),
-('CORRECTION', 'Stock count correction'),
-('DAMAGE', 'Damaged or defective items'),
-('EXPIRED', 'Expired items removed'),
-('RETURN', 'Customer return'),
-('PROMOTION', 'Promotional giveaway'),
-('THEFT', 'Theft or loss'),
-('TRANSFER', 'Transfer between locations'),
-('WASTE', 'Waste or spoilage'),
-('SAMPLE', 'Product sampling');
+('restock', 'Inventory restocking from supplier'),
+('correction', 'Stock count correction'),
+('damage', 'Damaged or defective items'),
+('expired', 'Expired items removed'),
+('return', 'Customer return'),
+('promotion', 'Promotional giveaway'),
+('theft', 'Theft or loss'),
+('transfer', 'Transfer between locations'),
+('waste', 'Waste or spoilage'),
+('sample', 'Product sampling');
 
 -- Insert default kiosk settings
 INSERT INTO kiosk_settings (setting_key, setting_value, setting_type, description, updated_by) VALUES
-('kiosk_timeout_seconds', '120', 'NUMBER', 'Seconds before kiosk session times out', 1),
-('enable_loyalty_program', 'true', 'BOOLEAN', 'Enable loyalty points system', 1),
-('loyalty_points_per_peso', '0.1', 'NUMBER', 'Loyalty points earned per peso spent', 1),
-('min_preorder_hours', '24', 'NUMBER', 'Minimum hours before pickup for pre-orders', 1),
-('min_custom_cake_days', '3', 'NUMBER', 'Minimum days before pickup for custom cakes', 1),
-('gcash_payment_enabled', 'true', 'BOOLEAN', 'Enable GCash payment option', 1),
-('paymaya_payment_enabled', 'true', 'BOOLEAN', 'Enable PayMaya payment option', 1),
-('cash_payment_enabled', 'true', 'BOOLEAN', 'Enable cash payment option', 1),
-('show_allergen_info', 'true', 'BOOLEAN', 'Display allergen information on kiosk', 1),
-('enable_customer_feedback', 'true', 'BOOLEAN', 'Enable feedback collection', 1),
-('default_tax_rate', '12.00', 'NUMBER', 'Default tax rate percentage', 1),
-('order_number_prefix', 'GM', 'STRING', 'Prefix for order numbers', 1);
+('kiosk_timeout_seconds', '120', 'number', 'Seconds before kiosk session times out', 1),
+('enable_loyalty_program', 'true', 'boolean', 'Enable loyalty points system', 1),
+('loyalty_points_per_peso', '0.1', 'number', 'Loyalty points earned per peso spent', 1),
+('min_preorder_hours', '24', 'number', 'Minimum hours before pickup for pre-orders', 1),
+('min_custom_cake_days', '3', 'number', 'Minimum days before pickup for custom cakes', 1),
+('gcash_payment_enabled', 'true', 'boolean', 'Enable GCash payment option', 1),
+('paymaya_payment_enabled', 'true', 'boolean', 'Enable PayMaya payment option', 1),
+('cash_payment_enabled', 'true', 'boolean', 'Enable cash payment option', 1),
+('show_allergen_info', 'true', 'boolean', 'Display allergen information on kiosk', 1),
+('enable_customer_feedback', 'true', 'boolean', 'Enable feedback collection', 1),
+('default_tax_rate', '12.00', 'number', 'Default tax rate percentage', 1),
+('order_number_prefix', 'GM', 'string', 'Prefix for order numbers', 1);
 
 -- Insert default tax rule
 INSERT INTO tax_rules (tax_name, tax_type, tax_rate, is_inclusive, is_active, effective_date, created_by) VALUES
-('VAT', 'PERCENTAGE', 12.00, FALSE, TRUE, '2024-01-01', 1);
+('VAT', 'percentage', 12.00, FALSE, TRUE, '2024-01-01', 1);
 
 SELECT '============================================================================' as '';
 SELECT 'GOLDEN MUNCH POS ENHANCED SCHEMA CREATED SUCCESSFULLY!' as status;
