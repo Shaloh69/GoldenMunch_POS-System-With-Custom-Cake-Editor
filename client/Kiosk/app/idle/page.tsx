@@ -816,19 +816,24 @@ export default function IdlePage() {
           console.log('\n⏸️  SKIPPING PATH RECALCULATION');
         }
 
-        // Follow the calculated path
+        // Follow the calculated path (use newly calculated path if available)
         console.log('\n🚶 PATH FOLLOWING:');
-        if (currentPath.length > 0) {
-          const nextWaypoint = currentPath[0];
+        const pathToFollow = newPathToSet !== null ? newPathToSet : currentPath;
+        console.log('  Using path:', newPathToSet !== null ? 'NEWLY CALCULATED' : 'EXISTING');
+        console.log('  Path length:', pathToFollow.length);
+
+        if (pathToFollow.length > 0) {
+          const nextWaypoint = pathToFollow[0];
           const dx = nextWaypoint.x - prev.x;
           const dy = nextWaypoint.y - prev.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
           console.log('  Next Waypoint:', { x: nextWaypoint.x.toFixed(1), y: nextWaypoint.y.toFixed(1) });
           console.log('  Distance to Waypoint:', dist.toFixed(2));
-          console.log('  Waypoints Remaining:', currentPath.length);
+          console.log('  Waypoints Remaining:', pathToFollow.length);
 
-          if (dist < 3) {
+          if (dist < 3 && newPathToSet === null) {
+            // Only advance path if we're using existing path (don't double-slice)
             newPathToSet = currentPath.slice(1);
             console.log('  ✅ REACHED WAYPOINT - Advancing to next');
           } else {
@@ -855,16 +860,18 @@ export default function IdlePage() {
           console.log('  ➡️  NO PATH - Continuing current direction:', { x: currentDirection.x.toFixed(2), y: currentDirection.y.toFixed(2) });
         }
 
-        // Apply movement
+        // Apply movement (use newly calculated direction if available)
+        const directionToUse = newDirectionToSet !== null ? newDirectionToSet : currentDirection;
         const speed = currentPowerMode ? 1.8 : 1.4;
-        const testX = prev.x + currentDirection.x * speed;
-        const testY = prev.y + currentDirection.y * speed;
+        const testX = prev.x + directionToUse.x * speed;
+        const testY = prev.y + directionToUse.y * speed;
 
         const wouldHitObstacle = isInsideObstacle(testX, testY, 1);
 
         console.log('\n🏃 MOVEMENT APPLICATION:');
         console.log('  Current Position:', { x: prev.x.toFixed(2), y: prev.y.toFixed(2) });
-        console.log('  Direction:', { x: currentDirection.x.toFixed(2), y: currentDirection.y.toFixed(2) });
+        console.log('  Using direction:', newDirectionToSet !== null ? 'NEWLY CALCULATED' : 'EXISTING');
+        console.log('  Direction:', { x: directionToUse.x.toFixed(2), y: directionToUse.y.toFixed(2) });
         console.log('  Speed:', speed);
         console.log('  Test Position:', { x: testX.toFixed(2), y: testY.toFixed(2) });
         console.log('  Would Hit Obstacle:', wouldHitObstacle);
