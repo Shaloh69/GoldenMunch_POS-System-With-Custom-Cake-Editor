@@ -94,6 +94,7 @@ export default function IdlePage() {
   const obstacleIdRef = useRef(0);
   const lastPacmanPos = useRef<Position>({ x: 50, y: 50 });
   const pathfindingCache = useRef<Map<string, Position[]>>(new Map());
+  const powerModeRef = useRef(false);
   const cakeEmojis = ['🎂', '🧁', '🍰', '🍪', '🍩', '🥧'];
   const specialCakeEmoji = '⭐';
   const ghostColors = ['#FF69B4', '#00CED1', '#FF6347', '#98FB98'];
@@ -288,6 +289,11 @@ export default function IdlePage() {
     return () => clearInterval(interval);
   }, []);
 
+  // Clear pathfinding cache when obstacles change
+  useEffect(() => {
+    pathfindingCache.current.clear();
+  }, [obstacles]);
+
   const findValidPosition = useCallback((): Position => {
     let attempts = 0;
     while (attempts < 50) {
@@ -306,7 +312,7 @@ export default function IdlePage() {
     return { x: 50, y: 50 };
   }, [isInsideObstacle]);
 
-  // Initialize
+  // Initialize - Only runs once on mount
   useEffect(() => {
     // Generate random obstacles first
     const initialObstacles: Obstacle[] = [];
@@ -374,9 +380,37 @@ export default function IdlePage() {
 
     setObstacles(initialObstacles);
 
+    // Helper function for this initialization only
+    const getValidPos = (): Position => {
+      let attempts = 0;
+      while (attempts < 50) {
+        const pos = {
+          x: Math.random() * 80 + 10,
+          y: Math.random() * 80 + 10
+        };
+
+        // Check if position is not inside any obstacle
+        const isInside = initialObstacles.some(obstacle => {
+          const obstacleLeft = obstacle.x - 3;
+          const obstacleRight = obstacle.x + obstacle.width + 3;
+          const obstacleTop = obstacle.y - 3;
+          const obstacleBottom = obstacle.y + obstacle.height + 3;
+
+          return pos.x >= obstacleLeft && pos.x <= obstacleRight &&
+                 pos.y >= obstacleTop && pos.y <= obstacleBottom;
+        });
+
+        if (!isInside) {
+          return pos;
+        }
+        attempts++;
+      }
+      return { x: 50, y: 50 };
+    };
+
     const initialCakes: Cake[] = [];
     for (let i = 0; i < 12; i++) {
-      const pos = findValidPosition();
+      const pos = getValidPos();
       initialCakes.push({
         id: cakeIdRef.current++,
         x: pos.x,
@@ -417,7 +451,7 @@ export default function IdlePage() {
     if (savedHighScore) {
       setHighScore(parseInt(savedHighScore));
     }
-  }, [findValidPosition]);
+  }, []); // Empty deps - only run once on mount
 
   // Mouth animation
   useEffect(() => {
@@ -426,6 +460,11 @@ export default function IdlePage() {
     }, isEating ? 100 : 200);
     return () => clearInterval(interval);
   }, [isEating]);
+
+  // Sync powerMode with ref
+  useEffect(() => {
+    powerModeRef.current = powerMode;
+  }, [powerMode]);
 
   // Power mode countdown
   useEffect(() => {
@@ -459,7 +498,7 @@ export default function IdlePage() {
 
     const interval = setInterval(spawnCake, 1500);
     return () => clearInterval(interval);
-  }, [cakes.length]);
+  }, [cakes.length, findValidPosition]);
 
   // Advanced Ghost AI with different personalities
   useEffect(() => {
@@ -611,129 +650,155 @@ export default function IdlePage() {
   // Improved Pacman AI with A* pathfinding
   useEffect(() => {
     const movePacman = () => {
-      setPacmanPosition(prev => {
-        let newX = prev.x;
-        let newY = prev.y;
+      // Track updates to apply after position change
+      let shouldIncrementStuck = false;
+      let shouldResetStuck = false;
+      let newPathToSet: Position[] | null = null;
+      let newDirectionToSet: Position | null = null;
+      let shouldClearPath = false;
 
-        // Stuck detection
-        if (Math.abs(prev.x - lastPacmanPos.current.x) < 0.1 &&
-            Math.abs(prev.y - lastPacmanPos.current.y) < 0.1) {
-          setPacmanStuckCounter(c => c + 1);
-        } else {
-          setPacmanStuckCounter(0);
-        }
+      const newPosition = (() => {
+        setPacmanPosition(prev => {
+          let newX = prev.x;
+          let newY = prev.y;
 
-        lastPacmanPos.current = { x: prev.x, y: prev.y };
+          // Stuck detection
+          if (Math.abs(prev.x - lastPacmanPos.current.x) < 0.1 &&
+              Math.abs(prev.y - lastPacmanPos.current.y) < 0.1) {
+            shouldIncrementStuck = true;
+          } else {
+            shouldResetStuck = true;
+          }
 
-        // Build target list with priorities
-        const targets: any[] = cakes.map(c => ({
-          ...c,
-          type: 'cake',
-          priority: c.isSpecial ? 3 : 1
-        }));
+          lastPacmanPos.current = { x: prev.x, y: prev.y };
 
-        if (powerMode) {
-          ghosts.filter(g => g.scared).forEach(g => {
-            targets.push({
-              x: g.x,
-              y: g.y,
-              isGhost: true,
-              type: 'ghost',
-              priority: 2
+          // Build target list with priorities
+          const targets: any[] = cakes.map(c => ({
+            ...c,
+            type: 'cake',
+            priority: c.isSpecial ? 3 : 1
+          }));
+
+          if (powerMode) {
+            ghosts.filter(g => g.scared).forEach(g => {
+              targets.push({
+                x: g.x,
+                y: g.y,
+                isGhost: true,
+                type: 'ghost',
+                priority: 2
+              });
             });
-          });
-        }
+          }
 
-        // Find dangerous ghosts to avoid
-        const dangerGhosts = ghosts.filter(g => !g.scared);
-        const avoidPoints: Position[] = dangerGhosts
-          .filter(g => {
-            const dist = Math.sqrt(Math.pow(g.x - prev.x, 2) + Math.pow(g.y - prev.y, 2));
-            return dist < 30;
-          })
-          .map(g => ({ x: g.x, y: g.y }));
+          // Find dangerous ghosts to avoid
+          const dangerGhosts = ghosts.filter(g => !g.scared);
+          const avoidPoints: Position[] = dangerGhosts
+            .filter(g => {
+              const dist = Math.sqrt(Math.pow(g.x - prev.x, 2) + Math.pow(g.y - prev.y, 2));
+              return dist < 30;
+            })
+            .map(g => ({ x: g.x, y: g.y }));
 
-        // Recalculate path if needed
-        if (pacmanPath.length === 0 || pacmanStuckCounter > 15 || Math.random() < 0.1) {
-          if (targets.length > 0) {
-            // Find best target considering priority and distance
-            const bestTarget = targets.reduce((best, target) => {
-              const distance = Math.sqrt(
-                Math.pow(target.x - prev.x, 2) + Math.pow(target.y - prev.y, 2)
-              );
-              const score = distance / target.priority;
-              return score < best.score ? { target, score } : best;
-            }, { target: null, score: Infinity });
+          // Recalculate path if needed
+          if (pacmanPath.length === 0 || pacmanStuckCounter > 15 || Math.random() < 0.1) {
+            if (targets.length > 0) {
+              // Find best target considering priority and distance
+              const bestTarget = targets.reduce((best, target) => {
+                const distance = Math.sqrt(
+                  Math.pow(target.x - prev.x, 2) + Math.pow(target.y - prev.y, 2)
+                );
+                const score = distance / target.priority;
+                return score < best.score ? { target, score } : best;
+              }, { target: null, score: Infinity });
 
-            if (bestTarget.target && bestTarget.score < 100) {
-              const newPath = findPath(
-                prev,
-                { x: bestTarget.target.x, y: bestTarget.target.y },
-                avoidPoints
-              );
-              setPacmanPath(newPath.slice(1)); // Remove current position
-              setPacmanStuckCounter(0);
+              if (bestTarget.target && bestTarget.score < 100) {
+                const calculatedPath = findPath(
+                  prev,
+                  { x: bestTarget.target.x, y: bestTarget.target.y },
+                  avoidPoints
+                );
+                newPathToSet = calculatedPath.slice(1); // Remove current position
+                shouldResetStuck = true;
+              }
             }
           }
-        }
 
-        // Follow the calculated path
-        if (pacmanPath.length > 0) {
-          const nextWaypoint = pacmanPath[0];
-          const dx = nextWaypoint.x - prev.x;
-          const dy = nextWaypoint.y - prev.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
+          // Follow the calculated path
+          if (pacmanPath.length > 0) {
+            const nextWaypoint = pacmanPath[0];
+            const dx = nextWaypoint.x - prev.x;
+            const dy = nextWaypoint.y - prev.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
 
-          if (dist < 3) {
-            // Reached waypoint, remove it
-            setPacmanPath(p => p.slice(1));
+            if (dist < 3) {
+              // Reached waypoint, remove it
+              newPathToSet = pacmanPath.slice(1);
+            }
+
+            if (dist > 0) {
+              newDirectionToSet = {
+                x: dx / dist,
+                y: dy / dist
+              };
+            }
+          } else if (avoidPoints.length > 0) {
+            // Emergency avoidance if no path
+            const nearestDanger = avoidPoints[0];
+            const dx = prev.x - nearestDanger.x;
+            const dy = prev.y - nearestDanger.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > 0) {
+              newDirectionToSet = {
+                x: dx / dist,
+                y: dy / dist
+              };
+            }
           }
 
-          if (dist > 0) {
-            setPacmanDirection({
-              x: dx / dist,
-              y: dy / dist
-            });
-          }
-        } else if (avoidPoints.length > 0) {
-          // Emergency avoidance if no path
-          const nearestDanger = avoidPoints[0];
-          const dx = prev.x - nearestDanger.x;
-          const dy = prev.y - nearestDanger.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist > 0) {
-            setPacmanDirection({
-              x: dx / dist,
-              y: dy / dist
-            });
-          }
-        }
+          // Apply movement
+          const speed = powerMode ? 1.8 : 1.4;
+          const testX = prev.x + pacmanDirection.x * speed;
+          const testY = prev.y + pacmanDirection.y * speed;
 
-        // Apply movement
-        const speed = powerMode ? 1.8 : 1.4;
-        const testX = prev.x + pacmanDirection.x * speed;
-        const testY = prev.y + pacmanDirection.y * speed;
+          // Check obstacle collision
+          const wouldHitObstacle = isInsideObstacle(testX, testY, 1);
 
-        // Check obstacle collision
-        const wouldHitObstacle = isInsideObstacle(testX, testY, 1);
-
-        if (testX > 5 && testX < 95 && testY > 5 && testY < 95 && !wouldHitObstacle) {
-          newX = testX;
-          newY = testY;
-        } else if (!wouldHitObstacle) {
-          if (testX > 5 && testX < 95 && !isInsideObstacle(testX, prev.y, 1)) {
+          if (testX > 5 && testX < 95 && testY > 5 && testY < 95 && !wouldHitObstacle) {
             newX = testX;
-          }
-          if (testY > 5 && testY < 95 && !isInsideObstacle(prev.x, testY, 1)) {
             newY = testY;
+          } else if (!wouldHitObstacle) {
+            if (testX > 5 && testX < 95 && !isInsideObstacle(testX, prev.y, 1)) {
+              newX = testX;
+            }
+            if (testY > 5 && testY < 95 && !isInsideObstacle(prev.x, testY, 1)) {
+              newY = testY;
+            }
+          } else {
+            // Hit obstacle, clear path to recalculate
+            shouldClearPath = true;
           }
-        } else {
-          // Hit obstacle, clear path to recalculate
-          setPacmanPath([]);
-        }
 
-        return { x: newX, y: newY };
-      });
+          return { x: newX, y: newY };
+        });
+      })();
+
+      // Apply deferred state updates
+      if (shouldIncrementStuck) {
+        setPacmanStuckCounter(c => c + 1);
+      } else if (shouldResetStuck) {
+        setPacmanStuckCounter(0);
+      }
+
+      if (newPathToSet !== null) {
+        setPacmanPath(newPathToSet);
+      } else if (shouldClearPath) {
+        setPacmanPath([]);
+      }
+
+      if (newDirectionToSet !== null) {
+        setPacmanDirection(newDirectionToSet);
+      }
     };
 
     const interval = setInterval(movePacman, 30);
@@ -789,19 +854,25 @@ export default function IdlePage() {
             setTimeout(() => setIsEating(false), 200);
             setPacmanPath([]); // Clear path when eating ghost
 
+            // Store ghost data for respawn
+            const ghostData = {
+              color: ghost.color,
+              personality: ghost.personality
+            };
+
             setTimeout(() => {
               const pos = findValidPosition();
               setGhosts(prev => [...prev, {
                 id: ghostIdRef.current++,
                 x: pos.x,
                 y: pos.y,
-                color: ghost.color,
+                color: ghostData.color,
                 direction: { x: (Math.random() - 0.5) * 2, y: (Math.random() - 0.5) * 2 },
-                scared: powerMode,
+                scared: powerModeRef.current, // Use ref to get current value
                 mode: 'flee',
                 modeTimer: 100,
                 stuckCounter: 0,
-                personality: ghost.personality
+                personality: ghostData.personality
               }]);
             }, 4000);
 
@@ -813,7 +884,7 @@ export default function IdlePage() {
         return remainingGhosts;
       });
     }
-  }, [pacmanPosition, powerMode]);
+  }, [pacmanPosition, powerMode, findValidPosition]);
 
   // Auto-increment score
   useEffect(() => {
