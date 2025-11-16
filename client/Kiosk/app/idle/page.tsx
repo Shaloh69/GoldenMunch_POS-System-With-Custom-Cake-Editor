@@ -800,7 +800,9 @@ export default function IdlePage() {
         });
 
         // Recalculate path if needed
-        const shouldRecalculate = currentPath.length === 0 || currentStuckCounter > 15 || shouldClearPath || Math.random() < 0.1;
+        // Reduce random recalculation when fleeing to prevent jittering
+        const recalcChance = desiredBehavior === 'run' ? 0.02 : 0.1;
+        const shouldRecalculate = currentPath.length === 0 || currentStuckCounter > 15 || shouldClearPath || Math.random() < recalcChance;
 
         if (shouldRecalculate) {
           if (desiredBehavior === 'run') {
@@ -842,7 +844,9 @@ export default function IdlePage() {
                 y: Math.max(10, Math.min(90, prev.y + Math.sin(fleeAngle) * 30))
               };
 
-              const calculatedPath = findPath(prev, fleeTarget, avoidPoints);
+              // Don't use avoidPoints when fleeing - we want to path TO the flee point,
+              // not avoid ghosts (that's contradictory and causes jittering)
+              const calculatedPath = findPath(prev, fleeTarget, []);
               newPathToSet = calculatedPath.length > 1 ? calculatedPath.slice(1) : calculatedPath;
               shouldResetStuck = true;
             }
@@ -895,8 +899,10 @@ export default function IdlePage() {
           const dy = nextWaypoint.y - prev.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
-          // Only advance to next waypoint when very close (prevents cutting corners)
-          if (dist < 2) {
+          // Adjust waypoint advancement threshold based on behavior
+          // Larger threshold when fleeing to prevent getting stuck/jittering
+          const waypointThreshold = desiredBehavior === 'run' ? 3 : 2;
+          if (dist < waypointThreshold) {
             newPathToSet = currentPath.slice(1);
           }
 
