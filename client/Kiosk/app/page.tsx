@@ -1,348 +1,95 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@heroui/button';
 import { Card, CardBody, CardHeader } from '@heroui/card';
 import { Chip } from '@heroui/chip';
 import { Spinner } from '@heroui/spinner';
 import { Badge } from '@heroui/badge';
+import { useCart } from '@/contexts/CartContext';
+import { MenuService } from '@/services/menu.service';
+import type { MenuItem, Category } from '@/types/api';
+import NextLink from 'next/link';
 
-interface MenuItem {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  category: string;
-  image: string;
-  available: boolean;
-  popular: boolean;
-}
-
-interface Category {
-  id: string;
-  name: string;
-  emoji: string;
-  color: string;
-}
-
-const categories: Category[] = [
-  { id: "all", name: "All Items", emoji: "🍽️", color: "golden-orange" },
-  { id: "cakes", name: "Cakes", emoji: "🍰", color: "golden-orange" },
-  { id: "pastries", name: "Pastries", emoji: "🥐", color: "deep-amber" },
-  { id: "cookies", name: "Cookies", emoji: "🍪", color: "caramel-beige" },
-  { id: "beverages", name: "Beverages", emoji: "☕", color: "mint-green" },
-  { id: "sandwiches", name: "Sandwiches", emoji: "🥪", color: "chocolate-brown" },
-];
-
-// Mock data for when server is not available
-const mockMenuItems: MenuItem[] = [
-  {
-    id: "1",
-    name: "Classic Chocolate Cake",
-    description: "Rich, moist chocolate cake with cream frosting",
-    price: 24.99,
-    category: "cakes",
-    image: "🍰",
-    available: true,
-    popular: true,
-  },
-  {
-    id: "2",
-    name: "Fresh Croissant",
-    description: "Buttery, flaky pastry baked fresh daily",
-    price: 3.49,
-    category: "pastries",
-    image: "🥐",
-    available: true,
-    popular: false,
-  },
-  {
-    id: "3",
-    name: "Chocolate Chip Cookies",
-    description: "Warm, gooey cookies with premium chocolate chips",
-    price: 2.99,
-    category: "cookies",
-    image: "🍪",
-    available: true,
-    popular: true,
-  },
-  {
-    id: "4",
-    name: "Artisan Coffee",
-    description: "Freshly roasted coffee beans, perfectly brewed",
-    price: 4.99,
-    category: "beverages",
-    image: "☕",
-    available: true,
-    popular: false,
-  },
-  {
-    id: "5",
-    name: "Gourmet Club Sandwich",
-    description: "Triple-decker with premium meats and fresh vegetables",
-    price: 12.99,
-    category: "sandwiches",
-    image: "🥪",
-    available: false,
-    popular: false,
-  },
-  {
-    id: "6",
-    name: "Red Velvet Cupcake",
-    description: "Decadent red velvet with cream cheese frosting",
-    price: 4.99,
-    category: "cakes",
-    image: "🧁",
-    available: true,
-    popular: true,
-  },
-  {
-    id: "7",
-    name: "Apple Danish",
-    description: "Flaky pastry with sweet apple filling",
-    price: 3.99,
-    category: "pastries",
-    image: "🥧",
-    available: true,
-    popular: false,
-  },
-  {
-    id: "8",
-    name: "Iced Latte",
-    description: "Smooth espresso with cold milk and ice",
-    price: 5.49,
-    category: "beverages",
-    image: "🧊",
-    available: true,
-    popular: true,
-  },
-];
-
-export default function Home() {
-  // Optimized state management
+export default function MenuPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [filteredItems, setFilteredItems] = useState<MenuItem[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Use refs for frequently changing values to avoid re-renders
-  const cartRef = useRef<{[key: string]: number}>({});
-  const [cartUpdateTrigger, setCartUpdateTrigger] = useState(0);
-  
-  // Debounce cart updates
-  const updateCartDisplay = useCallback(() => {
-    setCartUpdateTrigger(prev => prev + 1);
-  }, []);
+  const { addItem, items: cartItems, getItemCount, getTotal } = useCart();
 
-  // Memoized filtered items - only recalculate when menuItems or selectedCategory changes
-  const filteredItems = useMemo(() => {
-    if (selectedCategory === "all") {
-      return menuItems;
-    }
-    return menuItems.filter(item => item.category === selectedCategory);
-  }, [menuItems, selectedCategory]);
-
-  // Memoized cart calculations - only recalculate when cart changes
-  const cartStats = useMemo(() => {
-    const cart = cartRef.current;
-    const totalItems = Object.values(cart).reduce((sum, count) => sum + count, 0);
-    const totalPrice = Object.entries(cart).reduce((total, [itemId, count]) => {
-      const item = menuItems.find(i => i.id === itemId);
-      return total + (item ? item.price * count : 0);
-    }, 0);
-    
-    return { totalItems, totalPrice };
-  }, [menuItems, cartUpdateTrigger]);
-
-  // Optimized API call with proper cleanup
+  // Fetch menu items and categories
   useEffect(() => {
-    let isMounted = true;
-    
-    const fetchMenuItems = async () => {
-      if (!isMounted) return;
-      
+    const fetchData = async () => {
       setLoading(true);
       setError(null);
-      
+
       try {
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        if (!isMounted) return;
-        
-        // Simulate random server availability (85% success rate)
-        if (Math.random() > 0.85) {
-          throw new Error("Server temporarily unavailable");
-        }
-        
-        setMenuItems(mockMenuItems);
-      } catch (err) {
-        if (!isMounted) return;
-        
-        console.warn("Server not available, using mock data:", err);
-        setMenuItems(mockMenuItems);
-        setError("Using offline menu (server unavailable)");
+        const [items, cats] = await Promise.all([
+          MenuService.getMenuItems(),
+          MenuService.getCategories()
+        ]);
+
+        setMenuItems(items);
+        setCategories(cats);
+        setFilteredItems(items);
+      } catch (err: any) {
+        console.error('Error fetching data:', err);
+        setError(err.message || 'Failed to load menu. Please try again.');
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
-    fetchMenuItems();
-    
-    return () => {
-      isMounted = false;
-    };
+    fetchData();
   }, []);
 
-  // Optimized cart functions with minimal re-renders
-  const addToCart = useCallback((itemId: string) => {
-    cartRef.current = {
-      ...cartRef.current,
-      [itemId]: (cartRef.current[itemId] || 0) + 1
-    };
-    updateCartDisplay();
-  }, [updateCartDisplay]);
-
-  const removeFromCart = useCallback((itemId: string) => {
-    const currentCount = cartRef.current[itemId] || 0;
-    if (currentCount > 0) {
-      cartRef.current = {
-        ...cartRef.current,
-        [itemId]: currentCount - 1
-      };
-      updateCartDisplay();
+  // Filter items by category
+  useEffect(() => {
+    if (selectedCategory === null) {
+      setFilteredItems(menuItems);
+    } else {
+      // Note: We'd need to query the category_has_menu_item table
+      // For now, filter by item_type matching category name
+      setFilteredItems(menuItems);
     }
-  }, [updateCartDisplay]);
+  }, [menuItems, selectedCategory]);
 
-  // Memoized category buttons to prevent unnecessary re-renders
-  const CategoryButtons = useMemo(() => (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-      {categories.map((category) => (
-        <Button
-          key={category.id}
-          size="lg"
-          variant={selectedCategory === category.id ? "solid" : "bordered"}
-          className={`
-            ${selectedCategory === category.id 
-              ? 'bg-golden-orange text-chocolate-brown border-golden-orange shadow-lg scale-105' 
-              : 'border-golden-orange text-chocolate-brown hover:bg-golden-orange/10 hover:scale-105'
-            }
-            font-semibold text-lg px-4 py-6 h-auto flex-col gap-2 transition-all duration-300
-          `}
-          onClick={() => setSelectedCategory(category.id)}
-        >
-          <span className="text-3xl">{category.emoji}</span>
-          <span>{category.name}</span>
-        </Button>
-      ))}
-    </div>
-  ), [selectedCategory]);
+  const handleAddToCart = (item: MenuItem) => {
+    addItem({
+      menuItem: item,
+      quantity: 1,
+    });
+  };
 
-  // Memoized menu item component to prevent unnecessary re-renders
-  const MenuItem = useCallback(({ item }: { item: MenuItem }) => {
-    const itemCount = cartRef.current[item.id] || 0;
-    
-    return (
-      <Card 
-        key={item.id}
-        className={`
-          ${item.available ? 'hover:scale-105 cursor-pointer' : 'opacity-60'}
-          transition-all duration-300 shadow-lg border-2 border-golden-orange/20
-          ${item.available ? 'hover:shadow-2xl hover:border-golden-orange' : ''}
-          bg-cream-white
-        `}
-        isPressable={item.available}
-        onClick={() => item.available && addToCart(item.id)}
-      >
-        <CardHeader className="flex flex-col items-start px-6 pt-6 pb-0">
-          <div className="flex justify-between items-start w-full">
-            <div className="text-6xl mb-2">{item.image}</div>
-            <div className="flex flex-col gap-1">
-              {item.popular && (
-                <Chip color="warning" size="sm" variant="flat">
-                  🔥 Popular
-                </Chip>
-              )}
-              {!item.available && (
-                <Chip color="danger" size="sm" variant="flat">
-                  Sold Out
-                </Chip>
-              )}
-            </div>
-          </div>
-          <h3 className="text-xl font-bold text-chocolate-brown">{item.name}</h3>
-          <p className="text-chocolate-brown/70 text-sm">{item.description}</p>
-        </CardHeader>
-        
-        <CardBody className="px-6 pt-2">
-          <div className="flex justify-between items-center mb-4">
-            <span className="text-2xl font-bold text-deep-amber">
-              ${item.price.toFixed(2)}
-            </span>
-            {itemCount > 0 && (
-              <Badge content={itemCount} color="success" size="lg">
-                <div className="w-8 h-8 rounded-full bg-golden-orange"></div>
-              </Badge>
-            )}
-          </div>
-          
-          {item.available ? (
-            <div className="flex items-center gap-2">
-              {itemCount > 0 && (
-                <>
-                  <Button
-                    size="sm"
-                    variant="bordered"
-                    className="border-deep-amber text-deep-amber min-w-unit-10 font-bold text-lg"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeFromCart(item.id);
-                    }}
-                  >
-                    -
-                  </Button>
-                  <span className="text-chocolate-brown font-bold min-w-8 text-center text-lg">
-                    {itemCount}
-                  </span>
-                </>
-              )}
-              <Button
-                size={itemCount > 0 ? "sm" : "md"}
-                className={`
-                  ${itemCount > 0 ? 'min-w-unit-10' : 'w-full'}
-                  bg-golden-orange hover:bg-deep-amber text-chocolate-brown font-bold
-                  ${itemCount > 0 ? 'text-lg' : ''}
-                `}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  addToCart(item.id);
-                }}
-              >
-                {itemCount > 0 ? '+' : '🛒 Add to Cart'}
-              </Button>
-            </div>
-          ) : (
-            <Button
-              disabled
-              className="w-full bg-gray-300 text-gray-500"
-            >
-              Currently Unavailable
-            </Button>
-          )}
-        </CardBody>
-      </Card>
-    );
-  }, [addToCart, removeFromCart, cartUpdateTrigger]);
+  const getCartQuantity = (itemId: number): number => {
+    const cartItem = cartItems.find(item => item.menuItem.menu_item_id === itemId);
+    return cartItem?.quantity || 0;
+  };
 
-  // Loading state
+  const getItemEmoji = (itemType: string): string => {
+    const emojiMap: Record<string, string> = {
+      cake: '🍰',
+      pastry: '🥐',
+      beverage: '☕',
+      snack: '🍪',
+      main_dish: '🍽️',
+      appetizer: '🥗',
+      dessert: '🍨',
+      bread: '🍞',
+      other: '🍴'
+    };
+    return emojiMap[itemType] || '🍴';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-cream-white to-caramel-beige flex items-center justify-center">
         <div className="text-center">
-          <Spinner 
-            size="lg" 
+          <Spinner
+            size="lg"
             color="warning"
             classNames={{
               wrapper: "w-20 h-20"
@@ -356,31 +103,96 @@ export default function Home() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-cream-white to-caramel-beige flex items-center justify-center">
+        <div className="text-center max-w-md p-8">
+          <div className="text-8xl mb-6">⚠️</div>
+          <h1 className="text-4xl font-bold text-chocolate-brown mb-4">
+            Oops! Something went wrong
+          </h1>
+          <p className="text-xl text-chocolate-brown/70 mb-8">
+            {error}
+          </p>
+          <Button
+            size="lg"
+            className="bg-golden-orange hover:bg-deep-amber text-chocolate-brown font-bold text-xl px-8"
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-cream-white to-caramel-beige">
-      {/* Welcome Banner */}
-      <div className="bg-gradient-to-r from-golden-orange to-deep-amber text-chocolate-brown p-8 shadow-lg">
-        <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-5xl font-bold mb-2">Welcome to Golden Munch! 🍰</h1>
-          <p className="text-xl opacity-90">Touch an item to add it to your order</p>
-          
-          {/* Error Banner */}
-          {error && (
-            <div className="mt-4 bg-mint-green/20 border border-mint-green rounded-lg p-3 max-w-md mx-auto">
-              <p className="text-chocolate-brown text-sm">
-                ⚠️ {error}
-              </p>
-            </div>
+      {/* Header */}
+      <div className="bg-golden-orange text-chocolate-brown p-6 shadow-lg">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold">🍰 Golden Munch</h1>
+            <p className="text-lg opacity-80">Fresh. Delicious. Made with Love.</p>
+          </div>
+
+          {/* Cart Summary */}
+          {getItemCount() > 0 && (
+            <Badge content={getItemCount()} color="danger" size="lg">
+              <Button
+                as={NextLink}
+                href="/cart"
+                size="lg"
+                className="bg-deep-amber hover:bg-chocolate-brown text-cream-white font-bold text-xl px-8"
+              >
+                🛒 Cart - ${getTotal().toFixed(2)}
+              </Button>
+            </Badge>
           )}
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto p-6">
         {/* Category Filter */}
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-chocolate-brown mb-6 text-center">Choose Your Category</h2>
-          {CategoryButtons}
-        </div>
+        {categories.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-chocolate-brown mb-4">Categories</h2>
+            <div className="flex flex-wrap gap-3">
+              <Button
+                key="all"
+                size="lg"
+                variant={selectedCategory === null ? "solid" : "bordered"}
+                className={`
+                  ${selectedCategory === null
+                    ? 'bg-golden-orange text-chocolate-brown border-golden-orange'
+                    : 'border-golden-orange text-chocolate-brown hover:bg-golden-orange/10'
+                  }
+                  font-semibold text-lg px-6 py-3
+                `}
+                onClick={() => setSelectedCategory(null)}
+              >
+                🍽️ All Items
+              </Button>
+              {categories.map((category) => (
+                <Button
+                  key={category.category_id}
+                  size="lg"
+                  variant={selectedCategory === category.category_id ? "solid" : "bordered"}
+                  className={`
+                    ${selectedCategory === category.category_id
+                      ? 'bg-golden-orange text-chocolate-brown border-golden-orange'
+                      : 'border-golden-orange text-chocolate-brown hover:bg-golden-orange/10'
+                    }
+                    font-semibold text-lg px-6 py-3
+                  `}
+                  onClick={() => setSelectedCategory(category.category_id)}
+                >
+                  {category.name}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Menu Items */}
         {filteredItems.length === 0 ? (
@@ -389,37 +201,106 @@ export default function Home() {
             <h3 className="text-3xl font-bold text-chocolate-brown mb-2">
               No items available
             </h3>
-            <p className="text-xl text-chocolate-brown/70 mb-6">
-              {selectedCategory === "all" 
+            <p className="text-xl text-chocolate-brown/70">
+              {selectedCategory === null
                 ? "Our menu is being updated. Please check back soon!"
                 : "No items in this category right now."
               }
             </p>
-            <Button
-              size="lg"
-              className="bg-golden-orange text-chocolate-brown font-bold px-8 py-4 text-xl"
-              onClick={() => setSelectedCategory("all")}
-            >
-              View All Categories
-            </Button>
+            {selectedCategory !== null && (
+              <Button
+                size="lg"
+                className="mt-6 bg-golden-orange text-chocolate-brown font-bold"
+                onClick={() => setSelectedCategory(null)}
+              >
+                View All Categories
+              </Button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredItems.map((item) => (
-              <MenuItem key={item.id} item={item} />
-            ))}
+            {filteredItems.map((item) => {
+              const cartQty = getCartQuantity(item.menu_item_id);
+              const isAvailable = item.status === 'available' &&
+                (item.is_infinite_stock || item.stock_quantity > 0);
+
+              return (
+                <Card
+                  key={item.menu_item_id}
+                  className={`
+                    ${isAvailable ? 'hover:scale-105' : 'opacity-60'}
+                    transition-all duration-300 shadow-lg border-2 border-golden-orange/20
+                    ${isAvailable ? 'hover:shadow-2xl hover:border-golden-orange' : ''}
+                  `}
+                >
+                  <CardHeader className="flex flex-col items-start px-6 pt-6 pb-0">
+                    <div className="flex justify-between items-start w-full">
+                      <div className="text-6xl mb-2">
+                        {item.image_url || getItemEmoji(item.item_type)}
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        {item.is_featured && (
+                          <Chip color="warning" size="sm" variant="flat">
+                            🔥 Popular
+                          </Chip>
+                        )}
+                        {!isAvailable && (
+                          <Chip color="danger" size="sm" variant="flat">
+                            Sold Out
+                          </Chip>
+                        )}
+                      </div>
+                    </div>
+                    <h3 className="text-xl font-bold text-chocolate-brown">{item.name}</h3>
+                    <p className="text-chocolate-brown/70 text-sm">{item.description}</p>
+                  </CardHeader>
+
+                  <CardBody className="px-6 pt-2">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-2xl font-bold text-deep-amber">
+                        ${(item.current_price || 0).toFixed(2)}
+                      </span>
+                      {cartQty > 0 && (
+                        <Badge content={cartQty} color="success" size="lg">
+                          <div className="w-8 h-8 rounded-full bg-golden-orange"></div>
+                        </Badge>
+                      )}
+                    </div>
+
+                    {isAvailable ? (
+                      <Button
+                        size="md"
+                        className="w-full bg-golden-orange hover:bg-deep-amber text-chocolate-brown font-bold"
+                        onClick={() => handleAddToCart(item)}
+                      >
+                        {cartQty > 0 ? `Add Another (${cartQty} in cart)` : '🛒 Add to Cart'}
+                      </Button>
+                    ) : (
+                      <Button
+                        disabled
+                        className="w-full bg-gray-300 text-gray-500"
+                      >
+                        Currently Unavailable
+                      </Button>
+                    )}
+                  </CardBody>
+                </Card>
+              );
+            })}
           </div>
         )}
 
         {/* Floating Cart Button */}
-        {cartStats.totalItems > 0 && (
+        {getItemCount() > 0 && (
           <div className="fixed bottom-6 right-6 z-50">
-            <Badge content={cartStats.totalItems} color="danger" size="lg" placement="top-left">
+            <Badge content={getItemCount()} color="danger" size="lg">
               <Button
+                as={NextLink}
+                href="/cart"
                 size="lg"
-                className="bg-deep-amber hover:bg-chocolate-brown text-cream-white font-bold text-xl px-8 py-6 rounded-full shadow-2xl animate-bounce-slow"
+                className="bg-deep-amber hover:bg-chocolate-brown text-cream-white font-bold text-xl px-8 py-4 rounded-full shadow-2xl animate-bounce-slow"
               >
-                🛒 Checkout<br/>${cartStats.totalPrice.toFixed(2)}
+                🛒 Checkout - ${getTotal().toFixed(2)}
               </Button>
             </Badge>
           </div>

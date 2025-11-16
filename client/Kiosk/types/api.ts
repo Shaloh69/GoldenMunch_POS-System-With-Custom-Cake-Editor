@@ -1,0 +1,299 @@
+// Enums based on server schema
+export enum ItemType {
+  CAKE = 'cake',
+  PASTRY = 'pastry',
+  BEVERAGE = 'beverage',
+  SNACK = 'snack',
+  MAIN_DISH = 'main_dish',
+  APPETIZER = 'appetizer',
+  DESSERT = 'dessert',
+  BREAD = 'bread',
+  OTHER = 'other'
+}
+
+export enum UnitOfMeasure {
+  PIECE = 'piece',
+  DOZEN = 'dozen',
+  HALF_DOZEN = 'half_dozen',
+  KILOGRAM = 'kilogram',
+  GRAM = 'gram',
+  LITER = 'liter',
+  MILLILITER = 'milliliter',
+  SERVING = 'serving',
+  BOX = 'box',
+  PACK = 'pack'
+}
+
+export enum ItemStatus {
+  AVAILABLE = 'available',
+  SOLD_OUT = 'sold_out',
+  DISCONTINUED = 'discontinued'
+}
+
+export enum OrderType {
+  WALK_IN = 'walk_in',
+  PICKUP = 'pickup',
+  PRE_ORDER = 'pre_order',
+  CUSTOM_ORDER = 'custom_order'
+}
+
+export enum OrderSource {
+  KIOSK = 'kiosk',
+  CASHIER = 'cashier',
+  ADMIN = 'admin'
+}
+
+export enum PaymentMethod {
+  CASH = 'cash',
+  GCASH = 'gcash',
+  PAYMAYA = 'paymaya',
+  CARD = 'card',
+  BANK_TRANSFER = 'bank_transfer'
+}
+
+export enum PaymentStatus {
+  PENDING = 'pending',
+  PARTIAL_PAID = 'partial_paid',
+  PAID = 'paid',
+  FAILED = 'failed',
+  REFUNDED = 'refunded'
+}
+
+export enum OrderStatus {
+  PENDING = 'pending',
+  CONFIRMED = 'confirmed',
+  PREPARING = 'preparing',
+  READY = 'ready',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled'
+}
+
+export enum FrostingType {
+  BUTTERCREAM = 'buttercream',
+  FONDANT = 'fondant',
+  WHIPPED_CREAM = 'whipped_cream',
+  GANACHE = 'ganache',
+  CREAM_CHEESE = 'cream_cheese'
+}
+
+export enum DesignComplexity {
+  SIMPLE = 'simple',
+  MODERATE = 'moderate',
+  COMPLEX = 'complex',
+  INTRICATE = 'intricate'
+}
+
+// Database Models
+export interface MenuItem {
+  menu_item_id: number;
+  name: string;
+  description: string | null;
+  image_url: string | null;
+  item_type: ItemType;
+  unit_of_measure: UnitOfMeasure;
+  stock_quantity: number;
+  is_infinite_stock: boolean;
+  min_stock_level: number;
+  status: ItemStatus;
+  can_customize: boolean;
+  can_preorder: boolean;
+  preparation_time_minutes: number;
+  popularity_score: number;
+  total_orders: number;
+  total_quantity_sold: number;
+  last_ordered_date: Date | null;
+  supplier_id: number | null;
+  is_featured: boolean;
+  allergen_info: string | null;
+  nutritional_info: string | null;
+  is_deleted: boolean;
+  created_at: Date;
+  updated_at: Date;
+  current_price?: number; // Added by query
+  display_order?: number;
+}
+
+export interface Category {
+  category_id: number;
+  name: string;
+  description: string | null;
+  image_url: string | null;
+  display_order: number;
+  is_active: boolean;
+  admin_id: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface CakeFlavor {
+  flavor_id: number;
+  flavor_name: string;
+  description: string | null;
+  image_url: string | null;
+  additional_cost: number;
+  is_available: boolean;
+  display_order: number;
+  created_at: Date;
+}
+
+export interface CakeSize {
+  size_id: number;
+  size_name: string;
+  description: string | null;
+  serves_people: number | null;
+  diameter_inches: number | null;
+  size_multiplier: number;
+  is_available: boolean;
+  display_order: number;
+  created_at: Date;
+}
+
+export interface CustomCakeTheme {
+  theme_id: number;
+  theme_name: string;
+  description: string | null;
+  theme_image_url: string | null;
+  base_additional_cost: number;
+  preparation_days: number;
+  is_available: boolean;
+  display_order: number;
+  created_at: Date;
+}
+
+export interface MenuItemWithCustomization extends MenuItem {
+  flavors?: CakeFlavor[];
+  sizes?: CakeSize[];
+  themes?: CustomCakeTheme[];
+}
+
+export interface PromotionRule {
+  promotion_id: number;
+  promotion_name: string;
+  description: string | null;
+  promotion_type: string;
+  discount_percentage: number;
+  discount_amount: number;
+  min_purchase_amount: number;
+  min_quantity: number;
+  buy_quantity: number;
+  get_quantity: number;
+  start_date: Date;
+  end_date: Date;
+  start_time: string;
+  end_time: string;
+  max_uses_per_customer: number | null;
+  total_usage_limit: number | null;
+  current_usage_count: number;
+  is_active: boolean;
+  is_stackable: boolean;
+  display_on_kiosk: boolean;
+  created_by: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface CustomerOrder {
+  order_id: number;
+  order_number: string;
+  verification_code: string;
+  customer_id: number | null;
+  order_datetime: Date;
+  scheduled_pickup_datetime: Date | null;
+  actual_pickup_datetime: Date | null;
+  order_type: OrderType;
+  order_source: OrderSource;
+  is_preorder: boolean;
+  advance_payment_required: boolean;
+  advance_payment_amount: number;
+  total_amount: number;
+  discount_amount: number;
+  tax_amount: number;
+  final_amount: number;
+  cashier_id: number | null;
+  payment_method: PaymentMethod;
+  payment_status: PaymentStatus;
+  order_status: OrderStatus;
+  gcash_reference_number: string | null;
+  paymaya_reference_number: string | null;
+  card_transaction_ref: string | null;
+  payment_verified_at: Date | null;
+  payment_verified_by: number | null;
+  is_printed: boolean;
+  special_instructions: string | null;
+  kiosk_session_id: string | null;
+  is_deleted: boolean;
+  created_at: Date;
+  updated_at: Date;
+}
+
+// Request/Response DTOs
+export interface CreateOrderRequest {
+  customer_id?: number;
+  order_type: OrderType;
+  order_source: OrderSource;
+  scheduled_pickup_datetime?: string;
+  payment_method: PaymentMethod;
+  special_instructions?: string;
+  kiosk_session_id?: string;
+  items: OrderItemRequest[];
+}
+
+export interface OrderItemRequest {
+  menu_item_id: number;
+  quantity: number;
+  custom_cake_design?: CustomCakeDesignRequest;
+  flavor_id?: number;
+  size_id?: number;
+  special_instructions?: string;
+}
+
+export interface CustomCakeDesignRequest {
+  theme_id?: number;
+  frosting_color?: string;
+  frosting_type: FrostingType;
+  decoration_details?: string;
+  cake_text?: string;
+  special_instructions?: string;
+  design_complexity: DesignComplexity;
+}
+
+export interface ApiResponse<T = any> {
+  success: boolean;
+  message: string;
+  data?: T;
+  error?: string;
+}
+
+export interface PaginatedResponse<T> {
+  success: boolean;
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+// Menu Query Params
+export interface MenuQueryParams {
+  category_id?: number;
+  item_type?: ItemType;
+  is_featured?: boolean;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+// Capacity Check
+export interface CapacityCheckParams {
+  pickup_date: string;
+  complexity: DesignComplexity;
+}
+
+export interface CapacityCheckResult {
+  available: boolean;
+  remaining_capacity: number;
+  max_capacity: number;
+  message: string;
+}
