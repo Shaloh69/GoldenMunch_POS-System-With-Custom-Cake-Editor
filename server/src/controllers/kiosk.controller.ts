@@ -56,7 +56,7 @@ export const getMenuItems = async (req: AuthRequest, res: Response) => {
     params.push(`%${search}%`, `%${search}%`);
   }
 
-  sql += ` ORDER BY mi.display_order ASC, mi.popularity_score DESC`;
+  sql += ` ORDER BY mi.is_featured DESC, mi.popularity_score DESC`;
   sql += ` LIMIT ? OFFSET ?`;
   params.push(Number(limit), (Number(page) - 1) * Number(limit));
 

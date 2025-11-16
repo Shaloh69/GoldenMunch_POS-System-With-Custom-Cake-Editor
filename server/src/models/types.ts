@@ -96,6 +96,13 @@ export enum PaymentStatus {
   REFUNDED = 'refunded'
 }
 
+export enum PaymentTransactionStatus {
+  PENDING = 'pending',
+  VERIFIED = 'verified',
+  FAILED = 'failed',
+  REFUNDED = 'refunded'
+}
+
 export enum OrderStatus {
   PENDING = 'pending',
   CONFIRMED = 'confirmed',
@@ -457,7 +464,7 @@ export interface PaymentTransaction {
   payment_method: PaymentMethod;
   amount: number;
   reference_number: string | null;
-  payment_status: PaymentStatus;
+  payment_status: PaymentTransactionStatus;
   verified_by: number | null;
   verified_at: Date | null;
   payment_notes: string | null;
@@ -556,6 +563,71 @@ export interface KioskSession {
   total_orders: number;
   session_duration_minutes: number;
   last_activity: Date;
+}
+
+export interface CategoryHasMenuItem {
+  category_id: number;
+  menu_item_id: number;
+  display_order: number;
+  created_at: Date;
+}
+
+export interface PromotionApplicableItem {
+  promotion_id: number;
+  menu_item_id: number;
+  created_at: Date;
+}
+
+export interface PromotionApplicableCategory {
+  promotion_id: number;
+  category_id: number;
+  created_at: Date;
+}
+
+export interface PromotionUsageLog {
+  usage_id: number;
+  promotion_id: number;
+  order_id: number;
+  customer_id: number | null;
+  discount_applied: number;
+  used_at: Date;
+}
+
+export interface OrderTimeline {
+  timeline_id: number;
+  order_id: number;
+  status: OrderStatus;
+  changed_by: number | null;
+  change_reason: string | null;
+  notes: string | null;
+  timestamp: Date;
+}
+
+export interface StockAdjustmentReason {
+  reason_id: number;
+  reason_code: string;
+  reason_description: string;
+  is_active: boolean;
+  created_at: Date;
+}
+
+export interface MenuItemDailyStats {
+  stats_id: number;
+  menu_item_id: number;
+  stats_date: Date;
+  daily_orders: number;
+  daily_quantity_sold: number;
+  daily_revenue: number;
+}
+
+export interface PopularityHistory {
+  history_id: number;
+  menu_item_id: number;
+  old_popularity_score: number | null;
+  new_popularity_score: number | null;
+  change_reason: ChangeReason;
+  change_details: string | null;
+  changed_at: Date;
 }
 
 // Request/Response DTOs
