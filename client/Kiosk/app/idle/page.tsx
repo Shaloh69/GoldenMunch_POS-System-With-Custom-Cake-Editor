@@ -264,7 +264,13 @@ export default function IdlePage() {
           path.unshift({ x: node.x, y: node.y });
           node = node.parent;
         }
-        const simplifiedPath = path.length > 2 ? [path[0], path[Math.floor(path.length / 2)], path[path.length - 1]] : path;
+        // Simplify path by keeping every 3rd waypoint to navigate around corners
+        const simplifiedPath: Position[] = [];
+        for (let i = 0; i < path.length; i++) {
+          if (i === 0 || i === path.length - 1 || i % 3 === 0) {
+            simplifiedPath.push(path[i]);
+          }
+        }
         console.log('  ✅ PATH FOUND!');
         console.log('    Full path length:', path.length);
         console.log('    Simplified path length:', simplifiedPath.length);
@@ -903,13 +909,39 @@ export default function IdlePage() {
               const avgX = aggressiveGhosts.reduce((sum, g) => sum + g.x, 0) / aggressiveGhosts.length;
               const avgY = aggressiveGhosts.reduce((sum, g) => sum + g.y, 0) / aggressiveGhosts.length;
 
-              // Run in opposite direction
-              const fleeX = prev.x + (prev.x - avgX) * 2;
-              const fleeY = prev.y + (prev.y - avgY) * 2;
-              const clampedFleeX = Math.max(10, Math.min(90, fleeX));
-              const clampedFleeY = Math.max(10, Math.min(90, fleeY));
+              // Calculate flee direction
+              const fleeAngle = Math.atan2(prev.y - avgY, prev.x - avgX);
 
-              const calculatedPath = findPath(prev, { x: clampedFleeX, y: clampedFleeY }, avoidPoints);
+              // Try multiple flee points at different angles to find the best escape route
+              const fleeAttempts = [
+                { angle: fleeAngle, distance: 40 },           // Directly away
+                { angle: fleeAngle + 0.5, distance: 40 },    // Slightly right
+                { angle: fleeAngle - 0.5, distance: 40 },    // Slightly left
+                { angle: fleeAngle + 0.8, distance: 35 },    // More right
+                { angle: fleeAngle - 0.8, distance: 35 }     // More left
+              ];
+
+              let bestFleePoint = null;
+              for (const attempt of fleeAttempts) {
+                const fleeX = prev.x + Math.cos(attempt.angle) * attempt.distance;
+                const fleeY = prev.y + Math.sin(attempt.angle) * attempt.distance;
+                const clampedFleeX = Math.max(10, Math.min(90, fleeX));
+                const clampedFleeY = Math.max(10, Math.min(90, fleeY));
+
+                // Check if this flee point is not inside an obstacle
+                if (!isInsideObstacle(clampedFleeX, clampedFleeY, 3)) {
+                  bestFleePoint = { x: clampedFleeX, y: clampedFleeY };
+                  break;
+                }
+              }
+
+              // Use best flee point or default if all blocked
+              const fleeTarget = bestFleePoint || {
+                x: Math.max(10, Math.min(90, prev.x + Math.cos(fleeAngle) * 30)),
+                y: Math.max(10, Math.min(90, prev.y + Math.sin(fleeAngle) * 30))
+              };
+
+              const calculatedPath = findPath(prev, fleeTarget, avoidPoints);
               newPathToSet = calculatedPath.length > 1 ? calculatedPath.slice(1) : calculatedPath;
               shouldResetStuck = true;
             }
@@ -962,7 +994,8 @@ export default function IdlePage() {
           const dy = nextWaypoint.y - prev.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
-          if (dist < 3) {
+          // Only advance to next waypoint when very close (prevents cutting corners)
+          if (dist < 2) {
             newPathToSet = currentPath.slice(1);
           }
 
