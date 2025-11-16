@@ -952,7 +952,7 @@ export default function IdlePage() {
           Math.pow(cake.y - pacmanPosition.y, 2)
         );
 
-        if (distance < 5) {
+        if (distance < 3) {
           if (cake.isSpecial) {
             setPowerMode(true);
             setPowerTimeLeft(10);
@@ -983,7 +983,7 @@ export default function IdlePage() {
             Math.pow(ghost.y - pacmanPosition.y, 2)
           );
 
-          if (distance < 6 && ghost.scared) {
+          if (distance < 3.5 && ghost.scared) {
             createParticles(ghost.x, ghost.y, ghost.color, 10, '💯');
             setIsEating(true);
             setTimeout(() => setIsEating(false), 200);
@@ -1050,7 +1050,7 @@ export default function IdlePage() {
       <div className="absolute inset-0 opacity-10"
         style={{
           backgroundImage: 'linear-gradient(#D97706 1px, transparent 1px), linear-gradient(90deg, #D97706 1px, transparent 1px)',
-          backgroundSize: '60px 60px'
+          backgroundSize: '40px 40px'
         }}
       />
 
@@ -1092,7 +1092,7 @@ export default function IdlePage() {
       {particles.map(particle => (
         <div
           key={particle.id}
-          className="absolute text-xl pointer-events-none"
+          className="absolute text-base pointer-events-none"
           style={{
             left: `${particle.x}%`,
             top: `${particle.y}%`,
@@ -1120,7 +1120,7 @@ export default function IdlePage() {
         }}
       >
         <div
-          className={`w-10 h-10 relative transition-all duration-300`}
+          className={`w-6 h-6 relative transition-all duration-300`}
           style={{
             background: powerMode
               ? 'linear-gradient(135deg, #FFD700 0%, #FFA500 50%, #FFD700 100%)'
@@ -1130,13 +1130,13 @@ export default function IdlePage() {
               ? 'polygon(100% 70%, 40% 50%, 100% 30%, 100% 0%, 0% 0%, 0% 100%, 100% 100%)'
               : 'circle(50%)',
             boxShadow: powerMode
-              ? '0 0 40px rgba(255, 215, 0, 0.8), 0 0 80px rgba(255, 215, 0, 0.4)'
-              : '0 8px 20px rgba(249, 160, 63, 0.4)',
+              ? '0 0 30px rgba(255, 215, 0, 0.8), 0 0 60px rgba(255, 215, 0, 0.4)'
+              : '0 6px 15px rgba(249, 160, 63, 0.4)',
             filter: powerMode ? 'brightness(1.3)' : 'none'
           }}
         >
-          <div className="absolute w-2 h-2 bg-chocolate-brown rounded-full top-2.5 left-2.5 shadow-inner">
-            <div className="absolute w-0.5 h-0.5 bg-white rounded-full top-0.5 left-0.5"></div>
+          <div className="absolute w-1.5 h-1.5 bg-chocolate-brown rounded-full top-1.5 left-1.5 shadow-inner">
+            <div className="absolute w-0.5 h-0.5 bg-white rounded-full top-0 left-0"></div>
           </div>
           {powerMode && (
             <div className="absolute inset-0 rounded-full bg-golden-orange/30 animate-pulse-slow"></div>
@@ -1165,7 +1165,7 @@ export default function IdlePage() {
             }}
           >
             <div
-              className="text-3xl"
+              className="text-xl"
               style={{
                 color: ghost.scared ? '#9CA3AF' : ghost.color,
               }}
@@ -1174,7 +1174,7 @@ export default function IdlePage() {
             </div>
             {ghost.scared && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-lg">😱</div>
+                <div className="text-sm">😱</div>
               </div>
             )}
           </div>
@@ -1199,7 +1199,7 @@ export default function IdlePage() {
               : 'drop-shadow(0 4px 10px rgba(217, 119, 6, 0.3))'
           }}
         >
-          <div className={`text-2xl ${cake.isSpecial ? 'scale-125' : ''}`}>
+          <div className={`text-lg ${cake.isSpecial ? 'scale-125' : ''}`}>
             {cake.emoji}
           </div>
         </div>
