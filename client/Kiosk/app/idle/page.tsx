@@ -137,6 +137,29 @@ export default function IdlePage() {
     });
   }, []);
 
+  // Line-of-sight check: Can point A see point B without obstacles in between?
+  const hasLineOfSight = useCallback((from: Position, to: Position): boolean => {
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    // Sample points along the line
+    const steps = Math.ceil(distance / 2); // Check every 2 units
+
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const checkX = from.x + dx * t;
+      const checkY = from.y + dy * t;
+
+      // If any point along the line hits an obstacle, no line of sight
+      if (isInsideObstacle(checkX, checkY, 0)) {
+        return false;
+      }
+    }
+
+    return true;
+  }, [isInsideObstacle]);
+
   // A* Pathfinding Algorithm - Simplified and working
   const findPath = useCallback((start: Position, goal: Position, avoidPoints: Position[] = []): Position[] => {
     // Validate inputs
@@ -151,7 +174,7 @@ export default function IdlePage() {
 
     const GRID_SIZE = 5;
     const MAX_ITERATIONS = 100;
-    const BOUNDS = { min: 2, max: 98 };
+    const BOUNDS = { min: 5, max: 95 }; // Account for wall thickness
 
     // Helper: Check if position is walkable
     const isWalkable = (x: number, y: number): boolean => {
@@ -315,8 +338,8 @@ export default function IdlePage() {
     let attempts = 0;
     while (attempts < 50) {
       const pos = {
-        x: Math.random() * 96 + 2,
-        y: Math.random() * 96 + 2
+        x: Math.random() * 90 + 5,
+        y: Math.random() * 90 + 5
       };
 
       if (!isInsideObstacle(pos.x, pos.y, 3)) {
@@ -329,67 +352,166 @@ export default function IdlePage() {
 
   // Initialize - Only runs once on mount
   useEffect(() => {
-    // Generate random obstacles first
+    // Generate maze-like structure with corridors
     const initialObstacles: Obstacle[] = [];
-    const obstacleCount = Math.floor(Math.random() * 6) + 6; // 6-11 obstacles
     const obstacleColors = ['#8B4513', '#A0522D', '#6B4423', '#8B7355', '#654321'];
+    const wallColor = obstacleColors[0];
 
-    // Reserved areas (don't spawn obstacles here)
-    const reservedAreas = [
-      { x: 50, y: 50, radius: 15 }, // Center area for Pacman start
-      { x: 10, y: 10, radius: 8 },
-      { x: 90, y: 10, radius: 8 },
-      { x: 90, y: 90, radius: 8 },
-      { x: 10, y: 90, radius: 8 }
-    ];
+    // Outer walls (border)
+    const wallThickness = 2;
 
-    for (let i = 0; i < obstacleCount; i++) {
-      let validPosition = false;
-      let obstacle: Obstacle | null = null;
-      let attempts = 0;
+    // Top wall
+    initialObstacles.push({
+      id: obstacleIdRef.current++,
+      x: 0,
+      y: 0,
+      width: 100,
+      height: wallThickness,
+      color: wallColor
+    });
 
-      while (!validPosition && attempts < 100) {
-        const width = Math.random() * 4 + 2.5; // 2.5-6.5 units
-        const height = Math.random() * 4 + 2.5;
-        const x = Math.random() * 90 + 5;
-        const y = Math.random() * 90 + 5;
+    // Bottom wall
+    initialObstacles.push({
+      id: obstacleIdRef.current++,
+      x: 0,
+      y: 98,
+      width: 100,
+      height: wallThickness,
+      color: wallColor
+    });
 
-        const overlapsReserved = reservedAreas.some(area => {
-          const obstacleCenter = { x: x + width / 2, y: y + height / 2 };
-          const distance = Math.sqrt(
-            Math.pow(obstacleCenter.x - area.x, 2) +
-            Math.pow(obstacleCenter.y - area.y, 2)
-          );
-          return distance < area.radius + Math.max(width, height) / 2;
+    // Left wall
+    initialObstacles.push({
+      id: obstacleIdRef.current++,
+      x: 0,
+      y: 0,
+      width: wallThickness,
+      height: 100,
+      color: wallColor
+    });
+
+    // Right wall
+    initialObstacles.push({
+      id: obstacleIdRef.current++,
+      x: 98,
+      y: 0,
+      width: wallThickness,
+      height: 100,
+      color: wallColor
+    });
+
+    // Create maze corridors - vertical and horizontal walls with gaps
+    const corridorWidth = 2;
+    const gapSize = 12; // Size of openings in walls
+
+    // Vertical walls creating corridors
+    const verticalWalls = [25, 50, 75];
+    verticalWalls.forEach((xPos, index) => {
+      // Each vertical wall has gaps at different heights
+      const gapPositions = [
+        { start: 20, end: 20 + gapSize },
+        { start: 50, end: 50 + gapSize },
+        { start: 80, end: 80 + gapSize }
+      ];
+
+      // Shuffle gaps for variety
+      const selectedGap = gapPositions[(index * 2) % gapPositions.length];
+      const selectedGap2 = gapPositions[(index * 2 + 1) % gapPositions.length];
+
+      let currentY = wallThickness + 2;
+
+      // First segment (before first gap)
+      if (currentY < selectedGap.start) {
+        initialObstacles.push({
+          id: obstacleIdRef.current++,
+          x: xPos,
+          y: currentY,
+          width: corridorWidth,
+          height: selectedGap.start - currentY,
+          color: obstacleColors[Math.floor(Math.random() * obstacleColors.length)]
         });
+      }
+      currentY = selectedGap.end;
 
-        const overlapsObstacle = initialObstacles.some(existing => {
-          return !(
-            x > existing.x + existing.width + 4 ||
-            x + width < existing.x - 4 ||
-            y > existing.y + existing.height + 4 ||
-            y + height < existing.y - 4
-          );
+      // Second segment (between gaps)
+      if (selectedGap2.start > selectedGap.end && currentY < selectedGap2.start) {
+        initialObstacles.push({
+          id: obstacleIdRef.current++,
+          x: xPos,
+          y: currentY,
+          width: corridorWidth,
+          height: selectedGap2.start - currentY,
+          color: obstacleColors[Math.floor(Math.random() * obstacleColors.length)]
         });
-
-        if (!overlapsReserved && !overlapsObstacle) {
-          obstacle = {
-            id: obstacleIdRef.current++,
-            x,
-            y,
-            width,
-            height,
-            color: obstacleColors[Math.floor(Math.random() * obstacleColors.length)]
-          };
-          validPosition = true;
-        }
-        attempts++;
       }
+      currentY = selectedGap2.end;
 
-      if (obstacle) {
-        initialObstacles.push(obstacle);
+      // Third segment (after second gap to bottom)
+      if (currentY < 98 - wallThickness - 2) {
+        initialObstacles.push({
+          id: obstacleIdRef.current++,
+          x: xPos,
+          y: currentY,
+          width: corridorWidth,
+          height: 98 - wallThickness - 2 - currentY,
+          color: obstacleColors[Math.floor(Math.random() * obstacleColors.length)]
+        });
       }
-    }
+    });
+
+    // Horizontal walls creating corridors
+    const horizontalWalls = [25, 50, 75];
+    horizontalWalls.forEach((yPos, index) => {
+      // Each horizontal wall has gaps at different positions
+      const gapPositions = [
+        { start: 15, end: 15 + gapSize },
+        { start: 45, end: 45 + gapSize },
+        { start: 75, end: 75 + gapSize }
+      ];
+
+      const selectedGap = gapPositions[(index * 2 + 1) % gapPositions.length];
+      const selectedGap2 = gapPositions[(index * 2) % gapPositions.length];
+
+      let currentX = wallThickness + 2;
+
+      // First segment
+      if (currentX < selectedGap.start) {
+        initialObstacles.push({
+          id: obstacleIdRef.current++,
+          x: currentX,
+          y: yPos,
+          width: selectedGap.start - currentX,
+          height: corridorWidth,
+          color: obstacleColors[Math.floor(Math.random() * obstacleColors.length)]
+        });
+      }
+      currentX = selectedGap.end;
+
+      // Second segment
+      if (selectedGap2.start > selectedGap.end && currentX < selectedGap2.start) {
+        initialObstacles.push({
+          id: obstacleIdRef.current++,
+          x: currentX,
+          y: yPos,
+          width: selectedGap2.start - currentX,
+          height: corridorWidth,
+          color: obstacleColors[Math.floor(Math.random() * obstacleColors.length)]
+        });
+      }
+      currentX = selectedGap2.end;
+
+      // Third segment
+      if (currentX < 98 - wallThickness - 2) {
+        initialObstacles.push({
+          id: obstacleIdRef.current++,
+          x: currentX,
+          y: yPos,
+          width: 98 - wallThickness - 2 - currentX,
+          height: corridorWidth,
+          color: obstacleColors[Math.floor(Math.random() * obstacleColors.length)]
+        });
+      }
+    });
 
     setObstacles(initialObstacles);
     obstaclesRef.current = initialObstacles;
@@ -399,8 +521,8 @@ export default function IdlePage() {
       let attempts = 0;
       while (attempts < 50) {
         const pos = {
-          x: Math.random() * 96 + 2,
-          y: Math.random() * 96 + 2
+          x: Math.random() * 90 + 5,
+          y: Math.random() * 90 + 5
         };
 
         const isInside = initialObstacles.some(obstacle => {
@@ -556,8 +678,8 @@ export default function IdlePage() {
             newAggressionCooldown = 10; // 10 second cooldown
           }
         } else if (newBehavior === 'wander' && !newOnCooldown) {
-          // Random chance to enter aggression mode if close to Pacman
-          if (distance < 40 && Math.random() < 0.02) {
+          // Enter aggression mode if ghost can see Pacman (line of sight)
+          if (distance < 40 && hasLineOfSight({ x: ghost.x, y: ghost.y }, pacPos) && Math.random() < 0.05) {
             newBehavior = 'aggression';
             newAggressionTimer = 5; // 5 second aggression
           }
@@ -611,7 +733,7 @@ export default function IdlePage() {
 
         const wouldHitObstacle = isInsideObstacle(testX, testY, 1);
 
-        if (testX > 2 && testX < 98 && testY > 2 && testY < 98 && !wouldHitObstacle) {
+        if (testX > 5 && testX < 95 && testY > 5 && testY < 95 && !wouldHitObstacle) {
           newX = testX;
           newY = testY;
         } else if (wouldHitObstacle) {
@@ -633,7 +755,7 @@ export default function IdlePage() {
     }, 50);
 
     return () => clearInterval(interval);
-  }, [findPath, isInsideObstacle]);
+  }, [findPath, isInsideObstacle, hasLineOfSight]);
 
   // New Pacman AI - 3 Behaviors: Cake Hunting, Run, Hunting Ghosts
   useEffect(() => {
@@ -827,14 +949,14 @@ export default function IdlePage() {
 
         const wouldHitObstacle = isInsideObstacle(testX, testY, 1);
 
-        if (testX > 2 && testX < 98 && testY > 2 && testY < 98 && !wouldHitObstacle) {
+        if (testX > 5 && testX < 95 && testY > 5 && testY < 95 && !wouldHitObstacle) {
           newX = testX;
           newY = testY;
         } else if (!wouldHitObstacle) {
-          if (testX > 2 && testX < 98 && !isInsideObstacle(testX, prev.y, 1)) {
+          if (testX > 5 && testX < 95 && !isInsideObstacle(testX, prev.y, 1)) {
             newX = testX;
           }
-          if (testY > 2 && testY < 98 && !isInsideObstacle(prev.x, testY, 1)) {
+          if (testY > 5 && testY < 95 && !isInsideObstacle(prev.x, testY, 1)) {
             newY = testY;
           }
         } else {
