@@ -28,10 +28,9 @@ interface Ghost {
   color: string;
   direction: Position;
   scared: boolean;
-  mode: 'random' | 'chase' | 'flee' | 'ambush';
+  mode: 'random' | 'chase' | 'flee';
   modeTimer: number;
   stuckCounter: number;
-  personality: 'aggressive' | 'smart' | 'random' | 'ambusher';
 }
 
 interface Position {
@@ -50,15 +49,6 @@ interface Particle {
   emoji?: string;
 }
 
-interface PathNode {
-  x: number;
-  y: number;
-  g: number; // cost from start
-  h: number; // heuristic to goal
-  f: number; // total cost
-  parent: PathNode | null;
-}
-
 export default function IdlePage() {
   const [score, setScore] = useState(0);
   const [showMessage, setShowMessage] = useState(false);
@@ -66,7 +56,6 @@ export default function IdlePage() {
   const [lastMessageScore, setLastMessageScore] = useState(0);
   const [pacmanPosition, setPacmanPosition] = useState<Position>({ x: 50, y: 50 });
   const [pacmanDirection, setPacmanDirection] = useState<Position>({ x: 1, y: 0 });
-  const [pacmanPath, setPacmanPath] = useState<Position[]>([]);
   const [cakes, setCakes] = useState<Cake[]>([]);
   const [ghosts, setGhosts] = useState<Ghost[]>([]);
   const [isEating, setIsEating] = useState(false);
@@ -82,147 +71,9 @@ export default function IdlePage() {
   const ghostIdRef = useRef(0);
   const particleIdRef = useRef(0);
   const lastPacmanPos = useRef<Position>({ x: 50, y: 50 });
-  const pathfindingCache = useRef<Map<string, Position[]>>(new Map());
   const cakeEmojis = ['🎂', '🧁', '🍰', '🍪', '🍩', '🥧'];
   const specialCakeEmoji = '⭐';
   const ghostColors = ['#FF69B4', '#00CED1', '#FF6347', '#98FB98'];
-
-  // A* Pathfinding Algorithm
-  const findPath = useCallback((start: Position, goal: Position, avoidPoints: Position[] = []): Position[] => {
-    const cacheKey = `${Math.round(start.x)},${Math.round(start.y)}-${Math.round(goal.x)},${Math.round(goal.y)}`;
-    const cached = pathfindingCache.current.get(cacheKey);
-    if (cached && Math.random() > 0.3) return cached; // 70% cache hit for performance
-
-    const gridSize = 5; // Grid resolution
-    const openSet: PathNode[] = [];
-    const closedSet: Set<string> = new Set();
-
-    const heuristic = (a: Position, b: Position) => {
-      return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
-    };
-
-    const getKey = (pos: Position) => `${Math.round(pos.x / gridSize)},${Math.round(pos.y / gridSize)}`;
-
-    const startNode: PathNode = {
-      x: start.x,
-      y: start.y,
-      g: 0,
-      h: heuristic(start, goal),
-      f: heuristic(start, goal),
-      parent: null
-    };
-
-    openSet.push(startNode);
-
-    const directions = [
-      { x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 },
-      { x: 0.7, y: 0.7 }, { x: -0.7, y: 0.7 }, { x: 0.7, y: -0.7 }, { x: -0.7, y: -0.7 }
-    ];
-
-    let iterations = 0;
-    const maxIterations = 50; // Limit for performance
-
-    while (openSet.length > 0 && iterations < maxIterations) {
-      iterations++;
-
-      // Find node with lowest f score
-      openSet.sort((a, b) => a.f - b.f);
-      const current = openSet.shift()!;
-
-      const currentKey = getKey(current);
-      if (closedSet.has(currentKey)) continue;
-      closedSet.add(currentKey);
-
-      // Check if reached goal
-      if (heuristic(current, goal) < gridSize * 2) {
-        const path: Position[] = [];
-        let node: PathNode | null = current;
-        while (node) {
-          path.unshift({ x: node.x, y: node.y });
-          node = node.parent;
-        }
-
-        // Smooth the path
-        const smoothedPath = smoothPath(path);
-        pathfindingCache.current.set(cacheKey, smoothedPath);
-
-        // Clear old cache entries
-        if (pathfindingCache.current.size > 100) {
-          const firstKey = pathfindingCache.current.keys().next().value;
-          pathfindingCache.current.delete(firstKey);
-        }
-
-        return smoothedPath;
-      }
-
-      // Explore neighbors
-      for (const dir of directions) {
-        const newX = current.x + dir.x * gridSize;
-        const newY = current.y + dir.y * gridSize;
-
-        // Bounds check
-        if (newX < 5 || newX > 95 || newY < 5 || newY > 95) continue;
-
-        // Check if too close to avoid points (like dangerous ghosts)
-        const tooCloseToAvoid = avoidPoints.some(avoid =>
-          Math.sqrt(Math.pow(newX - avoid.x, 2) + Math.pow(newY - avoid.y, 2)) < 15
-        );
-        if (tooCloseToAvoid) continue;
-
-        const neighborKey = getKey({ x: newX, y: newY });
-        if (closedSet.has(neighborKey)) continue;
-
-        const g = current.g + gridSize;
-        const h = heuristic({ x: newX, y: newY }, goal);
-        const f = g + h;
-
-        const existing = openSet.find(n => getKey(n) === neighborKey);
-        if (!existing || g < existing.g) {
-          const neighbor: PathNode = {
-            x: newX,
-            y: newY,
-            g,
-            h,
-            f,
-            parent: current
-          };
-
-          if (!existing) {
-            openSet.push(neighbor);
-          } else {
-            existing.g = g;
-            existing.f = f;
-            existing.parent = current;
-          }
-        }
-      }
-    }
-
-    // No path found, return direct path
-    return [start, goal];
-  }, []);
-
-  // Smooth path by removing unnecessary waypoints
-  const smoothPath = (path: Position[]): Position[] => {
-    if (path.length <= 2) return path;
-
-    const smoothed: Position[] = [path[0]];
-    let current = 0;
-
-    while (current < path.length - 1) {
-      let farthest = current + 1;
-
-      // Try to skip as many waypoints as possible
-      for (let i = current + 2; i < Math.min(current + 5, path.length); i++) {
-        farthest = i;
-      }
-
-      smoothed.push(path[farthest]);
-      current = farthest;
-    }
-
-    return smoothed;
-  };
 
   // Create particles
   const createParticles = (x: number, y: number, color: string, count: number = 8, emoji?: string) => {
@@ -252,7 +103,7 @@ export default function IdlePage() {
             ...p,
             x: p.x + p.vx,
             y: p.y + p.vy,
-            vy: p.vy + 0.2,
+            vy: p.vy + 0.2, // gravity
             life: p.life - 0.02
           }))
           .filter(p => p.life > 0 && p.x > 0 && p.x < 100 && p.y > 0 && p.y < 100)
@@ -266,6 +117,31 @@ export default function IdlePage() {
       x: Math.random() * 80 + 10,
       y: Math.random() * 80 + 10
     };
+  };
+
+  const getAvailableDirections = (x: number, y: number): Position[] => {
+    const directions: Position[] = [];
+    const tests = [
+      { x: 1, y: 0 },
+      { x: -1, y: 0 },
+      { x: 0, y: 1 },
+      { x: 0, y: -1 },
+      { x: 0.7, y: 0.7 },
+      { x: -0.7, y: 0.7 },
+      { x: 0.7, y: -0.7 },
+      { x: -0.7, y: -0.7 },
+    ];
+
+    for (const dir of tests) {
+      const testX = x + dir.x * 5;
+      const testY = y + dir.y * 5;
+
+      if (testX > 5 && testX < 95 && testY > 5 && testY < 95) {
+        directions.push(dir);
+      }
+    }
+
+    return directions;
   };
 
   // Initialize
@@ -290,7 +166,6 @@ export default function IdlePage() {
       { x: 85, y: 85 },
       { x: 15, y: 85 }
     ];
-    const personalities: Ghost['personality'][] = ['aggressive', 'smart', 'random', 'ambusher'];
 
     for (let i = 0; i < 4; i++) {
       const pos = ghostStartPositions[i];
@@ -303,12 +178,12 @@ export default function IdlePage() {
         scared: false,
         mode: 'random',
         modeTimer: Math.floor(Math.random() * 100) + 50,
-        stuckCounter: 0,
-        personality: personalities[i]
+        stuckCounter: 0
       });
     }
     setGhosts(initialGhosts);
 
+    // Load high score
     const savedHighScore = localStorage.getItem('pacman_high_score');
     if (savedHighScore) {
       setHighScore(parseInt(savedHighScore));
@@ -357,7 +232,7 @@ export default function IdlePage() {
     return () => clearInterval(interval);
   }, [cakes.length]);
 
-  // Advanced Ghost AI with different personalities
+  // Ghost movement
   useEffect(() => {
     const moveGhosts = () => {
       setGhosts(prev => prev.map(ghost => {
@@ -367,110 +242,81 @@ export default function IdlePage() {
         let newMode = ghost.mode;
         let newModeTimer = ghost.modeTimer - 1;
 
-        // Update mode based on personality and timer
         if (newModeTimer <= 0) {
           if (ghost.scared) {
             newMode = 'flee';
             newModeTimer = 100;
           } else {
-            switch (ghost.personality) {
-              case 'aggressive':
-                newMode = Math.random() < 0.7 ? 'chase' : 'random';
-                newModeTimer = newMode === 'chase' ? 120 : 80;
-                break;
-              case 'smart':
-                newMode = Math.random() < 0.5 ? 'chase' : 'ambush';
-                newModeTimer = 100;
-                break;
-              case 'ambusher':
-                newMode = Math.random() < 0.6 ? 'ambush' : 'random';
-                newModeTimer = 150;
-                break;
-              default:
-                newMode = 'random';
-                newModeTimer = 100;
-            }
+            newMode = Math.random() < 0.3 ? 'chase' : 'random';
+            newModeTimer = newMode === 'chase' ? 80 + Math.random() * 60 : 100 + Math.random() * 100;
           }
         }
 
-        const distance = Math.sqrt(
-          Math.pow(ghost.x - pacmanPosition.x, 2) +
-          Math.pow(ghost.y - pacmanPosition.y, 2)
-        );
+        const availableDirections = getAvailableDirections(ghost.x, ghost.y);
 
-        // Use A* pathfinding for chase mode
-        if (newMode === 'chase' && !ghost.scared && distance < 50) {
-          const path = findPath({ x: ghost.x, y: ghost.y }, pacmanPosition);
-          if (path.length > 1) {
-            const nextPos = path[1];
-            const dx = nextPos.x - ghost.x;
-            const dy = nextPos.y - ghost.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist > 0) {
-              newDirection = { x: dx / dist, y: dy / dist };
-            }
-          }
-        } else if (newMode === 'ambush' && !ghost.scared) {
-          // Predict Pacman's future position and head there
-          const predictedX = pacmanPosition.x + pacmanDirection.x * 20;
-          const predictedY = pacmanPosition.y + pacmanDirection.y * 20;
-          const clampedX = Math.max(10, Math.min(90, predictedX));
-          const clampedY = Math.max(10, Math.min(90, predictedY));
+        if (availableDirections.length > 0 && Math.random() < 0.05) {
+          const randomDir = availableDirections[Math.floor(Math.random() * availableDirections.length)];
+          newDirection = randomDir;
+        }
 
-          if (distance < 60) {
-            const path = findPath(
-              { x: ghost.x, y: ghost.y },
-              { x: clampedX, y: clampedY }
-            );
-            if (path.length > 1) {
-              const nextPos = path[1];
-              const dx = nextPos.x - ghost.x;
-              const dy = nextPos.y - ghost.y;
-              const dist = Math.sqrt(dx * dx + dy * dy);
-              if (dist > 0) {
-                newDirection = { x: dx / dist, y: dy / dist };
+        const baseSpeed = ghost.scared ? 0.4 : 0.7;
+
+        if (newMode === 'chase' && !ghost.scared) {
+          const dx = pacmanPosition.x - ghost.x;
+          const dy = pacmanPosition.y - ghost.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance > 5 && distance < 45) {
+            let bestDir = newDirection;
+            let bestScore = Infinity;
+
+            for (const dir of availableDirections) {
+              const futureX = ghost.x + dir.x * 5;
+              const futureY = ghost.y + dir.y * 5;
+              const futureDist = Math.sqrt(
+                Math.pow(pacmanPosition.x - futureX, 2) +
+                Math.pow(pacmanPosition.y - futureY, 2)
+              );
+
+              if (futureDist < bestScore) {
+                bestScore = futureDist;
+                bestDir = dir;
               }
             }
-          }
-        } else if (newMode === 'flee' || ghost.scared) {
-          // Flee using A* away from Pacman
-          if (distance < 35) {
-            const fleeX = ghost.x + (ghost.x - pacmanPosition.x) * 2;
-            const fleeY = ghost.y + (ghost.y - pacmanPosition.y) * 2;
-            const clampedFleeX = Math.max(10, Math.min(90, fleeX));
-            const clampedFleeY = Math.max(10, Math.min(90, fleeY));
 
-            const path = findPath(
-              { x: ghost.x, y: ghost.y },
-              { x: clampedFleeX, y: clampedFleeY }
-            );
-            if (path.length > 1) {
-              const nextPos = path[1];
-              const dx = nextPos.x - ghost.x;
-              const dy = nextPos.y - ghost.y;
-              const dist = Math.sqrt(dx * dx + dy * dy);
-              if (dist > 0) {
-                newDirection = { x: dx / dist, y: dy / dist };
-              }
-            }
-          }
-        } else {
-          // Random movement - occasionally change direction
-          if (Math.random() < 0.03) {
-            const angle = Math.random() * Math.PI * 2;
             newDirection = {
-              x: Math.cos(angle),
-              y: Math.sin(angle)
+              x: newDirection.x * 0.6 + bestDir.x * 0.4,
+              y: newDirection.y * 0.6 + bestDir.y * 0.4
             };
           }
+        } else if (newMode === 'flee' || ghost.scared) {
+          const dx = ghost.x - pacmanPosition.x;
+          const dy = ghost.y - pacmanPosition.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance < 35) {
+            let bestDir = newDirection;
+            let bestScore = 0;
+
+            for (const dir of availableDirections) {
+              const futureX = ghost.x + dir.x * 5;
+              const futureY = ghost.y + dir.y * 5;
+              const futureDist = Math.sqrt(
+                Math.pow(pacmanPosition.x - futureX, 2) +
+                Math.pow(pacmanPosition.y - futureY, 2)
+              );
+
+              if (futureDist > bestScore) {
+                bestScore = futureDist;
+                bestDir = dir;
+              }
+            }
+
+            newDirection = bestDir;
+          }
         }
 
-        // Apply movement with personality-based speed
-        const baseSpeed = ghost.scared ? 0.4 :
-                         ghost.personality === 'aggressive' ? 0.8 :
-                         ghost.personality === 'smart' ? 0.7 : 0.6;
-
-        const speed = baseSpeed * (0.9 + Math.random() * 0.2);
+        const speed = baseSpeed * (1 + Math.random() * 0.2);
         const testX = ghost.x + newDirection.x * speed;
         const testY = ghost.y + newDirection.y * speed;
 
@@ -492,16 +338,15 @@ export default function IdlePage() {
 
     const interval = setInterval(moveGhosts, 50);
     return () => clearInterval(interval);
-  }, [pacmanPosition, pacmanDirection, findPath]);
+  }, [pacmanPosition]);
 
-  // Improved Pacman AI with A* pathfinding
+  // Pacman movement
   useEffect(() => {
     const movePacman = () => {
       setPacmanPosition(prev => {
         let newX = prev.x;
         let newY = prev.y;
 
-        // Stuck detection
         if (Math.abs(prev.x - lastPacmanPos.current.x) < 0.1 &&
             Math.abs(prev.y - lastPacmanPos.current.y) < 0.1) {
           setPacmanStuckCounter(c => c + 1);
@@ -511,92 +356,93 @@ export default function IdlePage() {
 
         lastPacmanPos.current = { x: prev.x, y: prev.y };
 
-        // Build target list with priorities
-        const targets: any[] = cakes.map(c => ({
-          ...c,
-          type: 'cake',
-          priority: c.isSpecial ? 3 : 1
-        }));
+        const availableDirections = getAvailableDirections(prev.x, prev.y);
 
+        if (pacmanStuckCounter > 10 && availableDirections.length > 0) {
+          const randomDir = availableDirections[Math.floor(Math.random() * availableDirections.length)];
+          setPacmanDirection(randomDir);
+          setPacmanStuckCounter(0);
+        }
+
+        const targets: any[] = cakes.map(c => ({ ...c, type: 'cake' }));
         if (powerMode) {
           ghosts.filter(g => g.scared).forEach(g => {
-            targets.push({
-              x: g.x,
-              y: g.y,
-              isGhost: true,
-              type: 'ghost',
-              priority: 2
-            });
+            targets.push({ x: g.x, y: g.y, isGhost: true, type: 'ghost' });
           });
         }
 
-        // Find dangerous ghosts to avoid
-        const dangerGhosts = ghosts.filter(g => !g.scared);
-        const avoidPoints: Position[] = dangerGhosts
-          .filter(g => {
-            const dist = Math.sqrt(Math.pow(g.x - prev.x, 2) + Math.pow(g.y - prev.y, 2));
-            return dist < 30;
-          })
-          .map(g => ({ x: g.x, y: g.y }));
+        let targetDir = null;
+        if (targets.length > 0) {
+          const nearest = targets.reduce((nearest, target) => {
+            const distance = Math.sqrt(Math.pow(target.x - prev.x, 2) + Math.pow(target.y - prev.y, 2));
+            const priority = target.isSpecial ? distance * 0.4 : target.isGhost ? distance * 0.6 : distance;
+            return priority < nearest.distance ? { target, distance: priority } : nearest;
+          }, { target: null, distance: Infinity });
 
-        // Recalculate path if needed
-        if (pacmanPath.length === 0 || pacmanStuckCounter > 15 || Math.random() < 0.1) {
-          if (targets.length > 0) {
-            // Find best target considering priority and distance
-            const bestTarget = targets.reduce((best, target) => {
-              const distance = Math.sqrt(
-                Math.pow(target.x - prev.x, 2) + Math.pow(target.y - prev.y, 2)
-              );
-              const score = distance / target.priority;
-              return score < best.score ? { target, score } : best;
-            }, { target: null, score: Infinity });
+          if (nearest.target && nearest.distance < 50) {
+            let bestDir = pacmanDirection;
+            let bestScore = Infinity;
 
-            if (bestTarget.target && bestTarget.score < 100) {
-              const newPath = findPath(
-                prev,
-                { x: bestTarget.target.x, y: bestTarget.target.y },
-                avoidPoints
+            for (const dir of availableDirections) {
+              const futureX = prev.x + dir.x * 5;
+              const futureY = prev.y + dir.y * 5;
+              const futureDist = Math.sqrt(
+                Math.pow(nearest.target.x - futureX, 2) +
+                Math.pow(nearest.target.y - futureY, 2)
               );
-              setPacmanPath(newPath.slice(1)); // Remove current position
-              setPacmanStuckCounter(0);
+
+              if (futureDist < bestScore) {
+                bestScore = futureDist;
+                bestDir = dir;
+              }
             }
+
+            targetDir = bestDir;
           }
         }
 
-        // Follow the calculated path
-        if (pacmanPath.length > 0) {
-          const nextWaypoint = pacmanPath[0];
-          const dx = nextWaypoint.x - prev.x;
-          const dy = nextWaypoint.y - prev.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
+        const dangerGhosts = ghosts.filter(g => !g.scared);
+        let avoidDir = null;
 
-          if (dist < 3) {
-            // Reached waypoint, remove it
-            setPacmanPath(p => p.slice(1));
-          }
+        for (const ghost of dangerGhosts) {
+          const distance = Math.sqrt(Math.pow(ghost.x - prev.x, 2) + Math.pow(ghost.y - prev.y, 2));
 
-          if (dist > 0) {
-            setPacmanDirection({
-              x: dx / dist,
-              y: dy / dist
-            });
-          }
-        } else if (avoidPoints.length > 0) {
-          // Emergency avoidance if no path
-          const nearestDanger = avoidPoints[0];
-          const dx = prev.x - nearestDanger.x;
-          const dy = prev.y - nearestDanger.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist > 0) {
-            setPacmanDirection({
-              x: dx / dist,
-              y: dy / dist
-            });
+          if (distance < 25) {
+            let bestDir = pacmanDirection;
+            let bestScore = 0;
+
+            for (const dir of availableDirections) {
+              const futureX = prev.x + dir.x * 5;
+              const futureY = prev.y + dir.y * 5;
+              const futureDist = Math.sqrt(
+                Math.pow(ghost.x - futureX, 2) +
+                Math.pow(ghost.y - futureY, 2)
+              );
+
+              if (futureDist > bestScore) {
+                bestScore = futureDist;
+                bestDir = dir;
+              }
+            }
+
+            avoidDir = bestDir;
+            break;
           }
         }
 
-        // Apply movement
-        const speed = powerMode ? 1.8 : 1.4;
+        let chosenDir = pacmanDirection;
+        if (avoidDir && !powerMode) {
+          chosenDir = avoidDir;
+        } else if (targetDir) {
+          chosenDir = targetDir;
+        }
+
+        setPacmanDirection(dir => ({
+          x: dir.x * 0.6 + chosenDir.x * 0.4,
+          y: dir.y * 0.6 + chosenDir.y * 0.4
+        }));
+
+        const speed = powerMode ? 1.6 : 1.3;
         const testX = prev.x + pacmanDirection.x * speed;
         const testY = prev.y + pacmanDirection.y * speed;
 
@@ -616,9 +462,9 @@ export default function IdlePage() {
       });
     };
 
-    const interval = setInterval(movePacman, 30);
+    const interval = setInterval(movePacman, 35);
     return () => clearInterval(interval);
-  }, [pacmanDirection, cakes, ghosts, powerMode, pacmanStuckCounter, pacmanPath, findPath]);
+  }, [pacmanDirection, cakes, ghosts, powerMode, pacmanStuckCounter]);
 
   // Collision detection - cakes
   useEffect(() => {
@@ -642,7 +488,6 @@ export default function IdlePage() {
           }
           setIsEating(true);
           setTimeout(() => setIsEating(false), 200);
-          setPacmanPath([]); // Clear path when eating
           return false;
         }
         return true;
@@ -667,7 +512,6 @@ export default function IdlePage() {
             createParticles(ghost.x, ghost.y, ghost.color, 10, '💯');
             setIsEating(true);
             setTimeout(() => setIsEating(false), 200);
-            setPacmanPath([]); // Clear path when eating ghost
 
             setTimeout(() => {
               const pos = findValidPosition();
@@ -680,8 +524,7 @@ export default function IdlePage() {
                 scared: powerMode,
                 mode: 'flee',
                 modeTimer: 100,
-                stuckCounter: 0,
-                personality: ghost.personality
+                stuckCounter: 0
               }]);
             }, 4000);
 
@@ -773,13 +616,12 @@ export default function IdlePage() {
                 Golden Munch
               </h1>
               <p className="text-2xl text-chocolate-brown mb-8">
-                Kiosk Idle Mode - AI Enhanced
+                Kiosk Idle Mode
               </p>
               <div className="text-xl text-chocolate-brown/80 mb-8 space-y-2">
-                <p>🎮 Watch Smart Pacman collect treats with A* pathfinding!</p>
+                <p>🎮 Watch Pacman collect delicious treats!</p>
                 <p>⭐ Special items activate power mode</p>
-                <p>👻 Ghosts have unique AI personalities</p>
-                <p>🧠 Advanced pathfinding & prediction</p>
+                <p>👻 Eat ghosts during power mode for bonus points</p>
               </div>
               <div className="bg-golden-orange/10 rounded-2xl p-6 mb-8">
                 <p className="text-4xl font-bold bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent">
@@ -850,9 +692,6 @@ export default function IdlePage() {
                 ⚡ POWERED UP!
               </Chip>
             )}
-            <Chip size="sm" variant="flat" color="success">
-              🧠 A* AI
-            </Chip>
           </div>
         </Card>
       </div>
@@ -874,20 +713,6 @@ export default function IdlePage() {
         >
           {particle.emoji || '✨'}
         </div>
-      ))}
-
-      {/* Debug: Show Pacman's path (optional - can be removed) */}
-      {pacmanPath.slice(0, 5).map((waypoint, idx) => (
-        <div
-          key={idx}
-          className="absolute w-2 h-2 bg-green-500/30 rounded-full pointer-events-none"
-          style={{
-            left: `${waypoint.x}%`,
-            top: `${waypoint.y}%`,
-            transform: 'translate(-50%, -50%)',
-            zIndex: 8
-          }}
-        />
       ))}
 
       {/* Pacman */}
@@ -918,6 +743,7 @@ export default function IdlePage() {
             filter: powerMode ? 'brightness(1.3)' : 'none'
           }}
         >
+          {/* Eye */}
           <div className="absolute w-3 h-3 bg-chocolate-brown rounded-full top-4 left-4 shadow-inner">
             <div className="absolute w-1 h-1 bg-white rounded-full top-0.5 left-0.5"></div>
           </div>
@@ -958,17 +784,6 @@ export default function IdlePage() {
             {ghost.scared && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-2xl">😱</div>
-              </div>
-            )}
-            {/* Personality indicator */}
-            {!ghost.scared && (
-              <div className="absolute -bottom-2 left-1/2 -translate-x-1/2">
-                <div className="text-xs bg-black/50 text-white px-1 rounded">
-                  {ghost.personality === 'aggressive' && '⚔️'}
-                  {ghost.personality === 'smart' && '🧠'}
-                  {ghost.personality === 'ambusher' && '🎯'}
-                  {ghost.personality === 'random' && '🎲'}
-                </div>
               </div>
             )}
           </div>
