@@ -16,6 +16,7 @@ interface Ghost {
   y: number;
   color: string;
   direction: Position;
+<<<<<<< HEAD
   scared: boolean;
   mode: 'random' | 'chase' | 'flee' | 'ambush';
   modeTimer: number;
@@ -24,6 +25,12 @@ interface Ghost {
   aggressionTimer: number;
   aggressionCooldown: number;
   sightRange: number;
+=======
+  behavior: 'wander' | 'scared' | 'aggression';
+  aggressionTimer: number; // Countdown when in aggression mode (5 seconds)
+  aggressionCooldown: number; // Cooldown period before can aggro again
+  onCooldown: boolean;
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
 }
 
 interface Position {
@@ -64,6 +71,7 @@ export default function IdlePage() {
   const [pacmanPosition, setPacmanPosition] = useState<Position>({ x: 50, y: 50 });
   const [pacmanDirection, setPacmanDirection] = useState<Position>({ x: 1, y: 0 });
   const [pacmanPath, setPacmanPath] = useState<Position[]>([]);
+  const [pacmanBehavior, setPacmanBehavior] = useState<'cake_hunting' | 'run' | 'hunting_ghosts'>('cake_hunting');
   const [cakes, setCakes] = useState<Cake[]>([]);
   const [ghosts, setGhosts] = useState<Ghost[]>([]);
   const [isEating, setIsEating] = useState(false);
@@ -84,6 +92,7 @@ export default function IdlePage() {
   const obstaclesRef = useRef<Obstacle[]>([]);
   const pacmanPosRef = useRef<Position>({ x: 50, y: 50 });
   const pacmanDirRef = useRef<Position>({ x: 1, y: 0 });
+  const pacmanBehaviorRef = useRef<'cake_hunting' | 'run' | 'hunting_ghosts'>('cake_hunting');
   const cakesRef = useRef<Cake[]>([]);
   const ghostsRef = useRef<Ghost[]>([]);
   const pacmanPathRef = useRef<Position[]>([]);
@@ -122,6 +131,10 @@ export default function IdlePage() {
     pacmanStuckCounterRef.current = pacmanStuckCounter;
   }, [pacmanStuckCounter]);
 
+  useEffect(() => {
+    pacmanBehaviorRef.current = pacmanBehavior;
+  }, [pacmanBehavior]);
+
   // Helper function to check if a position collides with any obstacle
   const isInsideObstacle = useCallback((x: number, y: number, margin: number = 2): boolean => {
     return obstaclesRef.current.some(obstacle => {
@@ -134,6 +147,29 @@ export default function IdlePage() {
              y >= obstacleTop && y <= obstacleBottom;
     });
   }, []);
+
+  // Line-of-sight check: Can point A see point B without obstacles in between?
+  const hasLineOfSight = useCallback((from: Position, to: Position): boolean => {
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    // Sample points along the line
+    const steps = Math.ceil(distance / 2); // Check every 2 units
+
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const checkX = from.x + dx * t;
+      const checkY = from.y + dy * t;
+
+      // If any point along the line hits an obstacle, no line of sight
+      if (isInsideObstacle(checkX, checkY, 0)) {
+        return false;
+      }
+    }
+
+    return true;
+  }, [isInsideObstacle]);
 
   // A* Pathfinding Algorithm - Simplified and working
   const findPath = useCallback((start: Position, goal: Position, avoidPoints: Position[] = []): Position[] => {
@@ -158,7 +194,7 @@ export default function IdlePage() {
 
     const GRID_SIZE = 5;
     const MAX_ITERATIONS = 100;
-    const BOUNDS = { min: 2, max: 98 };
+    const BOUNDS = { min: 5, max: 95 }; // Account for wall thickness
 
     // Helper: Check if position is walkable
     const isWalkable = (x: number, y: number): boolean => {
@@ -331,8 +367,8 @@ export default function IdlePage() {
     let attempts = 0;
     while (attempts < 50) {
       const pos = {
-        x: Math.random() * 96 + 2,
-        y: Math.random() * 96 + 2
+        x: Math.random() * 90 + 5,
+        y: Math.random() * 90 + 5
       };
 
       if (!isInsideObstacle(pos.x, pos.y, 3)) {
@@ -345,67 +381,166 @@ export default function IdlePage() {
 
   // Initialize - Only runs once on mount
   useEffect(() => {
-    // Generate random obstacles first
+    // Generate maze-like structure with corridors
     const initialObstacles: Obstacle[] = [];
-    const obstacleCount = Math.floor(Math.random() * 6) + 6; // 6-11 obstacles
     const obstacleColors = ['#8B4513', '#A0522D', '#6B4423', '#8B7355', '#654321'];
+    const wallColor = obstacleColors[0];
 
-    // Reserved areas (don't spawn obstacles here)
-    const reservedAreas = [
-      { x: 50, y: 50, radius: 15 }, // Center area for Pacman start
-      { x: 10, y: 10, radius: 8 },
-      { x: 90, y: 10, radius: 8 },
-      { x: 90, y: 90, radius: 8 },
-      { x: 10, y: 90, radius: 8 }
-    ];
+    // Outer walls (border)
+    const wallThickness = 2;
 
-    for (let i = 0; i < obstacleCount; i++) {
-      let validPosition = false;
-      let obstacle: Obstacle | null = null;
-      let attempts = 0;
+    // Top wall
+    initialObstacles.push({
+      id: obstacleIdRef.current++,
+      x: 0,
+      y: 0,
+      width: 100,
+      height: wallThickness,
+      color: wallColor
+    });
 
-      while (!validPosition && attempts < 100) {
-        const width = Math.random() * 4 + 2.5; // 2.5-6.5 units
-        const height = Math.random() * 4 + 2.5;
-        const x = Math.random() * 90 + 5;
-        const y = Math.random() * 90 + 5;
+    // Bottom wall
+    initialObstacles.push({
+      id: obstacleIdRef.current++,
+      x: 0,
+      y: 98,
+      width: 100,
+      height: wallThickness,
+      color: wallColor
+    });
 
-        const overlapsReserved = reservedAreas.some(area => {
-          const obstacleCenter = { x: x + width / 2, y: y + height / 2 };
-          const distance = Math.sqrt(
-            Math.pow(obstacleCenter.x - area.x, 2) +
-            Math.pow(obstacleCenter.y - area.y, 2)
-          );
-          return distance < area.radius + Math.max(width, height) / 2;
+    // Left wall
+    initialObstacles.push({
+      id: obstacleIdRef.current++,
+      x: 0,
+      y: 0,
+      width: wallThickness,
+      height: 100,
+      color: wallColor
+    });
+
+    // Right wall
+    initialObstacles.push({
+      id: obstacleIdRef.current++,
+      x: 98,
+      y: 0,
+      width: wallThickness,
+      height: 100,
+      color: wallColor
+    });
+
+    // Create maze corridors - vertical and horizontal walls with gaps
+    const corridorWidth = 2;
+    const gapSize = 12; // Size of openings in walls
+
+    // Vertical walls creating corridors
+    const verticalWalls = [25, 50, 75];
+    verticalWalls.forEach((xPos, index) => {
+      // Each vertical wall has gaps at different heights
+      const gapPositions = [
+        { start: 20, end: 20 + gapSize },
+        { start: 50, end: 50 + gapSize },
+        { start: 80, end: 80 + gapSize }
+      ];
+
+      // Shuffle gaps for variety
+      const selectedGap = gapPositions[(index * 2) % gapPositions.length];
+      const selectedGap2 = gapPositions[(index * 2 + 1) % gapPositions.length];
+
+      let currentY = wallThickness + 2;
+
+      // First segment (before first gap)
+      if (currentY < selectedGap.start) {
+        initialObstacles.push({
+          id: obstacleIdRef.current++,
+          x: xPos,
+          y: currentY,
+          width: corridorWidth,
+          height: selectedGap.start - currentY,
+          color: obstacleColors[Math.floor(Math.random() * obstacleColors.length)]
         });
+      }
+      currentY = selectedGap.end;
 
-        const overlapsObstacle = initialObstacles.some(existing => {
-          return !(
-            x > existing.x + existing.width + 4 ||
-            x + width < existing.x - 4 ||
-            y > existing.y + existing.height + 4 ||
-            y + height < existing.y - 4
-          );
+      // Second segment (between gaps)
+      if (selectedGap2.start > selectedGap.end && currentY < selectedGap2.start) {
+        initialObstacles.push({
+          id: obstacleIdRef.current++,
+          x: xPos,
+          y: currentY,
+          width: corridorWidth,
+          height: selectedGap2.start - currentY,
+          color: obstacleColors[Math.floor(Math.random() * obstacleColors.length)]
         });
-
-        if (!overlapsReserved && !overlapsObstacle) {
-          obstacle = {
-            id: obstacleIdRef.current++,
-            x,
-            y,
-            width,
-            height,
-            color: obstacleColors[Math.floor(Math.random() * obstacleColors.length)]
-          };
-          validPosition = true;
-        }
-        attempts++;
       }
+      currentY = selectedGap2.end;
 
-      if (obstacle) {
-        initialObstacles.push(obstacle);
+      // Third segment (after second gap to bottom)
+      if (currentY < 98 - wallThickness - 2) {
+        initialObstacles.push({
+          id: obstacleIdRef.current++,
+          x: xPos,
+          y: currentY,
+          width: corridorWidth,
+          height: 98 - wallThickness - 2 - currentY,
+          color: obstacleColors[Math.floor(Math.random() * obstacleColors.length)]
+        });
       }
-    }
+    });
+
+    // Horizontal walls creating corridors
+    const horizontalWalls = [25, 50, 75];
+    horizontalWalls.forEach((yPos, index) => {
+      // Each horizontal wall has gaps at different positions
+      const gapPositions = [
+        { start: 15, end: 15 + gapSize },
+        { start: 45, end: 45 + gapSize },
+        { start: 75, end: 75 + gapSize }
+      ];
+
+      const selectedGap = gapPositions[(index * 2 + 1) % gapPositions.length];
+      const selectedGap2 = gapPositions[(index * 2) % gapPositions.length];
+
+      let currentX = wallThickness + 2;
+
+      // First segment
+      if (currentX < selectedGap.start) {
+        initialObstacles.push({
+          id: obstacleIdRef.current++,
+          x: currentX,
+          y: yPos,
+          width: selectedGap.start - currentX,
+          height: corridorWidth,
+          color: obstacleColors[Math.floor(Math.random() * obstacleColors.length)]
+        });
+      }
+      currentX = selectedGap.end;
+
+      // Second segment
+      if (selectedGap2.start > selectedGap.end && currentX < selectedGap2.start) {
+        initialObstacles.push({
+          id: obstacleIdRef.current++,
+          x: currentX,
+          y: yPos,
+          width: selectedGap2.start - currentX,
+          height: corridorWidth,
+          color: obstacleColors[Math.floor(Math.random() * obstacleColors.length)]
+        });
+      }
+      currentX = selectedGap2.end;
+
+      // Third segment
+      if (currentX < 98 - wallThickness - 2) {
+        initialObstacles.push({
+          id: obstacleIdRef.current++,
+          x: currentX,
+          y: yPos,
+          width: 98 - wallThickness - 2 - currentX,
+          height: corridorWidth,
+          color: obstacleColors[Math.floor(Math.random() * obstacleColors.length)]
+        });
+      }
+    });
 
     setObstacles(initialObstacles);
     obstaclesRef.current = initialObstacles;
@@ -415,8 +550,8 @@ export default function IdlePage() {
       let attempts = 0;
       while (attempts < 50) {
         const pos = {
-          x: Math.random() * 96 + 2,
-          y: Math.random() * 96 + 2
+          x: Math.random() * 90 + 5,
+          y: Math.random() * 90 + 5
         };
 
         const isInside = initialObstacles.some(obstacle => {
@@ -458,7 +593,6 @@ export default function IdlePage() {
       { x: 90, y: 90 },
       { x: 10, y: 90 }
     ];
-    const personalities: Ghost['personality'][] = ['aggressive', 'smart', 'random', 'ambusher'];
 
     for (let i = 0; i < 4; i++) {
       const pos = ghostStartPositions[i];
@@ -468,6 +602,7 @@ export default function IdlePage() {
         y: pos.y,
         color: ghostColors[i],
         direction: { x: (Math.random() - 0.5) * 2, y: (Math.random() - 0.5) * 2 },
+<<<<<<< HEAD
         scared: false,
         mode: 'random',
         modeTimer: Math.floor(Math.random() * 100) + 50,
@@ -476,6 +611,12 @@ export default function IdlePage() {
         aggressionTimer: 0,
         aggressionCooldown: 0,
         sightRange: personalities[i] === 'aggressive' ? 35 : 25
+=======
+        behavior: 'wander',
+        aggressionTimer: 0,
+        aggressionCooldown: 0,
+        onCooldown: false
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
       });
     }
     setGhosts(initialGhosts);
@@ -504,7 +645,8 @@ export default function IdlePage() {
       return () => clearTimeout(timer);
     } else if (powerTimeLeft === 0 && powerMode) {
       setPowerMode(false);
-      setGhosts(prev => prev.map(ghost => ({ ...ghost, scared: false, mode: 'random' })));
+      setPacmanBehavior('cake_hunting');
+      setGhosts(prev => prev.map(ghost => ({ ...ghost, behavior: 'wander' })));
     }
   }, [powerMode, powerTimeLeft]);
 
@@ -529,13 +671,14 @@ export default function IdlePage() {
     return () => clearInterval(interval);
   }, [cakes.length, findValidPosition]);
 
-  // Advanced Ghost AI
+  // New Ghost AI - 3 Behaviors: Wander, Scared, Aggression
   useEffect(() => {
     const interval = setInterval(() => {
       setGhosts(prev => prev.map(ghost => {
         let newX = ghost.x;
         let newY = ghost.y;
         let newDirection = { ...ghost.direction };
+<<<<<<< HEAD
         let newMode = ghost.mode;
         let newModeTimer = ghost.modeTimer - 1;
         let newAggressive = ghost.aggressive;
@@ -623,26 +766,58 @@ export default function IdlePage() {
             if (dist > 0) {
               newDirection = { x: dx / dist, y: dy / dist };
             }
-          }
-        } else if (newMode === 'ambush' && !ghost.scared) {
-          const predictedX = pacPos.x + pacDir.x * 20;
-          const predictedY = pacPos.y + pacDir.y * 20;
-          const clampedX = Math.max(10, Math.min(90, predictedX));
-          const clampedY = Math.max(10, Math.min(90, predictedY));
+=======
+        let newBehavior = ghost.behavior;
+        let newAggressionTimer = ghost.aggressionTimer;
+        let newAggressionCooldown = ghost.aggressionCooldown;
+        let newOnCooldown = ghost.onCooldown;
 
-          if (distance < 60) {
-            const path = findPath({ x: ghost.x, y: ghost.y }, { x: clampedX, y: clampedY });
-            if (path.length > 1) {
-              const nextPos = path[1];
-              const dx = nextPos.x - ghost.x;
-              const dy = nextPos.y - ghost.y;
-              const dist = Math.sqrt(dx * dx + dy * dy);
-              if (dist > 0) {
-                newDirection = { x: dx / dist, y: dy / dist };
-              }
-            }
+        const pacPos = pacmanPosRef.current;
+        const currentPowerMode = powerModeRef.current;
+
+        const distance = Math.sqrt(
+          Math.pow(ghost.x - pacPos.x, 2) +
+          Math.pow(ghost.y - pacPos.y, 2)
+        );
+
+        // Update cooldown timer
+        if (newAggressionCooldown > 0) {
+          newAggressionCooldown = Math.max(0, newAggressionCooldown - 0.05); // Decrease by 50ms
+          if (newAggressionCooldown === 0) {
+            newOnCooldown = false;
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
           }
-        } else if (newMode === 'flee' || ghost.scared) {
+        }
+
+        // Behavior transitions
+        if (currentPowerMode) {
+          // When Pacman has star, all ghosts become scared
+          newBehavior = 'scared';
+          newAggressionTimer = 0;
+        } else if (newBehavior === 'scared') {
+          // Power mode ended, return to wander
+          newBehavior = 'wander';
+          newAggressionTimer = 0;
+        } else if (newBehavior === 'aggression') {
+          // In aggression mode, count down timer
+          newAggressionTimer = Math.max(0, newAggressionTimer - 0.05); // Decrease by 50ms
+          if (newAggressionTimer <= 0) {
+            // Aggression timer expired, go on cooldown
+            newBehavior = 'wander';
+            newOnCooldown = true;
+            newAggressionCooldown = 10; // 10 second cooldown
+          }
+        } else if (newBehavior === 'wander' && !newOnCooldown) {
+          // Enter aggression mode if ghost can see Pacman (line of sight)
+          if (distance < 40 && hasLineOfSight({ x: ghost.x, y: ghost.y }, pacPos) && Math.random() < 0.05) {
+            newBehavior = 'aggression';
+            newAggressionTimer = 5; // 5 second aggression
+          }
+        }
+
+        // Execute behavior
+        if (newBehavior === 'scared') {
+          // SCARED BEHAVIOR: Flee from Pacman
           if (distance < 35) {
             const fleeX = ghost.x + (ghost.x - pacPos.x) * 2;
             const fleeY = ghost.y + (ghost.y - pacPos.y) * 2;
@@ -660,26 +835,43 @@ export default function IdlePage() {
               }
             }
           }
+        } else if (newBehavior === 'aggression') {
+          // AGGRESSION BEHAVIOR: Actively pursue Pacman
+          const path = findPath({ x: ghost.x, y: ghost.y }, pacPos);
+          if (path.length > 1) {
+            const nextPos = path[1];
+            const dx = nextPos.x - ghost.x;
+            const dy = nextPos.y - ghost.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > 0) {
+              newDirection = { x: dx / dist, y: dy / dist };
+            }
+          }
         } else {
-          // Random movement
+          // WANDER BEHAVIOR: Random wandering
           if (Math.random() < 0.03) {
             const angle = Math.random() * Math.PI * 2;
             newDirection = { x: Math.cos(angle), y: Math.sin(angle) };
           }
         }
 
+<<<<<<< HEAD
         // Aggressive ghosts are much faster!
         let baseSpeed = ghost.scared ? 0.4 : ghost.personality === 'aggressive' ? 0.8 : 0.6;
         if (newAggressive) {
           baseSpeed = 1.2; // Very fast when aggressive!
         }
+=======
+        // Movement speed based on behavior
+        const baseSpeed = newBehavior === 'scared' ? 0.5 : newBehavior === 'aggression' ? 1.0 : 0.6;
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
         const speed = baseSpeed * (0.9 + Math.random() * 0.2);
         const testX = ghost.x + newDirection.x * speed;
         const testY = ghost.y + newDirection.y * speed;
 
         const wouldHitObstacle = isInsideObstacle(testX, testY, 1);
 
-        if (testX > 2 && testX < 98 && testY > 2 && testY < 98 && !wouldHitObstacle) {
+        if (testX > 5 && testX < 95 && testY > 5 && testY < 95 && !wouldHitObstacle) {
           newX = testX;
           newY = testY;
         } else if (wouldHitObstacle) {
@@ -692,19 +884,26 @@ export default function IdlePage() {
           x: newX,
           y: newY,
           direction: newDirection,
+<<<<<<< HEAD
           mode: newMode,
           modeTimer: newModeTimer,
           aggressive: newAggressive,
           aggressionTimer: newAggressionTimer,
           aggressionCooldown: newAggressionCooldown
+=======
+          behavior: newBehavior,
+          aggressionTimer: newAggressionTimer,
+          aggressionCooldown: newAggressionCooldown,
+          onCooldown: newOnCooldown
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
         };
       }));
     }, 50);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [findPath, isInsideObstacle, hasLineOfSight]);
 
-  // Improved Pacman AI with A* pathfinding
+  // New Pacman AI - 3 Behaviors: Cake Hunting, Run, Hunting Ghosts
   useEffect(() => {
     const movePacman = () => {
       let shouldIncrementStuck = false;
@@ -712,6 +911,7 @@ export default function IdlePage() {
       let newPathToSet: Position[] | null = null;
       let newDirectionToSet: Position | null = null;
       let shouldClearPath = false;
+      let newBehaviorToSet: 'cake_hunting' | 'run' | 'hunting_ghosts' | null = null;
 
       setPacmanPosition(prev => {
         let newX = prev.x;
@@ -724,6 +924,7 @@ export default function IdlePage() {
         const currentPath = pacmanPathRef.current;
         const currentStuckCounter = pacmanStuckCounterRef.current;
         const currentDirection = pacmanDirRef.current;
+<<<<<<< HEAD
 
         console.log('\n═══════════════════════════════════════════════');
         console.log('🎮 PACMAN MOVEMENT TICK');
@@ -742,6 +943,9 @@ export default function IdlePage() {
           const dist = Math.sqrt(Math.pow(cake.x - prev.x, 2) + Math.pow(cake.y - prev.y, 2));
           console.log(`  Cake ${i + 1}: ${cake.emoji} at (${cake.x.toFixed(1)}, ${cake.y.toFixed(1)}) - Distance: ${dist.toFixed(1)} - Special: ${cake.isSpecial}`);
         });
+=======
+        const currentBehavior = pacmanBehaviorRef.current;
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
 
         // Stuck detection
         if (Math.abs(prev.x - lastPacmanPos.current.x) < 0.1 &&
@@ -753,6 +957,7 @@ export default function IdlePage() {
 
         lastPacmanPos.current = { x: prev.x, y: prev.y };
 
+<<<<<<< HEAD
         // Check for aggressive ghosts
         const aggressiveGhosts = currentGhosts.filter(g => g.aggressive && !g.scared);
         const underAttack = aggressiveGhosts.length > 0;
@@ -763,9 +968,82 @@ export default function IdlePage() {
           aggressiveGhosts.forEach((g, i) => {
             const dist = Math.sqrt(Math.pow(g.x - prev.x, 2) + Math.pow(g.y - prev.y, 2));
             console.log(`    Aggressive Ghost ${i + 1}: at (${g.x.toFixed(1)}, ${g.y.toFixed(1)}) - Distance: ${dist.toFixed(1)} - Timer: ${g.aggressionTimer}`);
-          });
+=======
+        // Check for aggressive ghosts pursuing Pacman
+        const aggressiveGhosts = currentGhosts.filter(g => g.behavior === 'aggression');
+        const isBeingPursued = aggressiveGhosts.some(g => {
+          const dist = Math.sqrt(Math.pow(g.x - prev.x, 2) + Math.pow(g.y - prev.y, 2));
+          return dist < 25;
+        });
+
+        // Determine behavior based on game state
+        let desiredBehavior: 'cake_hunting' | 'run' | 'hunting_ghosts';
+        if (currentPowerMode) {
+          // HUNTING GHOSTS: Prioritize eating ghosts when powered up
+          desiredBehavior = 'hunting_ghosts';
+        } else if (isBeingPursued) {
+          // RUN: Flee from aggressive ghosts
+          desiredBehavior = 'run';
+        } else {
+          // CAKE HUNTING: Default behavior
+          desiredBehavior = 'cake_hunting';
         }
 
+        if (desiredBehavior !== currentBehavior) {
+          newBehaviorToSet = desiredBehavior;
+          shouldClearPath = true; // Clear path when behavior changes
+        }
+
+        // Build target list based on behavior
+        const targets: any[] = [];
+        let avoidPoints: Position[] = [];
+
+        if (desiredBehavior === 'hunting_ghosts') {
+          // Prioritize scared ghosts
+          const scaredGhosts = currentGhosts.filter(g => g.behavior === 'scared');
+          scaredGhosts.forEach(g => {
+            targets.push({
+              x: g.x,
+              y: g.y,
+              type: 'ghost',
+              priority: 5 // Highest priority
+            });
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
+          });
+
+          // Add cakes as secondary targets
+          currentCakes.forEach(c => {
+            targets.push({
+              ...c,
+              type: 'cake',
+              priority: c.isSpecial ? 3 : 1
+            });
+          });
+        } else if (desiredBehavior === 'run') {
+          // When running, find safe positions away from aggressive ghosts
+          // Don't target anything, just flee
+          avoidPoints = aggressiveGhosts.map(g => ({ x: g.x, y: g.y }));
+        } else {
+          // CAKE HUNTING: Target cakes, avoid aggressive ghosts
+          currentCakes.forEach(c => {
+            targets.push({
+              ...c,
+              type: 'cake',
+              priority: c.isSpecial ? 4 : 1 // Prioritize special cakes
+            });
+          });
+
+          // Avoid aggressive ghosts
+          const dangerGhosts = currentGhosts.filter(g => g.behavior === 'aggression' || g.behavior === 'wander');
+          avoidPoints = dangerGhosts
+            .filter(g => {
+              const dist = Math.sqrt(Math.pow(g.x - prev.x, 2) + Math.pow(g.y - prev.y, 2));
+              return dist < 25;
+            })
+            .map(g => ({ x: g.x, y: g.y }));
+        }
+
+<<<<<<< HEAD
         // Build target list (IGNORE CAKES when under attack!)
         const targets: any[] = [];
 
@@ -831,9 +1109,31 @@ export default function IdlePage() {
         console.log('  Reason:', currentPath.length === 0 ? 'NO PATH' : currentStuckCounter > 15 ? 'STUCK TOO LONG' : 'RANDOM REPLAN');
         console.log('  Current Path Length:', currentPath.length);
         console.log('  Stuck Counter:', currentStuckCounter);
+=======
+        // Recalculate path if needed
+        const shouldRecalculate = currentPath.length === 0 || currentStuckCounter > 15 || shouldClearPath || Math.random() < 0.1;
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
 
         if (shouldRecalculate) {
-          if (targets.length > 0) {
+          if (desiredBehavior === 'run') {
+            // Run away from aggressive ghosts
+            if (aggressiveGhosts.length > 0) {
+              // Find average position of aggressive ghosts
+              const avgX = aggressiveGhosts.reduce((sum, g) => sum + g.x, 0) / aggressiveGhosts.length;
+              const avgY = aggressiveGhosts.reduce((sum, g) => sum + g.y, 0) / aggressiveGhosts.length;
+
+              // Run in opposite direction
+              const fleeX = prev.x + (prev.x - avgX) * 2;
+              const fleeY = prev.y + (prev.y - avgY) * 2;
+              const clampedFleeX = Math.max(10, Math.min(90, fleeX));
+              const clampedFleeY = Math.max(10, Math.min(90, fleeY));
+
+              const calculatedPath = findPath(prev, { x: clampedFleeX, y: clampedFleeY }, avoidPoints);
+              newPathToSet = calculatedPath.slice(1);
+              shouldResetStuck = true;
+            }
+          } else if (targets.length > 0) {
+            // Find best target based on priority
             const bestTarget = targets.reduce((best, target) => {
               const distance = Math.sqrt(
                 Math.pow(target.x - prev.x, 2) + Math.pow(target.y - prev.y, 2)
@@ -842,6 +1142,7 @@ export default function IdlePage() {
               return score < best.score ? { target, score } : best;
             }, { target: null, score: Infinity });
 
+<<<<<<< HEAD
             console.log('\n🎯 BEST TARGET SELECTION:');
             if (bestTarget.target) {
               const targetDist = Math.sqrt(Math.pow(bestTarget.target.x - prev.x, 2) + Math.pow(bestTarget.target.y - prev.y, 2));
@@ -855,6 +1156,8 @@ export default function IdlePage() {
               console.log('  ❌ NO TARGET SELECTED');
             }
 
+=======
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
             if (bestTarget.target && bestTarget.score < 100) {
               console.log('\n📍 CALCULATING PATH TO TARGET...');
               console.log('  From:', { x: prev.x.toFixed(1), y: prev.y.toFixed(1) });
@@ -862,6 +1165,7 @@ export default function IdlePage() {
               console.log('  Avoid Points:', avoidPoints.length);
 
               const calculatedPath = findPath(prev, { x: bestTarget.target.x, y: bestTarget.target.y }, avoidPoints);
+<<<<<<< HEAD
 
               console.log('\n✅ PATH CALCULATED:');
               console.log('  Path Length:', calculatedPath.length);
@@ -874,6 +1178,10 @@ export default function IdlePage() {
               shouldResetStuck = true;
             } else {
               console.log('\n❌ TARGET REJECTED - Score too high:', bestTarget.score);
+=======
+              newPathToSet = calculatedPath.slice(1);
+              shouldResetStuck = true;
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
             }
           } else if (currentStuckCounter > 10) {
             // No targets available and stuck - move to random position
@@ -881,8 +1189,11 @@ export default function IdlePage() {
               x: Math.random() * 80 + 10,
               y: Math.random() * 80 + 10
             };
+<<<<<<< HEAD
             console.log('\n🎲 NO TARGETS - MOVING TO RANDOM POSITION');
             console.log('  Random Target:', { x: randomTarget.x.toFixed(1), y: randomTarget.y.toFixed(1) });
+=======
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
             const calculatedPath = findPath(prev, randomTarget, avoidPoints);
             console.log('  Random Path Length:', calculatedPath.length);
             newPathToSet = calculatedPath.slice(1);
@@ -906,6 +1217,7 @@ export default function IdlePage() {
           const dy = nextWaypoint.y - prev.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
+<<<<<<< HEAD
           console.log('  Next Waypoint:', { x: nextWaypoint.x.toFixed(1), y: nextWaypoint.y.toFixed(1) });
           console.log('  Distance to Waypoint:', dist.toFixed(2));
           console.log('  Waypoints Remaining:', pathToFollow.length);
@@ -916,24 +1228,36 @@ export default function IdlePage() {
             console.log('  ✅ REACHED WAYPOINT - Advancing to next');
           } else {
             console.log('  ⏩ Moving towards waypoint');
+=======
+          if (dist < 3) {
+            newPathToSet = currentPath.slice(1);
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
           }
 
           if (dist > 0) {
             newDirectionToSet = { x: dx / dist, y: dy / dist };
+<<<<<<< HEAD
             console.log('  ➡️  Setting Direction:', { x: newDirectionToSet.x.toFixed(2), y: newDirectionToSet.y.toFixed(2) });
+=======
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
           }
-        } else if (avoidPoints.length > 0) {
-          const nearestDanger = avoidPoints[0];
-          const dx = prev.x - nearestDanger.x;
-          const dy = prev.y - nearestDanger.y;
+        } else if (desiredBehavior === 'run' && aggressiveGhosts.length > 0) {
+          // Emergency flee if no path
+          const nearestAggro = aggressiveGhosts[0];
+          const dx = prev.x - nearestAggro.x;
+          const dy = prev.y - nearestAggro.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
+<<<<<<< HEAD
           console.log('  ⚠️  FLEEING FROM DANGER!');
           console.log('  Danger at:', { x: nearestDanger.x.toFixed(1), y: nearestDanger.y.toFixed(1) });
           console.log('  Distance from danger:', dist.toFixed(2));
+=======
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
           if (dist > 0) {
             newDirectionToSet = { x: dx / dist, y: dy / dist };
             console.log('  ➡️  Flee Direction:', { x: newDirectionToSet.x.toFixed(2), y: newDirectionToSet.y.toFixed(2) });
           }
+<<<<<<< HEAD
         } else {
           console.log('  ➡️  NO PATH - Continuing current direction:', { x: currentDirection.x.toFixed(2), y: currentDirection.y.toFixed(2) });
         }
@@ -962,22 +1286,43 @@ export default function IdlePage() {
         console.log('  In Bounds:', testX > 2 && testX < 98 && testY > 2 && testY < 98);
 
         if (testX > 2 && testX < 98 && testY > 2 && testY < 98 && !wouldHitObstacle) {
+=======
+        }
+
+        // Apply movement with speed based on behavior
+        let speed = 1.4; // Default
+        if (desiredBehavior === 'hunting_ghosts') {
+          speed = 1.8; // Fast when powered up
+        } else if (desiredBehavior === 'run') {
+          speed = 1.6; // Fast when fleeing
+        }
+
+        const testX = prev.x + currentDirection.x * speed;
+        const testY = prev.y + currentDirection.y * speed;
+
+        const wouldHitObstacle = isInsideObstacle(testX, testY, 1);
+
+        if (testX > 5 && testX < 95 && testY > 5 && testY < 95 && !wouldHitObstacle) {
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
           newX = testX;
           newY = testY;
           console.log('  ✅ MOVEMENT ALLOWED - Moving to:', { x: newX.toFixed(2), y: newY.toFixed(2) });
         } else if (!wouldHitObstacle) {
-          if (testX > 2 && testX < 98 && !isInsideObstacle(testX, prev.y, 1)) {
+          if (testX > 5 && testX < 95 && !isInsideObstacle(testX, prev.y, 1)) {
             newX = testX;
             console.log('  ➡️  Partial X movement allowed');
           }
-          if (testY > 2 && testY < 98 && !isInsideObstacle(prev.x, testY, 1)) {
+          if (testY > 5 && testY < 95 && !isInsideObstacle(prev.x, testY, 1)) {
             newY = testY;
             console.log('  ⬆️  Partial Y movement allowed');
           }
           console.log('  ⚠️  PARTIAL MOVEMENT - New pos:', { x: newX.toFixed(2), y: newY.toFixed(2) });
         } else {
           shouldClearPath = true;
+<<<<<<< HEAD
           console.log('  🚧 BLOCKED BY OBSTACLE - Clearing path');
+=======
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
         }
 
         // Update position ref immediately
@@ -988,6 +1333,7 @@ export default function IdlePage() {
       });
 
       // Apply deferred state updates
+<<<<<<< HEAD
       console.log('\n📝 DEFERRED STATE UPDATES:');
       console.log('  Increment Stuck:', shouldIncrementStuck);
       console.log('  Reset Stuck:', shouldResetStuck);
@@ -996,6 +1342,8 @@ export default function IdlePage() {
       console.log('  New Direction:', newDirectionToSet ? { x: newDirectionToSet.x.toFixed(2), y: newDirectionToSet.y.toFixed(2) } : 'null');
 
       // Update refs immediately (don't wait for state to propagate)
+=======
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
       if (shouldIncrementStuck) {
         setPacmanStuckCounter(c => c + 1);
         pacmanStuckCounterRef.current += 1;
@@ -1020,7 +1368,13 @@ export default function IdlePage() {
         console.log('  ✅ REF UPDATED - pacmanDirRef:', { x: pacmanDirRef.current.x.toFixed(2), y: pacmanDirRef.current.y.toFixed(2) });
       }
 
+<<<<<<< HEAD
       console.log('═══════════════════════════════════════════════\n');
+=======
+      if (newBehaviorToSet !== null) {
+        setPacmanBehavior(newBehaviorToSet);
+      }
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
     };
 
     const interval = setInterval(movePacman, 30);
@@ -1040,7 +1394,8 @@ export default function IdlePage() {
           if (cake.isSpecial) {
             setPowerMode(true);
             setPowerTimeLeft(10);
-            setGhosts(prev => prev.map(ghost => ({ ...ghost, scared: true, mode: 'flee', modeTimer: 120 })));
+            setPacmanBehavior('hunting_ghosts');
+            setGhosts(prev => prev.map(ghost => ({ ...ghost, behavior: 'scared' })));
             createParticles(cake.x, cake.y, '#FFD700', 12, '✨');
           } else {
             createParticles(cake.x, cake.y, '#F9A03F', 6);
@@ -1067,15 +1422,18 @@ export default function IdlePage() {
             Math.pow(ghost.y - pacmanPosition.y, 2)
           );
 
+<<<<<<< HEAD
           if (distance < 3.5 && ghost.scared) {
+=======
+          if (distance < 6 && ghost.behavior === 'scared') {
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
             createParticles(ghost.x, ghost.y, ghost.color, 10, '💯');
             setIsEating(true);
             setTimeout(() => setIsEating(false), 200);
             setPacmanPath([]);
 
             const ghostData = {
-              color: ghost.color,
-              personality: ghost.personality
+              color: ghost.color
             };
 
             setTimeout(() => {
@@ -1086,6 +1444,7 @@ export default function IdlePage() {
                 y: pos.y,
                 color: ghostData.color,
                 direction: { x: (Math.random() - 0.5) * 2, y: (Math.random() - 0.5) * 2 },
+<<<<<<< HEAD
                 scared: powerModeRef.current,
                 mode: 'flee',
                 modeTimer: 100,
@@ -1094,6 +1453,12 @@ export default function IdlePage() {
                 aggressionTimer: 0,
                 aggressionCooldown: 0,
                 sightRange: ghostData.personality === 'aggressive' ? 35 : 25
+=======
+                behavior: powerModeRef.current ? 'scared' : 'wander',
+                aggressionTimer: 0,
+                aggressionCooldown: 0,
+                onCooldown: false
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
               }]);
             }, 4000);
 
@@ -1245,24 +1610,37 @@ export default function IdlePage() {
           }}
         >
           <div
+<<<<<<< HEAD
             className={`relative ${ghost.scared ? 'animate-pulse' : ghost.aggressive ? 'animate-bounce' : ''}`}
+=======
+            className={`relative ${ghost.behavior === 'scared' ? 'animate-pulse' : ''}`}
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
             style={{
-              filter: ghost.scared
+              filter: ghost.behavior === 'scared'
                 ? 'saturate(0.3) brightness(1.8) drop-shadow(0 0 15px rgba(138, 43, 226, 0.6))'
+<<<<<<< HEAD
                 : ghost.aggressive
                 ? 'brightness(1.3) drop-shadow(0 0 20px rgba(255, 0, 0, 1)) drop-shadow(0 0 40px rgba(255, 0, 0, 0.8))'
+=======
+                : ghost.behavior === 'aggression'
+                ? `drop-shadow(0 0 20px ${ghost.color}) brightness(1.3)`
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
                 : `drop-shadow(0 4px 12px ${ghost.color}40)`,
             }}
           >
             <div
               className="text-xl"
               style={{
+<<<<<<< HEAD
                 color: ghost.scared ? '#9CA3AF' : ghost.aggressive ? '#FF0000' : ghost.color,
+=======
+                color: ghost.behavior === 'scared' ? '#9CA3AF' : ghost.color,
+>>>>>>> 6df7994770142b52ca5708428ef1c16a14c99c72
               }}
             >
               👻
             </div>
-            {ghost.scared && (
+            {ghost.behavior === 'scared' && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-sm">😱</div>
               </div>
@@ -1270,6 +1648,16 @@ export default function IdlePage() {
             {ghost.aggressive && !ghost.scared && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-sm">😠</div>
+              </div>
+            )}
+            {ghost.onCooldown && ghost.behavior === 'wander' && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-lg">😢</div>
+              </div>
+            )}
+            {ghost.behavior === 'aggression' && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-lg">😡</div>
               </div>
             )}
           </div>
