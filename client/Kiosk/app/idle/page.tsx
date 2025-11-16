@@ -16,10 +16,10 @@ interface Ghost {
   y: number;
   color: string;
   direction: Position;
-  scared: boolean;
-  mode: 'random' | 'chase' | 'flee' | 'ambush';
-  modeTimer: number;
-  personality: 'aggressive' | 'smart' | 'random' | 'ambusher';
+  behavior: 'wander' | 'scared' | 'aggression';
+  aggressionTimer: number; // Countdown when in aggression mode (5 seconds)
+  aggressionCooldown: number; // Cooldown period before can aggro again
+  onCooldown: boolean;
 }
 
 interface Position {
@@ -60,6 +60,7 @@ export default function IdlePage() {
   const [pacmanPosition, setPacmanPosition] = useState<Position>({ x: 50, y: 50 });
   const [pacmanDirection, setPacmanDirection] = useState<Position>({ x: 1, y: 0 });
   const [pacmanPath, setPacmanPath] = useState<Position[]>([]);
+  const [pacmanBehavior, setPacmanBehavior] = useState<'cake_hunting' | 'run' | 'hunting_ghosts'>('cake_hunting');
   const [cakes, setCakes] = useState<Cake[]>([]);
   const [ghosts, setGhosts] = useState<Ghost[]>([]);
   const [isEating, setIsEating] = useState(false);
@@ -80,6 +81,7 @@ export default function IdlePage() {
   const obstaclesRef = useRef<Obstacle[]>([]);
   const pacmanPosRef = useRef<Position>({ x: 50, y: 50 });
   const pacmanDirRef = useRef<Position>({ x: 1, y: 0 });
+  const pacmanBehaviorRef = useRef<'cake_hunting' | 'run' | 'hunting_ghosts'>('cake_hunting');
   const cakesRef = useRef<Cake[]>([]);
   const ghostsRef = useRef<Ghost[]>([]);
   const pacmanPathRef = useRef<Position[]>([]);
@@ -117,6 +119,10 @@ export default function IdlePage() {
   useEffect(() => {
     pacmanStuckCounterRef.current = pacmanStuckCounter;
   }, [pacmanStuckCounter]);
+
+  useEffect(() => {
+    pacmanBehaviorRef.current = pacmanBehavior;
+  }, [pacmanBehavior]);
 
   // Helper function to check if a position collides with any obstacle
   const isInsideObstacle = useCallback((x: number, y: number, margin: number = 2): boolean => {
@@ -436,7 +442,6 @@ export default function IdlePage() {
       { x: 90, y: 90 },
       { x: 10, y: 90 }
     ];
-    const personalities: Ghost['personality'][] = ['aggressive', 'smart', 'random', 'ambusher'];
 
     for (let i = 0; i < 4; i++) {
       const pos = ghostStartPositions[i];
@@ -446,10 +451,10 @@ export default function IdlePage() {
         y: pos.y,
         color: ghostColors[i],
         direction: { x: (Math.random() - 0.5) * 2, y: (Math.random() - 0.5) * 2 },
-        scared: false,
-        mode: 'random',
-        modeTimer: Math.floor(Math.random() * 100) + 50,
-        personality: personalities[i]
+        behavior: 'wander',
+        aggressionTimer: 0,
+        aggressionCooldown: 0,
+        onCooldown: false
       });
     }
     setGhosts(initialGhosts);
@@ -478,7 +483,8 @@ export default function IdlePage() {
       return () => clearTimeout(timer);
     } else if (powerTimeLeft === 0 && powerMode) {
       setPowerMode(false);
-      setGhosts(prev => prev.map(ghost => ({ ...ghost, scared: false, mode: 'random' })));
+      setPacmanBehavior('cake_hunting');
+      setGhosts(prev => prev.map(ghost => ({ ...ghost, behavior: 'wander' })));
     }
   }, [powerMode, powerTimeLeft]);
 
@@ -503,81 +509,63 @@ export default function IdlePage() {
     return () => clearInterval(interval);
   }, [cakes.length, findValidPosition]);
 
-  // Advanced Ghost AI
+  // New Ghost AI - 3 Behaviors: Wander, Scared, Aggression
   useEffect(() => {
     const interval = setInterval(() => {
       setGhosts(prev => prev.map(ghost => {
         let newX = ghost.x;
         let newY = ghost.y;
         let newDirection = { ...ghost.direction };
-        let newMode = ghost.mode;
-        let newModeTimer = ghost.modeTimer - 1;
-
-        // Update mode based on personality and timer
-        if (newModeTimer <= 0) {
-          if (ghost.scared) {
-            newMode = 'flee';
-            newModeTimer = 100;
-          } else {
-            switch (ghost.personality) {
-              case 'aggressive':
-                newMode = Math.random() < 0.7 ? 'chase' : 'random';
-                newModeTimer = newMode === 'chase' ? 120 : 80;
-                break;
-              case 'smart':
-                newMode = Math.random() < 0.5 ? 'chase' : 'ambush';
-                newModeTimer = 100;
-                break;
-              case 'ambusher':
-                newMode = Math.random() < 0.6 ? 'ambush' : 'random';
-                newModeTimer = 150;
-                break;
-              default:
-                newMode = 'random';
-                newModeTimer = 100;
-            }
-          }
-        }
+        let newBehavior = ghost.behavior;
+        let newAggressionTimer = ghost.aggressionTimer;
+        let newAggressionCooldown = ghost.aggressionCooldown;
+        let newOnCooldown = ghost.onCooldown;
 
         const pacPos = pacmanPosRef.current;
-        const pacDir = pacmanDirRef.current;
+        const currentPowerMode = powerModeRef.current;
 
         const distance = Math.sqrt(
           Math.pow(ghost.x - pacPos.x, 2) +
           Math.pow(ghost.y - pacPos.y, 2)
         );
 
-        // Use pathfinding for chase mode
-        if (newMode === 'chase' && !ghost.scared && distance < 50) {
-          const path = findPath({ x: ghost.x, y: ghost.y }, pacPos);
-          if (path.length > 1) {
-            const nextPos = path[1];
-            const dx = nextPos.x - ghost.x;
-            const dy = nextPos.y - ghost.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist > 0) {
-              newDirection = { x: dx / dist, y: dy / dist };
-            }
+        // Update cooldown timer
+        if (newAggressionCooldown > 0) {
+          newAggressionCooldown = Math.max(0, newAggressionCooldown - 0.05); // Decrease by 50ms
+          if (newAggressionCooldown === 0) {
+            newOnCooldown = false;
           }
-        } else if (newMode === 'ambush' && !ghost.scared) {
-          const predictedX = pacPos.x + pacDir.x * 20;
-          const predictedY = pacPos.y + pacDir.y * 20;
-          const clampedX = Math.max(10, Math.min(90, predictedX));
-          const clampedY = Math.max(10, Math.min(90, predictedY));
+        }
 
-          if (distance < 60) {
-            const path = findPath({ x: ghost.x, y: ghost.y }, { x: clampedX, y: clampedY });
-            if (path.length > 1) {
-              const nextPos = path[1];
-              const dx = nextPos.x - ghost.x;
-              const dy = nextPos.y - ghost.y;
-              const dist = Math.sqrt(dx * dx + dy * dy);
-              if (dist > 0) {
-                newDirection = { x: dx / dist, y: dy / dist };
-              }
-            }
+        // Behavior transitions
+        if (currentPowerMode) {
+          // When Pacman has star, all ghosts become scared
+          newBehavior = 'scared';
+          newAggressionTimer = 0;
+        } else if (newBehavior === 'scared') {
+          // Power mode ended, return to wander
+          newBehavior = 'wander';
+          newAggressionTimer = 0;
+        } else if (newBehavior === 'aggression') {
+          // In aggression mode, count down timer
+          newAggressionTimer = Math.max(0, newAggressionTimer - 0.05); // Decrease by 50ms
+          if (newAggressionTimer <= 0) {
+            // Aggression timer expired, go on cooldown
+            newBehavior = 'wander';
+            newOnCooldown = true;
+            newAggressionCooldown = 10; // 10 second cooldown
           }
-        } else if (newMode === 'flee' || ghost.scared) {
+        } else if (newBehavior === 'wander' && !newOnCooldown) {
+          // Random chance to enter aggression mode if close to Pacman
+          if (distance < 40 && Math.random() < 0.02) {
+            newBehavior = 'aggression';
+            newAggressionTimer = 5; // 5 second aggression
+          }
+        }
+
+        // Execute behavior
+        if (newBehavior === 'scared') {
+          // SCARED BEHAVIOR: Flee from Pacman
           if (distance < 35) {
             const fleeX = ghost.x + (ghost.x - pacPos.x) * 2;
             const fleeY = ghost.y + (ghost.y - pacPos.y) * 2;
@@ -595,15 +583,28 @@ export default function IdlePage() {
               }
             }
           }
+        } else if (newBehavior === 'aggression') {
+          // AGGRESSION BEHAVIOR: Actively pursue Pacman
+          const path = findPath({ x: ghost.x, y: ghost.y }, pacPos);
+          if (path.length > 1) {
+            const nextPos = path[1];
+            const dx = nextPos.x - ghost.x;
+            const dy = nextPos.y - ghost.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist > 0) {
+              newDirection = { x: dx / dist, y: dy / dist };
+            }
+          }
         } else {
-          // Random movement
+          // WANDER BEHAVIOR: Random wandering
           if (Math.random() < 0.03) {
             const angle = Math.random() * Math.PI * 2;
             newDirection = { x: Math.cos(angle), y: Math.sin(angle) };
           }
         }
 
-        const baseSpeed = ghost.scared ? 0.4 : ghost.personality === 'aggressive' ? 0.8 : 0.6;
+        // Movement speed based on behavior
+        const baseSpeed = newBehavior === 'scared' ? 0.5 : newBehavior === 'aggression' ? 1.0 : 0.6;
         const speed = baseSpeed * (0.9 + Math.random() * 0.2);
         const testX = ghost.x + newDirection.x * speed;
         const testY = ghost.y + newDirection.y * speed;
@@ -623,16 +624,18 @@ export default function IdlePage() {
           x: newX,
           y: newY,
           direction: newDirection,
-          mode: newMode,
-          modeTimer: newModeTimer
+          behavior: newBehavior,
+          aggressionTimer: newAggressionTimer,
+          aggressionCooldown: newAggressionCooldown,
+          onCooldown: newOnCooldown
         };
       }));
     }, 50);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [findPath, isInsideObstacle]);
 
-  // Improved Pacman AI with A* pathfinding
+  // New Pacman AI - 3 Behaviors: Cake Hunting, Run, Hunting Ghosts
   useEffect(() => {
     const movePacman = () => {
       let shouldIncrementStuck = false;
@@ -640,6 +643,7 @@ export default function IdlePage() {
       let newPathToSet: Position[] | null = null;
       let newDirectionToSet: Position | null = null;
       let shouldClearPath = false;
+      let newBehaviorToSet: 'cake_hunting' | 'run' | 'hunting_ghosts' | null = null;
 
       setPacmanPosition(prev => {
         let newX = prev.x;
@@ -652,15 +656,7 @@ export default function IdlePage() {
         const currentPath = pacmanPathRef.current;
         const currentStuckCounter = pacmanStuckCounterRef.current;
         const currentDirection = pacmanDirRef.current;
-
-        console.log('🎮 PACMAN MOVEMENT DEBUG:', {
-          position: prev,
-          cakesCount: currentCakes.length,
-          ghostsCount: currentGhosts.length,
-          currentPathLength: currentPath.length,
-          stuckCounter: currentStuckCounter,
-          direction: currentDirection
-        });
+        const currentBehavior = pacmanBehaviorRef.current;
 
         // Stuck detection
         if (Math.abs(prev.x - lastPacmanPos.current.x) < 0.1 &&
@@ -672,49 +668,102 @@ export default function IdlePage() {
 
         lastPacmanPos.current = { x: prev.x, y: prev.y };
 
-        // Build target list
-        const targets: any[] = currentCakes.map(c => ({
-          ...c,
-          type: 'cake',
-          priority: c.isSpecial ? 3 : 1
-        }));
+        // Check for aggressive ghosts pursuing Pacman
+        const aggressiveGhosts = currentGhosts.filter(g => g.behavior === 'aggression');
+        const isBeingPursued = aggressiveGhosts.some(g => {
+          const dist = Math.sqrt(Math.pow(g.x - prev.x, 2) + Math.pow(g.y - prev.y, 2));
+          return dist < 25;
+        });
 
+        // Determine behavior based on game state
+        let desiredBehavior: 'cake_hunting' | 'run' | 'hunting_ghosts';
         if (currentPowerMode) {
-          currentGhosts.filter(g => g.scared).forEach(g => {
+          // HUNTING GHOSTS: Prioritize eating ghosts when powered up
+          desiredBehavior = 'hunting_ghosts';
+        } else if (isBeingPursued) {
+          // RUN: Flee from aggressive ghosts
+          desiredBehavior = 'run';
+        } else {
+          // CAKE HUNTING: Default behavior
+          desiredBehavior = 'cake_hunting';
+        }
+
+        if (desiredBehavior !== currentBehavior) {
+          newBehaviorToSet = desiredBehavior;
+          shouldClearPath = true; // Clear path when behavior changes
+        }
+
+        // Build target list based on behavior
+        const targets: any[] = [];
+        let avoidPoints: Position[] = [];
+
+        if (desiredBehavior === 'hunting_ghosts') {
+          // Prioritize scared ghosts
+          const scaredGhosts = currentGhosts.filter(g => g.behavior === 'scared');
+          scaredGhosts.forEach(g => {
             targets.push({
               x: g.x,
               y: g.y,
               type: 'ghost',
-              priority: 2
+              priority: 5 // Highest priority
             });
           });
+
+          // Add cakes as secondary targets
+          currentCakes.forEach(c => {
+            targets.push({
+              ...c,
+              type: 'cake',
+              priority: c.isSpecial ? 3 : 1
+            });
+          });
+        } else if (desiredBehavior === 'run') {
+          // When running, find safe positions away from aggressive ghosts
+          // Don't target anything, just flee
+          avoidPoints = aggressiveGhosts.map(g => ({ x: g.x, y: g.y }));
+        } else {
+          // CAKE HUNTING: Target cakes, avoid aggressive ghosts
+          currentCakes.forEach(c => {
+            targets.push({
+              ...c,
+              type: 'cake',
+              priority: c.isSpecial ? 4 : 1 // Prioritize special cakes
+            });
+          });
+
+          // Avoid aggressive ghosts
+          const dangerGhosts = currentGhosts.filter(g => g.behavior === 'aggression' || g.behavior === 'wander');
+          avoidPoints = dangerGhosts
+            .filter(g => {
+              const dist = Math.sqrt(Math.pow(g.x - prev.x, 2) + Math.pow(g.y - prev.y, 2));
+              return dist < 25;
+            })
+            .map(g => ({ x: g.x, y: g.y }));
         }
 
-        console.log('🎯 TARGETS:', {
-          count: targets.length,
-          firstThree: targets.slice(0, 3).map(t => ({ x: t.x, y: t.y, type: t.type }))
-        });
-
-        // Find dangerous ghosts to avoid
-        const dangerGhosts = currentGhosts.filter(g => !g.scared);
-        const avoidPoints: Position[] = dangerGhosts
-          .filter(g => {
-            const dist = Math.sqrt(Math.pow(g.x - prev.x, 2) + Math.pow(g.y - prev.y, 2));
-            return dist < 30;
-          })
-          .map(g => ({ x: g.x, y: g.y }));
-
         // Recalculate path if needed
-        const shouldRecalculate = currentPath.length === 0 || currentStuckCounter > 15 || Math.random() < 0.1;
-        console.log('🔄 PATH RECALCULATION CHECK:', {
-          shouldRecalculate,
-          reason: currentPath.length === 0 ? 'no path' : currentStuckCounter > 15 ? 'stuck' : 'random',
-          pathLength: currentPath.length,
-          stuckCounter: currentStuckCounter
-        });
+        const shouldRecalculate = currentPath.length === 0 || currentStuckCounter > 15 || shouldClearPath || Math.random() < 0.1;
 
         if (shouldRecalculate) {
-          if (targets.length > 0) {
+          if (desiredBehavior === 'run') {
+            // Run away from aggressive ghosts
+            if (aggressiveGhosts.length > 0) {
+              // Find average position of aggressive ghosts
+              const avgX = aggressiveGhosts.reduce((sum, g) => sum + g.x, 0) / aggressiveGhosts.length;
+              const avgY = aggressiveGhosts.reduce((sum, g) => sum + g.y, 0) / aggressiveGhosts.length;
+
+              // Run in opposite direction
+              const fleeX = prev.x + (prev.x - avgX) * 2;
+              const fleeY = prev.y + (prev.y - avgY) * 2;
+              const clampedFleeX = Math.max(10, Math.min(90, fleeX));
+              const clampedFleeY = Math.max(10, Math.min(90, fleeY));
+
+              const calculatedPath = findPath(prev, { x: clampedFleeX, y: clampedFleeY }, avoidPoints);
+              newPathToSet = calculatedPath.slice(1);
+              shouldResetStuck = true;
+            }
+          } else if (targets.length > 0) {
+            // Find best target based on priority
             const bestTarget = targets.reduce((best, target) => {
               const distance = Math.sqrt(
                 Math.pow(target.x - prev.x, 2) + Math.pow(target.y - prev.y, 2)
@@ -723,23 +772,10 @@ export default function IdlePage() {
               return score < best.score ? { target, score } : best;
             }, { target: null, score: Infinity });
 
-            console.log('🎯 BEST TARGET:', {
-              target: bestTarget.target ? { x: bestTarget.target.x, y: bestTarget.target.y, type: bestTarget.target.type } : null,
-              score: bestTarget.score
-            });
-
             if (bestTarget.target && bestTarget.score < 100) {
               const calculatedPath = findPath(prev, { x: bestTarget.target.x, y: bestTarget.target.y }, avoidPoints);
-              console.log('📍 CALCULATED PATH:', {
-                from: prev,
-                to: { x: bestTarget.target.x, y: bestTarget.target.y },
-                pathLength: calculatedPath.length,
-                path: calculatedPath
-              });
               newPathToSet = calculatedPath.slice(1);
               shouldResetStuck = true;
-            } else {
-              console.log('❌ NO VALID TARGET (score too high or no target)');
             }
           } else if (currentStuckCounter > 10) {
             // No targets available and stuck - move to random position
@@ -747,7 +783,6 @@ export default function IdlePage() {
               x: Math.random() * 80 + 10,
               y: Math.random() * 80 + 10
             };
-            console.log('🎲 MOVING TO RANDOM TARGET:', randomTarget);
             const calculatedPath = findPath(prev, randomTarget, avoidPoints);
             newPathToSet = calculatedPath.slice(1);
             shouldResetStuck = true;
@@ -761,49 +796,36 @@ export default function IdlePage() {
           const dy = nextWaypoint.y - prev.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
 
-          console.log('🚶 FOLLOWING PATH:', {
-            currentWaypoint: nextWaypoint,
-            distance: dist,
-            willAdvance: dist < 3
-          });
-
           if (dist < 3) {
             newPathToSet = currentPath.slice(1);
-            console.log('✅ REACHED WAYPOINT, advancing to next');
           }
 
           if (dist > 0) {
             newDirectionToSet = { x: dx / dist, y: dy / dist };
-            console.log('➡️ NEW DIRECTION SET:', newDirectionToSet);
           }
-        } else if (avoidPoints.length > 0) {
-          const nearestDanger = avoidPoints[0];
-          const dx = prev.x - nearestDanger.x;
-          const dy = prev.y - nearestDanger.y;
+        } else if (desiredBehavior === 'run' && aggressiveGhosts.length > 0) {
+          // Emergency flee if no path
+          const nearestAggro = aggressiveGhosts[0];
+          const dx = prev.x - nearestAggro.x;
+          const dy = prev.y - nearestAggro.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          console.log('⚠️ FLEEING FROM DANGER:', { danger: nearestDanger, distance: dist });
           if (dist > 0) {
             newDirectionToSet = { x: dx / dist, y: dy / dist };
           }
-        } else {
-          console.log('🤷 NO PATH AND NO DANGER - continuing current direction');
         }
 
-        // Apply movement
-        const speed = currentPowerMode ? 1.8 : 1.4;
+        // Apply movement with speed based on behavior
+        let speed = 1.4; // Default
+        if (desiredBehavior === 'hunting_ghosts') {
+          speed = 1.8; // Fast when powered up
+        } else if (desiredBehavior === 'run') {
+          speed = 1.6; // Fast when fleeing
+        }
+
         const testX = prev.x + currentDirection.x * speed;
         const testY = prev.y + currentDirection.y * speed;
 
         const wouldHitObstacle = isInsideObstacle(testX, testY, 1);
-
-        console.log('🏃 MOVEMENT:', {
-          currentPos: prev,
-          currentDirection,
-          speed,
-          testPos: { x: testX, y: testY },
-          wouldHitObstacle,
-          willMove: testX > 2 && testX < 98 && testY > 2 && testY < 98 && !wouldHitObstacle
-        });
 
         if (testX > 2 && testX < 98 && testY > 2 && testY < 98 && !wouldHitObstacle) {
           newX = testX;
@@ -817,21 +839,12 @@ export default function IdlePage() {
           }
         } else {
           shouldClearPath = true;
-          console.log('🚧 HIT OBSTACLE - clearing path');
         }
 
         return { x: newX, y: newY };
       });
 
       // Apply deferred state updates
-      console.log('📝 DEFERRED STATE UPDATES:', {
-        shouldIncrementStuck,
-        shouldResetStuck,
-        newPathLength: newPathToSet ? newPathToSet.length : 'null',
-        shouldClearPath,
-        newDirection: newDirectionToSet
-      });
-
       if (shouldIncrementStuck) {
         setPacmanStuckCounter(c => c + 1);
       } else if (shouldResetStuck) {
@@ -848,7 +861,9 @@ export default function IdlePage() {
         setPacmanDirection(newDirectionToSet);
       }
 
-      console.log('─────────────────────────────────────────────');
+      if (newBehaviorToSet !== null) {
+        setPacmanBehavior(newBehaviorToSet);
+      }
     };
 
     const interval = setInterval(movePacman, 30);
@@ -868,7 +883,8 @@ export default function IdlePage() {
           if (cake.isSpecial) {
             setPowerMode(true);
             setPowerTimeLeft(10);
-            setGhosts(prev => prev.map(ghost => ({ ...ghost, scared: true, mode: 'flee', modeTimer: 120 })));
+            setPacmanBehavior('hunting_ghosts');
+            setGhosts(prev => prev.map(ghost => ({ ...ghost, behavior: 'scared' })));
             createParticles(cake.x, cake.y, '#FFD700', 12, '✨');
           } else {
             createParticles(cake.x, cake.y, '#F9A03F', 6);
@@ -895,15 +911,14 @@ export default function IdlePage() {
             Math.pow(ghost.y - pacmanPosition.y, 2)
           );
 
-          if (distance < 6 && ghost.scared) {
+          if (distance < 6 && ghost.behavior === 'scared') {
             createParticles(ghost.x, ghost.y, ghost.color, 10, '💯');
             setIsEating(true);
             setTimeout(() => setIsEating(false), 200);
             setPacmanPath([]);
 
             const ghostData = {
-              color: ghost.color,
-              personality: ghost.personality
+              color: ghost.color
             };
 
             setTimeout(() => {
@@ -914,10 +929,10 @@ export default function IdlePage() {
                 y: pos.y,
                 color: ghostData.color,
                 direction: { x: (Math.random() - 0.5) * 2, y: (Math.random() - 0.5) * 2 },
-                scared: powerModeRef.current,
-                mode: 'flee',
-                modeTimer: 100,
-                personality: ghostData.personality
+                behavior: powerModeRef.current ? 'scared' : 'wander',
+                aggressionTimer: 0,
+                aggressionCooldown: 0,
+                onCooldown: false
               }]);
             }, 4000);
 
@@ -1068,24 +1083,36 @@ export default function IdlePage() {
           }}
         >
           <div
-            className={`relative ${ghost.scared ? 'animate-pulse' : ''}`}
+            className={`relative ${ghost.behavior === 'scared' ? 'animate-pulse' : ''}`}
             style={{
-              filter: ghost.scared
+              filter: ghost.behavior === 'scared'
                 ? 'saturate(0.3) brightness(1.8) drop-shadow(0 0 15px rgba(138, 43, 226, 0.6))'
+                : ghost.behavior === 'aggression'
+                ? `drop-shadow(0 0 20px ${ghost.color}) brightness(1.3)`
                 : `drop-shadow(0 4px 12px ${ghost.color}40)`,
             }}
           >
             <div
               className="text-3xl"
               style={{
-                color: ghost.scared ? '#9CA3AF' : ghost.color,
+                color: ghost.behavior === 'scared' ? '#9CA3AF' : ghost.color,
               }}
             >
               👻
             </div>
-            {ghost.scared && (
+            {ghost.behavior === 'scared' && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-lg">😱</div>
+              </div>
+            )}
+            {ghost.onCooldown && ghost.behavior === 'wander' && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-lg">😢</div>
+              </div>
+            )}
+            {ghost.behavior === 'aggression' && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-lg">😡</div>
               </div>
             )}
           </div>
