@@ -579,7 +579,7 @@ export default function IdlePage() {
     };
 
     const initialCakes: Cake[] = [];
-    for (let i = 0; i < 12; i++) {
+    for (let i = 0; i < 5; i++) { // Reduced from 12 to 5
       const pos = getValidPos();
       initialCakes.push({
         id: cakeIdRef.current++,
@@ -665,7 +665,7 @@ export default function IdlePage() {
   // Spawn cakes
   useEffect(() => {
     const spawnCake = () => {
-      if (cakes.length < 15) {
+      if (cakes.length < 8) { // Reduced from 15 to 8
         const isSpecial = Math.random() < 0.15;
         const pos = findValidPosition();
         const newCake: Cake = {
@@ -679,7 +679,7 @@ export default function IdlePage() {
       }
     };
 
-    const interval = setInterval(spawnCake, 1500);
+    const interval = setInterval(spawnCake, 2000); // Increased from 1500ms to 2000ms
     return () => clearInterval(interval);
   }, [cakes.length, findValidPosition]);
 
