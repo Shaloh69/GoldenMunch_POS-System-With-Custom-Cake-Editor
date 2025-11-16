@@ -910,7 +910,7 @@ export default function IdlePage() {
               const clampedFleeY = Math.max(10, Math.min(90, fleeY));
 
               const calculatedPath = findPath(prev, { x: clampedFleeX, y: clampedFleeY }, avoidPoints);
-              newPathToSet = calculatedPath.slice(1);
+              newPathToSet = calculatedPath.length > 1 ? calculatedPath.slice(1) : calculatedPath;
               shouldResetStuck = true;
             }
           } else if (targets.length > 0) {
@@ -930,7 +930,7 @@ export default function IdlePage() {
               console.log('  Avoid Points:', avoidPoints.length);
 
               const calculatedPath = findPath(prev, { x: bestTarget.target.x, y: bestTarget.target.y }, avoidPoints);
-              newPathToSet = calculatedPath.slice(1);
+              newPathToSet = calculatedPath.length > 1 ? calculatedPath.slice(1) : calculatedPath;
               shouldResetStuck = true;
             }
           } else if (currentStuckCounter > 10) {
@@ -941,7 +941,7 @@ export default function IdlePage() {
             };
             const calculatedPath = findPath(prev, randomTarget, avoidPoints);
             console.log('  Random Path Length:', calculatedPath.length);
-            newPathToSet = calculatedPath.slice(1);
+            newPathToSet = calculatedPath.length > 1 ? calculatedPath.slice(1) : calculatedPath;
             shouldResetStuck = true;
           } else {
             console.log('\n⏸️  NO RECALCULATION NEEDED - Using existing path');
@@ -989,8 +989,10 @@ export default function IdlePage() {
           speed = 1.6; // Fast when fleeing
         }
 
-        const testX = prev.x + currentDirection.x * speed;
-        const testY = prev.y + currentDirection.y * speed;
+        // Use newly calculated direction if available, otherwise use current direction
+        const directionToUse = newDirectionToSet !== null ? newDirectionToSet : currentDirection;
+        const testX = prev.x + directionToUse.x * speed;
+        const testY = prev.y + directionToUse.y * speed;
 
         const wouldHitObstacle = isInsideObstacle(testX, testY, 1);
 
