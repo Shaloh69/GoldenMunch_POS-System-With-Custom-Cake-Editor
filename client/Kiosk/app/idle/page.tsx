@@ -781,8 +781,8 @@ export default function IdlePage() {
             });
           });
 
-          // Avoid aggressive ghosts
-          const dangerGhosts = currentGhosts.filter(g => g.behavior === 'aggression' || g.behavior === 'wander');
+          // Avoid ONLY aggressive ghosts (not wandering ones)
+          const dangerGhosts = currentGhosts.filter(g => g.behavior === 'aggression');
           avoidPoints = dangerGhosts
             .filter(g => {
               const dist = Math.sqrt(Math.pow(g.x - prev.x, 2) + Math.pow(g.y - prev.y, 2));
