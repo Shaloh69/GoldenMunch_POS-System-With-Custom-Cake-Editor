@@ -49,7 +49,7 @@ export const getCustomers = async (req: AuthRequest, res: Response) => {
   const countSql = 'SELECT COUNT(*) as total FROM customer WHERE 1=1' +
     (search ? ` AND (first_name LIKE ? OR last_name LIKE ? OR phone LIKE ? OR email LIKE ?)` : '') +
     (is_active !== undefined ? ' AND is_active = ?' : '');
-  const countParams = search
+  const countParams: any[] = search
     ? [`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`]
     : [];
   if (is_active !== undefined) {
