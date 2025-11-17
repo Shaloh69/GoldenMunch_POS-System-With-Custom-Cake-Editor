@@ -14,7 +14,11 @@
     "clean": "rm -rf node_modules package-lock.json",
     "clean:win": "if exist node_modules rmdir /s /q node_modules && if exist package-lock.json del package-lock.json",
     "fresh-install": "npm run clean && npm install",
-    "fresh-install:win": "npm run clean:win && npm install"
+    "fresh-install:win": "npm run clean:win && npm install",
+    "install:safe": "npm install --fetch-timeout=300000 --fetch-retries=5",
+    "install:electron": "npm install electron --save-dev --fetch-timeout=600000 --fetch-retries=10",
+    "verify": "npm ls --depth=0 && npx electron --version",
+    "troubleshoot": "echo 'See NPM_TROUBLESHOOTING.md for detailed help' && npm cache verify"
   },
   "engines": {
     "node": ">=18.17.0",
@@ -104,5 +108,14 @@
     "tailwindcss": "4.1.11",
     "typescript": "5.6.3",
     "wait-on": "^8.0.1"
+  },
+  "overrides": {
+    "glob": "^11.0.0",
+    "rimraf": "^6.0.1",
+    "uuid": "^11.0.3",
+    "request": "npm:noop-package@^1.0.0",
+    "are-we-there-yet": "npm:noop-package@^1.0.0",
+    "gauge": "npm:noop-package@^1.0.0",
+    "boolean": "npm:noop-package@^1.0.0"
   }
 }
