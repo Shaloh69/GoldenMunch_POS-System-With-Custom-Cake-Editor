@@ -211,21 +211,6 @@ CREATE TABLE promotion_applicable_categories (
     FOREIGN KEY (category_id) REFERENCES category(category_id) ON DELETE CASCADE
 );
 
-CREATE TABLE promotion_usage_log (
-    usage_id INT AUTO_INCREMENT PRIMARY KEY,
-    promotion_id INT NOT NULL,
-    order_id INT NOT NULL,
-    customer_id INT NULL,
-    discount_applied DECIMAL(10,2) NOT NULL,
-    used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (promotion_id) REFERENCES promotion_rules(promotion_id),
-    FOREIGN KEY (order_id) REFERENCES customer_order(order_id) ON DELETE CASCADE,
-    FOREIGN KEY (customer_id) REFERENCES customer(customer_id) ON DELETE SET NULL,
-    INDEX idx_promotion_usage_order (order_id),
-    INDEX idx_promotion_usage_customer (customer_id),
-    INDEX idx_promotion_usage_date (used_at)
-);
-
 -- ============================================================================
 -- TAX CONFIGURATION SYSTEM
 -- ============================================================================
@@ -423,6 +408,21 @@ CREATE TABLE customer_order (
     CONSTRAINT chk_advance_payment_positive CHECK (advance_payment_amount >= 0),
     CONSTRAINT chk_pickup_after_order CHECK (scheduled_pickup_datetime IS NULL OR scheduled_pickup_datetime > order_datetime),
     UNIQUE KEY unique_verification_code (verification_code, order_datetime)
+);
+
+CREATE TABLE promotion_usage_log (
+    usage_id INT AUTO_INCREMENT PRIMARY KEY,
+    promotion_id INT NOT NULL,
+    order_id INT NOT NULL,
+    customer_id INT NULL,
+    discount_applied DECIMAL(10,2) NOT NULL,
+    used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (promotion_id) REFERENCES promotion_rules(promotion_id),
+    FOREIGN KEY (order_id) REFERENCES customer_order(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (customer_id) REFERENCES customer(customer_id) ON DELETE SET NULL,
+    INDEX idx_promotion_usage_order (order_id),
+    INDEX idx_promotion_usage_customer (customer_id),
+    INDEX idx_promotion_usage_date (used_at)
 );
 
 CREATE TABLE order_item (
