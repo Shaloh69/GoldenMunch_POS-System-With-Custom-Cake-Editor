@@ -6,7 +6,15 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint --fix"
+    "lint": "eslint --fix",
+    "clean": "rm -rf node_modules package-lock.json",
+    "clean:win": "if exist node_modules rmdir /s /q node_modules && if exist package-lock.json del package-lock.json",
+    "fresh-install": "npm run clean && npm install",
+    "fresh-install:win": "npm run clean:win && npm install"
+  },
+  "engines": {
+    "node": ">=18.17.0",
+    "npm": ">=9.0.0"
   },
   "dependencies": {
     "@heroui/accordion": "2.2.23",
