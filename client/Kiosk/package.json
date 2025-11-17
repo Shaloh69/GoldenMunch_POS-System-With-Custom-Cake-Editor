@@ -11,53 +11,14 @@
     "export": "next build && next export",
     "start": "next start",
     "lint": "eslint --fix",
-    "electron": "NODE_ENV=development electron .",
-    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && npm run electron\"",
-    "electron:build": "next build && next export && electron-builder",
-    "electron:build:win": "npm run export && electron-builder --win",
-    "electron:build:mac": "npm run export && electron-builder --mac",
-    "electron:build:linux": "npm run export && electron-builder --linux",
-    "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "clean": "rm -rf node_modules package-lock.json",
+    "clean:win": "if exist node_modules rmdir /s /q node_modules && if exist package-lock.json del package-lock.json",
+    "fresh-install": "npm run clean && npm install",
+    "fresh-install:win": "npm run clean:win && npm install"
   },
-  "build": {
-    "appId": "com.goldenmunch.kiosk",
-    "productName": "GoldenMunch Kiosk",
-    "directories": {
-      "output": "dist"
-    },
-    "files": [
-      "electron/**/*",
-      "out/**/*",
-      "public/**/*",
-      "node_modules/**/*",
-      "package.json"
-    ],
-    "win": {
-      "target": [
-        "nsis",
-        "portable"
-      ],
-      "icon": "public/icon.ico"
-    },
-    "mac": {
-      "target": "dmg",
-      "icon": "public/icon.icns"
-    },
-    "linux": {
-      "target": [
-        "AppImage",
-        "deb"
-      ],
-      "icon": "public/icon.png",
-      "category": "Office"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
-    }
+  "engines": {
+    "node": ">=18.17.0",
+    "npm": ">=9.0.0"
   },
   "dependencies": {
     "@heroui/accordion": "2.2.23",

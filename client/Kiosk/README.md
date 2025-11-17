@@ -1,36 +1,63 @@
-# Next.js & HeroUI Template
+# GoldenMunch Kiosk Client
 
-This is a template for creating applications using Next.js 14 (app directory) and HeroUI (v2).
+This is the kiosk client for the GoldenMunch POS System, built with Next.js 15 and HeroUI (v2).
 
-[Try it on CodeSandbox](https://githubbox.com/heroui-inc/heroui/next-app-template)
+## Quick Start
+
+**Having installation issues?** See [INSTALL.md](./INSTALL.md) for detailed troubleshooting steps.
 
 ## Technologies Used
 
-- [Next.js 14](https://nextjs.org/docs/getting-started)
+- [Next.js 15](https://nextjs.org/docs/getting-started)
+- [React 18](https://react.dev/)
 - [HeroUI v2](https://heroui.com/)
-- [Tailwind CSS](https://tailwindcss.com/)
+- [Tailwind CSS v4](https://tailwindcss.com/)
 - [Tailwind Variants](https://tailwind-variants.org)
 - [TypeScript](https://www.typescriptlang.org/)
 - [Framer Motion](https://www.framer.com/motion/)
 - [next-themes](https://github.com/pacocoursey/next-themes)
+- [Axios](https://axios-http.com/)
 
-## How to Use
+## Prerequisites
 
-### Use the template with create-next-app
+- Node.js >= 18.17.0
+- npm >= 9.0.0
 
-To create a new project based on this template using `create-next-app`, run the following command:
+## Installation
 
+### Fresh Install (Recommended)
+
+**Windows:**
 ```bash
-npx create-next-app -e https://github.com/heroui-inc/next-app-template
+npm run fresh-install:win
 ```
 
-### Install dependencies
+**Linux/Mac:**
+```bash
+npm run fresh-install
+```
 
-You can use one of them `npm`, `yarn`, `pnpm`, `bun`, Example using `npm`:
+This will clean up any existing `node_modules` and `package-lock.json` files and perform a fresh installation.
+
+### Standard Install
 
 ```bash
 npm install
 ```
+
+**Note:** If you encounter errors with deprecated packages or Electron installation failures, use the fresh install method above.
+
+### Troubleshooting
+
+If you experience installation issues such as:
+- Deprecated package warnings
+- Electron installation errors (ETIMEDOUT)
+- Network timeout errors
+- Peer dependency conflicts
+
+Please see [INSTALL.md](./INSTALL.md) for comprehensive troubleshooting steps.
+
+## Development
 
 ### Run the development server
 
@@ -38,15 +65,29 @@ npm install
 npm run dev
 ```
 
-### Setup pnpm (optional)
+The application will be available at `http://localhost:3000`
 
-If you are using `pnpm`, you need to add the following code to your `.npmrc` file:
+### Build for production
 
 ```bash
-public-hoist-pattern[]=*@heroui/*
+npm run build
 ```
 
-After modifying the `.npmrc` file, you need to run `pnpm install` again to ensure that the dependencies are installed correctly.
+### Start production server
+
+```bash
+npm run start
+```
+
+## Configuration
+
+Create a `.env.local` file in this directory:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:5000
+```
+
+Adjust the API URL to match your backend server configuration.
 
 ## License
 
