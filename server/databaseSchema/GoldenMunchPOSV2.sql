@@ -156,75 +156,6 @@ CREATE TABLE category_has_menu_item (
     FOREIGN KEY (menu_item_id) REFERENCES menu_item(menu_item_id) ON DELETE CASCADE
 );
 
--- ============================================================================
--- PROMOTION & DISCOUNT SYSTEM
--- ============================================================================
-
-CREATE TABLE promotion_rules (
-    promotion_id INT AUTO_INCREMENT PRIMARY KEY,
-    promotion_name VARCHAR(100) NOT NULL,
-    description TEXT,
-    promotion_type ENUM('percentage', 'fixed_amount', 'buy_x_get_y', 'bundle', 'seasonal') NOT NULL,
-    discount_percentage DECIMAL(5,2) DEFAULT 0.00 COMMENT 'For percentage-based discounts',
-    discount_amount DECIMAL(10,2) DEFAULT 0.00 COMMENT 'For fixed amount discounts',
-    min_purchase_amount DECIMAL(10,2) DEFAULT 0.00 COMMENT 'Minimum purchase required',
-    min_quantity INT DEFAULT 0 COMMENT 'Minimum quantity required',
-    buy_quantity INT DEFAULT 0 COMMENT 'For Buy X Get Y promotions',
-    get_quantity INT DEFAULT 0 COMMENT 'For Buy X Get Y promotions',
-    start_date DATE NOT NULL,
-    end_date DATE NOT NULL,
-    start_time TIME DEFAULT '00:00:00' COMMENT 'Daily start time for promotion',
-    end_time TIME DEFAULT '23:59:59' COMMENT 'Daily end time for promotion',
-    max_uses_per_customer INT DEFAULT NULL COMMENT 'Usage limit per customer',
-    total_usage_limit INT DEFAULT NULL COMMENT 'Total times promotion can be used',
-    current_usage_count INT DEFAULT 0,
-    is_active BOOLEAN DEFAULT TRUE,
-    is_stackable BOOLEAN DEFAULT FALSE COMMENT 'Can be combined with other promotions',
-    display_on_kiosk BOOLEAN DEFAULT TRUE COMMENT 'Show this promotion on kiosk',
-    created_by INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (created_by) REFERENCES admin(admin_id),
-    INDEX idx_promotion_dates (start_date, end_date),
-    INDEX idx_promotion_active (is_active),
-    INDEX idx_promotion_kiosk (display_on_kiosk),
-    CONSTRAINT chk_promotion_dates CHECK (start_date <= end_date),
-    CONSTRAINT chk_discount_percentage CHECK (discount_percentage BETWEEN 0 AND 100),
-    CONSTRAINT chk_discount_amount CHECK (discount_amount >= 0)
-);
-
-CREATE TABLE promotion_applicable_items (
-    promotion_id INT NOT NULL,
-    menu_item_id INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (promotion_id, menu_item_id),
-    FOREIGN KEY (promotion_id) REFERENCES promotion_rules(promotion_id) ON DELETE CASCADE,
-    FOREIGN KEY (menu_item_id) REFERENCES menu_item(menu_item_id) ON DELETE CASCADE
-);
-
-CREATE TABLE promotion_applicable_categories (
-    promotion_id INT NOT NULL,
-    category_id INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (promotion_id, category_id),
-    FOREIGN KEY (promotion_id) REFERENCES promotion_rules(promotion_id) ON DELETE CASCADE,
-    FOREIGN KEY (category_id) REFERENCES category(category_id) ON DELETE CASCADE
-);
-
-CREATE TABLE promotion_usage_log (
-    usage_id INT AUTO_INCREMENT PRIMARY KEY,
-    promotion_id INT NOT NULL,
-    order_id INT NOT NULL,
-    customer_id INT NULL,
-    discount_applied DECIMAL(10,2) NOT NULL,
-    used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (promotion_id) REFERENCES promotion_rules(promotion_id),
-    FOREIGN KEY (order_id) REFERENCES customer_order(order_id) ON DELETE CASCADE,
-    FOREIGN KEY (customer_id) REFERENCES customer(customer_id) ON DELETE SET NULL,
-    INDEX idx_promotion_usage_order (order_id),
-    INDEX idx_promotion_usage_customer (customer_id),
-    INDEX idx_promotion_usage_date (used_at)
-);
 
 -- ============================================================================
 -- TAX CONFIGURATION SYSTEM
@@ -341,6 +272,7 @@ CREATE TABLE custom_cake_daily_capacity (
     CONSTRAINT chk_complex_capacity CHECK (current_complex_count <= max_complex_cakes),
     CONSTRAINT chk_intricate_capacity CHECK (current_intricate_count <= max_intricate_cakes)
 );
+
 
 -- ============================================================================
 -- CUSTOMER MANAGEMENT (SIMPLIFIED FOR KIOSK)
@@ -558,6 +490,78 @@ CREATE TABLE customer_feedback (
     CONSTRAINT chk_food_rating_range CHECK (food_rating IS NULL OR food_rating BETWEEN 1 AND 5),
     CONSTRAINT chk_cleanliness_rating_range CHECK (cleanliness_rating IS NULL OR cleanliness_rating BETWEEN 1 AND 5)
 );
+
+
+-- ============================================================================
+-- PROMOTION & DISCOUNT SYSTEM
+-- ============================================================================
+
+CREATE TABLE promotion_rules (
+    promotion_id INT AUTO_INCREMENT PRIMARY KEY,
+    promotion_name VARCHAR(100) NOT NULL,
+    description TEXT,
+    promotion_type ENUM('percentage', 'fixed_amount', 'buy_x_get_y', 'bundle', 'seasonal') NOT NULL,
+    discount_percentage DECIMAL(5,2) DEFAULT 0.00 COMMENT 'For percentage-based discounts',
+    discount_amount DECIMAL(10,2) DEFAULT 0.00 COMMENT 'For fixed amount discounts',
+    min_purchase_amount DECIMAL(10,2) DEFAULT 0.00 COMMENT 'Minimum purchase required',
+    min_quantity INT DEFAULT 0 COMMENT 'Minimum quantity required',
+    buy_quantity INT DEFAULT 0 COMMENT 'For Buy X Get Y promotions',
+    get_quantity INT DEFAULT 0 COMMENT 'For Buy X Get Y promotions',
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    start_time TIME DEFAULT '00:00:00' COMMENT 'Daily start time for promotion',
+    end_time TIME DEFAULT '23:59:59' COMMENT 'Daily end time for promotion',
+    max_uses_per_customer INT DEFAULT NULL COMMENT 'Usage limit per customer',
+    total_usage_limit INT DEFAULT NULL COMMENT 'Total times promotion can be used',
+    current_usage_count INT DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    is_stackable BOOLEAN DEFAULT FALSE COMMENT 'Can be combined with other promotions',
+    display_on_kiosk BOOLEAN DEFAULT TRUE COMMENT 'Show this promotion on kiosk',
+    created_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES admin(admin_id),
+    INDEX idx_promotion_dates (start_date, end_date),
+    INDEX idx_promotion_active (is_active),
+    INDEX idx_promotion_kiosk (display_on_kiosk),
+    CONSTRAINT chk_promotion_dates CHECK (start_date <= end_date),
+    CONSTRAINT chk_discount_percentage CHECK (discount_percentage BETWEEN 0 AND 100),
+    CONSTRAINT chk_discount_amount CHECK (discount_amount >= 0)
+);
+
+CREATE TABLE promotion_applicable_items (
+    promotion_id INT NOT NULL,
+    menu_item_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (promotion_id, menu_item_id),
+    FOREIGN KEY (promotion_id) REFERENCES promotion_rules(promotion_id) ON DELETE CASCADE,
+    FOREIGN KEY (menu_item_id) REFERENCES menu_item(menu_item_id) ON DELETE CASCADE
+);
+
+CREATE TABLE promotion_applicable_categories (
+    promotion_id INT NOT NULL,
+    category_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (promotion_id, category_id),
+    FOREIGN KEY (promotion_id) REFERENCES promotion_rules(promotion_id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES category(category_id) ON DELETE CASCADE
+);
+
+CREATE TABLE promotion_usage_log (
+    usage_id INT AUTO_INCREMENT PRIMARY KEY,
+    promotion_id INT NOT NULL,
+    order_id INT NOT NULL,
+    customer_id INT NULL,
+    discount_applied DECIMAL(10,2) NOT NULL,
+    used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (promotion_id) REFERENCES promotion_rules(promotion_id),
+    FOREIGN KEY (order_id) REFERENCES customer_order(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (customer_id) REFERENCES customer(customer_id) ON DELETE SET NULL,
+    INDEX idx_promotion_usage_order (order_id),
+    INDEX idx_promotion_usage_customer (customer_id),
+    INDEX idx_promotion_usage_date (used_at)
+);
+
 
 -- ============================================================================
 -- INVENTORY MANAGEMENT
