@@ -1,0 +1,41 @@
+{
+  "printerType": "usb",
+  "usb": {
+    "vid": "0x0416",
+    "pid": "0x5011",
+    "comment": "Common IDs - Check your printer's USB VID/PID using 'lsusb' (Linux/Mac) or Device Manager (Windows)"
+  },
+  "network": {
+    "address": "192.168.1.100",
+    "port": 9100,
+    "comment": "Use printer's IP address on your network"
+  },
+  "serial": {
+    "path": "/dev/ttyUSB0",
+    "baudRate": 9600,
+    "comment": "Serial port path - /dev/ttyUSB0 (Linux), COM3 (Windows)"
+  },
+  "settings": {
+    "width": 48,
+    "encoding": "GB18030",
+    "comment": "Width: 48 chars for 80mm paper, 32 for 58mm paper"
+  },
+  "commonPrinters": {
+    "epson": {
+      "usb": { "vid": "0x04b8", "pid": "0x0e03" },
+      "description": "Epson TM-T20, TM-T88 series"
+    },
+    "star": {
+      "usb": { "vid": "0x0519", "pid": "0x0001" },
+      "description": "Star TSP100, TSP650 series"
+    },
+    "xprinter": {
+      "usb": { "vid": "0x0416", "pid": "0x5011" },
+      "description": "XPrinter XP-58, XP-80 series"
+    },
+    "bixolon": {
+      "usb": { "vid": "0x1504", "pid": "0x0006" },
+      "description": "Bixolon SRP-350, SRP-275 series"
+    }
+  }
+}

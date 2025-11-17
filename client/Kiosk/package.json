@@ -1,12 +1,63 @@
 {
-  "name": "next-app-template",
-  "version": "0.0.1",
+  "name": "goldenmunch-kiosk",
+  "version": "1.0.0",
+  "description": "GoldenMunch POS Kiosk Application",
+  "author": "GoldenMunch",
+  "main": "electron/main.js",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
+    "export": "next build && next export",
     "start": "next start",
-    "lint": "eslint --fix"
+    "lint": "eslint --fix",
+    "electron": "NODE_ENV=development electron .",
+    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && npm run electron\"",
+    "electron:build": "next build && next export && electron-builder",
+    "electron:build:win": "npm run export && electron-builder --win",
+    "electron:build:mac": "npm run export && electron-builder --mac",
+    "electron:build:linux": "npm run export && electron-builder --linux",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "build": {
+    "appId": "com.goldenmunch.kiosk",
+    "productName": "GoldenMunch Kiosk",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "out/**/*",
+      "public/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ],
+      "icon": "public/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "public/icon.icns"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "public/icon.png",
+      "category": "Office"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   },
   "dependencies": {
     "@heroui/accordion": "2.2.23",
@@ -53,12 +104,14 @@
     "@react-aria/visually-hidden": "3.8.27",
     "axios": "^1.13.2",
     "clsx": "2.1.1",
+    "escpos": "^3.0.0-alpha.6",
     "framer-motion": "11.18.2",
     "intl-messageformat": "10.7.16",
     "next": "15.3.1",
     "next-themes": "0.4.6",
     "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react-dom": "18.3.1",
+    "serialport": "^12.0.0"
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "15.3.4",
@@ -69,6 +122,10 @@
     "@types/react-dom": "18.3.0",
     "@typescript-eslint/eslint-plugin": "8.34.1",
     "@typescript-eslint/parser": "8.34.1",
+    "concurrently": "^9.1.2",
+    "electron": "^34.0.0",
+    "electron-builder": "^25.1.8",
+    "electron-devtools-installer": "^3.2.0",
     "eslint": "9.25.1",
     "eslint-config-next": "15.3.4",
     "eslint-config-prettier": "9.1.0",
@@ -84,6 +141,7 @@
     "prettier": "3.5.3",
     "tailwind-variants": "3.1.1",
     "tailwindcss": "4.1.11",
-    "typescript": "5.6.3"
+    "typescript": "5.6.3",
+    "wait-on": "^8.0.1"
   }
 }
