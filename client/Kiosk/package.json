@@ -116,6 +116,8 @@
     "request": "npm:noop-package@^1.0.0",
     "are-we-there-yet": "npm:noop-package@^1.0.0",
     "gauge": "npm:noop-package@^1.0.0",
-    "boolean": "npm:noop-package@^1.0.0"
+    "boolean": "npm:noop-package@^1.0.0",
+    "@npmcli/move-file": "^3.0.3",
+    "npmlog": "npm:noop-package@^1.0.0"
   }
 }
