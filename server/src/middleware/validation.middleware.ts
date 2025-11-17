@@ -2,6 +2,64 @@ import { Request, Response, NextFunction } from 'express';
 import Joi from 'joi';
 import { AppError } from './error.middleware';
 
+// ENUM definitions (must match database schema)
+export const ENUMS = {
+  item_type: ['cake', 'pastry', 'beverage', 'snack', 'main_dish', 'appetizer', 'dessert', 'bread', 'other'],
+  unit_of_measure: ['piece', 'dozen', 'half_dozen', 'kilogram', 'gram', 'liter', 'milliliter', 'serving', 'box', 'pack'],
+  menu_status: ['available', 'sold_out', 'discontinued'],
+  price_type: ['regular', 'promotion', 'seasonal', 'bulk'],
+  promotion_type: ['percentage', 'fixed_amount', 'buy_x_get_y', 'bundle', 'seasonal'],
+  tax_type: ['percentage', 'fixed'],
+  frosting_type: ['buttercream', 'fondant', 'whipped_cream', 'ganache', 'cream_cheese'],
+  design_complexity: ['simple', 'moderate', 'complex', 'intricate'],
+  order_type: ['walk_in', 'pickup', 'pre_order', 'custom_order'],
+  order_source: ['kiosk', 'cashier', 'admin'],
+  payment_method: ['cash', 'gcash', 'paymaya', 'card', 'bank_transfer'],
+  payment_status: ['pending', 'partial_paid', 'paid', 'failed', 'refunded'],
+  order_status: ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled'],
+  refund_type: ['full', 'partial', 'item'],
+  refund_reason: ['customer_request', 'wrong_item', 'quality_issue', 'delay', 'cancellation', 'other'],
+  refund_method: ['cash', 'gcash', 'paymaya', 'card', 'bank_transfer', 'store_credit'],
+  refund_status: ['pending', 'approved', 'rejected', 'completed'],
+  feedback_type: ['positive', 'neutral', 'negative'],
+  transaction_type: ['in', 'out', 'adjustment', 'return', 'waste', 'transfer'],
+  waste_reason: ['expired', 'damaged', 'overproduction', 'quality_issue', 'customer_return', 'other'],
+  alert_type: ['low_stock', 'out_of_stock', 'expiring_soon', 'overstocked'],
+  change_reason: ['order_placed', 'daily_decay', 'system_recalculation', 'manual_adjustment'],
+} as const;
+
+// ENUM validation function
+export const validateEnum = (value: string, enumType: keyof typeof ENUMS, fieldName: string): void => {
+  const validValues = ENUMS[enumType];
+  if (!validValues.includes(value as any)) {
+    throw new AppError(
+      `Invalid ${fieldName}: '${value}'. Must be one of: ${validValues.join(', ')}`,
+      400
+    );
+  }
+};
+
+// ENUM validation middleware factory
+export const validateEnumField = (fieldName: string, enumType: keyof typeof ENUMS, required: boolean = false) => {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    const value = req.body[fieldName];
+
+    if (!value) {
+      if (required) {
+        return next(new AppError(`${fieldName} is required`, 400));
+      }
+      return next();
+    }
+
+    try {
+      validateEnum(value, enumType, fieldName);
+      next();
+    } catch (error) {
+      next(error);
+    }
+  };
+};
+
 // Validation schemas
 export const schemas = {
   // Auth schemas

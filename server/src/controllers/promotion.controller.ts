@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../models/types';
 import { query, callProcedure } from '../config/database';
-import { successResponse } from '../utils/helpers';
+import { successResponse, buildSafeUpdateQuery, validateDateRange } from '../utils/helpers';
 import { AppError } from '../middleware/error.middleware';
 import { getFirstRow } from '../utils/typeGuards';
 
@@ -107,12 +107,16 @@ export const updatePromotion = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const updates = req.body;
 
-  const fields = Object.keys(updates)
-    .map((key) => `${key} = ?`)
-    .join(', ');
-  const values = [...Object.values(updates), id];
+  const allowedColumns = [
+    'promotion_name', 'description', 'promotion_type', 'discount_percentage',
+    'discount_amount', 'min_purchase_amount', 'min_quantity', 'buy_quantity',
+    'get_quantity', 'start_date', 'end_date', 'start_time', 'end_time',
+    'max_uses_per_customer', 'total_usage_limit', 'is_active', 'is_stackable',
+    'display_on_kiosk'
+  ];
 
-  await query(`UPDATE promotion_rules SET ${fields} WHERE promotion_id = ?`, values);
+  const { setClause, values } = buildSafeUpdateQuery(updates, allowedColumns);
+  await query(`UPDATE promotion_rules SET ${setClause} WHERE promotion_id = ?`, [...values, id]);
 
   res.json(successResponse('Promotion updated'));
 };
@@ -129,6 +133,11 @@ export const deletePromotion = async (req: AuthRequest, res: Response) => {
 // Get promotion usage log
 export const getPromotionUsageLog = async (req: AuthRequest, res: Response) => {
   const { promotion_id, date_from, date_to, page = 1, limit = 20 } = req.query;
+
+  // Validate date range if provided
+  if (date_from && date_to) {
+    validateDateRange(date_from as string, date_to as string, 365);
+  }
 
   let sql = `
     SELECT pul.*, co.order_number, cust.first_name, cust.last_name
@@ -155,12 +164,25 @@ export const getPromotionUsageLog = async (req: AuthRequest, res: Response) => {
     params.push(date_to);
   }
 
+  // Get total count
+  const countSql = sql.replace(/SELECT pul\.\*.*FROM/, 'SELECT COUNT(*) as total FROM');
+  const countResult = getFirstRow<any>(await query(countSql, params.slice(0, -2)));
+  const total = countResult?.total || 0;
+
   sql += ' ORDER BY pul.used_at DESC LIMIT ? OFFSET ?';
   params.push(Number(limit), (Number(page) - 1) * Number(limit));
 
   const logs = await query(sql, params);
 
-  res.json(successResponse('Promotion usage log retrieved', logs));
+  res.json(successResponse('Promotion usage log retrieved', {
+    logs,
+    pagination: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      totalPages: Math.ceil(total / Number(limit))
+    }
+  }));
 };
 
 // Apply promotion to order (called during order calculation)

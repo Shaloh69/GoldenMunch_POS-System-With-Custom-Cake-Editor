@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../models/types';
 import { query, callProcedure } from '../config/database';
-import { successResponse } from '../utils/helpers';
+import { successResponse, buildSafeUpdateQuery, validateDateRange } from '../utils/helpers';
 import { AppError } from '../middleware/error.middleware';
 import { getFirstRow, getInsertId } from '../utils/typeGuards';
 
@@ -45,12 +45,15 @@ export const updateMenuItem = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const updates = req.body;
 
-  const fields = Object.keys(updates)
-    .map((key) => `${key} = ?`)
-    .join(', ');
-  const values = [...Object.values(updates), id];
+  const allowedColumns = [
+    'name', 'description', 'item_type', 'unit_of_measure', 'stock_quantity',
+    'is_infinite_stock', 'min_stock_level', 'status', 'can_customize',
+    'can_preorder', 'preparation_time_minutes', 'supplier_id', 'is_featured',
+    'allergen_info', 'nutritional_info', 'image_url'
+  ];
 
-  await query(`UPDATE menu_item SET ${fields} WHERE menu_item_id = ?`, values);
+  const { setClause, values } = buildSafeUpdateQuery(updates, allowedColumns);
+  await query(`UPDATE menu_item SET ${setClause} WHERE menu_item_id = ?`, [...values, id]);
 
   res.json(successResponse('Menu item updated'));
 };
@@ -149,8 +152,8 @@ export const adjustInventory = async (req: AuthRequest, res: Response) => {
   await query(
     `INSERT INTO inventory_transaction
      (menu_item_id, transaction_type, quantity, previous_quantity, new_quantity,
-      reason_id, notes, performed_by)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      reason_id, notes, performed_by, performed_by_role)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'admin')`,
     [menu_item_id, transaction_type, quantity, previousQuantity, newQuantity, reason_id, notes, admin_id]
   );
 
@@ -162,6 +165,12 @@ export const adjustInventory = async (req: AuthRequest, res: Response) => {
 // Get sales analytics
 export const getSalesAnalytics = async (req: AuthRequest, res: Response) => {
   const { date_from, date_to } = req.query;
+
+  // Validate date range
+  if (!date_from || !date_to) {
+    throw new AppError('date_from and date_to are required', 400);
+  }
+  validateDateRange(date_from as string, date_to as string, 365);
 
   const sql = `
     SELECT
@@ -282,12 +291,10 @@ export const updateCategory = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const updates = req.body;
 
-  const fields = Object.keys(updates)
-    .map((key) => `${key} = ?`)
-    .join(', ');
-  const values = [...Object.values(updates), id];
+  const allowedColumns = ['name', 'description', 'image_url', 'display_order', 'is_active'];
 
-  await query(`UPDATE category SET ${fields} WHERE category_id = ?`, values);
+  const { setClause, values } = buildSafeUpdateQuery(updates, allowedColumns);
+  await query(`UPDATE category SET ${setClause} WHERE category_id = ?`, [...values, id]);
 
   res.json(successResponse('Category updated'));
 };
@@ -311,6 +318,11 @@ export const assignItemToCategory = async (req: AuthRequest, res: Response) => {
 // Get feedback
 export const getFeedback = async (req: AuthRequest, res: Response) => {
   const { feedback_type, rating_min, date_from, date_to } = req.query;
+
+  // Validate date range if provided
+  if (date_from && date_to) {
+    validateDateRange(date_from as string, date_to as string, 365);
+  }
 
   let sql = `
     SELECT cf.*, co.order_number, c.first_name, c.last_name

@@ -219,6 +219,8 @@ CREATE TABLE promotion_usage_log (
     discount_applied DECIMAL(10,2) NOT NULL,
     used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (promotion_id) REFERENCES promotion_rules(promotion_id),
+    FOREIGN KEY (order_id) REFERENCES customer_order(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (customer_id) REFERENCES customer(customer_id) ON DELETE SET NULL,
     INDEX idx_promotion_usage_order (order_id),
     INDEX idx_promotion_usage_customer (customer_id),
     INDEX idx_promotion_usage_date (used_at)
@@ -579,14 +581,15 @@ CREATE TABLE inventory_transaction (
     reason_id INT NULL,
     notes TEXT COMMENT 'Additional transaction notes',
     reference_number VARCHAR(50),
-    performed_by INT NOT NULL,
+    performed_by INT NOT NULL COMMENT 'References either admin_id or cashier_id depending on user role',
+    performed_by_role ENUM('admin', 'cashier') NOT NULL DEFAULT 'admin' COMMENT 'Indicates whether performed_by references admin or cashier table',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (menu_item_id) REFERENCES menu_item(menu_item_id),
     FOREIGN KEY (reason_id) REFERENCES stock_adjustment_reason(reason_id),
-    FOREIGN KEY (performed_by) REFERENCES admin(admin_id),
     INDEX idx_inventory_item (menu_item_id),
     INDEX idx_inventory_type (transaction_type),
-    INDEX idx_inventory_date (created_at)
+    INDEX idx_inventory_date (created_at),
+    INDEX idx_inventory_performed_by (performed_by, performed_by_role)
 );
 
 CREATE TABLE inventory_alert (
@@ -1086,19 +1089,21 @@ BEGIN
 END;
 //
 
--- Apply daily popularity decay
+-- Apply daily popularity decay (UNUSED - Should be called via cron job/scheduler)
+-- RECOMMENDED: Set up a daily cron job to call this procedure
+-- Example: 0 0 * * * mysql -u user -p database -e "CALL ApplyDailyPopularityDecay();"
 CREATE PROCEDURE ApplyDailyPopularityDecay()
 BEGIN
     DECLARE items_updated INT DEFAULT 0;
-    
-    UPDATE menu_item 
+
+    UPDATE menu_item
     SET popularity_score = GREATEST(0, popularity_score * 0.995)
-    WHERE last_ordered_date != CURDATE() 
+    WHERE last_ordered_date != CURDATE()
         AND popularity_score > 0
         AND is_deleted = FALSE;
-    
+
     SET items_updated = ROW_COUNT();
-    
+
     INSERT INTO popularity_history (
         menu_item_id,
         old_popularity_score,
@@ -1114,7 +1119,7 @@ BEGIN
     WHERE last_ordered_date != CURDATE()
         AND popularity_score > 0
         AND is_deleted = FALSE;
-    
+
     SELECT CONCAT('Applied daily decay to ', items_updated, ' items') AS result;
 END;
 //
@@ -1205,11 +1210,19 @@ DELIMITER ;
 -- ============================================================================
 -- FUNCTIONS
 -- ============================================================================
+-- NOTE: The following functions are available but currently UNUSED in the application.
+-- They can be used for future features or reporting:
+--   - CalculateLoyaltyPoints: Can be used for loyalty program calculations
+--   - IsItemAvailable: Can be used in order validation
+--   - GetPopularityRank: Can be used in analytics dashboards
+--   - GetPopularityTrend: Can be used in analytics dashboards
+-- Consider removing these if not needed within the next development cycle.
+-- ============================================================================
 
 DELIMITER //
 
--- Calculate loyalty points
-CREATE FUNCTION CalculateLoyaltyPoints(amount DECIMAL(10,2)) 
+-- Calculate loyalty points (UNUSED - Consider using in customer loyalty features)
+CREATE FUNCTION CalculateLoyaltyPoints(amount DECIMAL(10,2))
 RETURNS INT
 READS SQL DATA
 DETERMINISTIC
@@ -1218,8 +1231,8 @@ BEGIN
 END;
 //
 
--- Check item availability
-CREATE FUNCTION IsItemAvailable(item_id INT, required_quantity INT) 
+-- Check item availability (UNUSED - Consider using in order validation)
+CREATE FUNCTION IsItemAvailable(item_id INT, required_quantity INT)
 RETURNS BOOLEAN
 READS SQL DATA
 DETERMINISTIC
@@ -1227,7 +1240,7 @@ BEGIN
     DECLARE current_stock INT DEFAULT 0;
     DECLARE item_status VARCHAR(20) DEFAULT '';
     DECLARE is_infinite BOOLEAN DEFAULT FALSE;
-    
+
     SELECT stock_quantity, status, is_infinite_stock
     INTO current_stock, item_status, is_infinite
     FROM menu_item
@@ -1243,30 +1256,30 @@ BEGIN
 END;
 //
 
--- Get popularity rank
-CREATE FUNCTION GetPopularityRank(item_id INT) 
+-- Get popularity rank (UNUSED - Consider using in analytics/reporting)
+CREATE FUNCTION GetPopularityRank(item_id INT)
 RETURNS INT
 READS SQL DATA
 DETERMINISTIC
 BEGIN
     DECLARE item_rank INT DEFAULT 0;
     DECLARE item_score DECIMAL(8,2) DEFAULT 0;
-    
+
     SELECT popularity_score INTO item_score
-    FROM menu_item 
+    FROM menu_item
     WHERE menu_item_id = item_id;
-    
+
     SELECT COUNT(*) + 1 INTO item_rank
-    FROM menu_item 
+    FROM menu_item
     WHERE popularity_score > item_score
         AND is_deleted = FALSE;
-    
+
     RETURN item_rank;
 END;
 //
 
--- Get popularity trend
-CREATE FUNCTION GetPopularityTrend(item_id INT, days_period INT) 
+-- Get popularity trend (UNUSED - Consider using in analytics/reporting)
+CREATE FUNCTION GetPopularityTrend(item_id INT, days_period INT)
 RETURNS VARCHAR(20)
 READS SQL DATA
 DETERMINISTIC
@@ -1275,25 +1288,25 @@ BEGIN
     DECLARE previous_avg DECIMAL(8,2) DEFAULT 0;
     DECLARE trend_result VARCHAR(20) DEFAULT 'stable';
     DECLARE period_to_use INT DEFAULT 7;
-    
+
     IF days_period IS NULL OR days_period <= 0 THEN
         SET period_to_use = 7;
     ELSE
         SET period_to_use = days_period;
     END IF;
-    
+
     SELECT COALESCE(AVG(daily_orders), 0) INTO recent_avg
-    FROM menu_item_daily_stats 
-    WHERE menu_item_id = item_id 
+    FROM menu_item_daily_stats
+    WHERE menu_item_id = item_id
         AND stats_date >= DATE_SUB(CURDATE(), INTERVAL period_to_use DAY)
         AND stats_date < CURDATE();
-    
+
     SELECT COALESCE(AVG(daily_orders), 0) INTO previous_avg
-    FROM menu_item_daily_stats 
-    WHERE menu_item_id = item_id 
+    FROM menu_item_daily_stats
+    WHERE menu_item_id = item_id
         AND stats_date >= DATE_SUB(CURDATE(), INTERVAL (period_to_use * 2) DAY)
         AND stats_date < DATE_SUB(CURDATE(), INTERVAL period_to_use DAY);
-    
+
     IF previous_avg = 0 AND recent_avg > 0 THEN
         SET trend_result = 'new_trending';
     ELSEIF previous_avg > 0 THEN
@@ -1309,7 +1322,7 @@ BEGIN
             SET trend_result = 'stable';
         END IF;
     END IF;
-    
+
     RETURN trend_result;
 END;
 //

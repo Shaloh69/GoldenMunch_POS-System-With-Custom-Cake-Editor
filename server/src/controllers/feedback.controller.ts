@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../models/types';
 import { query } from '../config/database';
-import { successResponse } from '../utils/helpers';
+import { successResponse, validateDateRange } from '../utils/helpers';
 import { AppError } from '../middleware/error.middleware';
 import { getFirstRow, getInsertId } from '../utils/typeGuards';
 
@@ -65,6 +65,12 @@ export const submitFeedback = async (req: AuthRequest, res: Response) => {
 // Get feedback statistics
 export const getFeedbackStats = async (req: AuthRequest, res: Response) => {
   const { date_from, date_to } = req.query;
+
+  // Validate date range
+  if (!date_from || !date_to) {
+    throw new AppError('date_from and date_to are required', 400);
+  }
+  validateDateRange(date_from as string, date_to as string, 365);
 
   const sql = `
     SELECT

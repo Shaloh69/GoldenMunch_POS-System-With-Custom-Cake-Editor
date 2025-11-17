@@ -1,9 +1,10 @@
 import { Response } from 'express';
 import { AuthRequest } from '../models/types';
-import { query } from '../config/database';
-import { successResponse } from '../utils/helpers';
+import { query, transaction } from '../config/database';
+import { successResponse, validateDateRange } from '../utils/helpers';
 import { AppError } from '../middleware/error.middleware';
 import { getFirstRow, getInsertId } from '../utils/typeGuards';
+import { PoolConnection } from 'mysql2/promise';
 
 // ==== WASTE TRACKING ====
 
@@ -19,69 +20,80 @@ export const createWasteEntry = async (req: AuthRequest, res: Response) => {
   } = req.body;
   const cashier_id = req.user?.id;
 
-  // Verify menu item exists
-  const item = getFirstRow<any>(await query(
-    'SELECT * FROM menu_item WHERE menu_item_id = ?',
-    [menu_item_id]
-  ));
+  const wasteId = await transaction(async (conn: PoolConnection) => {
+    // Lock and get menu item to prevent race condition
+    const [itemRows] = await conn.query(
+      'SELECT * FROM menu_item WHERE menu_item_id = ? FOR UPDATE',
+      [menu_item_id]
+    );
 
-  if (!item) {
-    throw new AppError('Menu item not found', 404);
-  }
+    const item = getFirstRow<any>(itemRows);
 
-  // Create waste entry
-  const result = await query(
-    `INSERT INTO waste_tracking
-     (menu_item_id, quantity_wasted, waste_reason, waste_cost, reason_details, reported_by, waste_date)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    [
-      menu_item_id,
-      quantity_wasted,
-      waste_reason,
-      waste_cost,
-      reason_details || null,
-      cashier_id,
-      waste_date || new Date().toISOString().slice(0, 10),
-    ]
-  );
+    if (!item) {
+      throw new AppError('Menu item not found', 404);
+    }
 
-  // Update inventory
-  await query(
-    `UPDATE menu_item
-     SET stock_quantity = stock_quantity - ?
-     WHERE menu_item_id = ? AND is_infinite_stock = FALSE`,
-    [quantity_wasted, menu_item_id]
-  );
+    const previousQuantity = item.stock_quantity;
+    const newQuantity = item.is_infinite_stock ? previousQuantity : previousQuantity - quantity_wasted;
 
-  // Record inventory transaction
-  const currentStock = getFirstRow<any>(await query(
-    'SELECT stock_quantity FROM menu_item WHERE menu_item_id = ?',
-    [menu_item_id]
-  ));
+    // Create waste entry
+    const [wasteResult] = await conn.query(
+      `INSERT INTO waste_tracking
+       (menu_item_id, quantity_wasted, waste_reason, waste_cost, reason_details, reported_by, waste_date)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        menu_item_id,
+        quantity_wasted,
+        waste_reason,
+        waste_cost,
+        reason_details || null,
+        cashier_id,
+        waste_date || new Date().toISOString().slice(0, 10),
+      ]
+    );
 
-  await query(
-    `INSERT INTO inventory_transaction
-     (menu_item_id, transaction_type, quantity, previous_quantity, new_quantity,
-      notes, performed_by)
-     VALUES (?, 'waste', ?, ?, ?, ?, ?)`,
-    [
-      menu_item_id,
-      quantity_wasted,
-      item.stock_quantity,
-      currentStock?.stock_quantity || 0,
-      `Waste entry: ${waste_reason}`,
-      cashier_id,
-    ]
-  );
+    // Update inventory (only if not infinite stock)
+    if (!item.is_infinite_stock) {
+      await conn.query(
+        `UPDATE menu_item
+         SET stock_quantity = ?
+         WHERE menu_item_id = ?`,
+        [newQuantity, menu_item_id]
+      );
+    }
+
+    // Record inventory transaction
+    await conn.query(
+      `INSERT INTO inventory_transaction
+       (menu_item_id, transaction_type, quantity, previous_quantity, new_quantity,
+        notes, performed_by, performed_by_role)
+       VALUES (?, 'waste', ?, ?, ?, ?, ?, 'cashier')`,
+      [
+        menu_item_id,
+        quantity_wasted,
+        previousQuantity,
+        newQuantity,
+        `Waste entry: ${waste_reason}`,
+        cashier_id,
+      ]
+    );
+
+    return (wasteResult as any).insertId;
+  });
 
   res.status(201).json(
-    successResponse('Waste entry created', { id: getInsertId(result) })
+    successResponse('Waste entry created', { id: wasteId })
   );
 };
 
 // Get waste entries
 export const getWasteEntries = async (req: AuthRequest, res: Response) => {
   const { menu_item_id, waste_reason, date_from, date_to, page = 1, limit = 20 } = req.query;
+
+  // Validate date range if provided
+  if (date_from && date_to) {
+    validateDateRange(date_from as string, date_to as string, 365);
+  }
 
   let sql = `
     SELECT wt.*, mi.name as item_name, c.name as reported_by_name
@@ -113,17 +125,36 @@ export const getWasteEntries = async (req: AuthRequest, res: Response) => {
     params.push(date_to);
   }
 
+  // Get total count
+  const countSql = sql.replace(/SELECT wt\.\*.*FROM/, 'SELECT COUNT(*) as total FROM');
+  const countResult = getFirstRow<any>(await query(countSql, params.slice(0, -2)));
+  const total = countResult?.total || 0;
+
   sql += ' ORDER BY wt.waste_date DESC, wt.created_at DESC LIMIT ? OFFSET ?';
   params.push(Number(limit), (Number(page) - 1) * Number(limit));
 
   const entries = await query(sql, params);
 
-  res.json(successResponse('Waste entries retrieved', entries));
+  res.json(successResponse('Waste entries retrieved', {
+    entries,
+    pagination: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      totalPages: Math.ceil(total / Number(limit))
+    }
+  }));
 };
 
 // Get waste summary
 export const getWasteSummary = async (req: AuthRequest, res: Response) => {
   const { date_from, date_to } = req.query;
+
+  // Validate date range
+  if (!date_from || !date_to) {
+    throw new AppError('date_from and date_to are required', 400);
+  }
+  validateDateRange(date_from as string, date_to as string, 365);
 
   const sql = `
     SELECT

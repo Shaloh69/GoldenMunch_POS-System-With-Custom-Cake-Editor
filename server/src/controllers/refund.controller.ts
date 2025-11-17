@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../models/types';
 import { query } from '../config/database';
-import { successResponse } from '../utils/helpers';
+import { successResponse, validateDateRange } from '../utils/helpers';
 import { AppError } from '../middleware/error.middleware';
 import { getFirstRow, getInsertId } from '../utils/typeGuards';
 
@@ -57,6 +57,11 @@ export const createRefundRequest = async (req: AuthRequest, res: Response) => {
 export const getRefundRequests = async (req: AuthRequest, res: Response) => {
   const { refund_status, date_from, date_to, page = 1, limit = 20 } = req.query;
 
+  // Validate date range if provided
+  if (date_from && date_to) {
+    validateDateRange(date_from as string, date_to as string, 365);
+  }
+
   let sql = `
     SELECT rr.*, co.order_number, c.name as requested_by_name
     FROM refund_request rr
@@ -82,12 +87,25 @@ export const getRefundRequests = async (req: AuthRequest, res: Response) => {
     params.push(date_to);
   }
 
+  // Get total count
+  const countSql = sql.replace(/SELECT rr\.\*.*FROM/, 'SELECT COUNT(*) as total FROM');
+  const countResult = getFirstRow<any>(await query(countSql, params.slice(0, -2)));
+  const total = countResult?.total || 0;
+
   sql += ' ORDER BY rr.created_at DESC LIMIT ? OFFSET ?';
   params.push(Number(limit), (Number(page) - 1) * Number(limit));
 
   const refunds = await query(sql, params);
 
-  res.json(successResponse('Refund requests retrieved', refunds));
+  res.json(successResponse('Refund requests retrieved', {
+    refunds,
+    pagination: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      totalPages: Math.ceil(total / Number(limit))
+    }
+  }));
 };
 
 // Get refund details

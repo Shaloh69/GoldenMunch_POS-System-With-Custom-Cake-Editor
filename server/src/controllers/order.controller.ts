@@ -247,14 +247,35 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
     res.json(successResponse('Payment verified', result[0][0]));
   } else {
     // Handle other payment methods
-    await query(
-      `UPDATE customer_order
-       SET payment_status = 'paid',
-           payment_verified_by = ?,
-           payment_verified_at = NOW()
-       WHERE order_id = ?`,
-      [cashier_id, order_id]
-    );
+    await transaction(async (conn: PoolConnection) => {
+      // Get order amount
+      const orderData = getFirstRow<any>(await conn.query(
+        'SELECT final_amount FROM customer_order WHERE order_id = ?',
+        [order_id]
+      ));
+
+      if (!orderData) {
+        throw new AppError('Order not found', 404);
+      }
+
+      // Update order payment status
+      await conn.query(
+        `UPDATE customer_order
+         SET payment_status = 'paid',
+             payment_verified_by = ?,
+             payment_verified_at = NOW()
+         WHERE order_id = ?`,
+        [cashier_id, order_id]
+      );
+
+      // Create payment transaction record
+      await conn.query(
+        `INSERT INTO payment_transaction
+         (order_id, payment_method, amount, reference_number, payment_status, verified_by, verified_at)
+         VALUES (?, ?, ?, ?, 'verified', ?, NOW())`,
+        [order_id, payment_method, orderData.final_amount, reference_number || null, cashier_id]
+      );
+    });
 
     res.json(successResponse('Payment verified successfully'));
   }
@@ -354,11 +375,24 @@ export const getOrders = async (req: AuthRequest, res: Response) => {
     params.push(date_to);
   }
 
+  // Get total count
+  const countSql = sql.replace(/SELECT co\.\*.*FROM/, 'SELECT COUNT(*) as total FROM');
+  const countResult = getFirstRow<any>(await query(countSql, params.slice(0, -2)));
+  const total = countResult?.total || 0;
+
   sql += ` ORDER BY co.order_datetime DESC`;
   sql += ` LIMIT ? OFFSET ?`;
   params.push(Number(limit), (Number(page) - 1) * Number(limit));
 
   const orders = await query(sql, params);
 
-  res.json(successResponse('Orders retrieved', orders));
+  res.json(successResponse('Orders retrieved', {
+    orders,
+    pagination: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+      totalPages: Math.ceil(total / Number(limit))
+    }
+  }));
 };

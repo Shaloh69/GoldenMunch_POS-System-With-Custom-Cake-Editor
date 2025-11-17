@@ -220,3 +220,76 @@ export const cleanObject = (obj: any): any => {
     Object.entries(obj).filter(([_, v]) => v != null)
   );
 };
+
+/**
+ * Build safe UPDATE query with column whitelisting
+ * Prevents SQL injection by only allowing whitelisted columns
+ *
+ * @param updates - Object containing column names and values
+ * @param allowedColumns - Array of column names that are allowed to be updated
+ * @returns Object with SQL SET clause and values array
+ * @throws Error if attempting to update non-whitelisted column
+ */
+export const buildSafeUpdateQuery = (
+  updates: Record<string, any>,
+  allowedColumns: string[]
+): { setClause: string; values: any[] } => {
+  const updateKeys = Object.keys(updates);
+
+  // Validate all update keys are in allowed columns
+  const invalidColumns = updateKeys.filter(key => !allowedColumns.includes(key));
+  if (invalidColumns.length > 0) {
+    throw new Error(`Invalid columns for update: ${invalidColumns.join(', ')}`);
+  }
+
+  if (updateKeys.length === 0) {
+    throw new Error('No valid columns to update');
+  }
+
+  // Build SET clause with whitelisted columns only
+  const setClause = updateKeys.map(key => `${key} = ?`).join(', ');
+  const values = updateKeys.map(key => updates[key]);
+
+  return { setClause, values };
+};
+
+/**
+ * Validate date range
+ * Ensures start_date is before or equal to end_date
+ *
+ * @param start_date - Start date string or Date object
+ * @param end_date - End date string or Date object
+ * @param maxDaysRange - Optional maximum allowed range in days
+ * @throws Error if date range is invalid
+ */
+export const validateDateRange = (
+  start_date: string | Date,
+  end_date: string | Date,
+  maxDaysRange?: number
+): void => {
+  const start = new Date(start_date);
+  const end = new Date(end_date);
+
+  // Check if dates are valid
+  if (isNaN(start.getTime())) {
+    throw new Error('Invalid start_date');
+  }
+  if (isNaN(end.getTime())) {
+    throw new Error('Invalid end_date');
+  }
+
+  // Check if start is before or equal to end
+  if (start > end) {
+    throw new Error('start_date must be before or equal to end_date');
+  }
+
+  // Check max range if specified
+  if (maxDaysRange) {
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays > maxDaysRange) {
+      throw new Error(`Date range cannot exceed ${maxDaysRange} days`);
+    }
+  }
+};

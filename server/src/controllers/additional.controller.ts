@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../models/types';
 import { query } from '../config/database';
-import { successResponse } from '../utils/helpers';
+import { successResponse, buildSafeUpdateQuery, validateDateRange } from '../utils/helpers';
 import { AppError } from '../middleware/error.middleware';
 import { getFirstRow, getAllRows, getInsertId, parseQueryNumber, parseQueryString, parseQueryBoolean } from '../utils/typeGuards';
 import bcrypt from 'bcrypt';
@@ -45,13 +45,34 @@ export const getCustomers = async (req: AuthRequest, res: Response) => {
     params.push(parseQueryBoolean(is_active));
   }
 
+  // Get total count
+  const countSql = 'SELECT COUNT(*) as total FROM customer WHERE 1=1' +
+    (search ? ` AND (first_name LIKE ? OR last_name LIKE ? OR phone LIKE ? OR email LIKE ?)` : '') +
+    (is_active !== undefined ? ' AND is_active = ?' : '');
+  const countParams = search
+    ? [`%${search}%`, `%${search}%`, `%${search}%`, `%${search}%`]
+    : [];
+  if (is_active !== undefined) {
+    countParams.push(parseQueryBoolean(is_active));
+  }
+  const countResult = getFirstRow<any>(await query(countSql, countParams));
+  const total = countResult?.total || 0;
+
   sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
   params.push(limit, (page - 1) * limit);
 
   const result = await query(sql, params);
   const customers = getAllRows(result);
 
-  res.json(successResponse('Customers retrieved', customers));
+  res.json(successResponse('Customers retrieved', {
+    customers,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit)
+    }
+  }));
 };
 
 export const getCustomer = async (req: AuthRequest, res: Response) => {
@@ -87,12 +108,10 @@ export const updateCustomer = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const updates = req.body;
 
-  const fields = Object.keys(updates)
-    .map((key) => `${key} = ?`)
-    .join(', ');
-  const values = [...Object.values(updates), id];
+  const allowedColumns = ['first_name', 'last_name', 'phone', 'email', 'date_of_birth', 'is_active'];
 
-  await query(`UPDATE customer SET ${fields} WHERE customer_id = ?`, values);
+  const { setClause, values } = buildSafeUpdateQuery(updates, allowedColumns);
+  await query(`UPDATE customer SET ${setClause} WHERE customer_id = ?`, [...values, id]);
 
   res.json(successResponse('Customer updated'));
 };
@@ -133,12 +152,10 @@ export const updateSupplier = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const updates = req.body;
 
-  const fields = Object.keys(updates)
-    .map((key) => `${key} = ?`)
-    .join(', ');
-  const values = [...Object.values(updates), id];
+  const allowedColumns = ['supplier_name', 'contact_person', 'phone', 'email', 'address', 'is_active'];
 
-  await query(`UPDATE suppliers SET ${fields} WHERE supplier_id = ?`, values);
+  const { setClause, values } = buildSafeUpdateQuery(updates, allowedColumns);
+  await query(`UPDATE suppliers SET ${setClause} WHERE supplier_id = ?`, [...values, id]);
 
   res.json(successResponse('Supplier updated'));
 };
@@ -195,12 +212,10 @@ export const updateCashier = async (req: AuthRequest, res: Response) => {
     updates.pin_hash = await bcrypt.hash(pin, 10);
   }
 
-  const fields = Object.keys(updates)
-    .map((key) => `${key} = ?`)
-    .join(', ');
-  const values = [...Object.values(updates), id];
+  const allowedColumns = ['name', 'cashier_code', 'pin_hash', 'phone', 'email', 'hire_date', 'hourly_rate', 'is_active'];
 
-  await query(`UPDATE cashier SET ${fields} WHERE cashier_id = ?`, values);
+  const { setClause, values } = buildSafeUpdateQuery(updates, allowedColumns);
+  await query(`UPDATE cashier SET ${setClause} WHERE cashier_id = ?`, [...values, id]);
 
   res.json(successResponse('Cashier updated'));
 };
@@ -250,12 +265,10 @@ export const updateTaxRule = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const updates = req.body;
 
-  const fields = Object.keys(updates)
-    .map((key) => `${key} = ?`)
-    .join(', ');
-  const values = [...Object.values(updates), id];
+  const allowedColumns = ['tax_name', 'tax_type', 'tax_rate', 'fixed_amount', 'is_inclusive', 'is_active', 'effective_date'];
 
-  await query(`UPDATE tax_rules SET ${fields} WHERE tax_id = ?`, values);
+  const { setClause, values } = buildSafeUpdateQuery(updates, allowedColumns);
+  await query(`UPDATE tax_rules SET ${setClause} WHERE tax_id = ?`, [...values, id]);
 
   res.json(successResponse('Tax rule updated'));
 };
@@ -288,12 +301,10 @@ export const updateFlavor = async (req: AuthRequest, res: Response) => {
     updates.image_url = `/uploads/products/${req.file.filename}`;
   }
 
-  const fields = Object.keys(updates)
-    .map((key) => `${key} = ?`)
-    .join(', ');
-  const values = [...Object.values(updates), id];
+  const allowedColumns = ['flavor_name', 'description', 'image_url', 'additional_cost', 'is_available', 'display_order'];
 
-  await query(`UPDATE cake_flavors SET ${fields} WHERE flavor_id = ?`, values);
+  const { setClause, values } = buildSafeUpdateQuery(updates, allowedColumns);
+  await query(`UPDATE cake_flavors SET ${setClause} WHERE flavor_id = ?`, [...values, id]);
 
   res.json(successResponse('Flavor updated'));
 };
@@ -320,12 +331,10 @@ export const updateSize = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const updates = req.body;
 
-  const fields = Object.keys(updates)
-    .map((key) => `${key} = ?`)
-    .join(', ');
-  const values = [...Object.values(updates), id];
+  const allowedColumns = ['size_name', 'description', 'serves_people', 'diameter_inches', 'size_multiplier', 'is_available', 'display_order'];
 
-  await query(`UPDATE cake_sizes SET ${fields} WHERE size_id = ?`, values);
+  const { setClause, values } = buildSafeUpdateQuery(updates, allowedColumns);
+  await query(`UPDATE cake_sizes SET ${setClause} WHERE size_id = ?`, [...values, id]);
 
   res.json(successResponse('Size updated'));
 };
@@ -357,12 +366,10 @@ export const updateTheme = async (req: AuthRequest, res: Response) => {
     updates.theme_image_url = `/uploads/products/${req.file.filename}`;
   }
 
-  const fields = Object.keys(updates)
-    .map((key) => `${key} = ?`)
-    .join(', ');
-  const values = [...Object.values(updates), id];
+  const allowedColumns = ['theme_name', 'description', 'theme_image_url', 'base_additional_cost', 'preparation_days', 'is_available', 'display_order'];
 
-  await query(`UPDATE custom_cake_theme SET ${fields} WHERE theme_id = ?`, values);
+  const { setClause, values } = buildSafeUpdateQuery(updates, allowedColumns);
+  await query(`UPDATE custom_cake_theme SET ${setClause} WHERE theme_id = ?`, [...values, id]);
 
   res.json(successResponse('Theme updated'));
 };
@@ -438,6 +445,11 @@ export const getOrderTimeline = async (req: AuthRequest, res: Response) => {
 
 export const getDailyStats = async (req: AuthRequest, res: Response) => {
   const { date_from, date_to, menu_item_id } = req.query;
+
+  // Validate date range if provided
+  if (date_from && date_to) {
+    validateDateRange(date_from as string, date_to as string, 365);
+  }
 
   let sql = `
     SELECT mids.*, mi.name as item_name
