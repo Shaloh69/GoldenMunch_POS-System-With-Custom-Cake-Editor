@@ -30,8 +30,8 @@ export const ENUMS = {
 
 // ENUM validation function
 export const validateEnum = (value: string, enumType: keyof typeof ENUMS, fieldName: string): void => {
-  const validValues = ENUMS[enumType];
-  if (!validValues.includes(value as any)) {
+  const validValues = ENUMS[enumType] as readonly string[];
+  if (!(validValues as string[]).includes(value)) {
     throw new AppError(
       `Invalid ${fieldName}: '${value}'. Must be one of: ${validValues.join(', ')}`,
       400
