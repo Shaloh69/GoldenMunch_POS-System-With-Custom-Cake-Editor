@@ -17,8 +17,11 @@ export const getMenuItems = async (req: AuthRequest, res: Response) => {
   } = req.query;
 
   // Parse and validate pagination parameters
-  const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
-  const limitNum = Math.min(100, Math.max(1, parseInt(limit as string, 10) || 50));
+  const parsedPage = parseInt(page as string, 10);
+  const parsedLimit = parseInt(limit as string, 10);
+
+  const pageNum = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+  const limitNum = Number.isFinite(parsedLimit) && parsedLimit > 0 ? Math.min(100, parsedLimit) : 50;
   const offset = (pageNum - 1) * limitNum;
 
   let sql = `
@@ -63,6 +66,12 @@ export const getMenuItems = async (req: AuthRequest, res: Response) => {
 
   sql += ` ORDER BY mi.is_featured DESC, mi.popularity_score DESC`;
   sql += ` LIMIT ? OFFSET ?`;
+
+  // Ensure pagination parameters are valid before adding to params
+  if (!Number.isFinite(limitNum) || !Number.isFinite(offset) || limitNum < 1 || offset < 0) {
+    throw new AppError('Invalid pagination parameters', 400);
+  }
+
   params.push(limitNum, offset);
 
   const items = await query(sql, params);
