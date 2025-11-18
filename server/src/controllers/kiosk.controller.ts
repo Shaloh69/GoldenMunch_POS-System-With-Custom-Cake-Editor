@@ -42,13 +42,13 @@ export const getMenuItems = async (req: AuthRequest, res: Response) => {
   const params: any[] = [];
 
   if (category_id) {
-    sql += ` AND EXISTS (
-      SELECT 1 FROM category_has_menu_item
-      WHERE menu_item_id = mi.menu_item_id
-      AND category_id = ?
-    )`;
     const categoryIdNum = parseInt(category_id as string, 10);
     if (!Number.isNaN(categoryIdNum)) {
+      sql += ` AND EXISTS (
+        SELECT 1 FROM category_has_menu_item
+        WHERE menu_item_id = mi.menu_item_id
+        AND category_id = ?
+      )`;
       params.push(categoryIdNum);
     }
   }
