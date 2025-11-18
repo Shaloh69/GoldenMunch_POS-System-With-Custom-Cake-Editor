@@ -41,18 +41,24 @@ export const getMenuItems = async (req: AuthRequest, res: Response) => {
 
   const params: any[] = [];
 
+  // Debug: Log raw query params
+  console.log('Raw query params:', { category_id, item_type, is_featured, search, page, limit });
+
   if (category_id) {
     sql += ` AND EXISTS (
       SELECT 1 FROM category_has_menu_item
       WHERE menu_item_id = mi.menu_item_id
       AND category_id = ?
     )`;
-    params.push(category_id);
+    const categoryIdNum = parseInt(category_id as string, 10);
+    if (!Number.isNaN(categoryIdNum)) {
+      params.push(categoryIdNum);
+    }
   }
 
   if (item_type) {
     sql += ` AND mi.item_type = ?`;
-    params.push(item_type);
+    params.push(String(item_type));
   }
 
   if (is_featured === 'true') {
@@ -61,7 +67,8 @@ export const getMenuItems = async (req: AuthRequest, res: Response) => {
 
   if (search) {
     sql += ` AND (mi.name LIKE ? OR mi.description LIKE ?)`;
-    params.push(`%${search}%`, `%${search}%`);
+    const searchStr = String(search);
+    params.push(`%${searchStr}%`, `%${searchStr}%`);
   }
 
   sql += ` ORDER BY mi.is_featured DESC, mi.popularity_score DESC`;
@@ -72,7 +79,26 @@ export const getMenuItems = async (req: AuthRequest, res: Response) => {
     throw new AppError('Invalid pagination parameters', 400);
   }
 
-  params.push(limitNum, offset);
+  // Explicitly convert to integers and add to params
+  const intLimit = Math.floor(limitNum);
+  const intOffset = Math.floor(offset);
+
+  // Debug logging
+  console.log('Pagination params:', {
+    page,
+    limit,
+    pageNum,
+    limitNum,
+    offset,
+    intLimit,
+    intOffset,
+    paramsBeforePagination: params.length,
+    paramsArray: params
+  });
+
+  params.push(intLimit, intOffset);
+
+  console.log('Final params array:', params);
 
   const items = await query(sql, params);
 
