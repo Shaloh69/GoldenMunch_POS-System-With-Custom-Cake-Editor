@@ -38,7 +38,9 @@ export const query = async <T = any>(
   params?: any[]
 ): Promise<T> => {
   try {
-    const [results] = await pool.execute(sql, params);
+    // Use pool.query instead of pool.execute to avoid prepared statement
+    // limitations with LIMIT/OFFSET parameters
+    const [results] = await pool.query(sql, params);
     return results as T;
   } catch (error) {
     console.error('Query error:', error);
@@ -73,7 +75,8 @@ export const callProcedure = async <T = any>(
   try {
     const placeholders = params.map(() => '?').join(', ');
     const sql = `CALL ${procedureName}(${placeholders})`;
-    const [results] = await pool.execute(sql, params);
+    // Use pool.query instead of pool.execute for compatibility
+    const [results] = await pool.query(sql, params);
     return results as T;
   } catch (error) {
     console.error(`Procedure ${procedureName} error:`, error);
