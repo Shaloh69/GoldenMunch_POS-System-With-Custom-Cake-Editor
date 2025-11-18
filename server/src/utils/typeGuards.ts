@@ -56,10 +56,11 @@ export function getInsertId(result: any): number {
 
 /**
  * Parse query parameters to numbers safely
+ * Uses Number.isFinite() to catch NaN, Infinity, and -Infinity
  */
 export function parseQueryNumber(value: any, defaultValue: number = 0): number {
   const parsed = parseInt(value as string, 10);
-  return isNaN(parsed) ? defaultValue : parsed;
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : defaultValue;
 }
 
 /**

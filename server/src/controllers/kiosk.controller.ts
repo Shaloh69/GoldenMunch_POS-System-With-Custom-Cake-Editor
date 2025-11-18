@@ -41,9 +41,6 @@ export const getMenuItems = async (req: AuthRequest, res: Response) => {
 
   const params: any[] = [];
 
-  // Debug: Log raw query params
-  console.log('Raw query params:', { category_id, item_type, is_featured, search, page, limit });
-
   if (category_id) {
     sql += ` AND EXISTS (
       SELECT 1 FROM category_has_menu_item
@@ -79,26 +76,7 @@ export const getMenuItems = async (req: AuthRequest, res: Response) => {
     throw new AppError('Invalid pagination parameters', 400);
   }
 
-  // Explicitly convert to integers and add to params
-  const intLimit = Math.floor(limitNum);
-  const intOffset = Math.floor(offset);
-
-  // Debug logging
-  console.log('Pagination params:', {
-    page,
-    limit,
-    pageNum,
-    limitNum,
-    offset,
-    intLimit,
-    intOffset,
-    paramsBeforePagination: params.length,
-    paramsArray: params
-  });
-
-  params.push(intLimit, intOffset);
-
-  console.log('Final params array:', params);
+  params.push(limitNum, offset);
 
   const items = await query(sql, params);
 

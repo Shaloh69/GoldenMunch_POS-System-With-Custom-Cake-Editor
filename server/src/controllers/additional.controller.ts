@@ -29,8 +29,14 @@ export const createCustomer = async (req: AuthRequest, res: Response) => {
 export const getCustomers = async (req: AuthRequest, res: Response) => {
   const search = parseQueryString(req.query.search);
   const is_active = req.query.is_active;
-  const page = parseQueryNumber(req.query.page, 1);
-  const limit = parseQueryNumber(req.query.limit, 20);
+  const page = Math.max(1, parseQueryNumber(req.query.page, 1));
+  const limit = Math.min(100, Math.max(1, parseQueryNumber(req.query.limit, 20)));
+  const offset = (page - 1) * limit;
+
+  // Ensure pagination values are valid
+  if (!Number.isFinite(limit) || !Number.isFinite(offset) || limit < 1 || offset < 0) {
+    throw new AppError('Invalid pagination parameters', 400);
+  }
 
   let sql = 'SELECT * FROM customer WHERE 1=1';
   const params: any[] = [];
@@ -59,7 +65,7 @@ export const getCustomers = async (req: AuthRequest, res: Response) => {
   const total = countResult?.total || 0;
 
   sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-  params.push(limit, (page - 1) * limit);
+  params.push(limit, offset);
 
   const result = await query(sql, params);
   const customers = getAllRows(result);
