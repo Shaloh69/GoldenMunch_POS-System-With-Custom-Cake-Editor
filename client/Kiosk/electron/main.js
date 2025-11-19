@@ -73,6 +73,11 @@ function createWindow() {
 app.whenReady().then(() => {
   createWindow();
 
+  // Initialize printer after a short delay
+  setTimeout(() => {
+    initializePrinter();
+  }, 2000);
+
   app.on('activate', () => {
     // On macOS, re-create window when dock icon is clicked
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -240,21 +245,6 @@ ipcMain.handle('printer-status', async () => {
   };
 });
 
-// Initialize printer on app ready
-app.whenReady().then(() => {
-  createWindow();
-
-  // Initialize printer after a short delay
-  setTimeout(() => {
-    initializePrinter();
-  }, 2000);
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
-    }
-  });
-});
 
 // Cleanup printer on quit
 app.on('before-quit', () => {
