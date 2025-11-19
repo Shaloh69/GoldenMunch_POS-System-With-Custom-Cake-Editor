@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // API Configuration
 export const API_CONFIG = {
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
   timeout: Number(process.env.NEXT_PUBLIC_API_TIMEOUT) || 30000,
 };
 
