@@ -30,7 +30,7 @@ function createWindow() {
 
   // Load the app
   const startUrl = isDev
-    ? 'http://localhost:3001' // Next.js dev server
+    ? 'http://localhost:3002' // Next.js dev server
     : `file://${path.join(__dirname, '../out/index.html')}`; // Production build
 
   mainWindow.loadURL(startUrl);
