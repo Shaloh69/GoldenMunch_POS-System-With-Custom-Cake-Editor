@@ -8,7 +8,6 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
-    "export": "next build && next export",
     "start": "next start",
     "lint": "eslint --fix",
     "clean": "rm -rf node_modules package-lock.json",
@@ -19,11 +18,11 @@
     "install:electron": "npm install electron --save-dev --fetch-timeout=600000 --fetch-retries=10",
     "verify": "npm ls --depth=0 && npx electron --version",
     "troubleshoot": "echo 'See NPM_TROUBLESHOOTING.md for detailed help' && npm cache verify",
-    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && NODE_ENV=development electron electron/main.js\"",
-    "electron:build": "npm run export && electron-builder",
-    "electron:build:win": "npm run export && electron-builder --win",
-    "electron:build:mac": "npm run export && electron-builder --mac",
-    "electron:build:linux": "npm run export && electron-builder --linux"
+    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
+    "electron:build": "next build && electron-builder",
+    "electron:build:win": "next build && electron-builder --win",
+    "electron:build:mac": "next build && electron-builder --mac",
+    "electron:build:linux": "next build && electron-builder --linux"
   },
   "engines": {
     "node": ">=18.17.0",
