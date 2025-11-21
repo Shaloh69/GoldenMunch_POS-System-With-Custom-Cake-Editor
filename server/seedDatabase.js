@@ -277,12 +277,24 @@ async function seedCredentials(connection) {
 async function seedCategories(connection) {
   console.log('\n📂 Seeding Categories...');
 
+  // Get the admin_id to use for categories
+  const [adminRows] = await connection.execute(
+    'SELECT admin_id FROM admin WHERE username = ? LIMIT 1',
+    ['admin']
+  );
+
+  if (adminRows.length === 0) {
+    throw new Error('Admin user not found. Please run credential seeding first.');
+  }
+
+  const adminId = adminRows[0].admin_id;
+
   for (const category of CATEGORIES) {
     await connection.execute(
-      `INSERT INTO category (name, description, display_order, created_at, updated_at)
-       VALUES (?, ?, ?, NOW(), NOW())
+      `INSERT INTO category (name, description, display_order, admin_id, is_active, created_at, updated_at)
+       VALUES (?, ?, ?, ?, TRUE, NOW(), NOW())
        ON DUPLICATE KEY UPDATE description = ?, display_order = ?, updated_at = NOW()`,
-      [category.name, category.description, category.display_order, category.description, category.display_order]
+      [category.name, category.description, category.display_order, adminId, category.description, category.display_order]
     );
   }
 
@@ -291,6 +303,13 @@ async function seedCategories(connection) {
 
 async function seedMenuItems(connection) {
   console.log('\n🍰 Seeding Menu Items...');
+
+  // Get admin_id for price creation
+  const [adminRows] = await connection.execute(
+    'SELECT admin_id FROM admin WHERE username = ? LIMIT 1',
+    ['admin']
+  );
+  const adminId = adminRows[0].admin_id;
 
   // Get category IDs
   const [categories] = await connection.execute('SELECT category_id, name FROM category');
@@ -304,17 +323,58 @@ async function seedMenuItems(connection) {
     const categoryId = categoryMap[item.category];
     if (!categoryId) continue;
 
-    await connection.execute(
-      `INSERT INTO menu_item (category_id, name, description, current_price, item_type, is_featured, is_infinite_stock, stock_quantity, status, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'available', NOW(), NOW())
+    // Insert/Update menu item
+    const [result] = await connection.execute(
+      `INSERT INTO menu_item (name, description, item_type, is_featured, is_infinite_stock, stock_quantity, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, 'available', NOW(), NOW())
        ON DUPLICATE KEY UPDATE
-         description = ?, current_price = ?, is_featured = ?, is_infinite_stock = ?, stock_quantity = ?, updated_at = NOW()`,
-      [
-        categoryId, item.name, item.description, item.current_price, item.item_type,
-        item.is_featured, item.is_infinite_stock, item.stock_quantity,
-        item.description, item.current_price, item.is_featured, item.is_infinite_stock, item.stock_quantity
-      ]
+         description = VALUES(description),
+         is_featured = VALUES(is_featured),
+         is_infinite_stock = VALUES(is_infinite_stock),
+         stock_quantity = VALUES(stock_quantity),
+         updated_at = NOW()`,
+      [item.name, item.description, item.item_type, item.is_featured, item.is_infinite_stock, item.stock_quantity]
     );
+
+    // Get the menu_item_id (either newly inserted or existing)
+    const menuItemId = result.insertId || (await connection.execute(
+      'SELECT menu_item_id FROM menu_item WHERE name = ?',
+      [item.name]
+    ))[0][0].menu_item_id;
+
+    // Link to category via junction table
+    await connection.execute(
+      `INSERT INTO category_has_menu_item (category_id, menu_item_id, display_order)
+       VALUES (?, ?, ?)
+       ON DUPLICATE KEY UPDATE display_order = VALUES(display_order)`,
+      [categoryId, menuItemId, count]
+    );
+
+    // Check if active price exists
+    const [existingPrice] = await connection.execute(
+      `SELECT price_id FROM menu_item_price
+       WHERE menu_item_id = ? AND is_active = TRUE AND price_type = 'regular'
+       LIMIT 1`,
+      [menuItemId]
+    );
+
+    if (existingPrice.length > 0) {
+      // Update existing price
+      await connection.execute(
+        `UPDATE menu_item_price
+         SET price = ?, updated_at = NOW()
+         WHERE price_id = ?`,
+        [item.current_price, existingPrice[0].price_id]
+      );
+    } else {
+      // Insert new price
+      await connection.execute(
+        `INSERT INTO menu_item_price (menu_item_id, price, start_date, end_date, price_type, is_active, created_by)
+         VALUES (?, ?, CURDATE(), DATE_ADD(CURDATE(), INTERVAL 10 YEAR), 'regular', TRUE, ?)`,
+        [menuItemId, item.current_price, adminId]
+      );
+    }
+
     count++;
   }
 
