@@ -212,12 +212,12 @@ const CAKE_FLAVORS = [
 ];
 
 const CAKE_SIZES = [
-  { name: '6 inch', description: 'Serves 6-8 people', base_price: 35.00 },
-  { name: '8 inch', description: 'Serves 10-12 people', base_price: 50.00 },
-  { name: '10 inch', description: 'Serves 15-20 people', base_price: 75.00 },
-  { name: '12 inch', description: 'Serves 25-30 people', base_price: 100.00 },
-  { name: 'Quarter Sheet', description: 'Serves 30-40 people', base_price: 120.00 },
-  { name: 'Half Sheet', description: 'Serves 50-60 people', base_price: 180.00 },
+  { name: '6 inch', description: 'Serves 6-8 people', serves_people: 8, diameter_inches: 6, size_multiplier: 1.00 },
+  { name: '8 inch', description: 'Serves 10-12 people', serves_people: 12, diameter_inches: 8, size_multiplier: 1.43 },
+  { name: '10 inch', description: 'Serves 15-20 people', serves_people: 20, diameter_inches: 10, size_multiplier: 2.14 },
+  { name: '12 inch', description: 'Serves 25-30 people', serves_people: 30, diameter_inches: 12, size_multiplier: 2.86 },
+  { name: 'Quarter Sheet', description: 'Serves 30-40 people', serves_people: 40, diameter_inches: null, size_multiplier: 3.43 },
+  { name: 'Half Sheet', description: 'Serves 50-60 people', serves_people: 60, diameter_inches: null, size_multiplier: 5.14 },
 ];
 
 const CUSTOM_CAKE_THEMES = [
@@ -386,9 +386,9 @@ async function seedCakeFlavors(connection) {
 
   for (const flavor of CAKE_FLAVORS) {
     await connection.execute(
-      `INSERT INTO cake_flavors (name, description, created_at, updated_at)
-       VALUES (?, ?, NOW(), NOW())
-       ON DUPLICATE KEY UPDATE description = ?, updated_at = NOW()`,
+      `INSERT INTO cake_flavors (flavor_name, description, is_available)
+       VALUES (?, ?, TRUE)
+       ON DUPLICATE KEY UPDATE description = ?`,
       [flavor.name, flavor.description, flavor.description]
     );
   }
@@ -401,10 +401,11 @@ async function seedCakeSizes(connection) {
 
   for (const size of CAKE_SIZES) {
     await connection.execute(
-      `INSERT INTO cake_sizes (name, description, base_price, created_at, updated_at)
-       VALUES (?, ?, ?, NOW(), NOW())
-       ON DUPLICATE KEY UPDATE description = ?, base_price = ?, updated_at = NOW()`,
-      [size.name, size.description, size.base_price, size.description, size.base_price]
+      `INSERT INTO cake_sizes (size_name, description, serves_people, diameter_inches, size_multiplier, is_available)
+       VALUES (?, ?, ?, ?, ?, TRUE)
+       ON DUPLICATE KEY UPDATE description = ?, serves_people = ?, diameter_inches = ?, size_multiplier = ?`,
+      [size.name, size.description, size.serves_people, size.diameter_inches, size.size_multiplier,
+       size.description, size.serves_people, size.diameter_inches, size.size_multiplier]
     );
   }
 
@@ -416,9 +417,9 @@ async function seedCustomCakeThemes(connection) {
 
   for (const theme of CUSTOM_CAKE_THEMES) {
     await connection.execute(
-      `INSERT INTO custom_cake_theme (name, description, created_at, updated_at)
-       VALUES (?, ?, NOW(), NOW())
-       ON DUPLICATE KEY UPDATE description = ?, updated_at = NOW()`,
+      `INSERT INTO custom_cake_theme (theme_name, description, is_available)
+       VALUES (?, ?, TRUE)
+       ON DUPLICATE KEY UPDATE description = ?`,
       [theme.name, theme.description, theme.description]
     );
   }
