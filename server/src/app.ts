@@ -33,9 +33,14 @@ app.use(helmet({
 
 // CORS - Cross-Origin Resource Sharing
 // Support multiple origins for development (comma-separated in .env)
-const allowedOrigins = process.env.CORS_ORIGIN
+// Always include standard development ports to prevent configuration issues
+const standardDevPorts = ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'];
+const envOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
-  : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'];
+  : [];
+
+// Combine environment origins with standard dev ports (remove duplicates)
+const allowedOrigins = Array.from(new Set([...standardDevPorts, ...envOrigins]));
 
 app.use(cors({
   origin: (origin, callback) => {
