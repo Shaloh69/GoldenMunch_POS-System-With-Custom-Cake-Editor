@@ -9,6 +9,7 @@
     "build": "tsc",
     "clean": "rm -rf dist",
     "rebuild": "npm run clean && npm run build",
+    "db:verify": "node verifyDatabase.js",
     "seed": "node seedDatabase.js",
     "seed:credentials": "node seedCredentials.js",
     "seed:admin": "ts-node src/seeders/seedAdminAndCashier.ts",

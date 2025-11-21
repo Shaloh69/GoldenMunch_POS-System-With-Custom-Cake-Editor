@@ -51,19 +51,32 @@ The seeders create data with **Node.js bcrypt hashes** that are guaranteed to wo
 
 ## Quick Start (Full Setup)
 
-For a complete database with demo data:
+**Step 1: Verify your database structure (Recommended)**
 
 ```bash
 cd server
+node verifyDatabase.js
+# OR
+npm run db:verify
+```
+
+This will check that all required tables exist with correct columns.
+
+**Step 2: Seed the database**
+
+```bash
 node seedDatabase.js
+# OR
+npm run seed
 ```
 
 This will:
 - Connect to your database
-- Seed all categories and menu items
+- Create admin and cashier credentials
+- Seed all categories and menu items with proper relationships
 - Create cake customization options
 - Generate secure credential hashes
-- Verify everything works
+- Link everything together correctly
 - Display a summary
 
 ## Default Credentials
