@@ -24,6 +24,12 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({ onCustomCakeComplete
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const getKioskSessionId = (): string => {
+    // Check if we're in the browser (client-side)
+    if (typeof window === 'undefined') {
+      // Return a temporary ID for SSR
+      return `kiosk_temp_${Date.now()}`;
+    }
+
     let sessionId = sessionStorage.getItem('kiosk_session_id');
     if (!sessionId) {
       sessionId = `kiosk_${Date.now()}_${Math.random().toString(36).substring(7)}`;
