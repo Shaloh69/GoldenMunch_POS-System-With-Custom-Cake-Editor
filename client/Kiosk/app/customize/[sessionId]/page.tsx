@@ -2,18 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import {
-  Button,
-  Card,
-  CardBody,
-  CardHeader,
-  Spinner,
-  Select,
-  SelectItem,
-  Textarea,
-  Input,
-  Chip,
-} from '@nextui-org/react';
+import { Button } from '@heroui/button';
+import { Card, CardBody, CardHeader } from '@heroui/card';
+import { Spinner } from '@heroui/spinner';
+import { Select, SelectItem } from '@heroui/select';
+import { Textarea } from '@heroui/input';
+import { Input } from '@heroui/input';
+import { Chip } from '@heroui/chip';
 import { MenuService } from '@/services/menu.service';
 import { CustomCakeService } from '@/services/customCake.service';
 import type { CakeFlavor, CakeSize, CustomCakeTheme } from '@/types/api';

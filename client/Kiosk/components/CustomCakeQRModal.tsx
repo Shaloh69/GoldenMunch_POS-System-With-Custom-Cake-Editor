@@ -1,17 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  Button,
-  Spinner,
-  Card,
-  CardBody,
-} from '@nextui-org/react';
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/modal';
+import { Button } from '@heroui/button';
+import { Spinner } from '@heroui/spinner';
+import { Card, CardBody } from '@heroui/card';
 import Image from 'next/image';
 import { CustomCakeService, CustomCakeSessionResponse } from '@/services/customCake.service';
 

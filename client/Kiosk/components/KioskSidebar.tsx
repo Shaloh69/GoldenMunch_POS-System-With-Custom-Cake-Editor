@@ -2,15 +2,12 @@
 
 import React, { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import {
-  Button,
-  Card,
-  CardBody,
-  Badge,
-  Divider,
-  ScrollShadow,
-  Chip,
-} from '@nextui-org/react';
+import { Button } from '@heroui/button';
+import { Card, CardBody } from '@heroui/card';
+import { Badge } from '@heroui/badge';
+import { Divider } from '@heroui/divider';
+import { ScrollShadow } from '@heroui/scroll-shadow';
+import { Chip } from '@heroui/chip';
 import { useCart } from '@/contexts/CartContext';
 import Image from 'next/image';
 import CustomCakeQRModal from './CustomCakeQRModal';

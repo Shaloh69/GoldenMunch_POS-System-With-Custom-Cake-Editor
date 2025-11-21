@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Card, CardBody, Button } from '@nextui-org/react';
+import { Card, CardBody } from '@heroui/card';
+import { Button } from '@heroui/button';
 import { useRouter } from 'next/navigation';
 
 export default function CustomizeSuccessPage() {
