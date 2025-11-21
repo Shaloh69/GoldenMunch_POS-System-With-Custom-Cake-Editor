@@ -240,21 +240,34 @@ const CUSTOM_CAKE_THEMES = [
 async function seedCredentials(connection) {
   console.log('\n🔐 Seeding Admin and Cashier Credentials...');
 
+  // First, ensure roles exist
+  await connection.execute(
+    `INSERT INTO roles (role_name, description) VALUES ('super_admin', 'Full system access')
+     ON DUPLICATE KEY UPDATE description = 'Full system access'`
+  );
+
+  // Get the super_admin role_id
+  const [roles] = await connection.execute(
+    'SELECT role_id FROM roles WHERE role_name = ?',
+    ['super_admin']
+  );
+  const superAdminRoleId = roles[0].role_id;
+
   // Admin
   const adminPasswordHash = await bcrypt.hash('password', SALT_ROUNDS);
   await connection.execute(
-    `INSERT INTO admin (username, password_hash, email, full_name, role, created_at, updated_at)
-     VALUES ('admin', ?, 'admin@goldenmunch.com', 'System Administrator', 'super_admin', NOW(), NOW())
-     ON DUPLICATE KEY UPDATE password_hash = ?, email = 'admin@goldenmunch.com', updated_at = NOW()`,
-    [adminPasswordHash, adminPasswordHash]
+    `INSERT INTO admin (username, password_hash, name, email, role_id, is_active, created_at, updated_at)
+     VALUES ('admin', ?, 'System Administrator', 'admin@goldenmunch.com', ?, TRUE, NOW(), NOW())
+     ON DUPLICATE KEY UPDATE password_hash = ?, name = 'System Administrator', email = 'admin@goldenmunch.com', updated_at = NOW()`,
+    [adminPasswordHash, superAdminRoleId, adminPasswordHash]
   );
 
   // Cashier
   const cashierPinHash = await bcrypt.hash('1234', SALT_ROUNDS);
   await connection.execute(
-    `INSERT INTO cashier (cashier_code, pin_hash, first_name, last_name, email, status, created_at, updated_at)
-     VALUES ('CASH001', ?, 'John', 'Doe', 'cashier@goldenmunch.com', 'active', NOW(), NOW())
-     ON DUPLICATE KEY UPDATE pin_hash = ?, email = 'cashier@goldenmunch.com', updated_at = NOW()`,
+    `INSERT INTO cashier (cashier_code, pin_hash, name, email, is_active, created_at, updated_at)
+     VALUES ('CASH001', ?, 'John Doe', 'cashier@goldenmunch.com', TRUE, NOW(), NOW())
+     ON DUPLICATE KEY UPDATE pin_hash = ?, name = 'John Doe', email = 'cashier@goldenmunch.com', updated_at = NOW()`,
     [cashierPinHash, cashierPinHash]
   );
 

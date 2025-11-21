@@ -35,13 +35,27 @@ async function seedCredentials() {
     const cashierPinHash = await bcrypt.hash('1234', SALT_ROUNDS);
     console.log('✅ Hashes generated!\n');
 
+    // Ensure roles exist
+    console.log('📋 Ensuring roles exist...');
+    await connection.execute(
+      `INSERT INTO roles (role_name, description) VALUES ('super_admin', 'Full system access')
+       ON DUPLICATE KEY UPDATE description = 'Full system access'`
+    );
+
+    // Get the super_admin role_id
+    const [roles] = await connection.execute(
+      'SELECT role_id FROM roles WHERE role_name = ?',
+      ['super_admin']
+    );
+    const superAdminRoleId = roles[0].role_id;
+
     // Update Admin
     console.log('👤 Updating Admin credentials...');
     const [adminResult] = await connection.execute(
       `UPDATE admin
        SET password_hash = ?,
            email = 'admin@goldenmunch.com',
-           full_name = 'System Administrator',
+           name = 'System Administrator',
            updated_at = NOW()
        WHERE username = 'admin'`,
       [adminPasswordHash]
@@ -50,9 +64,9 @@ async function seedCredentials() {
     if (adminResult.affectedRows === 0) {
       // Admin doesn't exist, create it
       await connection.execute(
-        `INSERT INTO admin (username, password_hash, email, full_name, role, created_at, updated_at)
-         VALUES ('admin', ?, 'admin@goldenmunch.com', 'System Administrator', 'super_admin', NOW(), NOW())`,
-        [adminPasswordHash]
+        `INSERT INTO admin (username, password_hash, name, email, role_id, is_active, created_at, updated_at)
+         VALUES ('admin', ?, 'System Administrator', 'admin@goldenmunch.com', ?, TRUE, NOW(), NOW())`,
+        [adminPasswordHash, superAdminRoleId]
       );
       console.log('✨ Admin account created');
     } else {
@@ -64,10 +78,9 @@ async function seedCredentials() {
     const [cashierResult] = await connection.execute(
       `UPDATE cashier
        SET pin_hash = ?,
-           first_name = 'John',
-           last_name = 'Doe',
+           name = 'John Doe',
            email = 'cashier@goldenmunch.com',
-           status = 'active',
+           is_active = TRUE,
            updated_at = NOW()
        WHERE cashier_code = 'CASH001'`,
       [cashierPinHash]
@@ -76,8 +89,8 @@ async function seedCredentials() {
     if (cashierResult.affectedRows === 0) {
       // Cashier doesn't exist, create it
       await connection.execute(
-        `INSERT INTO cashier (cashier_code, pin_hash, first_name, last_name, email, status, created_at, updated_at)
-         VALUES ('CASH001', ?, 'John', 'Doe', 'cashier@goldenmunch.com', 'active', NOW(), NOW())`,
+        `INSERT INTO cashier (cashier_code, pin_hash, name, email, is_active, created_at, updated_at)
+         VALUES ('CASH001', ?, 'John Doe', 'cashier@goldenmunch.com', TRUE, NOW(), NOW())`,
         [cashierPinHash]
       );
       console.log('✨ Cashier account created');
