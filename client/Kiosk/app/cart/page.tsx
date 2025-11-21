@@ -185,7 +185,7 @@ export default function CartPage() {
                             {item.menuItem.item_type}
                           </Chip>
                           <span className="text-lg font-semibold text-deep-amber">
-                            ${(item.menuItem.current_price || 0).toFixed(2)} each
+                            ${(Number(item.menuItem.current_price) || 0).toFixed(2)} each
                           </span>
                         </div>
                         {item.special_instructions && (
@@ -223,7 +223,7 @@ export default function CartPage() {
                         {/* Item Total */}
                         <div className="text-center">
                           <p className="text-2xl font-bold text-chocolate-brown">
-                            ${((item.menuItem.current_price || 0) * item.quantity).toFixed(2)}
+                            ${((Number(item.menuItem.current_price) || 0) * item.quantity).toFixed(2)}
                           </p>
                           <Button
                             size="sm"

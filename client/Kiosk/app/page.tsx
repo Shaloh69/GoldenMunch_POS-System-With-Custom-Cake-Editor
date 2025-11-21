@@ -343,7 +343,7 @@ export default function MenuPage() {
                       <div className="flex items-center justify-between mb-4">
                         <div>
                           <span className="text-3xl font-bold bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent">
-                            ${(item.current_price || 0).toFixed(2)}
+                            ${(Number(item.current_price) || 0).toFixed(2)}
                           </span>
                         </div>
                         <Chip size="sm" variant="flat" color="default">
