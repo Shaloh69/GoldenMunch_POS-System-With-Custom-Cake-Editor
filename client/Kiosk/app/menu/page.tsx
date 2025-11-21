@@ -13,6 +13,7 @@ import type { MenuItem, Category } from '@/types/api';
 import NextLink from 'next/link';
 import ImageLightbox from '@/components/ImageLightbox';
 import Image from 'next/image';
+import CustomCakeQRModal from '@/components/CustomCakeQRModal';
 
 export default function MenuPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -22,6 +23,7 @@ export default function MenuPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCustomCakeModalOpen, setIsCustomCakeModalOpen] = useState(false);
   const { addItem, items: cartItems, getItemCount, getTotal } = useCart();
 
   // Fetch menu items and categories
@@ -76,9 +78,26 @@ export default function MenuPage() {
     });
   };
 
+  const handleCustomCakeComplete = (customizationData: any) => {
+    console.log('Custom cake customization completed:', customizationData);
+    // TODO: Add custom cake to cart with customization data
+    // For now, we'll just show a success message
+    alert('Custom cake design completed! (Cart integration coming soon)');
+  };
+
   const getCartQuantity = (itemId: number): number => {
     const cartItem = cartItems.find(item => item.menuItem.menu_item_id === itemId);
     return cartItem?.quantity || 0;
+  };
+
+  // Generate unique kiosk session ID
+  const getKioskSessionId = (): string => {
+    let sessionId = sessionStorage.getItem('kiosk_session_id');
+    if (!sessionId) {
+      sessionId = `kiosk_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      sessionStorage.setItem('kiosk_session_id', sessionId);
+    }
+    return sessionId;
   };
 
   const getItemEmoji = (itemType: string): string => {
@@ -239,6 +258,41 @@ export default function MenuPage() {
             </div>
           </div>
         )}
+
+        {/* Custom Cake Button - Special Highlight */}
+        <div className="animate-slide-left">
+          <Card className="card-modern bg-gradient-to-r from-golden-orange/10 via-deep-amber/10 to-golden-orange/10 border-2 border-golden-orange/30 hover:border-golden-orange hover:shadow-2xl-golden transition-all duration-300 hover:scale-[1.02]">
+            <CardBody className="p-8">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div className="flex items-center gap-6">
+                  <div className="text-8xl animate-float">🎨</div>
+                  <div>
+                    <h3 className="text-3xl font-bold bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent mb-2">
+                      Design Your Dream Cake
+                    </h3>
+                    <p className="text-lg text-chocolate-brown/80 mb-2">
+                      Create a custom cake tailored to your special occasion
+                    </p>
+                    <div className="flex gap-2 flex-wrap">
+                      <Chip color="warning" variant="flat" size="sm">Choose Flavor</Chip>
+                      <Chip color="warning" variant="flat" size="sm">Pick Size</Chip>
+                      <Chip color="warning" variant="flat" size="sm">Select Theme</Chip>
+                      <Chip color="warning" variant="flat" size="sm">Customize Design</Chip>
+                    </div>
+                  </div>
+                </div>
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-golden-orange to-deep-amber text-white font-bold text-2xl px-12 py-8 h-auto shadow-xl-golden hover:scale-110 transition-transform animate-pulse-slow"
+                  onClick={() => setIsCustomCakeModalOpen(true)}
+                >
+                  <span className="text-3xl mr-2">✨</span>
+                  Start Designing
+                </Button>
+              </div>
+            </CardBody>
+          </Card>
+        </div>
 
         {/* Menu Items Grid with Staggered Animation */}
         {filteredItems.length === 0 ? (
@@ -425,6 +479,14 @@ export default function MenuPage() {
 
       {/* Spacer for bottom navigation */}
       <div className="h-24"></div>
+
+      {/* Custom Cake QR Modal */}
+      <CustomCakeQRModal
+        isOpen={isCustomCakeModalOpen}
+        onClose={() => setIsCustomCakeModalOpen(false)}
+        onComplete={handleCustomCakeComplete}
+        kioskSessionId={getKioskSessionId()}
+      />
     </div>
   );
 }
