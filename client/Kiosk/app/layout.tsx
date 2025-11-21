@@ -1,15 +1,13 @@
 "use client";
 
 import "@/styles/globals.css";
-import { Link } from "@heroui/link";
 import clsx from "clsx";
 import { usePathname } from "next/navigation";
 
 import { Providers } from "./providers";
 
-import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
-import { KioskNavbar } from "@/components/kiosk-navbar";
+import { KioskSidebar } from "@/components/KioskSidebar";
 
 interface RootLayoutProps {
   children: React.ReactNode;
@@ -38,28 +36,20 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
   const isIdlePage = pathname === '/idle';
 
   if (isIdlePage) {
-    // Return full-screen layout without navbar for idle page
+    // Return full-screen layout without sidebar for idle page
     return <>{children}</>;
   }
 
-  // Return normal layout with navbar for all other pages
+  // Return layout with sidebar for all other pages
   return (
-    <div className="relative flex flex-col h-screen">
-      <KioskNavbar />
-      <main className="container mx-auto max-w-7xl pt-16 px-6 flex-grow">
+    <div className="relative flex h-screen overflow-hidden">
+      {/* Main Content Area */}
+      <main className="flex-1 overflow-y-auto lg:mr-[420px]">
         {children}
       </main>
-      <footer className="w-full flex items-center justify-center py-3">
-        <Link
-          isExternal
-          className="flex items-center gap-1 text-current"
-          href="https://heroui.com?utm_source=next-app-template"
-          title="heroui.com homepage"
-        >
-          <span className="text-default-600">Powered by</span>
-          <p className="text-primary">HeroUI</p>
-        </Link>
-      </footer>
+
+      {/* Sidebar */}
+      <KioskSidebar />
     </div>
   );
 }
