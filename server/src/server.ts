@@ -1,6 +1,7 @@
 import app from './app';
 import { testConnection } from './config/database';
 import logger from './utils/logger';
+import { logJWTDiagnostic } from './utils/jwtDiagnostic';
 
 const PORT = process.env.PORT || 5000;
 const HOST = process.env.HOST || 'localhost';
@@ -11,6 +12,9 @@ const startServer = async () => {
     // Test database connection
     await testConnection();
     logger.info('Database connection established');
+
+    // Check JWT configuration
+    logJWTDiagnostic();
 
     // Start Express server
     app.listen(Number(PORT), HOST, () => {

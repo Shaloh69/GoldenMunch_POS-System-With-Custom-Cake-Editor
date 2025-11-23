@@ -360,6 +360,7 @@ router.get('/health', (_req, res) => {
 router.post('/auth/admin/login', validate(schemas.adminLogin), asyncHandler(authController.adminLogin));
 router.post('/auth/cashier/login', validate(schemas.cashierLogin), asyncHandler(authController.cashierLogin));
 router.get('/auth/verify', authenticate, asyncHandler(authController.verifyToken));
+router.get('/auth/diagnostic', asyncHandler(authController.diagnosticJWT));
 
 // ==== KIOSK ROUTES (Public/Optional Auth) ====
 router.get('/kiosk/menu', optionalAuth, asyncHandler(kioskController.getMenuItems));
