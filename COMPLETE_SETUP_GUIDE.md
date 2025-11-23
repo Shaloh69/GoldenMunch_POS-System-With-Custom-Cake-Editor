@@ -11,37 +11,23 @@
 
 ## STEP 1: DATABASE SETUP
 
-### 1.1 Create Database
-
-```bash
-# Login to MySQL
-mysql -u root -p
-
-# Create database
-CREATE DATABASE GoldenMunchPOS;
-USE GoldenMunchPOS;
-exit;
-```
-
-### 1.2 Run Migrations (IN ORDER!)
+### 1.1 Run Complete Database Setup (ONE FILE!)
 
 ```bash
 cd server/databaseSchema
 
-# 1. Main schema (tables, users, menu, orders, etc.)
-mysql -u root -p GoldenMunchPOS < GoldenMunchPOSV2.sql
-
-# 2. Custom cake system (new tables for custom cakes)
-mysql -u root -p GoldenMunchPOS < custom_cake_request_migration.sql
-
-# 3. Create temporary test data (optional)
-mysql -u root -p GoldenMunchPOS < create_temp_data.sql
-
-# 4. Update credentials (sets admin/cashier passwords)
-mysql -u root -p GoldenMunchPOS < update_credentials.sql
+# Run the unified V3 schema - Creates everything in one go!
+mysql -u root -p < GoldenMunchPOSV3.sql
 ```
 
-### 1.3 Verify Database
+**That's it!** The V3 schema includes:
+- ✅ All 40 tables (POS + Custom Cakes)
+- ✅ All views, triggers, and stored procedures
+- ✅ Initial data (roles, admin, cashier, categories, flavors, sizes, themes)
+- ✅ Proper foreign keys and indexes
+- ✅ Ready-to-use credentials
+
+### 1.2 Verify Database
 
 ```bash
 mysql -u root -p GoldenMunchPOS
