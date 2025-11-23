@@ -3,7 +3,7 @@
 import { Card, CardBody } from '@heroui/card';
 import { Chip } from '@heroui/chip';
 import { Textarea } from '@heroui/input';
-import type { CakeDesign } from '@/app/cake-editor/page';
+import type { CakeDesign } from '@/app/page';
 
 interface StepReviewProps {
   design: CakeDesign;

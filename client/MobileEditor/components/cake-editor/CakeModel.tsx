@@ -4,7 +4,7 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Cylinder, Text3D, Sphere } from '@react-three/drei';
 import * as THREE from 'three';
-import type { CakeDesign } from '@/app/cake-editor/page';
+import type { CakeDesign } from '@/app/page';
 
 interface CakeModelProps {
   design: CakeDesign;

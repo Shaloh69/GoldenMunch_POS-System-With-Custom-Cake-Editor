@@ -3,7 +3,7 @@
 import { Button } from '@heroui/button';
 import { Card, CardBody } from '@heroui/card';
 import { CheckIcon } from '@heroicons/react/24/solid';
-import type { CakeDesign } from '@/app/cake-editor/page';
+import type { CakeDesign } from '@/app/page';
 
 interface StepLayersProps {
   design: CakeDesign;
