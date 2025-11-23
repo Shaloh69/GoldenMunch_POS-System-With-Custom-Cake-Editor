@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Card, CardBody } from '@heroui/card';
 import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from '@heroui/table';
 import { Button } from '@heroui/button';
@@ -13,7 +13,8 @@ import { Textarea } from '@heroui/input';
 import { MenuService } from '@/services/menu.service';
 import { ProtectedRoute } from '@/components/protected-route';
 import type { MenuItem, CreateMenuItemRequest } from '@/types/api';
-import { PlusIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, MagnifyingGlassIcon, FunnelIcon, TrashIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { Checkbox } from '@heroui/checkbox';
 
 // Utility function to safely format price
 const formatPrice = (price: any): string => {
@@ -60,10 +61,96 @@ function MenuManagementContent() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [stockAdjusting, setStockAdjusting] = useState<Record<number, boolean>>({});
+  const [priceModalItem, setPriceModalItem] = useState<MenuItem | null>(null);
+  const [newPrice, setNewPrice] = useState('');
+  const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
+
+  // Search, Filter, and Pagination state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'name' | 'price' | 'stock' | 'popularity'>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
 
   useEffect(() => {
     loadMenuItems();
   }, []);
+
+  // Analytics stats
+  const analytics = useMemo(() => {
+    const totalItems = items.length;
+    const lowStockItems = items.filter(item =>
+      !item.is_infinite_stock && toNumber(item.stock_quantity, 0) <= item.min_stock_level
+    ).length;
+    const totalValue = items.reduce((sum, item) =>
+      sum + (toNumber(item.current_price, 0) * toNumber(item.stock_quantity, 0)), 0
+    );
+    const avgPrice = items.length > 0
+      ? items.reduce((sum, item) => sum + toNumber(item.current_price, 0), 0) / items.length
+      : 0;
+    const outOfStock = items.filter(item => item.status === 'out_of_stock').length;
+
+    return {
+      totalItems,
+      lowStockItems,
+      totalValue,
+      avgPrice,
+      outOfStock,
+    };
+  }, [items]);
+
+  // Filtered and paginated items
+  const filteredAndPaginatedItems = useMemo(() => {
+    // Filter
+    let filtered = items.filter((item) => {
+      // Search filter
+      const matchesSearch = searchQuery === '' ||
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description?.toLowerCase().includes(searchQuery.toLowerCase());
+
+      // Type filter
+      const matchesType = filterType === 'all' || item.item_type === filterType;
+
+      // Status filter
+      const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
+
+      return matchesSearch && matchesType && matchesStatus;
+    });
+
+    // Sort
+    filtered.sort((a, b) => {
+      let comparison = 0;
+      switch (sortBy) {
+        case 'name':
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case 'price':
+          comparison = toNumber(a.current_price, 0) - toNumber(b.current_price, 0);
+          break;
+        case 'stock':
+          comparison = toNumber(a.stock_quantity, 0) - toNumber(b.stock_quantity, 0);
+          break;
+        case 'popularity':
+          comparison = (a.popularity_score || 0) - (b.popularity_score || 0);
+          break;
+      }
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+
+    // Paginate
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+
+    return {
+      items: filtered.slice(startIndex, endIndex),
+      total: filtered.length,
+      totalPages: Math.ceil(filtered.length / itemsPerPage),
+    };
+  }, [items, searchQuery, filterType, filterStatus, sortBy, sortOrder, currentPage, itemsPerPage]);
 
   const loadMenuItems = async () => {
     try {
@@ -95,7 +182,7 @@ function MenuManagementContent() {
       setError(null);
 
       // Ensure numeric fields are properly typed
-      const sanitizedData: CreateMenuItemRequest = {
+      const sanitizedData: any = {
         name: formData.name.trim(),
         description: formData.description?.trim() || '',
         item_type: formData.item_type,
@@ -110,21 +197,47 @@ function MenuManagementContent() {
         nutritional_info: formData.nutritional_info?.trim(),
       };
 
-      const response = await MenuService.createMenuItem(sanitizedData, imageFile || undefined);
+      let response;
+      if (editingItem) {
+        // Update existing item
+        response = await MenuService.updateMenuItem(editingItem.menu_item_id, sanitizedData, imageFile || undefined);
+      } else {
+        // Create new item
+        response = await MenuService.createMenuItem(sanitizedData, imageFile || undefined);
+      }
 
       if (response.success) {
         onClose();
         loadMenuItems();
         resetForm();
       } else {
-        setError(response.message || 'Failed to create menu item');
+        setError(response.message || `Failed to ${editingItem ? 'update' : 'create'} menu item`);
       }
     } catch (error: any) {
-      console.error('Failed to create menu item:', error);
-      setError(error?.message || 'An error occurred while creating the menu item');
+      console.error(`Failed to ${editingItem ? 'update' : 'create'} menu item:`, error);
+      setError(error?.message || `An error occurred while ${editingItem ? 'updating' : 'creating'} the menu item`);
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleEdit = (item: MenuItem) => {
+    setEditingItem(item);
+    setFormData({
+      name: item.name,
+      description: item.description,
+      item_type: item.item_type,
+      unit_of_measure: item.unit_of_measure,
+      stock_quantity: item.stock_quantity,
+      min_stock_level: item.min_stock_level,
+      is_infinite_stock: item.is_infinite_stock,
+      can_customize: item.can_customize,
+      can_preorder: item.can_preorder,
+      preparation_time_minutes: item.preparation_time_minutes,
+      allergen_info: item.allergen_info,
+      nutritional_info: item.nutritional_info,
+    });
+    onOpen();
   };
 
   const handleDelete = async (id: number) => {
@@ -144,10 +257,141 @@ function MenuManagementContent() {
     }
   };
 
+  const handleStockAdjust = async (itemId: number, adjustment: number) => {
+    setStockAdjusting((prev) => ({ ...prev, [itemId]: true }));
+    try {
+      const item = items.find((i) => i.menu_item_id === itemId);
+      if (!item) return;
+
+      const newStock = Math.max(0, toNumber(item.stock_quantity, 0) + adjustment);
+      const response = await MenuService.updateMenuItem(itemId, {
+        stock_quantity: newStock,
+      });
+
+      if (response.success) {
+        loadMenuItems();
+      } else {
+        setError(response.message || 'Failed to update stock');
+      }
+    } catch (error: any) {
+      console.error('Failed to update stock:', error);
+      setError(error?.message || 'An error occurred while updating stock');
+    } finally {
+      setStockAdjusting((prev) => ({ ...prev, [itemId]: false }));
+    }
+  };
+
+  const handleStatusToggle = async (itemId: number, currentStatus: string) => {
+    const newStatus = currentStatus === 'available' ? 'unavailable' : 'available';
+    try {
+      const response = await MenuService.updateMenuItem(itemId, {
+        status: newStatus,
+      });
+
+      if (response.success) {
+        loadMenuItems();
+      } else {
+        setError(response.message || 'Failed to update status');
+      }
+    } catch (error: any) {
+      console.error('Failed to update status:', error);
+      setError(error?.message || 'An error occurred while updating status');
+    }
+  };
+
+  const handlePriceUpdate = async () => {
+    if (!priceModalItem || !newPrice) return;
+
+    const priceValue = parseFloat(newPrice);
+    if (isNaN(priceValue) || priceValue < 0) {
+      setError('Please enter a valid price');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError(null);
+
+      // Add new price to price history
+      const today = new Date().toISOString().split('T')[0];
+      await MenuService.addMenuItemPrice({
+        menu_item_id: priceModalItem.menu_item_id,
+        price: priceValue,
+        start_date: today,
+        price_type: 'regular',
+      });
+
+      setPriceModalItem(null);
+      setNewPrice('');
+      loadMenuItems();
+    } catch (error: any) {
+      console.error('Failed to update price:', error);
+      setError(error?.message || 'An error occurred while updating price');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allIds = new Set(filteredAndPaginatedItems.items.map(item => item.menu_item_id));
+      setSelectedItems(allIds);
+    } else {
+      setSelectedItems(new Set());
+    }
+  };
+
+  const handleSelectItem = (id: number, checked: boolean) => {
+    const newSelected = new Set(selectedItems);
+    if (checked) {
+      newSelected.add(id);
+    } else {
+      newSelected.delete(id);
+    }
+    setSelectedItems(newSelected);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedItems.size === 0) return;
+
+    if (confirm(`Are you sure you want to delete ${selectedItems.size} items?`)) {
+      try {
+        setError(null);
+        const promises = Array.from(selectedItems).map(id =>
+          MenuService.deleteMenuItem(id)
+        );
+        await Promise.all(promises);
+        setSelectedItems(new Set());
+        loadMenuItems();
+      } catch (error: any) {
+        console.error('Failed to delete items:', error);
+        setError(error?.message || 'An error occurred while deleting items');
+      }
+    }
+  };
+
+  const handleBulkStatusChange = async (status: string) => {
+    if (selectedItems.size === 0) return;
+
+    try {
+      setError(null);
+      const promises = Array.from(selectedItems).map(id =>
+        MenuService.updateMenuItem(id, { status: status as any })
+      );
+      await Promise.all(promises);
+      setSelectedItems(new Set());
+      loadMenuItems();
+    } catch (error: any) {
+      console.error('Failed to update status:', error);
+      setError(error?.message || 'An error occurred while updating status');
+    }
+  };
+
   const resetForm = () => {
     setFormData({});
     setImageFile(null);
     setError(null);
+    setEditingItem(null);
   };
 
   const handleModalClose = () => {
@@ -170,6 +414,73 @@ function MenuManagementContent() {
         </Button>
       </div>
 
+      {/* Analytics Dashboard */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardBody className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-default-500">Total Items</p>
+                <p className="text-2xl font-bold text-primary">{analytics.totalItems}</p>
+              </div>
+              <div className="p-3 bg-primary-100 rounded-full">
+                <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardBody className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-default-500">Inventory Value</p>
+                <p className="text-2xl font-bold text-success">₱{formatPrice(analytics.totalValue)}</p>
+              </div>
+              <div className="p-3 bg-success-100 rounded-full">
+                <svg className="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardBody className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-default-500">Low Stock</p>
+                <p className="text-2xl font-bold text-warning">{analytics.lowStockItems}</p>
+              </div>
+              <div className="p-3 bg-warning-100 rounded-full">
+                <svg className="h-6 w-6 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardBody className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-default-500">Avg Price</p>
+                <p className="text-2xl font-bold text-secondary">₱{formatPrice(analytics.avgPrice)}</p>
+              </div>
+              <div className="p-3 bg-secondary-100 rounded-full">
+                <svg className="h-6 w-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+      </div>
+
       {error && (
         <Card className="bg-danger-50 border-danger">
           <CardBody>
@@ -178,38 +489,216 @@ function MenuManagementContent() {
         </Card>
       )}
 
+      {/* Search and Filters */}
+      <Card>
+        <CardBody>
+          <div className="flex flex-col gap-4">
+            {/* Search Bar */}
+            <div className="flex gap-4 items-end">
+              <Input
+                className="flex-1"
+                placeholder="Search by name or description..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1); // Reset to first page on search
+                }}
+                startContent={<MagnifyingGlassIcon className="h-5 w-5 text-default-400" />}
+                isClearable
+                onClear={() => setSearchQuery('')}
+              />
+              <Select
+                label="Items per page"
+                selectedKeys={[itemsPerPage.toString()]}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="w-32"
+              >
+                <SelectItem key="10" value="10">10</SelectItem>
+                <SelectItem key="25" value="25">25</SelectItem>
+                <SelectItem key="50" value="50">50</SelectItem>
+                <SelectItem key="100" value="100">100</SelectItem>
+              </Select>
+            </div>
+
+            {/* Filters */}
+            <div className="flex gap-4 items-center flex-wrap">
+              <div className="flex items-center gap-2">
+                <FunnelIcon className="h-5 w-5 text-default-500" />
+                <span className="text-sm font-medium text-default-600">Filters:</span>
+              </div>
+              <Select
+                label="Type"
+                selectedKeys={[filterType]}
+                onChange={(e) => {
+                  setFilterType(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-40"
+              >
+                <SelectItem key="all" value="all">All Types</SelectItem>
+                <SelectItem key="cake" value="cake">Cake</SelectItem>
+                <SelectItem key="pastry" value="pastry">Pastry</SelectItem>
+                <SelectItem key="beverage" value="beverage">Beverage</SelectItem>
+                <SelectItem key="coffee" value="coffee">Coffee</SelectItem>
+                <SelectItem key="sandwich" value="sandwich">Sandwich</SelectItem>
+                <SelectItem key="bread" value="bread">Bread</SelectItem>
+                <SelectItem key="dessert" value="dessert">Dessert</SelectItem>
+                <SelectItem key="snack" value="snack">Snack</SelectItem>
+                <SelectItem key="other" value="other">Other</SelectItem>
+              </Select>
+              <Select
+                label="Status"
+                selectedKeys={[filterStatus]}
+                onChange={(e) => {
+                  setFilterStatus(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-40"
+              >
+                <SelectItem key="all" value="all">All Status</SelectItem>
+                <SelectItem key="available" value="available">Available</SelectItem>
+                <SelectItem key="unavailable" value="unavailable">Unavailable</SelectItem>
+                <SelectItem key="out_of_stock" value="out_of_stock">Out of Stock</SelectItem>
+              </Select>
+              <Select
+                label="Sort By"
+                selectedKeys={[sortBy]}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="w-40"
+              >
+                <SelectItem key="name" value="name">Name</SelectItem>
+                <SelectItem key="price" value="price">Price</SelectItem>
+                <SelectItem key="stock" value="stock">Stock</SelectItem>
+                <SelectItem key="popularity" value="popularity">Popularity</SelectItem>
+              </Select>
+              <Button
+                size="sm"
+                variant="flat"
+                onPress={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              >
+                {sortOrder === 'asc' ? '↑ Ascending' : '↓ Descending'}
+              </Button>
+            </div>
+
+            {/* Results Summary */}
+            <div className="text-sm text-default-500">
+              Showing {filteredAndPaginatedItems.items.length} of {filteredAndPaginatedItems.total} items
+              {(searchQuery || filterType !== 'all' || filterStatus !== 'all') && (
+                <Button
+                  size="sm"
+                  variant="light"
+                  className="ml-2"
+                  onPress={() => {
+                    setSearchQuery('');
+                    setFilterType('all');
+                    setFilterStatus('all');
+                    setCurrentPage(1);
+                  }}
+                >
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardBody>
+      </Card>
+
       <Card>
         <CardBody>
           {loading ? (
             <div className="flex justify-center p-8">
               <Spinner size="lg" color="primary" />
             </div>
-          ) : items.length === 0 ? (
+          ) : filteredAndPaginatedItems.total === 0 ? (
             <div className="text-center p-8 text-default-500">
               <p>No menu items found</p>
-              <Button
-                color="primary"
-                size="sm"
-                className="mt-4"
-                startContent={<PlusIcon className="h-4 w-4" />}
-                onPress={onOpen}
-              >
-                Add Your First Item
-              </Button>
+              {items.length === 0 ? (
+                <Button
+                  color="primary"
+                  size="sm"
+                  className="mt-4"
+                  startContent={<PlusIcon className="h-4 w-4" />}
+                  onPress={onOpen}
+                >
+                  Add Your First Item
+                </Button>
+              ) : (
+                <p className="mt-2 text-sm">Try adjusting your search or filters</p>
+              )}
             </div>
           ) : (
-            <Table aria-label="Menu items table">
-              <TableHeader>
-                <TableColumn>NAME</TableColumn>
-                <TableColumn>TYPE</TableColumn>
-                <TableColumn>PRICE</TableColumn>
-                <TableColumn>STOCK</TableColumn>
-                <TableColumn>STATUS</TableColumn>
-                <TableColumn>ACTIONS</TableColumn>
-              </TableHeader>
-              <TableBody>
-                {items.map((item) => (
+            <>
+              {/* Bulk Actions Toolbar */}
+              {selectedItems.size > 0 && (
+                <div className="mb-4 p-4 bg-primary-50 border border-primary-200 rounded-lg flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      isSelected={true}
+                      onChange={() => setSelectedItems(new Set())}
+                    />
+                    <span className="font-medium">
+                      {selectedItems.size} item{selectedItems.size > 1 ? 's' : ''} selected
+                    </span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      color="success"
+                      variant="flat"
+                      startContent={<CheckCircleIcon className="h-4 w-4" />}
+                      onPress={() => handleBulkStatusChange('available')}
+                    >
+                      Set Available
+                    </Button>
+                    <Button
+                      size="sm"
+                      color="warning"
+                      variant="flat"
+                      startContent={<XCircleIcon className="h-4 w-4" />}
+                      onPress={() => handleBulkStatusChange('unavailable')}
+                    >
+                      Set Unavailable
+                    </Button>
+                    <Button
+                      size="sm"
+                      color="danger"
+                      variant="flat"
+                      startContent={<TrashIcon className="h-4 w-4" />}
+                      onPress={handleBulkDelete}
+                    >
+                      Delete
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              <Table aria-label="Menu items table">
+                <TableHeader>
+                  <TableColumn>
+                    <Checkbox
+                      isSelected={selectedItems.size === filteredAndPaginatedItems.items.length && filteredAndPaginatedItems.items.length > 0}
+                      onChange={(e) => handleSelectAll(e.target.checked)}
+                    />
+                  </TableColumn>
+                  <TableColumn>NAME</TableColumn>
+                  <TableColumn>TYPE</TableColumn>
+                  <TableColumn>PRICE</TableColumn>
+                  <TableColumn>STOCK</TableColumn>
+                  <TableColumn>STATUS</TableColumn>
+                  <TableColumn>ACTIONS</TableColumn>
+                </TableHeader>
+                <TableBody>
+                  {filteredAndPaginatedItems.items.map((item) => (
                   <TableRow key={item.menu_item_id}>
+                    <TableCell>
+                      <Checkbox
+                        isSelected={selectedItems.has(item.menu_item_id)}
+                        onChange={(e) => handleSelectItem(item.menu_item_id, e.target.checked)}
+                      />
+                    </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
                         <span className="font-semibold">{item.name || 'N/A'}</span>
@@ -227,7 +716,39 @@ function MenuManagementContent() {
                       <span className="font-semibold">₱{formatPrice(item.current_price)}</span>
                     </TableCell>
                     <TableCell>
-                      <span className="font-medium">{formatStock(item)}</span>
+                      {item.is_infinite_stock ? (
+                        <span className="font-medium text-primary">∞</span>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            isIconOnly
+                            variant="flat"
+                            color="danger"
+                            onPress={() => handleStockAdjust(item.menu_item_id, -1)}
+                            isDisabled={stockAdjusting[item.menu_item_id] || toNumber(item.stock_quantity, 0) <= 0}
+                            className="min-w-6 h-6"
+                          >
+                            −
+                          </Button>
+                          <span className={`font-medium min-w-10 text-center ${
+                            toNumber(item.stock_quantity, 0) <= item.min_stock_level ? 'text-danger' : ''
+                          }`}>
+                            {formatStock(item)}
+                          </span>
+                          <Button
+                            size="sm"
+                            isIconOnly
+                            variant="flat"
+                            color="success"
+                            onPress={() => handleStockAdjust(item.menu_item_id, 1)}
+                            isDisabled={stockAdjusting[item.menu_item_id]}
+                            className="min-w-6 h-6"
+                          >
+                            +
+                          </Button>
+                        </div>
+                      )}
                     </TableCell>
                     <TableCell>
                       <Chip
@@ -240,13 +761,33 @@ function MenuManagementContent() {
                         }
                         size="sm"
                         variant="flat"
-                        className="capitalize"
+                        className="capitalize cursor-pointer"
+                        onClick={() => handleStatusToggle(item.menu_item_id, item.status)}
                       >
                         {item.status || 'unknown'}
                       </Chip>
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 flex-wrap">
+                        <Button
+                          size="sm"
+                          color="primary"
+                          variant="flat"
+                          onPress={() => handleEdit(item)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          color="secondary"
+                          variant="flat"
+                          onPress={() => {
+                            setPriceModalItem(item);
+                            setNewPrice(formatPrice(item.current_price));
+                          }}
+                        >
+                          Price
+                        </Button>
                         <Button
                           size="sm"
                           color="danger"
@@ -261,14 +802,58 @@ function MenuManagementContent() {
                 ))}
               </TableBody>
             </Table>
+
+            {/* Pagination */}
+            {filteredAndPaginatedItems.totalPages > 1 && (
+              <div className="flex justify-between items-center mt-4 px-2">
+                <div className="text-sm text-default-500">
+                  Page {currentPage} of {filteredAndPaginatedItems.totalPages}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    onPress={() => setCurrentPage(1)}
+                    isDisabled={currentPage === 1}
+                  >
+                    First
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    onPress={() => setCurrentPage(currentPage - 1)}
+                    isDisabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    onPress={() => setCurrentPage(currentPage + 1)}
+                    isDisabled={currentPage === filteredAndPaginatedItems.totalPages}
+                  >
+                    Next
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    onPress={() => setCurrentPage(filteredAndPaginatedItems.totalPages)}
+                    isDisabled={currentPage === filteredAndPaginatedItems.totalPages}
+                  >
+                    Last
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
           )}
         </CardBody>
       </Card>
 
-      {/* Add Item Modal */}
+      {/* Add/Edit Item Modal */}
       <Modal isOpen={isOpen} onClose={handleModalClose} size="2xl" scrollBehavior="inside">
         <ModalContent>
-          <ModalHeader>Add New Menu Item</ModalHeader>
+          <ModalHeader>{editingItem ? 'Edit Menu Item' : 'Add New Menu Item'}</ModalHeader>
           <ModalBody>
             {error && (
               <div className="p-3 bg-danger-50 border border-danger rounded-lg mb-4">
@@ -375,9 +960,21 @@ function MenuManagementContent() {
                 onChange={(e) => setFormData({ ...formData, nutritional_info: e.target.value })}
                 minRows={2}
               />
+              {editingItem?.image_url && !imageFile && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">Current Image</p>
+                  <div className="relative w-32 h-32 border-2 border-default-200 rounded-lg overflow-hidden">
+                    <img
+                      src={editingItem.image_url}
+                      alt={editingItem.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              )}
               <Input
                 type="file"
-                label="Item Image"
+                label={editingItem?.image_url ? 'Replace Image' : 'Item Image'}
                 accept="image/*"
                 onChange={(e) => setImageFile(e.target.files?.[0] || null)}
                 description="Upload an image of the menu item (JPG, PNG, max 10MB)"
@@ -399,7 +996,76 @@ function MenuManagementContent() {
               isLoading={saving}
               isDisabled={!formData.name || !formData.item_type}
             >
-              {saving ? 'Creating...' : 'Create Item'}
+              {saving
+                ? (editingItem ? 'Updating...' : 'Creating...')
+                : (editingItem ? 'Update Item' : 'Create Item')
+              }
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Price Management Modal */}
+      <Modal
+        isOpen={!!priceModalItem}
+        onClose={() => {
+          setPriceModalItem(null);
+          setNewPrice('');
+          setError(null);
+        }}
+        size="md"
+      >
+        <ModalContent>
+          <ModalHeader>Update Price - {priceModalItem?.name}</ModalHeader>
+          <ModalBody>
+            {error && (
+              <div className="p-3 bg-danger-50 border border-danger rounded-lg mb-4">
+                <p className="text-danger text-sm">{error}</p>
+              </div>
+            )}
+            <div className="space-y-4">
+              <div className="p-4 bg-default-100 rounded-lg">
+                <p className="text-sm text-default-600">Current Price</p>
+                <p className="text-2xl font-bold text-primary">
+                  ₱{priceModalItem && formatPrice(priceModalItem.current_price)}
+                </p>
+              </div>
+              <Input
+                type="number"
+                label="New Price"
+                placeholder="Enter new price"
+                value={newPrice}
+                onChange={(e) => setNewPrice(e.target.value)}
+                startContent={
+                  <span className="text-default-400 text-sm">₱</span>
+                }
+                min="0"
+                step="0.01"
+              />
+              <p className="text-xs text-default-500">
+                This will add a new price entry starting today and update the current price.
+              </p>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="light"
+              onPress={() => {
+                setPriceModalItem(null);
+                setNewPrice('');
+                setError(null);
+              }}
+              isDisabled={saving}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="primary"
+              onPress={handlePriceUpdate}
+              isLoading={saving}
+              isDisabled={!newPrice || parseFloat(newPrice) < 0}
+            >
+              {saving ? 'Updating...' : 'Update Price'}
             </Button>
           </ModalFooter>
         </ModalContent>
