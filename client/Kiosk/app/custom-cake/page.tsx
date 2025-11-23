@@ -4,14 +4,9 @@ import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { Cake, Smartphone, Clock, Sparkles, CheckCircle } from 'lucide-react';
+import { CustomCakeService, CustomCakeSessionResponse } from '@/services/customCake.service';
 
-interface QRSession {
-  sessionToken: string;
-  qrCodeUrl: string;
-  editorUrl: string;
-  expiresIn: number;
-  expiresAt: string;
-}
+type QRSession = CustomCakeSessionResponse;
 
 export default function CustomCakePage() {
   const [qrSession, setQrSession] = useState<QRSession | null>(null);
@@ -27,22 +22,14 @@ export default function CustomCakePage() {
     setStep('generating');
 
     try {
-      // Simulate API call (replace with actual API)
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Call real API to generate QR session
+      const session = await CustomCakeService.generateQRSession('KIOSK-001');
 
-      const mockSession: QRSession = {
-        sessionToken: `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        qrCodeUrl: `https://goldenmunch.com/cake-editor`,
-        editorUrl: `${window.location.origin}/cake-editor?session=session-${Date.now()}`,
-        expiresIn: 1800, // 30 minutes
-        expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-      };
-
-      setQrSession(mockSession);
-      setTimeRemaining(mockSession.expiresIn);
+      setQrSession(session);
+      setTimeRemaining(session.expiresIn);
       setStep('qr');
     } catch (err: any) {
-      setError(err.message || 'Failed to generate QR code');
+      setError(err?.response?.data?.message || err.message || 'Failed to generate QR code');
       setStep('welcome');
     } finally {
       setLoading(false);

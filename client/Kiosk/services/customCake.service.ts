@@ -2,12 +2,13 @@ import apiClient from '@/config/api';
 import type { ApiResponse } from '@/types/api';
 
 /**
- * Custom Cake Session Interface
+ * Custom Cake Session Interface (New Comprehensive API)
  */
 export interface CustomCakeSessionResponse {
-  sessionId: string;
-  customizationUrl: string;
-  qrCodeDataUrl: string;
+  sessionToken: string;
+  qrCodeUrl: string;
+  editorUrl: string;
+  expiresIn: number;
   expiresAt: string;
 }
 
@@ -31,28 +32,25 @@ export interface CustomCakeSessionStatus {
  */
 export class CustomCakeService {
   /**
-   * Create a new custom cake session
+   * Generate a new QR code session for custom cake design
+   * Uses the new comprehensive API endpoint
    */
-  static async createSession(
-    kioskSessionId: string,
-    menuItemId?: number
-  ): Promise<CustomCakeSessionResponse> {
+  static async generateQRSession(kioskId?: string): Promise<CustomCakeSessionResponse> {
     try {
       const response = await apiClient.post<ApiResponse<CustomCakeSessionResponse>>(
-        '/kiosk/custom-cake/session',
+        '/kiosk/custom-cake/generate-qr',
         {
-          kiosk_session_id: kioskSessionId,
-          menu_item_id: menuItemId,
+          kiosk_id: kioskId || 'KIOSK-DEFAULT',
         }
       );
 
       if (!response.data.data) {
-        throw new Error('Failed to create custom cake session');
+        throw new Error('Failed to generate QR code session');
       }
 
       return response.data.data;
     } catch (error) {
-      console.error('Error creating custom cake session:', error);
+      console.error('Error generating QR session:', error);
       throw error;
     }
   }

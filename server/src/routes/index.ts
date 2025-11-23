@@ -15,6 +15,7 @@ import * as wasteController from '../controllers/waste.controller';
 import * as feedbackController from '../controllers/feedback.controller';
 import * as promotionController from '../controllers/promotion.controller';
 import * as customCakeSessionController from '../controllers/customCakeSession.controller';
+import * as customCakeController from '../controllers/customCake.controller';
 
 const router = Router();
 
@@ -381,6 +382,19 @@ router.post('/kiosk/custom-cake/session/:sessionId/complete', asyncHandler(custo
 router.get('/kiosk/custom-cake/session/:sessionId/poll', asyncHandler(customCakeSessionController.pollCustomCakeSession));
 router.delete('/kiosk/custom-cake/session/:sessionId', asyncHandler(customCakeSessionController.deleteCustomCakeSession));
 
+// ==== CUSTOM CAKE COMPREHENSIVE SYSTEM ====
+
+// Kiosk - Generate QR Code
+router.post('/kiosk/custom-cake/generate-qr', asyncHandler(customCakeController.generateQRSession));
+
+// Mobile Editor - Public Routes
+router.get('/custom-cake/session/:token', asyncHandler(customCakeController.validateSession));
+router.get('/custom-cake/options', asyncHandler(customCakeController.getDesignOptions));
+router.post('/custom-cake/save-draft', asyncHandler(customCakeController.saveDraft));
+router.post('/custom-cake/upload-images', asyncHandler(customCakeController.uploadImages));
+router.post('/custom-cake/submit', asyncHandler(customCakeController.submitForReview));
+router.get('/custom-cake/status/:requestId', asyncHandler(customCakeController.checkStatus));
+
 // ==== CASHIER ROUTES ====
 router.post(
   '/cashier/orders/verify',
@@ -413,6 +427,10 @@ router.post('/cashier/feedback', authenticateCashier, asyncHandler(feedbackContr
 router.post('/cashier/refund', authenticateCashier, asyncHandler(refundController.createRefundRequest));
 router.get('/cashier/refund', authenticateCashier, asyncHandler(refundController.getRefundRequests));
 router.get('/cashier/refund/:id', authenticateCashier, asyncHandler(refundController.getRefundDetails));
+
+// Cashier - Custom Cakes
+router.get('/cashier/custom-cakes/approved', authenticateCashier, asyncHandler(customCakeController.getApprovedOrders));
+router.post('/cashier/custom-cakes/:requestId/process-payment', authenticateCashier, asyncHandler(customCakeController.processPayment));
 
 // ==== ADMIN ROUTES ====
 
@@ -530,6 +548,12 @@ router.put('/admin/cake/sizes/:id', authenticateAdmin, asyncHandler(additionalCo
 router.post('/admin/cake/themes', authenticateAdmin, uploadProductImage.single('image'), asyncHandler(additionalController.createTheme));
 router.get('/admin/cake/themes', authenticateAdmin, asyncHandler(additionalController.getThemes));
 router.put('/admin/cake/themes/:id', authenticateAdmin, uploadProductImage.single('image'), asyncHandler(additionalController.updateTheme));
+
+// Custom Cake Requests Management
+router.get('/admin/custom-cakes/pending', authenticateAdmin, asyncHandler(customCakeController.getPendingRequests));
+router.get('/admin/custom-cakes/:requestId', authenticateAdmin, asyncHandler(customCakeController.getRequestDetails));
+router.post('/admin/custom-cakes/:requestId/approve', authenticateAdmin, asyncHandler(customCakeController.approveRequest));
+router.post('/admin/custom-cakes/:requestId/reject', authenticateAdmin, asyncHandler(customCakeController.rejectRequest));
 
 // Kiosk Settings
 router.get('/admin/kiosk-settings', authenticateAdmin, asyncHandler(additionalController.getKioskSettings));
