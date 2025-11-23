@@ -8,7 +8,7 @@ import { Table, TableHeader, TableBody, TableColumn, TableRow, TableCell } from 
 import { AnalyticsService } from '@/services/analytics.service';
 import {
   ChartBarIcon,
-  TrendingUpIcon,
+  ArrowTrendingUpIcon,
   CurrencyDollarIcon,
   ShoppingCartIcon,
 } from '@heroicons/react/24/outline';
@@ -152,7 +152,7 @@ export default function AnalyticsPage() {
             <CardBody>
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-secondary/10 rounded-lg">
-                  <TrendingUpIcon className="h-6 w-6 text-secondary" />
+                  <ArrowTrendingUpIcon className="h-6 w-6 text-secondary" />
                 </div>
                 <div>
                   <p className="text-sm text-default-500">Unique Customers</p>
