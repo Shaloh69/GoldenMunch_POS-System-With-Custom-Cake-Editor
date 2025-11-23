@@ -633,3 +633,326 @@ export interface AuthResponse {
   token: string;
   user: AuthUser;
 }
+
+// ============================================================================
+// CUSTOM CAKE REQUEST TYPES
+// ============================================================================
+
+export enum CustomCakeRequestStatus {
+  DRAFT = 'draft',
+  PENDING_REVIEW = 'pending_review',
+  APPROVED = 'approved',
+  REJECTED = 'rejected',
+  CANCELLED = 'cancelled',
+  COMPLETED = 'completed'
+}
+
+export enum FrostingType {
+  BUTTERCREAM = 'buttercream',
+  FONDANT = 'fondant',
+  WHIPPED_CREAM = 'whipped_cream',
+  GANACHE = 'ganache',
+  CREAM_CHEESE = 'cream_cheese'
+}
+
+export enum CandleType {
+  NUMBER = 'number',
+  REGULAR = 'regular',
+  SPARKLER = 'sparkler',
+  NONE = 'none'
+}
+
+export enum TextFont {
+  SCRIPT = 'script',
+  BOLD = 'bold',
+  ELEGANT = 'elegant',
+  PLAYFUL = 'playful',
+  MODERN = 'modern'
+}
+
+export enum TextPosition {
+  TOP = 'top',
+  CENTER = 'center',
+  BOTTOM = 'bottom'
+}
+
+export enum QRSessionStatus {
+  ACTIVE = 'active',
+  USED = 'used',
+  EXPIRED = 'expired',
+  CANCELLED = 'cancelled'
+}
+
+export enum ImageType {
+  RENDER_3D = '3d_render',
+  REFERENCE = 'reference',
+  SKETCH = 'sketch',
+  FINAL_PRODUCT = 'final_product'
+}
+
+export enum ViewAngle {
+  FRONT = 'front',
+  SIDE = 'side',
+  TOP = 'top',
+  PERSPECTIVE_3D = '3d_perspective',
+  ALL_ANGLES = 'all_angles'
+}
+
+// 3D Decoration Object
+export interface Decoration3D {
+  type: string; // 'candle', 'flower', 'topper', 'ribbon', etc.
+  position: { x: number; y: number; z: number };
+  rotation: { x: number; y: number; z: number };
+  scale: { x: number; y: number; z: number };
+  color?: string;
+  model?: string; // Model identifier
+  metadata?: Record<string, any>;
+}
+
+// Price Breakdown
+export interface PriceBreakdown {
+  base: number;
+  layers: number;
+  theme: number;
+  decorations: number;
+  frosting: number;
+  rush_fee?: number;
+  total: number;
+}
+
+// Layer Configuration
+export interface CakeLayer {
+  layerNumber: number;
+  flavorId: number | null;
+  flavorName?: string;
+  sizeId: number | null;
+  sizeName?: string;
+  diameter?: number;
+  height?: number;
+}
+
+// Custom Cake Request (Main Entity)
+export interface CustomCakeRequest {
+  request_id: number;
+  session_token: string;
+  qr_code_url?: string;
+
+  // Customer Info
+  customer_name?: string;
+  customer_phone?: string;
+  customer_email?: string;
+
+  // Cake Structure
+  num_layers: number;
+  layer_1_flavor_id?: number;
+  layer_2_flavor_id?: number;
+  layer_3_flavor_id?: number;
+  layer_4_flavor_id?: number;
+  layer_5_flavor_id?: number;
+  layer_1_size_id?: number;
+  layer_2_size_id?: number;
+  layer_3_size_id?: number;
+  layer_4_size_id?: number;
+  layer_5_size_id?: number;
+  total_height_cm?: number;
+  base_diameter_cm?: number;
+
+  // Theme & Frosting
+  theme_id?: number;
+  theme_name?: string;
+  frosting_color?: string;
+  frosting_type: FrostingType;
+
+  // Candles
+  candles_count: number;
+  candle_type: CandleType;
+  candle_numbers?: string;
+
+  // Text
+  cake_text?: string;
+  text_color?: string;
+  text_font: TextFont;
+  text_position: TextPosition;
+
+  // 3D Decorations
+  decorations_3d?: Decoration3D[];
+
+  // Instructions
+  special_instructions?: string;
+  baker_notes?: string;
+  dietary_restrictions?: string;
+
+  // Event
+  event_type?: string;
+  event_date?: string;
+
+  // Workflow
+  status: CustomCakeRequestStatus;
+  submitted_at?: string;
+  reviewed_at?: string;
+  reviewed_by?: number;
+  reviewed_by_name?: string;
+  rejection_reason?: string;
+  admin_notes?: string;
+
+  // Pricing
+  estimated_price?: number;
+  approved_price?: number;
+  price_breakdown?: PriceBreakdown;
+
+  // Scheduling
+  preparation_days?: number;
+  scheduled_pickup_date?: string;
+  scheduled_pickup_time?: string;
+
+  // Order Link
+  order_id?: number;
+
+  // Timestamps
+  created_at: string;
+  updated_at: string;
+  expires_at?: string;
+}
+
+// Custom Cake Request Image
+export interface CustomCakeRequestImage {
+  image_id: number;
+  request_id: number;
+  image_url: string;
+  image_type: ImageType;
+  view_angle: ViewAngle;
+  file_size?: number;
+  mime_type?: string;
+  width?: number;
+  height?: number;
+  uploaded_at: string;
+}
+
+// QR Code Session
+export interface QRCodeSession {
+  session_id: number;
+  session_token: string;
+  qr_code_data: string;
+  editor_url: string;
+  request_id?: number;
+  kiosk_id?: string;
+  ip_address?: string;
+  user_agent?: string;
+  status: QRSessionStatus;
+  accessed_at?: string;
+  completed_at?: string;
+  created_at: string;
+  expires_at: string;
+}
+
+// Request DTOs
+export interface CreateCustomCakeRequest {
+  customer_name: string;
+  customer_email: string;
+  customer_phone: string;
+
+  num_layers: number;
+  layer_1_flavor_id?: number;
+  layer_2_flavor_id?: number;
+  layer_3_flavor_id?: number;
+  layer_4_flavor_id?: number;
+  layer_5_flavor_id?: number;
+  layer_1_size_id?: number;
+  layer_2_size_id?: number;
+  layer_3_size_id?: number;
+  layer_4_size_id?: number;
+  layer_5_size_id?: number;
+
+  theme_id?: number;
+  frosting_color?: string;
+  frosting_type: FrostingType;
+
+  candles_count?: number;
+  candle_type?: CandleType;
+  candle_numbers?: string;
+
+  cake_text?: string;
+  text_color?: string;
+  text_font?: TextFont;
+  text_position?: TextPosition;
+
+  decorations_3d?: Decoration3D[];
+
+  special_instructions?: string;
+  baker_notes?: string;
+  dietary_restrictions?: string;
+
+  event_type?: string;
+  event_date?: string;
+}
+
+export interface SaveDraftRequest {
+  session_token: string;
+  data: Partial<CreateCustomCakeRequest>;
+}
+
+export interface SubmitCustomCakeRequest extends CreateCustomCakeRequest {
+  session_token: string;
+  image_urls: string[];
+}
+
+export interface ApproveCustomCakeRequest {
+  approved_price: number;
+  preparation_days: number;
+  scheduled_pickup_date: string;
+  scheduled_pickup_time: string;
+  admin_notes?: string;
+}
+
+export interface RejectCustomCakeRequest {
+  rejection_reason: string;
+}
+
+export interface GenerateQRResponse {
+  sessionToken: string;
+  qrCodeUrl: string;
+  editorUrl: string;
+  expiresIn: number; // seconds
+  expiresAt: string;
+}
+
+export interface CustomCakeOptions {
+  flavors: CakeFlavor[];
+  sizes: CakeSize[];
+  themes: CustomCakeTheme[];
+  frostingTypes: Array<{ value: FrostingType; label: string }>;
+  candleTypes: Array<{ value: CandleType; label: string }>;
+  textFonts: Array<{ value: TextFont; label: string }>;
+}
+
+// Helper types for cake configuration
+export interface CakeFlavor {
+  flavor_id: number;
+  flavor_name: string;
+  description?: string;
+  image_url?: string;
+  additional_cost: number;
+  is_available: boolean;
+  display_order: number;
+}
+
+export interface CakeSize {
+  size_id: number;
+  size_name: string;
+  diameter_cm: number;
+  serves: number;
+  price_multiplier: number;
+  is_available: boolean;
+  display_order: number;
+}
+
+export interface CustomCakeTheme {
+  theme_id: number;
+  theme_name: string;
+  description?: string;
+  theme_image_url?: string;
+  base_additional_cost: number;
+  preparation_days: number;
+  is_available: boolean;
+  display_order: number;
+}
