@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardBody } from '@heroui/card';
@@ -78,12 +78,14 @@ const STEPS = [
 function CakeEditorContent() {
   const searchParams = useSearchParams();
   const sessionToken = searchParams?.get('session');
+  const canvasRef = useRef<any>(null);
 
   const [currentStep, setCurrentStep] = useState(0);
   const [sessionValid, setSessionValid] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [requestId, setRequestId] = useState<number | null>(null);
 
   // Design Options from API
   const [options, setOptions] = useState<any>(null);
@@ -114,10 +116,26 @@ function CakeEditorContent() {
   }, [sessionToken]);
 
   const validateSession = async () => {
+    if (!sessionToken) {
+      setSessionValid(false);
+      setLoading(false);
+      return;
+    }
+
     try {
-      // TODO: Call validation API
-      // await CustomCakeService.validateSession(sessionToken);
-      setSessionValid(true);
+      // Call real API to validate session
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/custom-cake/session/${sessionToken}`);
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setSessionValid(true);
+        } else {
+          setSessionValid(false);
+        }
+      } else {
+        setSessionValid(false);
+      }
     } catch (error) {
       console.error('Session validation failed:', error);
       setSessionValid(false);
@@ -128,33 +146,50 @@ function CakeEditorContent() {
 
   const fetchDesignOptions = async () => {
     try {
-      // TODO: Fetch flavors, sizes, themes from API
-      // const data = await CustomCakeService.getDesignOptions();
-      // setOptions(data);
+      // Fetch real options from API
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/custom-cake/options`);
 
-      // Mock data for now
-      setOptions({
-        flavors: [
-          { flavor_id: 1, flavor_name: 'Chocolate', description: 'Rich chocolate', base_price_per_tier: 100 },
-          { flavor_id: 2, flavor_name: 'Vanilla', description: 'Classic vanilla', base_price_per_tier: 80 },
-          { flavor_id: 3, flavor_name: 'Strawberry', description: 'Fresh strawberry', base_price_per_tier: 90 },
-          { flavor_id: 4, flavor_name: 'Red Velvet', description: 'Velvety smooth', base_price_per_tier: 120 },
-        ],
-        sizes: [
-          { size_id: 1, size_name: 'Small (6")', diameter_cm: 15, servings: 8, base_price_multiplier: 1.0 },
-          { size_id: 2, size_name: 'Medium (8")', diameter_cm: 20, servings: 16, base_price_multiplier: 1.5 },
-          { size_id: 3, size_name: 'Large (10")', diameter_cm: 25, servings: 24, base_price_multiplier: 2.0 },
-          { size_id: 4, size_name: 'XL (12")', diameter_cm: 30, servings: 36, base_price_multiplier: 2.5 },
-        ],
-        themes: [
-          { theme_id: 1, theme_name: 'Birthday', base_additional_cost: 200 },
-          { theme_id: 2, theme_name: 'Wedding', base_additional_cost: 500 },
-          { theme_id: 3, theme_name: 'Anniversary', base_additional_cost: 300 },
-        ],
-      });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          setOptions(data.data);
+        } else {
+          // Fallback to mock data
+          useMockData();
+        }
+      } else {
+        useMockData();
+      }
     } catch (error) {
       console.error('Failed to fetch design options:', error);
+      useMockData();
     }
+  };
+
+  const useMockData = () => {
+    setOptions({
+      flavors: [
+        { flavor_id: 1, flavor_name: 'Chocolate', description: 'Rich chocolate', base_price_per_tier: 100 },
+        { flavor_id: 2, flavor_name: 'Vanilla', description: 'Classic vanilla', base_price_per_tier: 80 },
+        { flavor_id: 3, flavor_name: 'Strawberry', description: 'Fresh strawberry', base_price_per_tier: 90 },
+        { flavor_id: 4, flavor_name: 'Red Velvet', description: 'Velvety smooth', base_price_per_tier: 120 },
+      ],
+      sizes: [
+        { size_id: 1, size_name: 'Small (6")', diameter_cm: 15, servings: 8, base_price_multiplier: 1.0 },
+        { size_id: 2, size_name: 'Medium (8")', diameter_cm: 20, servings: 16, base_price_multiplier: 1.5 },
+        { size_id: 3, size_name: 'Large (10")', diameter_cm: 25, servings: 24, base_price_multiplier: 2.0 },
+        { size_id: 4, size_name: 'XL (12")', diameter_cm: 30, servings: 36, base_price_multiplier: 2.5 },
+      ],
+      themes: [
+        { theme_id: 1, theme_name: 'Birthday', base_additional_cost: 200 },
+        { theme_id: 2, theme_name: 'Wedding', base_additional_cost: 500 },
+        { theme_id: 3, theme_name: 'Anniversary', base_additional_cost: 300 },
+      ],
+      frostingTypes: ['buttercream', 'fondant', 'whipped_cream', 'ganache', 'cream_cheese'],
+      candleTypes: ['number', 'regular', 'sparkler', 'none'],
+      textFonts: ['script', 'bold', 'elegant', 'playful', 'modern'],
+      textPositions: ['top', 'center', 'bottom'],
+    });
   };
 
   // Auto-save design
@@ -169,15 +204,37 @@ function CakeEditorContent() {
   }, [design, currentStep]);
 
   const saveDraft = async () => {
-    if (!sessionToken) return;
+    if (!sessionToken || !sessionValid) return;
 
     try {
       setSaving(true);
-      // TODO: Call save draft API
-      // await CustomCakeService.saveDraft(sessionToken, design);
-      console.log('Draft saved:', design);
+
+      // Call real API to save draft
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/custom-cake/save-draft`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          session_token: sessionToken,
+          ...design,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save draft');
+      }
+
+      const data = await response.json();
+      console.log('Draft saved successfully:', data);
+
+      // Store request_id if returned
+      if (data.data && data.data.request_id && !requestId) {
+        setRequestId(data.data.request_id);
+      }
     } catch (error) {
       console.error('Failed to save draft:', error);
+      // Don't show error to user for auto-save
     } finally {
       setSaving(false);
     }
@@ -195,17 +252,91 @@ function CakeEditorContent() {
     }
   };
 
+  const captureScreenshots = async (): Promise<string[]> => {
+    const screenshots: string[] = [];
+
+    if (canvasRef.current && canvasRef.current.captureScreenshot) {
+      try {
+        // Capture from different angles
+        const angles = ['front', 'side', 'top', '3d_perspective'];
+
+        for (const angle of angles) {
+          const screenshot = await canvasRef.current.captureScreenshot(angle);
+          if (screenshot) {
+            screenshots.push(screenshot);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to capture screenshots:', error);
+      }
+    }
+
+    return screenshots;
+  };
+
   const handleSubmit = async () => {
     try {
       setSubmitting(true);
-      // TODO: Submit for review
-      // 1. Capture 3D screenshots
-      // 2. Upload images
-      // 3. Submit request
-      alert('Submitting your custom cake request...');
-    } catch (error) {
+
+      // Step 1: Save final draft to get request_id
+      if (!requestId) {
+        await saveDraft();
+      }
+
+      // Step 2: Capture 3D screenshots
+      const screenshots = await captureScreenshots();
+
+      // Step 3: Upload images (if we have them)
+      if (screenshots.length > 0 && requestId) {
+        try {
+          const imageUploads = screenshots.map((dataUrl, index) => ({
+            url: dataUrl,
+            type: '3d_render',
+            view_angle: ['front', 'side', 'top', '3d_perspective'][index] || 'front',
+          }));
+
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/custom-cake/upload-images`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              request_id: requestId,
+              images: imageUploads,
+            }),
+          });
+        } catch (error) {
+          console.error('Failed to upload images:', error);
+          // Continue even if image upload fails
+        }
+      }
+
+      // Step 4: Submit for review
+      const submitResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/custom-cake/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          request_id: requestId,
+        }),
+      });
+
+      if (!submitResponse.ok) {
+        throw new Error('Failed to submit request');
+      }
+
+      const result = await submitResponse.json();
+
+      // Success! Show confirmation
+      alert(`✅ Success! Your custom cake request has been submitted!\n\nRequest ID: ${requestId}\n\nWe'll review your design and contact you at ${design.customer_email} within 24 hours with pricing and availability.`);
+
+      // Optionally redirect to a success page
+      // window.location.href = '/custom-cake/success';
+
+    } catch (error: any) {
       console.error('Failed to submit:', error);
-      alert('Failed to submit request. Please try again.');
+      alert(`❌ Failed to submit request: ${error.message || 'Unknown error'}\n\nPlease try again or contact staff for assistance.`);
     } finally {
       setSubmitting(false);
     }
@@ -286,7 +417,7 @@ function CakeEditorContent() {
               <CardBody className="p-6">
                 <h3 className="text-lg font-semibold mb-4">Live Preview</h3>
                 <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl overflow-hidden">
-                  <CakeCanvas3D design={design} />
+                  <CakeCanvas3D ref={canvasRef} design={design} />
                 </div>
                 <div className="mt-4 p-3 bg-amber-50 rounded-lg">
                   <p className="text-sm font-medium text-amber-900">Estimated Price</p>

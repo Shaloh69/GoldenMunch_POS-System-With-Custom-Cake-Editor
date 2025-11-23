@@ -161,7 +161,7 @@ function getFlavorColor(layerIndex: number, design: CakeDesign): string {
   return flavorColors[flavorId || 1] || '#FFE4B5';
 }
 
-// 3D Decoration Component
+// 3D Decoration Component - now supports all decoration types
 function Decoration3D({ decoration }: { decoration: any }) {
   const { type, position, color, scale } = decoration;
 
@@ -171,23 +171,78 @@ function Decoration3D({ decoration }: { decoration: any }) {
     position?.z || 0,
   ];
 
-  const scl = scale?.x || 1;
+  const scl = scale?.x || scale || 1;
 
+  // Basic decorations (for compatibility)
   if (type === 'flower') {
     return (
-      <group position={pos}>
-        <Sphere args={[0.1 * scl, 8, 8]}>
-          <meshStandardMaterial color={color || '#FF69B4'} />
+      <group position={pos} scale={scl}>
+        {/* Simple flower representation */}
+        <Sphere args={[0.08, 12, 12]}>
+          <meshStandardMaterial color={color || '#FF69B4'} roughness={0.4} />
         </Sphere>
+        {Array.from({ length: 5 }).map((_, i) => {
+          const angle = (i / 5) * Math.PI * 2;
+          return (
+            <Sphere
+              key={i}
+              args={[0.04, 8, 8]}
+              position={[Math.cos(angle) * 0.06, 0, Math.sin(angle) * 0.06]}
+            >
+              <meshStandardMaterial color={color || '#FF69B4'} roughness={0.3} />
+            </Sphere>
+          );
+        })}
       </group>
     );
   }
 
   if (type === 'star') {
     return (
-      <group position={pos}>
-        <Sphere args={[0.08 * scl, 5, 5]}>
-          <meshStandardMaterial color={color || '#FFD700'} emissive="#FFD700" emissiveIntensity={0.5} />
+      <group position={pos} scale={scl}>
+        <Sphere args={[0.06, 5, 5]}>
+          <meshStandardMaterial
+            color={color || '#FFD700'}
+            emissive={color || '#FFD700'}
+            emissiveIntensity={0.5}
+            roughness={0.2}
+            metalness={0.8}
+          />
+        </Sphere>
+      </group>
+    );
+  }
+
+  if (type === 'heart') {
+    return (
+      <group position={pos} scale={scl}>
+        <Sphere args={[0.05, 16, 16]}>
+          <meshStandardMaterial color={color || '#FF1493'} roughness={0.3} />
+        </Sphere>
+      </group>
+    );
+  }
+
+  if (type === 'ribbon') {
+    return (
+      <group position={pos} scale={scl}>
+        <mesh>
+          <torusGeometry args={[0.06, 0.012, 12, 24]} />
+          <meshStandardMaterial color={color || '#FF1493'} roughness={0.3} metalness={0.2} />
+        </mesh>
+      </group>
+    );
+  }
+
+  if (type === 'pearl') {
+    return (
+      <group position={pos} scale={scl}>
+        <Sphere args={[0.02, 24, 24]}>
+          <meshStandardMaterial
+            color={color || '#F5F5DC'}
+            roughness={0.1}
+            metalness={0.9}
+          />
         </Sphere>
       </group>
     );
