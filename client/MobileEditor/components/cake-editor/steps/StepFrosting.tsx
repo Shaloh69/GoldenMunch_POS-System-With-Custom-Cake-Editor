@@ -3,7 +3,7 @@
 import { Card, CardBody } from '@heroui/card';
 import { Select, SelectItem } from '@heroui/select';
 import { Input } from '@heroui/input';
-import type { CakeDesign } from '@/app/cake-editor/page';
+import type { CakeDesign } from '@/app/page';
 
 interface StepFrostingProps {
   design: CakeDesign;

@@ -2,7 +2,7 @@
 
 import { Input } from '@heroui/input';
 import { Select, SelectItem } from '@heroui/select';
-import type { CakeDesign } from '@/app/cake-editor/page';
+import type { CakeDesign } from '@/app/page';
 
 interface StepCustomerInfoProps {
   design: CakeDesign;

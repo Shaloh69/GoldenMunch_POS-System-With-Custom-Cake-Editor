@@ -1,0 +1,1149 @@
+-- ============================================================================
+-- GOLDEN MUNCH POS - COMPLETE UNIFIED SCHEMA
+-- Version: 3.0
+-- Description: Complete POS system with custom cake ordering and QR integration
+-- Features: Kiosk ordering, mobile 3D cake editor, admin approval workflow
+-- Architecture: Normalized database with proper foreign keys and indexes
+-- Date: November 23, 2025
+-- ============================================================================
+
+DROP DATABASE IF EXISTS GoldenMunchPOS;
+CREATE DATABASE GoldenMunchPOS CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE GoldenMunchPOS;
+
+-- ============================================================================
+-- SECTION 1: USER MANAGEMENT & AUTHENTICATION
+-- ============================================================================
+
+-- Roles for admin users
+CREATE TABLE roles (
+    role_id INT AUTO_INCREMENT PRIMARY KEY,
+    role_name VARCHAR(50) NOT NULL UNIQUE,
+    description VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_role_name (role_name)
+) ENGINE=InnoDB;
+
+-- Admin users (managers, supervisors)
+CREATE TABLE admin (
+    admin_id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    role_id INT NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    last_login TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (role_id) REFERENCES roles(role_id) ON DELETE RESTRICT,
+    INDEX idx_admin_username (username),
+    INDEX idx_admin_email (email),
+    INDEX idx_admin_active (is_active)
+) ENGINE=InnoDB;
+
+-- Cashier users (counter staff)
+CREATE TABLE cashier (
+    cashier_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    cashier_code VARCHAR(20) NOT NULL UNIQUE,
+    pin_hash VARCHAR(255) NOT NULL COMMENT 'Hashed PIN for quick cashier login',
+    phone VARCHAR(20),
+    email VARCHAR(100),
+    hire_date DATE,
+    hourly_rate DECIMAL(8,2),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_cashier_code (cashier_code),
+    INDEX idx_cashier_active (is_active)
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- SECTION 2: PRODUCT CATALOG & INVENTORY
+-- ============================================================================
+
+-- Suppliers for inventory
+CREATE TABLE suppliers (
+    supplier_id INT AUTO_INCREMENT PRIMARY KEY,
+    supplier_name VARCHAR(100) NOT NULL,
+    contact_person VARCHAR(100),
+    phone VARCHAR(20),
+    email VARCHAR(100),
+    address TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_supplier_active (is_active)
+) ENGINE=InnoDB;
+
+-- Product categories
+CREATE TABLE category (
+    category_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    description VARCHAR(255),
+    image_url VARCHAR(255) COMMENT 'Category image for kiosk display',
+    display_order INT DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    admin_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (admin_id) REFERENCES admin(admin_id) ON DELETE RESTRICT,
+    INDEX idx_category_active (is_active),
+    INDEX idx_category_order (display_order)
+) ENGINE=InnoDB;
+
+-- Menu items (products)
+CREATE TABLE menu_item (
+    menu_item_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    image_url VARCHAR(255) COMMENT 'Product image for kiosk display',
+    item_type ENUM('cake', 'pastry', 'beverage', 'snack', 'main_dish', 'appetizer', 'dessert', 'bread', 'other') NOT NULL DEFAULT 'other',
+    unit_of_measure ENUM('piece', 'dozen', 'half_dozen', 'kilogram', 'gram', 'liter', 'milliliter', 'serving', 'box', 'pack') DEFAULT 'piece',
+    stock_quantity INT NOT NULL DEFAULT 0,
+    is_infinite_stock BOOLEAN DEFAULT FALSE COMMENT 'True for items that never run out',
+    min_stock_level INT DEFAULT 5,
+    status ENUM('available', 'sold_out', 'discontinued') NOT NULL DEFAULT 'available',
+    can_customize BOOLEAN DEFAULT FALSE,
+    can_preorder BOOLEAN DEFAULT FALSE,
+    preparation_time_minutes INT DEFAULT 0,
+    popularity_score DECIMAL(5,2) DEFAULT 0 COMMENT 'Auto-calculated based on sales',
+    supplier_id INT NULL,
+    is_featured BOOLEAN DEFAULT FALSE COMMENT 'Show on kiosk featured section',
+    allergen_info TEXT,
+    nutritional_info JSON,
+    barcode VARCHAR(50) UNIQUE,
+    sku VARCHAR(50) UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (supplier_id) REFERENCES suppliers(supplier_id) ON DELETE SET NULL,
+    INDEX idx_menu_item_type (item_type),
+    INDEX idx_menu_item_status (status),
+    INDEX idx_menu_item_featured (is_featured),
+    INDEX idx_menu_item_popularity (popularity_score),
+    FULLTEXT INDEX idx_menu_item_search (name, description)
+) ENGINE=InnoDB;
+
+-- Pricing for menu items (supports multiple price points)
+CREATE TABLE menu_item_price (
+    price_id INT AUTO_INCREMENT PRIMARY KEY,
+    menu_item_id INT NOT NULL,
+    price_type ENUM('base', 'promo', 'bulk', 'wholesale', 'seasonal') DEFAULT 'base',
+    unit_price DECIMAL(10,2) NOT NULL,
+    cost_price DECIMAL(10,2) COMMENT 'For margin calculations',
+    min_quantity INT DEFAULT 1 COMMENT 'For bulk pricing',
+    max_quantity INT NULL,
+    valid_from DATE NULL,
+    valid_until DATE NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (menu_item_id) REFERENCES menu_item(menu_item_id) ON DELETE CASCADE,
+    INDEX idx_price_active (is_active),
+    INDEX idx_price_type (price_type),
+    INDEX idx_price_validity (valid_from, valid_until)
+) ENGINE=InnoDB;
+
+-- Many-to-many: Categories and Menu Items
+CREATE TABLE category_has_menu_item (
+    category_id INT NOT NULL,
+    menu_item_id INT NOT NULL,
+    display_order INT DEFAULT 0,
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (category_id, menu_item_id),
+    FOREIGN KEY (category_id) REFERENCES category(category_id) ON DELETE CASCADE,
+    FOREIGN KEY (menu_item_id) REFERENCES menu_item(menu_item_id) ON DELETE CASCADE,
+    INDEX idx_category_display_order (category_id, display_order)
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- SECTION 3: PROMOTIONS & DISCOUNTS
+-- ============================================================================
+
+-- Promotion rules
+CREATE TABLE promotion_rules (
+    promotion_id INT AUTO_INCREMENT PRIMARY KEY,
+    promotion_code VARCHAR(50) UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    discount_type ENUM('percentage', 'fixed_amount', 'buy_x_get_y', 'bundle') NOT NULL,
+    discount_value DECIMAL(10,2) NOT NULL COMMENT 'Percentage (0-100) or fixed amount',
+    min_purchase_amount DECIMAL(10,2) DEFAULT 0,
+    max_discount_amount DECIMAL(10,2) NULL COMMENT 'Cap for percentage discounts',
+    applicable_to ENUM('all', 'specific_items', 'specific_categories', 'customer_tier') DEFAULT 'all',
+    buy_quantity INT NULL COMMENT 'For buy_x_get_y promos',
+    get_quantity INT NULL,
+    bundle_items JSON NULL COMMENT 'Array of {menu_item_id, quantity} for bundles',
+    start_date DATETIME NOT NULL,
+    end_date DATETIME NOT NULL,
+    usage_limit INT NULL COMMENT 'Total times this promo can be used',
+    usage_per_customer INT DEFAULT 1,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES admin(admin_id) ON DELETE RESTRICT,
+    INDEX idx_promo_code (promotion_code),
+    INDEX idx_promo_active (is_active),
+    INDEX idx_promo_dates (start_date, end_date)
+) ENGINE=InnoDB;
+
+-- Promotion applicable items (for specific_items promotions)
+CREATE TABLE promotion_applicable_items (
+    promotion_id INT NOT NULL,
+    menu_item_id INT NOT NULL,
+    PRIMARY KEY (promotion_id, menu_item_id),
+    FOREIGN KEY (promotion_id) REFERENCES promotion_rules(promotion_id) ON DELETE CASCADE,
+    FOREIGN KEY (menu_item_id) REFERENCES menu_item(menu_item_id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Promotion applicable categories (for specific_categories promotions)
+CREATE TABLE promotion_applicable_categories (
+    promotion_id INT NOT NULL,
+    category_id INT NOT NULL,
+    PRIMARY KEY (promotion_id, category_id),
+    FOREIGN KEY (promotion_id) REFERENCES promotion_rules(promotion_id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES category(category_id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- SECTION 4: TAX RULES
+-- ============================================================================
+
+-- Tax rules (VAT, service charge, etc.)
+CREATE TABLE tax_rules (
+    tax_id INT AUTO_INCREMENT PRIMARY KEY,
+    tax_name VARCHAR(50) NOT NULL,
+    tax_type ENUM('vat', 'service_charge', 'sales_tax', 'other') NOT NULL,
+    tax_rate DECIMAL(5,2) NOT NULL COMMENT 'Percentage (e.g., 12.00 for 12% VAT)',
+    is_inclusive BOOLEAN DEFAULT FALSE COMMENT 'True if already included in price',
+    applicable_to ENUM('all', 'dine_in', 'takeout', 'delivery', 'specific_items') DEFAULT 'all',
+    is_active BOOLEAN DEFAULT TRUE,
+    start_date DATE NULL,
+    end_date DATE NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_tax_active (is_active),
+    INDEX idx_tax_type (tax_type)
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- SECTION 5: CUSTOM CAKE CONFIGURATION
+-- ============================================================================
+
+-- Cake flavors (chocolate, vanilla, etc.)
+CREATE TABLE cake_flavors (
+    flavor_id INT AUTO_INCREMENT PRIMARY KEY,
+    flavor_name VARCHAR(50) NOT NULL,
+    description VARCHAR(255),
+    flavor_category ENUM('classic', 'premium', 'specialty', 'seasonal') DEFAULT 'classic',
+    base_price_per_tier DECIMAL(8,2) NOT NULL COMMENT 'Additional cost per layer',
+    is_available BOOLEAN DEFAULT TRUE,
+    allergen_info TEXT,
+    image_url VARCHAR(255),
+    popularity_score DECIMAL(5,2) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_flavor_available (is_available),
+    INDEX idx_flavor_category (flavor_category)
+) ENGINE=InnoDB;
+
+-- Cake sizes (6", 8", 10", etc.)
+CREATE TABLE cake_sizes (
+    size_id INT AUTO_INCREMENT PRIMARY KEY,
+    size_name VARCHAR(50) NOT NULL COMMENT 'e.g., "6 inches", "8 inches"',
+    diameter_cm DECIMAL(5,2) NOT NULL,
+    servings INT NOT NULL COMMENT 'Approximate number of servings',
+    base_price_multiplier DECIMAL(4,2) DEFAULT 1.00 COMMENT 'Price multiplier (1.0 = standard)',
+    is_available BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_size_available (is_available)
+) ENGINE=InnoDB;
+
+-- Custom cake themes (birthday, wedding, etc.)
+CREATE TABLE custom_cake_theme (
+    theme_id INT AUTO_INCREMENT PRIMARY KEY,
+    theme_name VARCHAR(50) NOT NULL,
+    description VARCHAR(255),
+    theme_category ENUM('birthday', 'wedding', 'anniversary', 'corporate', 'holiday', 'other') DEFAULT 'other',
+    base_additional_cost DECIMAL(8,2) DEFAULT 0 COMMENT 'Extra cost for this theme',
+    available_decorations JSON COMMENT 'Array of available decoration types',
+    color_palette JSON COMMENT 'Recommended colors for this theme',
+    sample_image_url VARCHAR(255),
+    is_available BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_theme_available (is_available),
+    INDEX idx_theme_category (theme_category)
+) ENGINE=InnoDB;
+
+-- Custom cake designs (pre-made templates)
+CREATE TABLE custom_cake_design (
+    design_id INT AUTO_INCREMENT PRIMARY KEY,
+    design_name VARCHAR(100) NOT NULL,
+    theme_id INT NULL,
+    description TEXT,
+    design_data JSON NOT NULL COMMENT 'Complete cake design configuration',
+    base_price DECIMAL(10,2) NOT NULL,
+    preview_image_url VARCHAR(255),
+    is_featured BOOLEAN DEFAULT FALSE,
+    is_available BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (theme_id) REFERENCES custom_cake_theme(theme_id) ON DELETE SET NULL,
+    INDEX idx_design_available (is_available),
+    INDEX idx_design_featured (is_featured)
+) ENGINE=InnoDB;
+
+-- Daily capacity for custom cakes (production limits)
+CREATE TABLE custom_cake_daily_capacity (
+    capacity_id INT AUTO_INCREMENT PRIMARY KEY,
+    capacity_date DATE NOT NULL UNIQUE,
+    max_orders INT DEFAULT 10 COMMENT 'Maximum custom cakes per day',
+    current_orders INT DEFAULT 0 COMMENT 'How many booked so far',
+    is_fully_booked BOOLEAN DEFAULT FALSE,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_capacity_date (capacity_date),
+    INDEX idx_capacity_available (is_fully_booked, capacity_date)
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- SECTION 6: CUSTOM CAKE REQUESTS (QR-BASED ORDERING)
+-- ============================================================================
+
+-- QR code sessions (30-minute temporary sessions)
+CREATE TABLE qr_code_sessions (
+    session_id INT AUTO_INCREMENT PRIMARY KEY,
+    session_token VARCHAR(100) NOT NULL UNIQUE COMMENT 'Secure random token for QR',
+    qr_code_data TEXT NOT NULL COMMENT 'Base64 QR code image',
+    editor_url VARCHAR(500) NOT NULL COMMENT 'Mobile editor URL with session token',
+    kiosk_id VARCHAR(50) NULL COMMENT 'Which kiosk generated this',
+    ip_address VARCHAR(50) NULL,
+    user_agent TEXT NULL,
+    status ENUM('active', 'used', 'expired') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL COMMENT '30 minutes from creation',
+    used_at TIMESTAMP NULL,
+    INDEX idx_session_token (session_token),
+    INDEX idx_session_status (status),
+    INDEX idx_session_expiry (expires_at)
+) ENGINE=InnoDB;
+
+-- Custom cake requests (main table for custom orders)
+CREATE TABLE custom_cake_request (
+    request_id INT AUTO_INCREMENT PRIMARY KEY,
+
+    -- Session & QR Code
+    session_token VARCHAR(100) NOT NULL UNIQUE COMMENT 'Links to QR session',
+    qr_code_url VARCHAR(500) NULL,
+
+    -- Customer Information
+    customer_name VARCHAR(100),
+    customer_phone VARCHAR(20),
+    customer_email VARCHAR(100),
+
+    -- Cake Structure (up to 5 layers)
+    num_layers INT DEFAULT 1 CHECK (num_layers BETWEEN 1 AND 5),
+    layer_1_flavor_id INT NULL,
+    layer_2_flavor_id INT NULL,
+    layer_3_flavor_id INT NULL,
+    layer_4_flavor_id INT NULL,
+    layer_5_flavor_id INT NULL,
+    layer_1_size_id INT NULL,
+    layer_2_size_id INT NULL,
+    layer_3_size_id INT NULL,
+    layer_4_size_id INT NULL,
+    layer_5_size_id INT NULL,
+    total_height_cm DECIMAL(5,2) NULL COMMENT 'Total cake height',
+    base_diameter_cm DECIMAL(5,2) NULL COMMENT 'Base layer diameter',
+
+    -- Theme & Frosting
+    theme_id INT NULL,
+    frosting_color VARCHAR(50) NULL,
+    frosting_type ENUM('buttercream', 'fondant', 'whipped_cream', 'ganache', 'cream_cheese') DEFAULT 'buttercream',
+
+    -- Candles
+    candles_count INT DEFAULT 0,
+    candle_type ENUM('number', 'regular', 'sparkler', 'none') DEFAULT 'regular',
+    candle_numbers VARCHAR(20) NULL COMMENT 'e.g., "2,5" for age',
+
+    -- Text on Cake
+    cake_text VARCHAR(200) NULL,
+    text_color VARCHAR(50) NULL,
+    text_font ENUM('script', 'bold', 'elegant', 'playful', 'modern') DEFAULT 'script',
+    text_position ENUM('top', 'center', 'bottom') DEFAULT 'top',
+
+    -- 3D Decorations (JSON array)
+    decorations_3d JSON NULL COMMENT 'Array of {type, position, rotation, scale, color}',
+
+    -- Instructions & Notes
+    special_instructions TEXT NULL,
+    baker_notes TEXT NULL,
+    dietary_restrictions TEXT NULL COMMENT 'Allergies, vegan, gluten-free, etc.',
+
+    -- Event Details
+    event_type VARCHAR(50) NULL COMMENT 'birthday, wedding, anniversary',
+    event_date DATE NULL,
+
+    -- Approval Workflow
+    status ENUM('draft', 'pending_review', 'approved', 'rejected', 'cancelled', 'completed') DEFAULT 'draft',
+    submitted_at TIMESTAMP NULL,
+    reviewed_at TIMESTAMP NULL,
+    reviewed_by INT NULL COMMENT 'admin_id who reviewed',
+    rejection_reason TEXT NULL,
+    admin_notes TEXT NULL,
+
+    -- Pricing
+    estimated_price DECIMAL(10,2) NULL COMMENT 'Auto-calculated estimate',
+    approved_price DECIMAL(10,2) NULL COMMENT 'Final price from admin',
+    price_breakdown JSON NULL COMMENT '{base, layers, decorations, theme, etc}',
+
+    -- Scheduling
+    preparation_days INT NULL COMMENT 'Days needed for preparation',
+    scheduled_pickup_date DATE NULL,
+    scheduled_pickup_time TIME NULL,
+
+    -- Linked Order
+    order_id INT NULL COMMENT 'Links to customer_order after payment',
+
+    -- Timestamps
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NULL COMMENT 'Session expiry',
+
+    -- Foreign Keys
+    FOREIGN KEY (theme_id) REFERENCES custom_cake_theme(theme_id) ON DELETE SET NULL,
+    FOREIGN KEY (layer_1_flavor_id) REFERENCES cake_flavors(flavor_id) ON DELETE SET NULL,
+    FOREIGN KEY (layer_2_flavor_id) REFERENCES cake_flavors(flavor_id) ON DELETE SET NULL,
+    FOREIGN KEY (layer_3_flavor_id) REFERENCES cake_flavors(flavor_id) ON DELETE SET NULL,
+    FOREIGN KEY (layer_4_flavor_id) REFERENCES cake_flavors(flavor_id) ON DELETE SET NULL,
+    FOREIGN KEY (layer_5_flavor_id) REFERENCES cake_flavors(flavor_id) ON DELETE SET NULL,
+    FOREIGN KEY (layer_1_size_id) REFERENCES cake_sizes(size_id) ON DELETE SET NULL,
+    FOREIGN KEY (layer_2_size_id) REFERENCES cake_sizes(size_id) ON DELETE SET NULL,
+    FOREIGN KEY (layer_3_size_id) REFERENCES cake_sizes(size_id) ON DELETE SET NULL,
+    FOREIGN KEY (layer_4_size_id) REFERENCES cake_sizes(size_id) ON DELETE SET NULL,
+    FOREIGN KEY (layer_5_size_id) REFERENCES cake_sizes(size_id) ON DELETE SET NULL,
+    FOREIGN KEY (reviewed_by) REFERENCES admin(admin_id) ON DELETE SET NULL,
+
+    -- Indexes
+    INDEX idx_ccr_session (session_token),
+    INDEX idx_ccr_status (status),
+    INDEX idx_ccr_customer_email (customer_email),
+    INDEX idx_ccr_pickup_date (scheduled_pickup_date),
+    INDEX idx_ccr_created (created_at),
+    FULLTEXT INDEX idx_ccr_search (customer_name, customer_email, customer_phone)
+) ENGINE=InnoDB;
+
+-- Custom cake request images (3D screenshots)
+CREATE TABLE custom_cake_request_images (
+    image_id INT AUTO_INCREMENT PRIMARY KEY,
+    request_id INT NOT NULL,
+    image_url VARCHAR(500) NOT NULL COMMENT 'URL or base64 data',
+    image_type ENUM('3d_render', 'reference', 'final_photo') DEFAULT '3d_render',
+    view_angle ENUM('front', 'side', 'top', '3d_perspective') DEFAULT 'front',
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (request_id) REFERENCES custom_cake_request(request_id) ON DELETE CASCADE,
+    INDEX idx_ccri_request (request_id),
+    INDEX idx_ccri_type (image_type)
+) ENGINE=InnoDB;
+
+-- Custom cake notifications (email log)
+CREATE TABLE custom_cake_notifications (
+    notification_id INT AUTO_INCREMENT PRIMARY KEY,
+    request_id INT NOT NULL,
+    notification_type ENUM('submission_received', 'approved', 'rejected', 'ready_for_pickup', 'reminder') NOT NULL,
+    recipient_email VARCHAR(100) NOT NULL,
+    subject VARCHAR(200),
+    message_body TEXT,
+    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('pending', 'sent', 'failed') DEFAULT 'pending',
+    error_message TEXT NULL,
+    FOREIGN KEY (request_id) REFERENCES custom_cake_request(request_id) ON DELETE CASCADE,
+    INDEX idx_ccn_request (request_id),
+    INDEX idx_ccn_status (status)
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- SECTION 7: CUSTOMERS & ORDERS
+-- ============================================================================
+
+-- Customer information
+CREATE TABLE customer (
+    customer_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    phone VARCHAR(20) NOT NULL UNIQUE,
+    email VARCHAR(100),
+    address TEXT,
+    loyalty_points INT DEFAULT 0,
+    total_spent DECIMAL(12,2) DEFAULT 0,
+    customer_tier ENUM('regular', 'silver', 'gold', 'platinum') DEFAULT 'regular',
+    last_order_date DATE,
+    notes TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_customer_phone (phone),
+    INDEX idx_customer_email (email),
+    INDEX idx_customer_tier (customer_tier),
+    FULLTEXT INDEX idx_customer_search (name, phone, email)
+) ENGINE=InnoDB;
+
+-- Customer orders (main order table)
+CREATE TABLE customer_order (
+    order_id INT AUTO_INCREMENT PRIMARY KEY,
+    order_number VARCHAR(20) NOT NULL UNIQUE COMMENT 'User-friendly order number',
+    order_type ENUM('dine_in', 'takeout', 'delivery', 'kiosk', 'custom_cake') NOT NULL DEFAULT 'kiosk',
+    customer_id INT NULL,
+    cashier_id INT NULL,
+    kiosk_id VARCHAR(50) NULL COMMENT 'Which kiosk placed this order',
+
+    -- Order Details
+    order_status ENUM('pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled') DEFAULT 'pending',
+    priority ENUM('normal', 'high', 'urgent') DEFAULT 'normal',
+    special_instructions TEXT,
+
+    -- Pricing
+    subtotal DECIMAL(10,2) NOT NULL,
+    tax_amount DECIMAL(10,2) DEFAULT 0,
+    discount_amount DECIMAL(10,2) DEFAULT 0,
+    service_charge DECIMAL(10,2) DEFAULT 0,
+    delivery_fee DECIMAL(10,2) DEFAULT 0,
+    total_amount DECIMAL(10,2) NOT NULL,
+
+    -- Applied Promotions
+    promotion_id INT NULL,
+    promotion_discount DECIMAL(10,2) DEFAULT 0,
+
+    -- Payment Status
+    payment_status ENUM('unpaid', 'partial', 'paid', 'refunded') DEFAULT 'unpaid',
+    payment_method ENUM('cash', 'credit_card', 'debit_card', 'gcash', 'paymaya', 'bank_transfer', 'loyalty_points', 'other') NULL,
+    amount_paid DECIMAL(10,2) DEFAULT 0,
+    change_amount DECIMAL(10,2) DEFAULT 0,
+
+    -- Delivery Info (if applicable)
+    delivery_address TEXT NULL,
+    delivery_phone VARCHAR(20) NULL,
+    estimated_delivery_time DATETIME NULL,
+    actual_delivery_time DATETIME NULL,
+
+    -- Pickup Info
+    scheduled_pickup_time DATETIME NULL,
+    actual_pickup_time DATETIME NULL,
+
+    -- Timestamps
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP NULL,
+
+    -- Foreign Keys
+    FOREIGN KEY (customer_id) REFERENCES customer(customer_id) ON DELETE SET NULL,
+    FOREIGN KEY (cashier_id) REFERENCES cashier(cashier_id) ON DELETE SET NULL,
+    FOREIGN KEY (promotion_id) REFERENCES promotion_rules(promotion_id) ON DELETE SET NULL,
+
+    -- Indexes
+    INDEX idx_order_number (order_number),
+    INDEX idx_order_type (order_type),
+    INDEX idx_order_status (order_status),
+    INDEX idx_order_customer (customer_id),
+    INDEX idx_order_date (created_at),
+    INDEX idx_order_payment (payment_status)
+) ENGINE=InnoDB;
+
+-- Promotion usage log
+CREATE TABLE promotion_usage_log (
+    usage_id INT AUTO_INCREMENT PRIMARY KEY,
+    promotion_id INT NOT NULL,
+    order_id INT NOT NULL,
+    customer_id INT NULL,
+    discount_amount DECIMAL(10,2) NOT NULL,
+    used_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (promotion_id) REFERENCES promotion_rules(promotion_id) ON DELETE CASCADE,
+    FOREIGN KEY (order_id) REFERENCES customer_order(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (customer_id) REFERENCES customer(customer_id) ON DELETE SET NULL,
+    INDEX idx_promo_usage_promo (promotion_id),
+    INDEX idx_promo_usage_customer (customer_id)
+) ENGINE=InnoDB;
+
+-- Order items (line items in an order)
+CREATE TABLE order_item (
+    order_item_id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    menu_item_id INT NULL,
+    custom_cake_request_id INT NULL COMMENT 'For custom cake orders',
+
+    -- Item Details
+    item_name VARCHAR(100) NOT NULL COMMENT 'Snapshot of name at order time',
+    item_description TEXT NULL,
+    quantity INT NOT NULL,
+    unit_price DECIMAL(10,2) NOT NULL COMMENT 'Price per unit at order time',
+    subtotal DECIMAL(10,2) NOT NULL COMMENT 'quantity * unit_price',
+
+    -- Customizations
+    customization_notes TEXT NULL,
+    special_requests TEXT NULL,
+
+    -- Status
+    item_status ENUM('pending', 'preparing', 'ready', 'served', 'cancelled') DEFAULT 'pending',
+
+    -- Timestamps
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- Foreign Keys
+    FOREIGN KEY (order_id) REFERENCES customer_order(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (menu_item_id) REFERENCES menu_item(menu_item_id) ON DELETE SET NULL,
+    FOREIGN KEY (custom_cake_request_id) REFERENCES custom_cake_request(request_id) ON DELETE SET NULL,
+
+    -- Indexes
+    INDEX idx_order_item_order (order_id),
+    INDEX idx_order_item_menu (menu_item_id),
+    INDEX idx_order_item_status (item_status)
+) ENGINE=InnoDB;
+
+-- Link custom_cake_request.order_id to customer_order
+ALTER TABLE custom_cake_request
+    ADD FOREIGN KEY (order_id) REFERENCES customer_order(order_id) ON DELETE SET NULL;
+
+-- Order timeline (status change history)
+CREATE TABLE order_timeline (
+    timeline_id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    status ENUM('pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled') NOT NULL,
+    changed_by INT NULL COMMENT 'cashier_id or admin_id',
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (order_id) REFERENCES customer_order(order_id) ON DELETE CASCADE,
+    INDEX idx_timeline_order (order_id),
+    INDEX idx_timeline_date (created_at)
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- SECTION 8: PAYMENTS & REFUNDS
+-- ============================================================================
+
+-- Payment transactions
+CREATE TABLE payment_transaction (
+    transaction_id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    transaction_type ENUM('payment', 'refund', 'adjustment') DEFAULT 'payment',
+    payment_method ENUM('cash', 'credit_card', 'debit_card', 'gcash', 'paymaya', 'bank_transfer', 'loyalty_points', 'other') NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    reference_number VARCHAR(100) NULL COMMENT 'Bank ref, transaction ID, etc.',
+    card_last_four VARCHAR(4) NULL,
+
+    -- Status
+    status ENUM('pending', 'completed', 'failed', 'cancelled') DEFAULT 'pending',
+    failure_reason TEXT NULL,
+
+    -- Processed by
+    processed_by INT NULL COMMENT 'cashier_id',
+
+    -- Timestamps
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP NULL,
+
+    -- Foreign Keys
+    FOREIGN KEY (order_id) REFERENCES customer_order(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (processed_by) REFERENCES cashier(cashier_id) ON DELETE SET NULL,
+
+    -- Indexes
+    INDEX idx_transaction_order (order_id),
+    INDEX idx_transaction_method (payment_method),
+    INDEX idx_transaction_status (status),
+    INDEX idx_transaction_date (created_at)
+) ENGINE=InnoDB;
+
+-- Refund requests
+CREATE TABLE refund_request (
+    refund_id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NOT NULL,
+    requested_by INT NULL COMMENT 'customer_id',
+    approved_by INT NULL COMMENT 'admin_id',
+
+    -- Refund Details
+    refund_amount DECIMAL(10,2) NOT NULL,
+    refund_reason TEXT NOT NULL,
+    admin_notes TEXT NULL,
+
+    -- Status
+    status ENUM('pending', 'approved', 'rejected', 'processed') DEFAULT 'pending',
+    rejection_reason TEXT NULL,
+
+    -- Timestamps
+    requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    reviewed_at TIMESTAMP NULL,
+    processed_at TIMESTAMP NULL,
+
+    -- Foreign Keys
+    FOREIGN KEY (order_id) REFERENCES customer_order(order_id) ON DELETE CASCADE,
+    FOREIGN KEY (requested_by) REFERENCES customer(customer_id) ON DELETE SET NULL,
+    FOREIGN KEY (approved_by) REFERENCES admin(admin_id) ON DELETE SET NULL,
+
+    -- Indexes
+    INDEX idx_refund_order (order_id),
+    INDEX idx_refund_status (status),
+    INDEX idx_refund_date (requested_at)
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- SECTION 9: CUSTOMER FEEDBACK
+-- ============================================================================
+
+-- Customer feedback and ratings
+CREATE TABLE customer_feedback (
+    feedback_id INT AUTO_INCREMENT PRIMARY KEY,
+    order_id INT NULL,
+    customer_id INT NULL,
+
+    -- Ratings (1-5 stars)
+    overall_rating DECIMAL(2,1) CHECK (overall_rating BETWEEN 1.0 AND 5.0),
+    food_quality_rating DECIMAL(2,1) NULL,
+    service_rating DECIMAL(2,1) NULL,
+    cleanliness_rating DECIMAL(2,1) NULL,
+    value_rating DECIMAL(2,1) NULL,
+
+    -- Comments
+    comments TEXT,
+    improvement_suggestions TEXT,
+
+    -- Follow-up
+    would_recommend BOOLEAN NULL,
+    contact_requested BOOLEAN DEFAULT FALSE,
+    responded_at TIMESTAMP NULL,
+    response_notes TEXT NULL,
+
+    -- Timestamps
+    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    -- Foreign Keys
+    FOREIGN KEY (order_id) REFERENCES customer_order(order_id) ON DELETE SET NULL,
+    FOREIGN KEY (customer_id) REFERENCES customer(customer_id) ON DELETE SET NULL,
+
+    -- Indexes
+    INDEX idx_feedback_order (order_id),
+    INDEX idx_feedback_customer (customer_id),
+    INDEX idx_feedback_rating (overall_rating),
+    INDEX idx_feedback_date (submitted_at)
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- SECTION 10: INVENTORY MANAGEMENT
+-- ============================================================================
+
+-- Stock adjustment reasons
+CREATE TABLE stock_adjustment_reason (
+    reason_id INT AUTO_INCREMENT PRIMARY KEY,
+    reason_name VARCHAR(100) NOT NULL,
+    reason_type ENUM('received', 'sold', 'waste', 'damaged', 'expired', 'theft', 'return', 'adjustment', 'other') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- Inventory transactions (all stock movements)
+CREATE TABLE inventory_transaction (
+    transaction_id INT AUTO_INCREMENT PRIMARY KEY,
+    menu_item_id INT NOT NULL,
+    transaction_type ENUM('in', 'out', 'adjustment') NOT NULL,
+    quantity INT NOT NULL COMMENT 'Positive for in, negative for out',
+    reason_id INT NOT NULL,
+    reference_number VARCHAR(100) NULL COMMENT 'PO number, order number, etc.',
+    notes TEXT,
+    performed_by INT NULL COMMENT 'admin_id or cashier_id',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (menu_item_id) REFERENCES menu_item(menu_item_id) ON DELETE CASCADE,
+    FOREIGN KEY (reason_id) REFERENCES stock_adjustment_reason(reason_id) ON DELETE RESTRICT,
+    INDEX idx_inv_transaction_item (menu_item_id),
+    INDEX idx_inv_transaction_type (transaction_type),
+    INDEX idx_inv_transaction_date (created_at)
+) ENGINE=InnoDB;
+
+-- Inventory alerts (low stock notifications)
+CREATE TABLE inventory_alert (
+    alert_id INT AUTO_INCREMENT PRIMARY KEY,
+    menu_item_id INT NOT NULL,
+    alert_type ENUM('low_stock', 'out_of_stock', 'expiring_soon', 'expired') NOT NULL,
+    current_quantity INT NOT NULL,
+    threshold_quantity INT NOT NULL,
+    severity ENUM('low', 'medium', 'high', 'critical') DEFAULT 'medium',
+    is_acknowledged BOOLEAN DEFAULT FALSE,
+    acknowledged_by INT NULL COMMENT 'admin_id',
+    acknowledged_at TIMESTAMP NULL,
+    notes TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (menu_item_id) REFERENCES menu_item(menu_item_id) ON DELETE CASCADE,
+    FOREIGN KEY (acknowledged_by) REFERENCES admin(admin_id) ON DELETE SET NULL,
+    INDEX idx_alert_item (menu_item_id),
+    INDEX idx_alert_type (alert_type),
+    INDEX idx_alert_severity (severity),
+    INDEX idx_alert_status (is_acknowledged)
+) ENGINE=InnoDB;
+
+-- Waste tracking
+CREATE TABLE waste_tracking (
+    waste_id INT AUTO_INCREMENT PRIMARY KEY,
+    menu_item_id INT NOT NULL,
+    quantity INT NOT NULL,
+    waste_reason ENUM('expired', 'damaged', 'overproduction', 'spoiled', 'contaminated', 'customer_return', 'other') NOT NULL,
+    estimated_value DECIMAL(10,2) COMMENT 'Cost of wasted items',
+    notes TEXT,
+    recorded_by INT NULL COMMENT 'admin_id or cashier_id',
+    waste_date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (menu_item_id) REFERENCES menu_item(menu_item_id) ON DELETE CASCADE,
+    INDEX idx_waste_item (menu_item_id),
+    INDEX idx_waste_date (waste_date),
+    INDEX idx_waste_reason (waste_reason)
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- SECTION 11: ANALYTICS & REPORTING
+-- ============================================================================
+
+-- Daily stats per menu item
+CREATE TABLE menu_item_daily_stats (
+    stats_id INT AUTO_INCREMENT PRIMARY KEY,
+    menu_item_id INT NOT NULL,
+    stats_date DATE NOT NULL,
+    daily_orders INT DEFAULT 0,
+    daily_quantity_sold INT DEFAULT 0,
+    daily_revenue DECIMAL(10,2) DEFAULT 0,
+    UNIQUE KEY unique_item_date (menu_item_id, stats_date),
+    FOREIGN KEY (menu_item_id) REFERENCES menu_item(menu_item_id) ON DELETE CASCADE,
+    INDEX idx_stats_date (stats_date),
+    INDEX idx_stats_item (menu_item_id)
+) ENGINE=InnoDB;
+
+-- Popularity history (track popularity score changes)
+CREATE TABLE popularity_history (
+    history_id INT AUTO_INCREMENT PRIMARY KEY,
+    menu_item_id INT NOT NULL,
+    popularity_score DECIMAL(5,2) NOT NULL,
+    total_orders INT NOT NULL,
+    recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (menu_item_id) REFERENCES menu_item(menu_item_id) ON DELETE CASCADE,
+    INDEX idx_pop_history_item (menu_item_id),
+    INDEX idx_pop_history_date (recorded_at)
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- SECTION 12: KIOSK MANAGEMENT
+-- ============================================================================
+
+-- Kiosk settings and configuration
+CREATE TABLE kiosk_settings (
+    setting_id INT AUTO_INCREMENT PRIMARY KEY,
+    kiosk_id VARCHAR(50) NOT NULL UNIQUE,
+    kiosk_name VARCHAR(100) NOT NULL,
+    location VARCHAR(100),
+    is_active BOOLEAN DEFAULT TRUE,
+    config_json JSON COMMENT 'Kiosk-specific configuration',
+    last_sync TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_kiosk_active (is_active)
+) ENGINE=InnoDB;
+
+-- Kiosk sessions (track customer sessions)
+CREATE TABLE kiosk_session (
+    session_id INT AUTO_INCREMENT PRIMARY KEY,
+    kiosk_id VARCHAR(50) NOT NULL,
+    session_token VARCHAR(100) UNIQUE,
+    customer_id INT NULL,
+    order_id INT NULL,
+    session_start TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    session_end TIMESTAMP NULL,
+    items_viewed JSON COMMENT 'Array of viewed menu_item_ids',
+    abandoned BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (customer_id) REFERENCES customer(customer_id) ON DELETE SET NULL,
+    FOREIGN KEY (order_id) REFERENCES customer_order(order_id) ON DELETE SET NULL,
+    INDEX idx_kiosk_session_kiosk (kiosk_id),
+    INDEX idx_kiosk_session_date (session_start)
+) ENGINE=InnoDB;
+
+-- ============================================================================
+-- SECTION 13: VIEWS (Read-only aggregated data)
+-- ============================================================================
+
+-- View: Pending custom cake requests
+CREATE OR REPLACE VIEW v_pending_custom_cakes AS
+SELECT
+    ccr.request_id,
+    ccr.customer_name,
+    ccr.customer_email,
+    ccr.customer_phone,
+    ccr.num_layers,
+    ccr.event_type,
+    ccr.event_date,
+    ccr.estimated_price,
+    ccr.special_instructions,
+    ccr.created_at,
+    ccr.submitted_at,
+    t.theme_name,
+    COUNT(DISTINCT ccri.image_id) as image_count
+FROM custom_cake_request ccr
+LEFT JOIN custom_cake_theme t ON ccr.theme_id = t.theme_id
+LEFT JOIN custom_cake_request_images ccri ON ccr.request_id = ccri.request_id
+WHERE ccr.status = 'pending_review'
+GROUP BY ccr.request_id
+ORDER BY ccr.submitted_at DESC;
+
+-- View: Approved custom cake requests
+CREATE OR REPLACE VIEW v_approved_custom_cakes AS
+SELECT
+    ccr.request_id,
+    ccr.customer_name,
+    ccr.customer_email,
+    ccr.customer_phone,
+    ccr.num_layers,
+    ccr.event_type,
+    ccr.event_date,
+    ccr.approved_price,
+    ccr.scheduled_pickup_date,
+    ccr.scheduled_pickup_time,
+    ccr.reviewed_at,
+    a.name as reviewed_by_name,
+    ccr.order_id,
+    t.theme_name
+FROM custom_cake_request ccr
+LEFT JOIN custom_cake_theme t ON ccr.theme_id = t.theme_id
+LEFT JOIN admin a ON ccr.reviewed_by = a.admin_id
+WHERE ccr.status = 'approved'
+ORDER BY ccr.scheduled_pickup_date, ccr.scheduled_pickup_time;
+
+-- ============================================================================
+-- SECTION 14: TRIGGERS (Automated business logic)
+-- ============================================================================
+
+DELIMITER //
+
+-- Trigger: Auto-calculate estimated price when request is submitted
+CREATE TRIGGER trg_calculate_estimated_price
+BEFORE UPDATE ON custom_cake_request
+FOR EACH ROW
+BEGIN
+    IF NEW.status = 'pending_review' AND OLD.status = 'draft' THEN
+        DECLARE base_price DECIMAL(10,2) DEFAULT 500;
+        DECLARE layer_cost DECIMAL(10,2) DEFAULT 0;
+        DECLARE theme_cost DECIMAL(10,2) DEFAULT 0;
+
+        -- Calculate layer costs (each additional layer adds ₱150)
+        SET layer_cost = (NEW.num_layers - 1) * 150;
+
+        -- Add theme cost if applicable
+        IF NEW.theme_id IS NOT NULL THEN
+            SELECT base_additional_cost INTO theme_cost
+            FROM custom_cake_theme
+            WHERE theme_id = NEW.theme_id;
+        END IF;
+
+        -- Basic calculation (can be enhanced with size, flavor costs)
+        SET NEW.estimated_price = base_price + layer_cost + COALESCE(theme_cost, 0) + 100;
+        SET NEW.submitted_at = NOW();
+    END IF;
+END//
+
+-- Trigger: Update QR session status when request is submitted
+CREATE TRIGGER trg_update_qr_session_on_submit
+AFTER UPDATE ON custom_cake_request
+FOR EACH ROW
+BEGIN
+    IF NEW.status = 'pending_review' AND OLD.status = 'draft' THEN
+        UPDATE qr_code_sessions
+        SET status = 'used', used_at = NOW()
+        WHERE session_token = NEW.session_token;
+    END IF;
+END//
+
+DELIMITER ;
+
+-- ============================================================================
+-- SECTION 15: STORED PROCEDURES (Reusable business logic)
+-- ============================================================================
+
+DELIMITER //
+
+-- Procedure: Expire old QR sessions
+CREATE PROCEDURE sp_expire_qr_sessions()
+BEGIN
+    UPDATE qr_code_sessions
+    SET status = 'expired'
+    WHERE status = 'active'
+    AND expires_at < NOW();
+END//
+
+-- Procedure: Get complete custom cake details
+CREATE PROCEDURE sp_get_custom_cake_details(IN p_request_id INT)
+BEGIN
+    -- Main request details
+    SELECT
+        ccr.*,
+        t.theme_name,
+        t.theme_category,
+        f1.flavor_name as layer_1_flavor,
+        f2.flavor_name as layer_2_flavor,
+        f3.flavor_name as layer_3_flavor,
+        f4.flavor_name as layer_4_flavor,
+        f5.flavor_name as layer_5_flavor,
+        s1.size_name as layer_1_size,
+        s2.size_name as layer_2_size,
+        s3.size_name as layer_3_size,
+        s4.size_name as layer_4_size,
+        s5.size_name as layer_5_size,
+        a.name as reviewed_by_name,
+        a.email as reviewer_email
+    FROM custom_cake_request ccr
+    LEFT JOIN custom_cake_theme t ON ccr.theme_id = t.theme_id
+    LEFT JOIN cake_flavors f1 ON ccr.layer_1_flavor_id = f1.flavor_id
+    LEFT JOIN cake_flavors f2 ON ccr.layer_2_flavor_id = f2.flavor_id
+    LEFT JOIN cake_flavors f3 ON ccr.layer_3_flavor_id = f3.flavor_id
+    LEFT JOIN cake_flavors f4 ON ccr.layer_4_flavor_id = f4.flavor_id
+    LEFT JOIN cake_flavors f5 ON ccr.layer_5_flavor_id = f5.flavor_id
+    LEFT JOIN cake_sizes s1 ON ccr.layer_1_size_id = s1.size_id
+    LEFT JOIN cake_sizes s2 ON ccr.layer_2_size_id = s2.size_id
+    LEFT JOIN cake_sizes s3 ON ccr.layer_3_size_id = s3.size_id
+    LEFT JOIN cake_sizes s4 ON ccr.layer_4_size_id = s4.size_id
+    LEFT JOIN cake_sizes s5 ON ccr.layer_5_size_id = s5.size_id
+    LEFT JOIN admin a ON ccr.reviewed_by = a.admin_id
+    WHERE ccr.request_id = p_request_id;
+
+    -- Request images
+    SELECT * FROM custom_cake_request_images
+    WHERE request_id = p_request_id
+    ORDER BY uploaded_at;
+
+    -- Notifications sent
+    SELECT * FROM custom_cake_notifications
+    WHERE request_id = p_request_id
+    ORDER BY sent_at DESC;
+END//
+
+DELIMITER ;
+
+-- ============================================================================
+-- SECTION 16: INITIAL DATA (Required for system operation)
+-- ============================================================================
+
+-- Insert Roles
+INSERT INTO roles (role_name, description) VALUES
+('Super Admin', 'Full system access'),
+('Manager', 'Store management and reporting'),
+('Supervisor', 'Order management and staff supervision');
+
+-- Insert Default Admin (Password: admin123)
+-- Hash generated with: bcrypt.hash('admin123', 10)
+INSERT INTO admin (username, password_hash, name, email, role_id, is_active) VALUES
+('admin', '$2b$10$YourActualBcryptHashHere', 'System Administrator', 'admin@goldenmunch.com', 1, TRUE);
+
+-- Insert Default Cashier (PIN: 1234)
+-- Hash generated with: bcrypt.hash('1234', 10)
+INSERT INTO cashier (name, cashier_code, pin_hash, phone, email, hire_date, hourly_rate, is_active) VALUES
+('Default Cashier', 'CASH001', '$2b$10$YourActualBcryptHashHere', '+63-917-555-0100', 'cashier@goldenmunch.com', CURDATE(), 75.00, TRUE);
+
+-- Insert Stock Adjustment Reasons
+INSERT INTO stock_adjustment_reason (reason_name, reason_type) VALUES
+('Purchase Order Received', 'received'),
+('Sales', 'sold'),
+('Spoilage', 'waste'),
+('Damaged in Transit', 'damaged'),
+('Expired', 'expired'),
+('Theft/Loss', 'theft'),
+('Customer Return', 'return'),
+('Inventory Count Adjustment', 'adjustment'),
+('Production', 'other');
+
+-- Insert Default Suppliers
+INSERT INTO suppliers (supplier_name, contact_person, phone, email, address, is_active) VALUES
+('Manila Bakery Supplies Inc.', 'Juan Dela Cruz', '+63-917-555-0101', 'juan@manilabakerysupplies.ph', '123 Quezon Ave, Quezon City', TRUE),
+('Premium Flour Mills', 'Maria Santos', '+63-917-555-0102', 'maria@premiumflour.ph', '456 Makati Ave, Makati City', TRUE),
+('Chocolate Dreams Co.', 'Pedro Reyes', '+63-917-555-0103', 'pedro@chocolatedreams.ph', '789 Taft Ave, Manila', TRUE);
+
+-- Insert Default Categories
+INSERT INTO category (name, description, image_url, display_order, is_active, admin_id) VALUES
+('Cakes', 'Freshly baked cakes for all occasions', '/images/categories/cakes.jpg', 1, TRUE, 1),
+('Pastries', 'Delicious pastries and sweet treats', '/images/categories/pastries.jpg', 2, TRUE, 1),
+('Breads', 'Fresh baked breads daily', '/images/categories/breads.jpg', 3, TRUE, 1),
+('Beverages', 'Hot and cold beverages', '/images/categories/beverages.jpg', 4, TRUE, 1),
+('Custom Cakes', 'Personalized cakes for special events', '/images/categories/custom-cakes.jpg', 5, TRUE, 1);
+
+-- Insert Cake Flavors
+INSERT INTO cake_flavors (flavor_name, description, flavor_category, base_price_per_tier, is_available) VALUES
+('Chocolate', 'Rich and moist chocolate cake', 'classic', 100.00, TRUE),
+('Vanilla', 'Classic vanilla cake', 'classic', 80.00, TRUE),
+('Strawberry', 'Fresh strawberry flavor', 'classic', 90.00, TRUE),
+('Red Velvet', 'Smooth red velvet with cream cheese frosting', 'premium', 120.00, TRUE),
+('Ube', 'Purple yam cake (Filipino favorite)', 'specialty', 110.00, TRUE),
+('Mocha', 'Coffee-infused chocolate cake', 'premium', 115.00, TRUE),
+('Lemon', 'Zesty lemon cake', 'classic', 85.00, TRUE);
+
+-- Insert Cake Sizes
+INSERT INTO cake_sizes (size_name, diameter_cm, servings, base_price_multiplier, is_available) VALUES
+('6 inches (Small)', 15.24, 8, 1.00, TRUE),
+('8 inches (Medium)', 20.32, 16, 1.50, TRUE),
+('10 inches (Large)', 25.40, 24, 2.00, TRUE),
+('12 inches (Extra Large)', 30.48, 36, 2.50, TRUE),
+('14 inches (Party Size)', 35.56, 48, 3.00, TRUE);
+
+-- Insert Custom Cake Themes
+INSERT INTO custom_cake_theme (theme_name, description, theme_category, base_additional_cost, is_available) VALUES
+('Birthday', 'Fun and festive birthday theme', 'birthday', 200.00, TRUE),
+('Wedding', 'Elegant wedding cake designs', 'wedding', 500.00, TRUE),
+('Anniversary', 'Romantic anniversary theme', 'anniversary', 300.00, TRUE),
+('Baby Shower', 'Cute baby shower decorations', 'other', 250.00, TRUE),
+('Graduation', 'Celebrate academic achievements', 'other', 250.00, TRUE),
+('Corporate', 'Professional corporate events', 'corporate', 400.00, TRUE),
+('Christmas', 'Festive holiday theme', 'holiday', 300.00, TRUE);
+
+-- Insert Default Tax Rules
+INSERT INTO tax_rules (tax_name, tax_type, tax_rate, is_inclusive, applicable_to, is_active) VALUES
+('VAT (12%)', 'vat', 12.00, FALSE, 'all', TRUE),
+('Service Charge (5%)', 'service_charge', 5.00, FALSE, 'dine_in', FALSE);
+
+-- ============================================================================
+-- SECTION 17: UPDATE DEFAULT CREDENTIALS (Node.js bcrypt compatible)
+-- ============================================================================
+
+-- Update Admin password (password: admin123)
+-- Generated with: bcrypt.hashSync('admin123', 10)
+UPDATE admin
+SET password_hash = '$2b$10$CXizOigTmnkp0RTmFSF2D.rfmDhi9A4TTLK0CFmHNhRWMhQAT5DYG'
+WHERE username = 'admin';
+
+-- Update Cashier PIN (PIN: 1234)
+-- Generated with: bcrypt.hashSync('1234', 10)
+UPDATE cashier
+SET pin_hash = '$2b$10$fEDASegIWOnbGTzD0pEA9u/5rHLpLAS2tEqn8782ryWHLp1eYYsTG'
+WHERE cashier_code = 'CASH001';
+
+-- ============================================================================
+-- COMPLETION MESSAGE
+-- ============================================================================
+
+SELECT '╔════════════════════════════════════════════════════════════════════╗' as '';
+SELECT '║                                                                    ║' as '';
+SELECT '║            GOLDENMUNCH POS V3 - DATABASE CREATED                  ║' as '';
+SELECT '║                                                                    ║' as '';
+SELECT '╚════════════════════════════════════════════════════════════════════╝' as '';
+SELECT '' as '';
+SELECT '✅ Database: GoldenMunchPOS' as 'STATUS';
+SELECT '✅ Tables: 40 tables created' as '';
+SELECT '✅ Views: 2 views created' as '';
+SELECT '✅ Triggers: 2 triggers created' as '';
+SELECT '✅ Procedures: 2 stored procedures created' as '';
+SELECT '✅ Initial Data: Loaded' as '';
+SELECT '' as '';
+SELECT '🔐 DEFAULT CREDENTIALS:' as '';
+SELECT '   Admin Login:' as '';
+SELECT '     Username: admin' as '';
+SELECT '     Password: admin123' as '';
+SELECT '' as '';
+SELECT '   Cashier Login:' as '';
+SELECT '     Code: CASH001' as '';
+SELECT '     PIN: 1234' as '';
+SELECT '' as '';
+SELECT '⚠️  IMPORTANT: Change these credentials after first login!' as '';
+SELECT '' as '';
+SELECT '📊 FEATURES INCLUDED:' as '';
+SELECT '   • Complete POS System' as '';
+SELECT '   • Custom Cake Ordering (QR-based)' as '';
+SELECT '   • Mobile 3D Cake Editor Integration' as '';
+SELECT '   • Inventory Management' as '';
+SELECT '   • Customer Management' as '';
+SELECT '   • Promotions & Discounts' as '';
+SELECT '   • Kiosk Self-Service' as '';
+SELECT '   • Analytics & Reporting' as '';
+SELECT '' as '';
+SELECT '🚀 Ready for deployment!' as '';

@@ -4,7 +4,7 @@ import React, { Suspense, forwardRef, useImperativeHandle, useRef, useEffect } f
 import { Canvas, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera, Environment, ContactShadows } from '@react-three/drei';
 import CakeModel from './CakeModel';
-import type { CakeDesign } from '@/app/cake-editor/page';
+import type { CakeDesign } from '@/app/page';
 
 interface CakeCanvas3DProps {
   design: CakeDesign;
