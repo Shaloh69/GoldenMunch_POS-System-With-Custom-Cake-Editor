@@ -1,7 +1,7 @@
 'use client';
 
-import { Button } from '@heroui/button';
-import { Card, CardBody } from '@heroui/card';
+import { Button } from '@nextui-org/button';
+import { Card, CardBody } from '@nextui-org/card';
 import { CheckIcon } from '@heroicons/react/24/solid';
 import type { CakeDesign } from '@/app/page';
 

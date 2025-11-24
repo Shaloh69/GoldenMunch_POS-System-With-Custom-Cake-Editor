@@ -1,8 +1,8 @@
 'use client';
 
-import { Card, CardBody } from '@heroui/card';
-import { Select, SelectItem } from '@heroui/select';
-import { Input } from '@heroui/input';
+import { Card, CardBody } from '@nextui-org/card';
+import { Select, SelectItem } from '@nextui-org/select';
+import { Input } from '@nextui-org/input';
 import type { CakeDesign } from '@/app/page';
 
 interface StepFrostingProps {
