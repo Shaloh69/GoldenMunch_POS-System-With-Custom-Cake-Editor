@@ -3,10 +3,10 @@
 import { useEffect, useState, Suspense, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardBody } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { Progress } from '@heroui/progress';
-import { Spinner } from '@heroui/spinner';
+import { Card, CardBody } from '@nextui-org/card';
+import { Button } from '@nextui-org/button';
+import { Progress } from '@nextui-org/progress';
+import { Spinner } from '@nextui-org/spinner';
 import { ArrowLeftIcon, ArrowRightIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import CakeCanvas3D from '@/components/cake-editor/CakeCanvas3D';
 import StepCustomerInfo from '@/components/cake-editor/steps/StepCustomerInfo';

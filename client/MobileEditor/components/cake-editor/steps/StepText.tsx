@@ -1,8 +1,8 @@
 'use client';
 
-import { Input } from '@heroui/input';
-import { Select, SelectItem } from '@heroui/select';
-import { Switch } from '@heroui/switch';
+import { Input } from '@nextui-org/input';
+import { Select, SelectItem } from '@nextui-org/select';
+import { Switch } from '@nextui-org/switch';
 import { useState } from 'react';
 import type { CakeDesign } from '@/app/page';
 

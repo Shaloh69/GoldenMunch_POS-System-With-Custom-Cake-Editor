@@ -1,7 +1,7 @@
 'use client';
 
-import { Input } from '@heroui/input';
-import { Select, SelectItem } from '@heroui/select';
+import { Input } from '@nextui-org/input';
+import { Select, SelectItem } from '@nextui-org/select';
 import type { CakeDesign } from '@/app/page';
 
 interface StepCustomerInfoProps {

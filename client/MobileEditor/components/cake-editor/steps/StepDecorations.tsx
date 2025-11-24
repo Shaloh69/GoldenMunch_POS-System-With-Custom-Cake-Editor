@@ -1,8 +1,8 @@
 'use client';
 
-import { Button } from '@heroui/button';
-import { Card, CardBody } from '@heroui/card';
-import { Select, SelectItem } from '@heroui/select';
+import { Button } from '@nextui-org/button';
+import { Card, CardBody } from '@nextui-org/card';
+import { Select, SelectItem } from '@nextui-org/select';
 import type { CakeDesign } from '@/app/page';
 
 interface StepDecorationsProps {
