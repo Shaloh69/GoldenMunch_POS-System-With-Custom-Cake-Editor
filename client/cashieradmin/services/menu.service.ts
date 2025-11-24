@@ -77,7 +77,7 @@ export class MenuService {
     price_type: string;
     is_active?: boolean;
   }) {
-    return apiClient.post<MenuItemPrice>('/admin/menu/price', data);
+    return apiClient.post<MenuItemPrice>('/admin/menu/prices', data);
   }
 
   static async createCategory(data: CreateCategoryRequest) {
