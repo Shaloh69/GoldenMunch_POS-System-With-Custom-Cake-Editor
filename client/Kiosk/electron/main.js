@@ -25,6 +25,7 @@ function createWindow() {
       contextIsolation: true,
       enableRemoteModule: false,
       preload: path.join(__dirname, 'preload.js'),
+      cache: false, // Disable HTTP cache to ensure fresh data
     },
   });
 

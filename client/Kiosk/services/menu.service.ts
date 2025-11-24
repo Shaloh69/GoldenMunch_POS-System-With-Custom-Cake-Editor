@@ -23,6 +23,7 @@ export class MenuService {
         params: {
           ...params,
           is_featured: params?.is_featured ? 'true' : undefined,
+          _t: Date.now(), // Cache-busting timestamp
         },
       });
       return response.data.data || [];
@@ -38,7 +39,8 @@ export class MenuService {
   static async getItemDetails(id: number): Promise<MenuItemWithCustomization> {
     try {
       const response = await apiClient.get<ApiResponse<MenuItemWithCustomization>>(
-        `/kiosk/menu/${id}`
+        `/kiosk/menu/${id}`,
+        { params: { _t: Date.now() } } // Cache-busting timestamp
       );
       if (!response.data.data) {
         throw new Error('Item not found');
@@ -55,7 +57,9 @@ export class MenuService {
    */
   static async getCategories(): Promise<Category[]> {
     try {
-      const response = await apiClient.get<ApiResponse<Category[]>>('/kiosk/categories');
+      const response = await apiClient.get<ApiResponse<Category[]>>('/kiosk/categories', {
+        params: { _t: Date.now() } // Cache-busting timestamp
+      });
       return response.data.data || [];
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -68,7 +72,9 @@ export class MenuService {
    */
   static async getActivePromotions(): Promise<PromotionRule[]> {
     try {
-      const response = await apiClient.get<ApiResponse<PromotionRule[]>>('/kiosk/promotions');
+      const response = await apiClient.get<ApiResponse<PromotionRule[]>>('/kiosk/promotions', {
+        params: { _t: Date.now() } // Cache-busting timestamp
+      });
       return response.data.data || [];
     } catch (error) {
       console.error('Error fetching promotions:', error);
