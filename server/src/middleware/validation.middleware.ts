@@ -7,15 +7,15 @@ export const ENUMS = {
   item_type: ['cake', 'pastry', 'beverage', 'snack', 'main_dish', 'appetizer', 'dessert', 'bread', 'other'],
   unit_of_measure: ['piece', 'dozen', 'half_dozen', 'kilogram', 'gram', 'liter', 'milliliter', 'serving', 'box', 'pack'],
   menu_status: ['available', 'sold_out', 'discontinued'],
-  price_type: ['regular', 'promotion', 'seasonal', 'bulk'],
-  promotion_type: ['percentage', 'fixed_amount', 'buy_x_get_y', 'bundle', 'seasonal'],
-  tax_type: ['percentage', 'fixed'],
+  price_type: ['base', 'promo', 'bulk', 'wholesale', 'seasonal'],
+  promotion_type: ['percentage', 'fixed_amount', 'buy_x_get_y', 'bundle'],
+  tax_type: ['vat', 'service_charge', 'sales_tax', 'other'],
   frosting_type: ['buttercream', 'fondant', 'whipped_cream', 'ganache', 'cream_cheese'],
   design_complexity: ['simple', 'moderate', 'complex', 'intricate'],
-  order_type: ['walk_in', 'pickup', 'pre_order', 'custom_order'],
+  order_type: ['dine_in', 'takeout', 'delivery', 'kiosk', 'custom_cake'],
   order_source: ['kiosk', 'cashier', 'admin'],
-  payment_method: ['cash', 'gcash', 'paymaya', 'card', 'bank_transfer'],
-  payment_status: ['pending', 'partial_paid', 'paid', 'failed', 'refunded'],
+  payment_method: ['cash', 'credit_card', 'debit_card', 'gcash', 'paymaya', 'bank_transfer', 'loyalty_points', 'other'],
+  payment_status: ['unpaid', 'partial', 'paid', 'refunded'],
   order_status: ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled'],
   refund_type: ['full', 'partial', 'item'],
   refund_reason: ['customer_request', 'wrong_item', 'quality_issue', 'delay', 'cancellation', 'other'],
@@ -77,14 +77,14 @@ export const schemas = {
   createOrder: Joi.object({
     customer_id: Joi.number().optional(),
     order_type: Joi.string()
-      .valid('walk_in', 'pickup', 'pre_order', 'custom_order')
+      .valid(...ENUMS.order_type)
       .required(),
     order_source: Joi.string()
-      .valid('kiosk', 'cashier', 'admin')
+      .valid(...ENUMS.order_source)
       .default('kiosk'),
     scheduled_pickup_datetime: Joi.date().optional(),
     payment_method: Joi.string()
-      .valid('cash', 'gcash', 'paymaya', 'card', 'bank_transfer')
+      .valid(...ENUMS.payment_method)
       .required(),
     special_instructions: Joi.string().optional().allow(''),
     kiosk_session_id: Joi.string().optional(),
@@ -100,13 +100,13 @@ export const schemas = {
             theme_id: Joi.number().optional(),
             frosting_color: Joi.string().optional(),
             frosting_type: Joi.string()
-              .valid('buttercream', 'fondant', 'whipped_cream', 'ganache', 'cream_cheese')
+              .valid(...ENUMS.frosting_type)
               .required(),
             decoration_details: Joi.string().optional().allow(''),
             cake_text: Joi.string().optional().allow(''),
             special_instructions: Joi.string().optional().allow(''),
             design_complexity: Joi.string()
-              .valid('simple', 'moderate', 'complex', 'intricate')
+              .valid(...ENUMS.design_complexity)
               .required(),
           }).optional(),
         })
@@ -117,9 +117,9 @@ export const schemas = {
 
   verifyPayment: Joi.object({
     order_id: Joi.number().required(),
-    reference_number: Joi.string().required(),
+    reference_number: Joi.string().optional().allow(''),
     payment_method: Joi.string()
-      .valid('gcash', 'paymaya', 'card')
+      .valid(...ENUMS.payment_method)
       .required(),
   }),
 
@@ -132,10 +132,10 @@ export const schemas = {
     name: Joi.string().required(),
     description: Joi.string().optional().allow(''),
     item_type: Joi.string()
-      .valid('cake', 'pastry', 'beverage', 'snack', 'main_dish', 'appetizer', 'dessert', 'bread', 'other')
+      .valid(...ENUMS.item_type)
       .required(),
     unit_of_measure: Joi.string()
-      .valid('piece', 'dozen', 'half_dozen', 'kilogram', 'gram', 'liter', 'milliliter', 'serving', 'box', 'pack')
+      .valid(...ENUMS.unit_of_measure)
       .default('piece'),
     stock_quantity: Joi.number().min(0).default(0),
     is_infinite_stock: Joi.boolean().default(false),
@@ -153,11 +153,11 @@ export const schemas = {
     name: Joi.string().optional(),
     description: Joi.string().optional().allow(''),
     item_type: Joi.string()
-      .valid('cake', 'pastry', 'beverage', 'snack', 'main_dish', 'appetizer', 'dessert', 'bread', 'other')
+      .valid(...ENUMS.item_type)
       .optional(),
     stock_quantity: Joi.number().min(0).optional(),
     status: Joi.string()
-      .valid('available', 'sold_out', 'discontinued')
+      .valid(...ENUMS.menu_status)
       .optional(),
     is_featured: Joi.boolean().optional(),
   }),

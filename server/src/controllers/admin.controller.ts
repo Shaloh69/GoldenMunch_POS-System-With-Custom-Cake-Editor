@@ -62,21 +62,21 @@ export const updateMenuItem = async (req: AuthRequest, res: Response) => {
 export const deleteMenuItem = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
 
-  await query('UPDATE menu_item SET is_deleted = TRUE WHERE menu_item_id = ?', [id]);
+  await query('UPDATE menu_item SET status = ? WHERE menu_item_id = ?', ['discontinued', id]);
 
   res.json(successResponse('Menu item deleted'));
 };
 
 // Add item price
 export const addItemPrice = async (req: AuthRequest, res: Response) => {
-  const { menu_item_id, price, start_date, end_date, price_type } = req.body;
+  const { menu_item_id, unit_price, valid_from, valid_until, price_type } = req.body;
   const admin_id = req.user?.id;
 
   await query(
     `INSERT INTO menu_item_price
-     (menu_item_id, price, start_date, end_date, price_type, created_by)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [menu_item_id, price, start_date, end_date, price_type || 'regular', admin_id]
+     (menu_item_id, unit_price, valid_from, valid_until, price_type, is_active)
+     VALUES (?, ?, ?, ?, ?, TRUE)`,
+    [menu_item_id, unit_price, valid_from, valid_until, price_type || 'base']
   );
 
   res.status(201).json(successResponse('Price added'));

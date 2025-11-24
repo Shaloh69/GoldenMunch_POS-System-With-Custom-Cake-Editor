@@ -152,7 +152,7 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
         totals.total,
         orderData.special_instructions || null,
         orderData.kiosk_session_id || generateSessionId(),
-        orderData.order_type === 'pre_order' || orderData.order_type === 'custom_order',
+        orderData.order_type === 'custom_cake',
       ]
     );
 
