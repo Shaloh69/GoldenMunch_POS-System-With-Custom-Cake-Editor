@@ -27,11 +27,11 @@ export const getMenuItems = async (req: AuthRequest, res: Response) => {
   let sql = `
     SELECT
       mi.*,
-      (SELECT price FROM menu_item_price
+      (SELECT unit_price FROM menu_item_price
        WHERE menu_item_id = mi.menu_item_id
        AND is_active = TRUE
-       AND CURDATE() BETWEEN start_date AND end_date
-       ORDER BY price_type = 'regular' DESC, created_at DESC
+       AND CURDATE() BETWEEN valid_from AND valid_until
+       ORDER BY price_type = 'base' DESC, created_at DESC
        LIMIT 1) as current_price
     FROM menu_item mi
     WHERE mi.is_deleted = FALSE
@@ -101,11 +101,11 @@ export const getItemDetails = async (req: AuthRequest, res: Response) => {
 
   const item = getFirstRow<any>(await query(
     `SELECT mi.*,
-      (SELECT price FROM menu_item_price
+      (SELECT unit_price FROM menu_item_price
        WHERE menu_item_id = mi.menu_item_id
        AND is_active = TRUE
-       AND CURDATE() BETWEEN start_date AND end_date
-       ORDER BY price_type = 'regular' DESC
+       AND CURDATE() BETWEEN valid_from AND valid_until
+       ORDER BY price_type = 'base' DESC
        LIMIT 1) as current_price
      FROM menu_item mi
      WHERE mi.menu_item_id = ? AND mi.is_deleted = FALSE`,
