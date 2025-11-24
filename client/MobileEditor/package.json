@@ -15,7 +15,7 @@
     "@heroui/react": "^2.2.9",
     "@heroui/system": "^2.0.15",
     "@heroui/theme": "^2.1.17",
-    "framer-motion": "^10.16.4",
+    "framer-motion": "^11.11.17",
     "@react-three/fiber": "^8.17.10",
     "@react-three/drei": "^9.114.3",
     "three": "^0.169.0"

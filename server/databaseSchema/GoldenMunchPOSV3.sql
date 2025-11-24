@@ -915,11 +915,12 @@ CREATE TRIGGER trg_calculate_estimated_price
 BEFORE UPDATE ON custom_cake_request
 FOR EACH ROW
 BEGIN
-    IF NEW.status = 'pending_review' AND OLD.status = 'draft' THEN
-        DECLARE base_price DECIMAL(10,2) DEFAULT 500;
-        DECLARE layer_cost DECIMAL(10,2) DEFAULT 0;
-        DECLARE theme_cost DECIMAL(10,2) DEFAULT 0;
+    -- DECLARE statements must come first in MySQL triggers
+    DECLARE base_price DECIMAL(10,2) DEFAULT 500;
+    DECLARE layer_cost DECIMAL(10,2) DEFAULT 0;
+    DECLARE theme_cost DECIMAL(10,2) DEFAULT 0;
 
+    IF NEW.status = 'pending_review' AND OLD.status = 'draft' THEN
         -- Calculate layer costs (each additional layer adds ₱150)
         SET layer_cost = (NEW.num_layers - 1) * 150;
 
