@@ -28,7 +28,14 @@ export class MenuService {
       const formData = new FormData();
       Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          formData.append(key, value.toString());
+          // Handle booleans and numbers properly
+          if (typeof value === 'boolean') {
+            formData.append(key, value ? '1' : '0');
+          } else if (typeof value === 'number') {
+            formData.append(key, value.toString());
+          } else {
+            formData.append(key, String(value));
+          }
         }
       });
       formData.append('image', imageFile);
@@ -42,7 +49,14 @@ export class MenuService {
       const formData = new FormData();
       Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          formData.append(key, value.toString());
+          // Handle booleans and numbers properly
+          if (typeof value === 'boolean') {
+            formData.append(key, value ? '1' : '0');
+          } else if (typeof value === 'number') {
+            formData.append(key, value.toString());
+          } else {
+            formData.append(key, String(value));
+          }
         }
       });
       formData.append('image', imageFile);
@@ -57,12 +71,13 @@ export class MenuService {
 
   static async addMenuItemPrice(data: {
     menu_item_id: number;
-    price: number;
-    start_date: string;
-    end_date?: string;
+    unit_price: number;
+    valid_from: string;
+    valid_until: string;
     price_type: string;
+    is_active?: boolean;
   }) {
-    return apiClient.post<MenuItemPrice>('/admin/menu/prices', data);
+    return apiClient.post<MenuItemPrice>('/admin/menu/price', data);
   }
 
   static async createCategory(data: CreateCategoryRequest) {

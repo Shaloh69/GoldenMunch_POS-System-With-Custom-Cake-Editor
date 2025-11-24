@@ -66,6 +66,7 @@ function MenuManagementContent() {
   const [priceModalItem, setPriceModalItem] = useState<MenuItem | null>(null);
   const [newPrice, setNewPrice] = useState('');
   const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
+  const [initialPrice, setInitialPrice] = useState<string>('');
 
   // Search, Filter, and Pagination state
   const [searchQuery, setSearchQuery] = useState('');
@@ -207,6 +208,28 @@ function MenuManagementContent() {
       }
 
       if (response.success) {
+        // If creating a new item with an initial price, set the price
+        if (!editingItem && initialPrice && parseFloat(initialPrice) > 0 && response.data?.id) {
+          try {
+            const today = new Date().toISOString().split('T')[0];
+            const nextYear = new Date();
+            nextYear.setFullYear(nextYear.getFullYear() + 1);
+            const validUntil = nextYear.toISOString().split('T')[0];
+
+            await MenuService.addMenuItemPrice({
+              menu_item_id: response.data.id,
+              unit_price: parseFloat(initialPrice),
+              valid_from: today,
+              valid_until: validUntil,
+              price_type: 'base',
+              is_active: true
+            });
+          } catch (priceError) {
+            console.error('Failed to set initial price:', priceError);
+            setError('Item created but failed to set price. You can set it later.');
+          }
+        }
+
         onClose();
         loadMenuItems();
         resetForm();
@@ -392,6 +415,7 @@ function MenuManagementContent() {
     setImageFile(null);
     setError(null);
     setEditingItem(null);
+    setInitialPrice('');
   };
 
   const handleModalClose = () => {
@@ -888,19 +912,44 @@ function MenuManagementContent() {
                 <SelectItem key="cake" value="cake">Cake</SelectItem>
                 <SelectItem key="pastry" value="pastry">Pastry</SelectItem>
                 <SelectItem key="beverage" value="beverage">Beverage</SelectItem>
-                <SelectItem key="coffee" value="coffee">Coffee</SelectItem>
-                <SelectItem key="sandwich" value="sandwich">Sandwich</SelectItem>
-                <SelectItem key="bread" value="bread">Bread</SelectItem>
-                <SelectItem key="dessert" value="dessert">Dessert</SelectItem>
                 <SelectItem key="snack" value="snack">Snack</SelectItem>
+                <SelectItem key="main_dish" value="main_dish">Main Dish</SelectItem>
+                <SelectItem key="appetizer" value="appetizer">Appetizer</SelectItem>
+                <SelectItem key="dessert" value="dessert">Dessert</SelectItem>
+                <SelectItem key="bread" value="bread">Bread</SelectItem>
                 <SelectItem key="other" value="other">Other</SelectItem>
               </Select>
-              <Input
+              <Select
                 label="Unit of Measure"
-                placeholder="e.g., piece, slice, cup, gram"
-                value={formData.unit_of_measure || ''}
+                placeholder="Select unit of measure"
+                selectedKeys={formData.unit_of_measure ? [formData.unit_of_measure] : ['piece']}
                 onChange={(e) => setFormData({ ...formData, unit_of_measure: e.target.value })}
-              />
+                defaultSelectedKeys={['piece']}
+              >
+                <SelectItem key="piece" value="piece">Piece</SelectItem>
+                <SelectItem key="dozen" value="dozen">Dozen</SelectItem>
+                <SelectItem key="half_dozen" value="half_dozen">Half Dozen</SelectItem>
+                <SelectItem key="kilogram" value="kilogram">Kilogram</SelectItem>
+                <SelectItem key="gram" value="gram">Gram</SelectItem>
+                <SelectItem key="liter" value="liter">Liter</SelectItem>
+                <SelectItem key="milliliter" value="milliliter">Milliliter</SelectItem>
+                <SelectItem key="serving" value="serving">Serving</SelectItem>
+                <SelectItem key="box" value="box">Box</SelectItem>
+                <SelectItem key="pack" value="pack">Pack</SelectItem>
+              </Select>
+              {!editingItem && (
+                <Input
+                  label="Initial Price (₱)"
+                  type="number"
+                  placeholder="Enter price (e.g., 99.00)"
+                  value={initialPrice}
+                  onChange={(e) => setInitialPrice(e.target.value)}
+                  startContent={<span className="text-default-400 text-sm">₱</span>}
+                  description="Set the base price for this item. You can adjust it later."
+                  min="0"
+                  step="0.01"
+                />
+              )}
               <Input
                 label="Stock Quantity"
                 type="number"
