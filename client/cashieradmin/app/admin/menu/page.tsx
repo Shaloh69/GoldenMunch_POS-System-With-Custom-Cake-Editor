@@ -216,7 +216,7 @@ function MenuManagementContent() {
             nextYear.setFullYear(nextYear.getFullYear() + 1);
             const validUntil = nextYear.toISOString().split('T')[0];
 
-            await MenuService.addMenuItemPrice({
+            console.log('Creating initial price:', {
               menu_item_id: response.data.id,
               unit_price: parseFloat(initialPrice),
               valid_from: today,
@@ -224,9 +224,25 @@ function MenuManagementContent() {
               price_type: 'base',
               is_active: true
             });
-          } catch (priceError) {
+
+            const priceResponse = await MenuService.addMenuItemPrice({
+              menu_item_id: response.data.id,
+              unit_price: parseFloat(initialPrice),
+              valid_from: today,
+              valid_until: validUntil,
+              price_type: 'base',
+              is_active: true
+            });
+
+            console.log('Price creation response:', priceResponse);
+
+            if (!priceResponse.success) {
+              throw new Error(priceResponse.message || 'Failed to create price');
+            }
+          } catch (priceError: any) {
             console.error('Failed to set initial price:', priceError);
-            setError('Item created but failed to set price. You can set it later.');
+            setError('Item created but failed to set price: ' + (priceError?.message || 'Unknown error'));
+            // Don't return early - still close modal and refresh
           }
         }
 
@@ -337,12 +353,22 @@ function MenuManagementContent() {
 
       // Add new price to price history
       const today = new Date().toISOString().split('T')[0];
-      await MenuService.addMenuItemPrice({
+      const nextYear = new Date();
+      nextYear.setFullYear(nextYear.getFullYear() + 1);
+      const validUntil = nextYear.toISOString().split('T')[0];
+
+      const response = await MenuService.addMenuItemPrice({
         menu_item_id: priceModalItem.menu_item_id,
-        price: priceValue,
-        start_date: today,
-        price_type: 'regular',
+        unit_price: priceValue,
+        valid_from: today,
+        valid_until: validUntil,
+        price_type: 'base',
+        is_active: true
       });
+
+      if (!response.success) {
+        throw new Error(response.message || 'Failed to update price');
+      }
 
       setPriceModalItem(null);
       setNewPrice('');
