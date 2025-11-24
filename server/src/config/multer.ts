@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 
 // Ensure upload directories exist
-const uploadDirs = ['./uploads/qr-codes', './uploads/products', './uploads/temp'];
+const uploadDirs = ['./uploads/qr-codes', './uploads/products', './uploads/temp', './uploads/payment-qr'];
 uploadDirs.forEach(dir => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
@@ -29,6 +29,18 @@ const productStorage = multer.diskStorage({
   filename: (_req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, `product-${uniqueSuffix}${path.extname(file.originalname)}`);
+  }
+});
+
+// Storage configuration for payment QR codes
+const paymentQRStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, './uploads/payment-qr');
+  },
+  filename: (req, file, cb) => {
+    const paymentMethod = req.body.payment_method || 'unknown';
+    const timestamp = Date.now();
+    cb(null, `${paymentMethod}-qr-${timestamp}${path.extname(file.originalname)}`);
   }
 });
 
@@ -68,6 +80,15 @@ export const uploadMultipleProducts = multer({
   limits: {
     fileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760'),
     files: 5 // Maximum 5 files
+  },
+  fileFilter: imageFilter
+});
+
+// Payment QR code upload
+export const uploadPaymentQR = multer({
+  storage: paymentQRStorage,
+  limits: {
+    fileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760')
   },
   fileFilter: imageFilter
 });

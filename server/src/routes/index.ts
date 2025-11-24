@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { asyncHandler } from '../middleware/error.middleware';
 import { authenticate, authenticateAdmin, authenticateCashier, optionalAuth } from '../middleware/auth.middleware';
 import { validate, schemas } from '../middleware/validation.middleware';
-import { uploadQRCode, uploadProductImage } from '../config/multer';
+import { uploadQRCode, uploadProductImage, uploadPaymentQR } from '../config/multer';
 
 // Controllers
 import * as authController from '../controllers/auth.controller';
@@ -16,6 +16,7 @@ import * as feedbackController from '../controllers/feedback.controller';
 import * as promotionController from '../controllers/promotion.controller';
 import * as customCakeSessionController from '../controllers/customCakeSession.controller';
 import * as customCakeController from '../controllers/customCake.controller';
+import * as paymentQRController from '../controllers/paymentQR.controller';
 
 const router = Router();
 
@@ -382,6 +383,9 @@ router.post('/kiosk/custom-cake/session/:sessionId/complete', asyncHandler(custo
 router.get('/kiosk/custom-cake/session/:sessionId/poll', asyncHandler(customCakeSessionController.pollCustomCakeSession));
 router.delete('/kiosk/custom-cake/session/:sessionId', asyncHandler(customCakeSessionController.deleteCustomCakeSession));
 
+// Payment QR Codes (Public - for kiosk)
+router.get('/kiosk/payment-qr/:paymentMethod', asyncHandler(paymentQRController.getPaymentQR));
+
 // ==== CUSTOM CAKE COMPREHENSIVE SYSTEM ====
 
 // Kiosk - Generate QR Code
@@ -559,6 +563,10 @@ router.post('/admin/custom-cakes/:requestId/reject', authenticateAdmin, asyncHan
 router.get('/admin/kiosk-settings', authenticateAdmin, asyncHandler(additionalController.getKioskSettings));
 router.post('/admin/kiosk-settings', authenticateAdmin, asyncHandler(additionalController.createKioskSetting));
 router.put('/admin/kiosk-settings/:key', authenticateAdmin, asyncHandler(additionalController.updateKioskSetting));
+
+// Payment QR Codes (Admin only)
+router.post('/admin/payment-qr/upload', authenticateAdmin, uploadPaymentQR.single('qr_code'), asyncHandler(paymentQRController.uploadPaymentQR));
+router.get('/admin/payment-qr', authenticateAdmin, asyncHandler(paymentQRController.getAllPaymentQR));
 
 // Refund Management (Admin Only)
 router.get('/admin/refund', authenticateAdmin, asyncHandler(refundController.getRefundRequests));
