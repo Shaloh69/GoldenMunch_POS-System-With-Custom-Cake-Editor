@@ -9,6 +9,7 @@ import { Providers } from "./providers";
 import { fontSans } from "@/config/fonts";
 import { KioskSidebar } from "@/components/KioskSidebar";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
+import { CartFooter } from "@/components/CartFooter";
 
 interface RootLayoutProps {
   children: React.ReactNode;
@@ -52,9 +53,12 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       <AnimatedBackground />
       <div className="relative min-h-screen">
         {/* Main Content Area - Full width for portrait */}
-        <main className="w-full overflow-y-auto">
+        <main className="w-full overflow-y-auto pb-32">
           {children}
         </main>
+
+        {/* Floating Cart Footer */}
+        <CartFooter />
       </div>
     </>
   );
