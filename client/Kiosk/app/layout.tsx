@@ -46,18 +46,15 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Return layout with sidebar for all other pages
+  // Portrait mode - full screen without sidebar for better space utilization
   return (
     <>
       <AnimatedBackground />
-      <div className="relative flex h-screen overflow-hidden">
-        {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto lg:mr-[420px]">
+      <div className="relative min-h-screen">
+        {/* Main Content Area - Full width for portrait */}
+        <main className="w-full overflow-y-auto">
           {children}
         </main>
-
-        {/* Sidebar */}
-        <KioskSidebar />
       </div>
     </>
   );
