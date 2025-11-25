@@ -138,13 +138,13 @@ export const schemas = {
       .valid(...ENUMS.unit_of_measure)
       .default('piece'),
     stock_quantity: Joi.number().min(0).default(0),
-    is_infinite_stock: Joi.boolean().default(false),
+    is_infinite_stock: Joi.boolean().truthy('1', 'true').falsy('0', 'false').default(false),
     min_stock_level: Joi.number().min(0).default(5),
-    can_customize: Joi.boolean().default(false),
-    can_preorder: Joi.boolean().default(false),
+    can_customize: Joi.boolean().truthy('1', 'true').falsy('0', 'false').default(false),
+    can_preorder: Joi.boolean().truthy('1', 'true').falsy('0', 'false').default(false),
     preparation_time_minutes: Joi.number().min(0).default(0),
     supplier_id: Joi.number().optional(),
-    is_featured: Joi.boolean().default(false),
+    is_featured: Joi.boolean().truthy('1', 'true').falsy('0', 'false').default(false),
     allergen_info: Joi.string().optional().allow(''),
     nutritional_info: Joi.string().optional().allow(''),
   }),
@@ -159,7 +159,10 @@ export const schemas = {
     status: Joi.string()
       .valid(...ENUMS.menu_status)
       .optional(),
-    is_featured: Joi.boolean().optional(),
+    is_featured: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
+    is_infinite_stock: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
+    can_customize: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
+    can_preorder: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
   }),
 
   // Feedback schema
@@ -170,7 +173,7 @@ export const schemas = {
     food_rating: Joi.number().min(1).max(5).optional(),
     cleanliness_rating: Joi.number().min(1).max(5).optional(),
     feedback_text: Joi.string().optional().allow(''),
-    is_anonymous: Joi.boolean().default(false),
+    is_anonymous: Joi.boolean().truthy('1', 'true').falsy('0', 'false').default(false),
   }),
 
   // Customer schema
