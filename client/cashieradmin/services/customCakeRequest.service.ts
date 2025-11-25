@@ -56,14 +56,16 @@ export class CustomCakeRequestService {
    * Get all pending custom cake requests
    */
   static async getPendingRequests(): Promise<CustomCakeRequest[]> {
-    return apiClient.get<CustomCakeRequest[]>('/admin/custom-cakes/pending');
+    const response = await apiClient.get<CustomCakeRequest[]>('/admin/custom-cakes/pending');
+    return response.data || [];
   }
 
   /**
    * Get detailed information about a custom cake request
    */
   static async getRequestDetails(requestId: number): Promise<CustomCakeRequestDetails> {
-    return apiClient.get<CustomCakeRequestDetails>(`/admin/custom-cakes/${requestId}`);
+    const response = await apiClient.get<CustomCakeRequestDetails>(`/admin/custom-cakes/${requestId}`);
+    return response.data as CustomCakeRequestDetails;
   }
 
   /**
@@ -73,7 +75,7 @@ export class CustomCakeRequestService {
     requestId: number,
     data: ApproveCustomCakeData
   ): Promise<void> {
-    return apiClient.post<void>(`/admin/custom-cakes/${requestId}/approve`, data);
+    await apiClient.post<void>(`/admin/custom-cakes/${requestId}/approve`, data);
   }
 
   /**
@@ -83,7 +85,7 @@ export class CustomCakeRequestService {
     requestId: number,
     data: RejectCustomCakeData
   ): Promise<void> {
-    return apiClient.post<void>(`/admin/custom-cakes/${requestId}/reject`, data);
+    await apiClient.post<void>(`/admin/custom-cakes/${requestId}/reject`, data);
   }
 
   /**
