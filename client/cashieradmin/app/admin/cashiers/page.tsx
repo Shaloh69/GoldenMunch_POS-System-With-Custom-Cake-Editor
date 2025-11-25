@@ -80,10 +80,10 @@ export default function CashiersPage() {
     try {
       setLoading(true);
       const response = await CashierService.getCashiers();
-      if (response.data?.success) {
-        setCashiers(response.data.data || []);
+      if (response.success) {
+        setCashiers(response.data || []);
       } else {
-        console.error('Failed to fetch cashiers:', response.data?.message);
+        console.error('Failed to fetch cashiers:', response.message);
       }
     } catch (error) {
       console.error('Failed to fetch cashiers:', error);
@@ -95,12 +95,12 @@ export default function CashiersPage() {
   const handleCreateCashier = async () => {
     try {
       const response = await CashierService.createCashier(formState);
-      if (response.data?.success) {
+      if (response.success) {
         setShowCreateModal(false);
         resetForm();
         fetchCashiers();
       } else {
-        console.error('Failed to create cashier:', response.data?.message);
+        console.error('Failed to create cashier:', response.message);
       }
     } catch (error) {
       console.error('Failed to create cashier:', error);
@@ -118,12 +118,12 @@ export default function CashiersPage() {
         selectedCashier.cashier_id,
         updateData
       );
-      if (response.data?.success) {
+      if (response.success) {
         setShowEditModal(false);
         resetForm();
         fetchCashiers();
       } else {
-        console.error('Failed to update cashier:', response.data?.message);
+        console.error('Failed to update cashier:', response.message);
       }
     } catch (error) {
       console.error('Failed to update cashier:', error);
@@ -135,12 +135,12 @@ export default function CashiersPage() {
 
     try {
       const response = await CashierService.deleteCashier(selectedCashier.cashier_id);
-      if (response.data?.success) {
+      if (response.success) {
         setShowDeleteModal(false);
         setSelectedCashier(null);
         fetchCashiers();
       } else {
-        console.error('Failed to delete cashier:', response.data?.message);
+        console.error('Failed to delete cashier:', response.message);
       }
     } catch (error) {
       console.error('Failed to delete cashier:', error);
