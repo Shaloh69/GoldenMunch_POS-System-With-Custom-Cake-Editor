@@ -24,7 +24,11 @@ export default function MenuPage() {
 
   // Fetch menu items and categories
   useEffect(() => {
+    console.log('🎬 MENU PAGE: Component mounted, initializing data fetch');
+    console.log('Timestamp:', new Date().toISOString());
+
     const fetchData = async () => {
+      console.log('🔄 MENU PAGE: Starting initial data fetch...');
       setLoading(true);
       setError(null);
 
@@ -34,11 +38,17 @@ export default function MenuPage() {
           MenuService.getCategories()
         ]);
 
+        console.log('✅ MENU PAGE: Initial data loaded successfully', {
+          itemCount: items.length,
+          categoryCount: cats.length,
+          timestamp: new Date().toISOString(),
+        });
+
         setMenuItems(items);
         setCategories(cats);
         setFilteredItems(items);
       } catch (err: any) {
-        console.error('Error fetching data:', err);
+        console.error('❌ MENU PAGE: Error fetching data:', err);
         setError(err.message || 'Failed to load menu. Please try again.');
       } finally {
         setLoading(false);
@@ -48,24 +58,49 @@ export default function MenuPage() {
     fetchData();
 
     // ✅ FIX: Auto-refresh menu every 30 seconds to get latest items from admin
+    console.log('⏰ MENU PAGE: Setting up auto-refresh interval (30s)');
     const refreshInterval = setInterval(() => {
-      console.log('🔄 Auto-refreshing menu items...');
+      console.log('╔════════════════════════════════════════════════════════╗');
+      console.log('║  🔄 AUTO-REFRESH TRIGGERED (30s interval)             ║');
+      console.log('║  Timestamp:', new Date().toISOString().padEnd(30), '║');
+      console.log('╚════════════════════════════════════════════════════════╝');
+
       MenuService.getMenuItems().then(items => {
+        const previousCount = menuItems.length;
         setMenuItems(items);
-        console.log('✅ Menu refreshed:', items.length, 'items');
+        console.log('✅ Menu refreshed successfully:', {
+          previousCount,
+          newCount: items.length,
+          difference: items.length - previousCount,
+          timestamp: new Date().toISOString(),
+        });
+
+        // Log any new or removed items
+        if (items.length !== previousCount) {
+          console.log('⚠️ MENU CHANGED - Items count changed from', previousCount, 'to', items.length);
+        }
       }).catch(err => {
         console.error('❌ Auto-refresh failed:', err);
       });
 
       MenuService.getCategories().then(cats => {
+        const previousCatCount = categories.length;
         setCategories(cats);
+        console.log('✅ Categories refreshed:', {
+          previousCount: previousCatCount,
+          newCount: cats.length,
+          timestamp: new Date().toISOString(),
+        });
       }).catch(err => {
         console.error('❌ Category refresh failed:', err);
       });
     }, 30000); // Refresh every 30 seconds
 
     // Cleanup interval on unmount
-    return () => clearInterval(refreshInterval);
+    return () => {
+      console.log('🛑 MENU PAGE: Component unmounting, clearing refresh interval');
+      clearInterval(refreshInterval);
+    };
   }, []);
 
   // Filter items by category and search

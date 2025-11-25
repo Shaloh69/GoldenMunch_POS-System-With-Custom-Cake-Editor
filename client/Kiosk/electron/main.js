@@ -8,9 +8,13 @@ let mainWindow;
 let printerService = null;
 
 function createWindow() {
+  console.log('=== KIOSK INITIALIZATION ===');
+  console.log('Environment:', isDev ? 'DEVELOPMENT' : 'PRODUCTION');
+
   // Get primary display dimensions
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width, height } = primaryDisplay.workAreaSize;
+  console.log('Display size:', { width, height });
 
   // Create the browser window
   mainWindow = new BrowserWindow({
@@ -29,11 +33,15 @@ function createWindow() {
     },
   });
 
+  console.log('Cache disabled:', true);
+  console.log('HTTP caching:', 'DISABLED via webPreferences.cache = false');
+
   // Load the app
   const startUrl = isDev
     ? 'http://localhost:3002' // Next.js dev server
     : `file://${path.join(__dirname, '../out/index.html')}`; // Production build
 
+  console.log('Loading URL:', startUrl);
   mainWindow.loadURL(startUrl);
 
   // Open DevTools in development
@@ -41,9 +49,17 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
   }
 
+  // Log when page finishes loading
+  mainWindow.webContents.on('did-finish-load', () => {
+    console.log('=== PAGE LOADED SUCCESSFULLY ===');
+    console.log('Timestamp:', new Date().toISOString());
+  });
+
   // Prevent navigation away from app
   mainWindow.webContents.on('will-navigate', (event, url) => {
+    console.log('Navigation attempt to:', url);
     if (!url.startsWith(startUrl)) {
+      console.log('Navigation blocked (external URL)');
       event.preventDefault();
     }
   });
@@ -54,6 +70,7 @@ function createWindow() {
   }
 
   mainWindow.on('closed', () => {
+    console.log('=== KIOSK WINDOW CLOSED ===');
     mainWindow = null;
   });
 

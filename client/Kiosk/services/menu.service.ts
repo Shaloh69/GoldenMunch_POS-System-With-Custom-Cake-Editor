@@ -19,16 +19,35 @@ export class MenuService {
    */
   static async getMenuItems(params?: MenuQueryParams): Promise<MenuItem[]> {
     try {
+      const cacheBustTimestamp = Date.now();
+      console.log('📋 MenuService.getMenuItems() called', {
+        params,
+        cacheBustTimestamp,
+        timestamp: new Date().toISOString(),
+      });
+
       const response = await apiClient.get<ApiResponse<MenuItem[]>>('/kiosk/menu', {
         params: {
           ...params,
           is_featured: params?.is_featured ? 'true' : undefined,
-          _t: Date.now(), // Cache-busting timestamp
+          _t: cacheBustTimestamp, // Cache-busting timestamp
         },
       });
-      return response.data.data || [];
+
+      const items = response.data.data || [];
+      console.log('✅ MenuService.getMenuItems() received', {
+        itemCount: items.length,
+        items: items.map(item => ({
+          id: item.menu_item_id,
+          name: item.name,
+          price: item.current_price,
+        })),
+        timestamp: new Date().toISOString(),
+      });
+
+      return items;
     } catch (error) {
-      console.error('Error fetching menu items:', error);
+      console.error('❌ MenuService.getMenuItems() error:', error);
       throw error;
     }
   }
@@ -57,12 +76,26 @@ export class MenuService {
    */
   static async getCategories(): Promise<Category[]> {
     try {
-      const response = await apiClient.get<ApiResponse<Category[]>>('/kiosk/categories', {
-        params: { _t: Date.now() } // Cache-busting timestamp
+      const cacheBustTimestamp = Date.now();
+      console.log('📂 MenuService.getCategories() called', {
+        cacheBustTimestamp,
+        timestamp: new Date().toISOString(),
       });
-      return response.data.data || [];
+
+      const response = await apiClient.get<ApiResponse<Category[]>>('/kiosk/categories', {
+        params: { _t: cacheBustTimestamp } // Cache-busting timestamp
+      });
+
+      const categories = response.data.data || [];
+      console.log('✅ MenuService.getCategories() received', {
+        categoryCount: categories.length,
+        categories: categories.map(cat => ({ id: cat.category_id, name: cat.name })),
+        timestamp: new Date().toISOString(),
+      });
+
+      return categories;
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error('❌ MenuService.getCategories() error:', error);
       throw error;
     }
   }

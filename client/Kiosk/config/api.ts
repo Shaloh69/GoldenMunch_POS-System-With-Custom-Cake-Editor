@@ -23,6 +23,19 @@ export const apiClient = axios.create({
 // Request interceptor
 apiClient.interceptors.request.use(
   (config) => {
+    // Debug: Log all outgoing API requests
+    console.log('🔵 API REQUEST:', {
+      method: config.method?.toUpperCase(),
+      url: config.url,
+      params: config.params,
+      cacheHeaders: {
+        'Cache-Control': config.headers['Cache-Control'],
+        'Pragma': config.headers['Pragma'],
+        'Expires': config.headers['Expires'],
+      },
+      timestamp: new Date().toISOString(),
+    });
+
     // Add any auth tokens here if needed in the future
     // const token = localStorage.getItem('token');
     // if (token) {
@@ -31,6 +44,7 @@ apiClient.interceptors.request.use(
     return config;
   },
   (error) => {
+    console.error('🔴 API REQUEST ERROR:', error);
     return Promise.reject(error);
   }
 );
@@ -38,19 +52,41 @@ apiClient.interceptors.request.use(
 // Response interceptor
 apiClient.interceptors.response.use(
   (response) => {
+    // Debug: Log all API responses
+    console.log('🟢 API RESPONSE:', {
+      status: response.status,
+      url: response.config.url,
+      params: response.config.params,
+      cacheHeaders: {
+        'Cache-Control': response.headers['cache-control'],
+        'Pragma': response.headers['pragma'],
+        'Expires': response.headers['expires'],
+        'ETag': response.headers['etag'],
+        'Last-Modified': response.headers['last-modified'],
+      },
+      dataLength: Array.isArray(response.data?.data) ? response.data.data.length : 'N/A',
+      timestamp: new Date().toISOString(),
+    });
     return response;
   },
   (error) => {
     // Handle errors globally
     if (error.response) {
       // Server responded with error
-      console.error('API Error:', error.response.data);
+      console.error('🔴 API ERROR (Server):', {
+        status: error.response.status,
+        url: error.config?.url,
+        data: error.response.data,
+      });
     } else if (error.request) {
       // Request made but no response
-      console.error('Network Error:', error.message);
+      console.error('🔴 API ERROR (Network):', {
+        url: error.config?.url,
+        message: error.message,
+      });
     } else {
       // Something else happened
-      console.error('Error:', error.message);
+      console.error('🔴 API ERROR (Unknown):', error.message);
     }
     return Promise.reject(error);
   }
