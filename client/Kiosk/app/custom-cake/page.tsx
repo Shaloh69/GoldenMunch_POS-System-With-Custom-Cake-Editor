@@ -1,19 +1,21 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
-import { Cake, Smartphone, Clock, Sparkles, CheckCircle } from 'lucide-react';
+import { Cake, Smartphone, Clock, Sparkles, CheckCircle, ArrowLeft } from 'lucide-react';
 import { CustomCakeService, CustomCakeSessionResponse } from '@/services/customCake.service';
 
 type QRSession = CustomCakeSessionResponse;
 
 export default function CustomCakePage() {
+  const router = useRouter();
   const [qrSession, setQrSession] = useState<QRSession | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
-  const [step, setStep] = useState<'welcome' | 'generating' | 'qr' | 'expired'>('welcome');
+  const [step, setStep] = useState<'welcome' | 'generating' | 'qr' | 'expired' | 'success'>('welcome');
 
   // Generate QR Code
   const generateQR = useCallback(async () => {
@@ -28,6 +30,9 @@ export default function CustomCakePage() {
       setQrSession(session);
       setTimeRemaining(session.expiresIn);
       setStep('qr');
+
+      // Start polling for success status
+      pollForSuccess(session.sessionId);
     } catch (err: any) {
       setError(err?.response?.data?.message || err.message || 'Failed to generate QR code');
       setStep('welcome');
@@ -35,6 +40,29 @@ export default function CustomCakePage() {
       setLoading(false);
     }
   }, []);
+
+  // Poll for QR scan success
+  const pollForSuccess = useCallback(async (sessionId: string) => {
+    const pollInterval = setInterval(async () => {
+      try {
+        const status = await CustomCakeService.pollSessionStatus(sessionId);
+
+        if (status.status === 'completed') {
+          clearInterval(pollInterval);
+          setStep('success');
+
+          // Redirect to menu after 5 seconds
+          setTimeout(() => {
+            router.push('/menu');
+          }, 5000);
+        }
+      } catch (err) {
+        console.error('Polling error:', err);
+      }
+    }, 2000); // Poll every 2 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [router]);
 
   // Countdown timer
   useEffect(() => {
@@ -287,15 +315,16 @@ export default function CustomCakePage() {
                 <StepIndicator number={3} text="Submit" />
               </motion.div>
 
-              {/* Cancel button */}
+              {/* Back to Menu button */}
               <motion.button
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                onClick={() => setStep('welcome')}
-                className="w-full mt-6 py-3 text-[#EAD7B7] hover:text-[#FAF7F2] font-medium transition-colors"
+                onClick={() => router.push('/menu')}
+                className="w-full mt-6 py-4 flex items-center justify-center gap-2 bg-gradient-to-r from-[#D9B38C] to-[#C67B57] text-white font-semibold rounded-xl hover:scale-105 transition-all shadow-lg"
               >
-                Cancel & Go Back
+                <ArrowLeft className="w-5 h-5" />
+                Back to Menu
               </motion.button>
             </div>
           </motion.div>
@@ -322,15 +351,107 @@ export default function CustomCakePage() {
                 Your QR code session has timed out. Please generate a new one to continue.
               </p>
 
-              <button
-                onClick={() => {
-                  setStep('welcome');
-                  setQrSession(null);
-                }}
-                className="w-full bg-gradient-to-r from-[#7B4B28] to-[#662B35] text-[#FAF7F2] py-4 rounded-2xl text-xl font-bold shadow-[0_0_30px_rgba(234,215,183,0.4)] hover:shadow-[0_0_40px_rgba(234,215,183,0.6)] transition-all"
+              <div className="space-y-3">
+                <button
+                  onClick={() => {
+                    setStep('welcome');
+                    setQrSession(null);
+                  }}
+                  className="w-full bg-gradient-to-r from-[#7B4B28] to-[#662B35] text-[#FAF7F2] py-4 rounded-2xl text-xl font-bold shadow-[0_0_30px_rgba(234,215,183,0.4)] hover:shadow-[0_0_40px_rgba(234,215,183,0.6)] transition-all"
+                >
+                  Generate New QR Code
+                </button>
+
+                <button
+                  onClick={() => router.push('/menu')}
+                  className="w-full py-4 flex items-center justify-center gap-2 bg-gradient-to-r from-[#D9B38C] to-[#C67B57] text-white font-semibold rounded-xl hover:scale-105 transition-all"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  Back to Menu
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Success Screen */}
+        {step === 'success' && (
+          <motion.div
+            key="success"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="max-w-2xl w-full"
+          >
+            <div className="glass-card rounded-3xl shadow-[0_0_40px_rgba(234,215,183,0.3)] p-12 text-center">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                className="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-green-500 to-green-600 rounded-full mb-6 shadow-2xl"
               >
-                Generate New QR Code
-              </button>
+                <CheckCircle className="w-20 h-20 text-white" />
+              </motion.div>
+
+              <motion.h2
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="text-5xl font-bold text-[#FAF7F2] mb-4 drop-shadow-lg"
+              >
+                Successfully Scanned!
+              </motion.h2>
+
+              <motion.p
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-2xl text-[#EAD7B7] mb-8"
+              >
+                Your custom cake design is now loading on your phone
+              </motion.p>
+
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="bg-gradient-to-r from-[#D9B38C]/20 to-[#C67B57]/20 rounded-2xl p-8 mb-8"
+              >
+                <h3 className="text-2xl font-bold text-[#FAF7F2] mb-4">Next Steps:</h3>
+                <div className="space-y-3 text-left">
+                  <p className="text-lg text-[#EAD7B7] flex items-start gap-3">
+                    <span className="text-2xl">🎨</span>
+                    <span>Design your perfect cake on your phone</span>
+                  </p>
+                  <p className="text-lg text-[#EAD7B7] flex items-start gap-3">
+                    <span className="text-2xl">🪑</span>
+                    <span>Please take a seat and relax while you design</span>
+                  </p>
+                  <p className="text-lg text-[#EAD7B7] flex items-start gap-3">
+                    <span className="text-2xl">✨</span>
+                    <span>We'll notify you when it's ready for approval</span>
+                  </p>
+                </div>
+              </motion.div>
+
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="text-[#EAD7B7] text-lg mb-4"
+              >
+                Returning to menu in 5 seconds...
+              </motion.p>
+
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6 }}
+                onClick={() => router.push('/menu')}
+                className="bg-gradient-to-r from-[#D9B38C] to-[#C67B57] text-white font-bold text-xl py-4 px-8 rounded-xl hover:scale-105 transition-all shadow-lg"
+              >
+                Return to Menu Now
+              </motion.button>
             </div>
           </motion.div>
         )}

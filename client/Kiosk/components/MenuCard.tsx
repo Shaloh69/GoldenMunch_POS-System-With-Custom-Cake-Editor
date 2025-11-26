@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Card } from '@heroui/card';
+import { Card, CardBody } from '@heroui/card';
 import { Chip } from '@heroui/chip';
 import Image from 'next/image';
 import type { MenuItem } from '@/types/api';
@@ -22,101 +22,95 @@ export const MenuCard: React.FC<MenuCardProps> = ({ item, onClick, cartQuantity 
       isPressable
       onPress={() => onClick(item)}
       className={`
-        relative overflow-hidden cursor-pointer
-        border-2 border-[#D9B38C]/30
+        relative overflow-hidden cursor-pointer h-[330px]
+        border-2 border-[#D9B38C]
         transition-all duration-300
         ${isAvailable
-          ? 'hover:border-[#C67B57] hover:shadow-[0_0_30px_rgba(198,123,87,0.4)] hover:scale-105'
+          ? 'hover:border-[#C67B57] hover:shadow-[0_0_30px_rgba(198,123,87,0.4)] hover:scale-103'
           : 'opacity-60 cursor-not-allowed'
         }
       `}
     >
-      {/* Full Image Background */}
-      <div className="relative h-80 w-full overflow-hidden">
-        {getImageUrl(item.image_url) ? (
-          <Image
-            src={getImageUrl(item.image_url) || ''}
-            alt={item.name}
-            fill
-            className={`object-cover transition-transform duration-300 ${isAvailable ? 'group-hover:scale-110' : ''}`}
-            sizes="25vw"
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-[#E8DCC8]/50 to-[#D9B38C]/50 flex items-center justify-center">
-            <span className="text-9xl">🍰</span>
+      <CardBody className="p-0 h-full flex flex-col">
+        {/* Image Section - 60% (200px) - Clean, no text */}
+        <div className="relative h-[200px] w-full overflow-hidden bg-gradient-to-br from-[#E8DCC8] to-[#D9B38C]/30">
+          {getImageUrl(item.image_url) ? (
+            <Image
+              src={getImageUrl(item.image_url) || ''}
+              alt={item.name}
+              fill
+              className={`object-cover transition-transform duration-500 ${isAvailable ? 'group-hover:scale-110' : ''}`}
+              sizes="25vw"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <span className="text-8xl">🍰</span>
+            </div>
+          )}
+
+          {/* Badges - Only on Image */}
+          <div className="absolute top-3 right-3 flex flex-col gap-2 z-10">
+            {item.is_featured && (
+              <Chip
+                size="lg"
+                className="font-bold text-sm px-3 py-1 bg-[#C67B57] text-white shadow-lg"
+              >
+                ⭐ Popular
+              </Chip>
+            )}
+            {!isAvailable && (
+              <Chip
+                size="lg"
+                className="font-bold text-sm px-3 py-1 bg-red-500 text-white shadow-lg"
+              >
+                Sold Out
+              </Chip>
+            )}
+            {cartQuantity > 0 && (
+              <Chip
+                size="lg"
+                className="font-bold text-sm px-3 py-1 bg-green-600 text-white shadow-lg animate-pulse"
+              >
+                {cartQuantity} in cart
+              </Chip>
+            )}
           </div>
-        )}
-
-        {/* Gradient Overlay - Bottom */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-
-        {/* Badges - Top Right */}
-        <div className="absolute top-3 right-3 flex flex-col gap-2 z-10">
-          {item.is_featured && (
-            <Chip
-              size="lg"
-              className="font-bold text-base px-4 py-2 bg-[#C67B57] text-white shadow-xl backdrop-blur-sm"
-            >
-              ⭐ Popular
-            </Chip>
-          )}
-          {!isAvailable && (
-            <Chip
-              size="lg"
-              className="font-bold text-base px-4 py-2 bg-red-500 text-white shadow-xl backdrop-blur-sm"
-            >
-              Sold Out
-            </Chip>
-          )}
-          {cartQuantity > 0 && (
-            <Chip
-              size="lg"
-              className="font-bold text-base px-4 py-2 bg-green-500 text-white shadow-xl backdrop-blur-sm animate-pulse"
-            >
-              {cartQuantity} in cart
-            </Chip>
-          )}
         </div>
 
-        {/* Item Info - Bottom Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
+        {/* Info Section - 40% (130px) - Solid Background, Perfect Contrast */}
+        <div className="h-[130px] bg-[#FFF9F2] p-4 flex flex-col justify-between">
           {/* Item Name */}
-          <h3 className="text-2xl font-black text-white mb-2 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] line-clamp-2">
+          <h3 className="text-lg font-bold text-[#8B5A3C] line-clamp-1 leading-tight">
             {item.name}
           </h3>
 
-          {/* Price & Type */}
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-4xl font-black text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+          {/* Price & Category */}
+          <div className="flex items-end justify-between mt-2">
+            <div>
+              <span className="text-3xl font-black text-[#8B5A3C]">
                 ${(Number(item.current_price) || 0).toFixed(2)}
               </span>
             </div>
             <Chip
-              size="md"
-              className="bg-white/90 backdrop-blur-sm text-[#C67B57] font-semibold text-sm px-3"
+              size="sm"
+              className="bg-[#E8DCC8] text-[#8B5A3C] font-semibold text-xs px-2"
             >
               {item.item_type}
             </Chip>
           </div>
 
-          {/* Click to View Indicator */}
+          {/* Tap to View Indicator */}
           {isAvailable && (
-            <div className="mt-3 text-center">
-              <div className="inline-block bg-[#D9B38C]/90 backdrop-blur-sm px-4 py-2 rounded-full">
-                <span className="text-white font-semibold text-sm">
-                  👆 Tap to view details
+            <div className="mt-2">
+              <div className="inline-block bg-[#D9B38C] px-3 py-1 rounded-full">
+                <span className="text-white font-semibold text-xs">
+                  👆 Tap for details
                 </span>
               </div>
             </div>
           )}
         </div>
-
-        {/* Hover Shine Effect */}
-        {isAvailable && (
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000" />
-        )}
-      </div>
+      </CardBody>
     </Card>
   );
 };
