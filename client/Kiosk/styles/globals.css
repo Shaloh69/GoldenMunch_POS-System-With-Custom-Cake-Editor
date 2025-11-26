@@ -2,7 +2,16 @@
 
 @config "../tailwind.config.js";
 
-/* Golden Munch Custom Styles - Modern Food Kiosk Design */
+/* Golden Munch - Modern Chocolate Luxe Design */
+
+/* Color Palette Variables */
+:root {
+  --dark-cocoa: #3A1F0F;
+  --milk-chocolate: #7B4B28;
+  --champagne-gold: #EAD7B7;
+  --soft-white: #FAF7F2;
+  --deep-burgundy: #662B35;
+}
 
 /* Smooth scrolling for the kiosk */
 html {
@@ -577,50 +586,58 @@ img {
   }
 }
 
-/* Enhanced Glassmorphism Utilities for Kiosk Redesign */
+/* Chocolate Luxe Glassmorphism Utilities */
 @layer utilities {
-  /* Glass Card - For product cards and content containers */
+  /* Glass Card - Champagne gold tinted glass for product cards */
   .glass-card {
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(234, 215, 183, 0.15);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(234, 215, 183, 0.3);
+    box-shadow: 0 8px 32px 0 rgba(123, 75, 40, 0.2);
+    border-radius: 20px;
+  }
+
+  .glass-card:hover {
+    background: rgba(234, 215, 183, 0.25);
+    border-color: rgba(234, 215, 183, 0.5);
+    box-shadow: 0 12px 40px 0 rgba(123, 75, 40, 0.3);
+    transform: translateY(-4px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Glass Header - Elegant header with soft white tint */
+  .glass-header {
+    background: rgba(250, 247, 242, 0.12);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid rgba(234, 215, 183, 0.25);
+    box-shadow: 0 4px 20px rgba(58, 31, 15, 0.15);
+  }
+
+  /* Glass Footer - Deep burgundy tinted footer */
+  .glass-footer {
+    background: rgba(102, 43, 53, 0.15);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-top: 1px solid rgba(234, 215, 183, 0.3);
+    box-shadow: 0 -4px 20px rgba(58, 31, 15, 0.2);
+  }
+
+  /* Glass Button - Interactive milk chocolate tinted buttons */
+  .glass-button {
+    background: rgba(123, 75, 40, 0.15);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 8px 32px 0 rgba(249, 160, 63, 0.15);
-    border-radius: 16px;
-  }
-
-  /* Glass Header - For header sections */
-  .glass-header {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 4px 16px rgba(249, 160, 63, 0.1);
-  }
-
-  /* Glass Footer - For footer sections */
-  .glass-footer {
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border-top: 1px solid rgba(255, 255, 255, 0.3);
-    box-shadow: 0 -4px 16px rgba(249, 160, 63, 0.1);
-  }
-
-  /* Glass Button - For button overlays */
-  .glass-button {
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(234, 215, 183, 0.4);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .glass-button:hover {
-    background: rgba(255, 255, 255, 0.3);
-    border-color: rgba(249, 160, 63, 0.4);
+    background: rgba(123, 75, 40, 0.25);
+    border-color: rgba(234, 215, 183, 0.6);
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(249, 160, 63, 0.2);
+    box-shadow: 0 8px 24px rgba(234, 215, 183, 0.3);
   }
 
   /* Touch Optimized - Large touch targets for 24" touchscreen */

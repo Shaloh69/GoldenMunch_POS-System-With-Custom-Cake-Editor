@@ -182,14 +182,14 @@ export default function CartPage() {
 
   if (cartItems.length === 0) {
     return (
-      <div className="min-h-screen  flex items-center justify-center p-6">
-        <Card className="max-w-lg card-transparent animate-scale-in">
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <Card className="max-w-lg glass-card animate-scale-in">
           <CardBody className="text-center p-12">
             <div className="text-9xl mb-6 animate-float">🛒</div>
-            <h1 className="text-5xl font-bold text-chocolate-brown mb-4">
+            <h1 className="text-5xl font-bold text-[#FAF7F2] mb-4 drop-shadow-lg">
               Your Cart is Empty
             </h1>
-            <p className="text-xl text-chocolate-brown/70 mb-8">
+            <p className="text-xl text-[#EAD7B7] mb-8">
               Looks like you haven't added any delicious treats yet!
             </p>
             <div className="flex flex-col gap-4">
@@ -197,7 +197,7 @@ export default function CartPage() {
                 as={NextLink}
                 href="/"
                 size="lg"
-                className="bg-gradient-to-r from-golden-orange to-deep-amber text-white font-bold text-xl px-10 py-7 shadow-xl-golden hover:scale-105 transition-transform"
+                className="bg-gradient-to-r from-[#7B4B28] to-[#662B35] text-[#FAF7F2] font-bold text-xl px-10 py-7 shadow-[0_0_30px_rgba(234,215,183,0.4)] hover:scale-105 transition-transform"
               >
                 🍰 Browse Our Menu
               </Button>
@@ -206,7 +206,7 @@ export default function CartPage() {
                 href="/specials"
                 size="lg"
                 variant="bordered"
-                className="border-2 border-golden-orange text-chocolate-brown hover:bg-golden-orange/10 font-bold text-lg px-10"
+                className="border-2 border-[#EAD7B7]/60 text-[#FAF7F2] hover:bg-[#EAD7B7]/10 font-bold text-lg px-10"
               >
                 ⭐ View Today's Specials
               </Button>
@@ -218,15 +218,15 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen">
       {/* Beautiful Header */}
-      <div className="bg-gradient-to-r from-golden-orange via-deep-amber to-golden-orange shadow-xl-golden">
+      <div className="glass-header border-b-4 border-[#EAD7B7]/30">
         <div className="max-w-7xl mx-auto p-8">
           <div className="flex items-center gap-4 animate-slide-right">
             <div className="text-7xl animate-bounce-slow">🛒</div>
             <div>
-              <h1 className="text-5xl font-bold text-white mb-2 drop-shadow-lg">Your Cart</h1>
-              <p className="text-xl text-white/90">
+              <h1 className="text-5xl font-bold text-[#FAF7F2] mb-2 drop-shadow-lg">Your Cart</h1>
+              <p className="text-xl text-[#EAD7B7]">
                 {getItemCount()} {getItemCount() === 1 ? 'item' : 'items'} • Ready to checkout?
               </p>
             </div>
@@ -238,9 +238,9 @@ export default function CartPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items - Takes 2 columns on large screens */}
           <div className="lg:col-span-2 space-y-4">
-            <Card className="card-transparent animate-slide-up">
-              <CardHeader className="p-6 border-b border-golden-orange/20">
-                <h2 className="text-3xl font-bold text-chocolate-brown flex items-center gap-2">
+            <Card className="glass-card animate-slide-up">
+              <CardHeader className="p-6 border-b border-[#EAD7B7]/20">
+                <h2 className="text-3xl font-bold text-[#FAF7F2] flex items-center gap-2 drop-shadow-lg">
                   <span className="text-4xl">📦</span>
                   Your Order ({getItemCount()} items)
                 </h2>
@@ -252,9 +252,9 @@ export default function CartPage() {
                     className="animate-slide-up"
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
-                    <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-white to-golden-orange/5 rounded-2xl border-2 border-golden-orange/20 hover:border-golden-orange/40 hover:shadow-lg transition-all">
+                    <div className="flex items-center gap-4 p-5 glass-button rounded-2xl hover:scale-[1.02] transition-all border-2 border-[#EAD7B7]/20 hover:border-[#EAD7B7]/40">
                       {/* Item Image */}
-                      <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-golden-orange/20 to-deep-amber/20 flex items-center justify-center flex-shrink-0">
+                      <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-[#7B4B28]/20 to-[#662B35]/20 flex items-center justify-center flex-shrink-0">
                         <div className="text-5xl">
                           {item.menuItem.image_url || getItemEmoji(item.menuItem.item_type)}
                         </div>
@@ -262,19 +262,19 @@ export default function CartPage() {
 
                       {/* Item Details */}
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-xl font-bold text-chocolate-brown truncate">
+                        <h3 className="text-xl font-bold text-[#FAF7F2] truncate drop-shadow-md">
                           {item.menuItem.name}
                         </h3>
                         <div className="flex items-center gap-2 mt-1">
-                          <Chip size="sm" color="default" variant="flat">
+                          <Chip size="sm" variant="flat" className="bg-[#EAD7B7]/20 text-[#FAF7F2] border border-[#EAD7B7]/30">
                             {item.menuItem.item_type}
                           </Chip>
-                          <span className="text-lg font-semibold text-deep-amber">
-                            ${(Number(item.menuItem.current_price) || 0).toFixed(2)} each
+                          <span className="text-lg font-semibold text-[#EAD7B7]">
+                            ₱{(Number(item.menuItem.current_price) || 0).toFixed(2)} each
                           </span>
                         </div>
                         {item.special_instructions && (
-                          <p className="text-sm text-chocolate-brown/60 mt-2 italic">
+                          <p className="text-sm text-[#EAD7B7]/80 mt-2 italic">
                             📝 {item.special_instructions}
                           </p>
                         )}
@@ -282,23 +282,23 @@ export default function CartPage() {
 
                       {/* Quantity Controls */}
                       <div className="flex flex-col items-center gap-3">
-                        <div className="flex items-center gap-3 bg-white rounded-full px-3 py-2 shadow-md">
+                        <div className="flex items-center gap-3 glass-button rounded-full px-3 py-2 border border-[#EAD7B7]/30">
                           <Button
                             isIconOnly
                             size="sm"
                             variant="flat"
-                            className="rounded-full bg-deep-amber/10 hover:bg-deep-amber hover:text-white text-deep-amber font-bold transition-all"
+                            className="rounded-full bg-[#662B35]/30 hover:bg-[#662B35] text-[#FAF7F2] font-bold transition-all"
                             onClick={() => updateQuantity(item.menuItem.menu_item_id, item.quantity - 1)}
                           >
                             −
                           </Button>
-                          <span className="text-xl font-bold text-chocolate-brown min-w-[32px] text-center">
+                          <span className="text-xl font-bold text-[#FAF7F2] min-w-[32px] text-center">
                             {item.quantity}
                           </span>
                           <Button
                             isIconOnly
                             size="sm"
-                            className="rounded-full bg-golden-orange hover:bg-deep-amber text-white font-bold shadow-lg transition-all"
+                            className="rounded-full bg-gradient-to-r from-[#7B4B28] to-[#662B35] text-[#FAF7F2] font-bold shadow-lg transition-all"
                             onClick={() => updateQuantity(item.menuItem.menu_item_id, item.quantity + 1)}
                           >
                             +
@@ -307,14 +307,13 @@ export default function CartPage() {
 
                         {/* Item Total */}
                         <div className="text-center">
-                          <p className="text-2xl font-bold text-chocolate-brown">
-                            ${((Number(item.menuItem.current_price) || 0) * item.quantity).toFixed(2)}
+                          <p className="text-2xl font-bold text-[#FAF7F2] drop-shadow-lg">
+                            ₱{((Number(item.menuItem.current_price) || 0) * item.quantity).toFixed(2)}
                           </p>
                           <Button
                             size="sm"
-                            color="danger"
                             variant="light"
-                            className="text-xs"
+                            className="text-xs text-[#662B35] hover:text-[#FAF7F2]"
                             onClick={() => removeItem(item.menuItem.menu_item_id)}
                           >
                             Remove
@@ -325,14 +324,14 @@ export default function CartPage() {
                   </div>
                 ))}
 
-                <Divider className="my-6" />
+                <Divider className="my-6 bg-[#EAD7B7]/20" />
 
                 <Button
                   as={NextLink}
                   href="/"
                   size="lg"
                   variant="bordered"
-                  className="w-full border-2 border-golden-orange text-chocolate-brown hover:bg-golden-orange/10 font-bold text-lg py-6"
+                  className="w-full border-2 border-[#EAD7B7]/60 text-[#FAF7F2] hover:bg-[#EAD7B7]/10 font-bold text-lg py-6"
                 >
                   + Add More Items
                 </Button>
@@ -343,9 +342,9 @@ export default function CartPage() {
           {/* Checkout Section */}
           <div className="space-y-6">
             {/* Order Information */}
-            <Card className="card-transparent animate-slide-up" style={{ animationDelay: '0.2s' }}>
-              <CardHeader className="p-6 bg-gradient-to-r from-golden-orange/10 to-deep-amber/10 border-b border-golden-orange/20">
-                <h2 className="text-2xl font-bold text-chocolate-brown flex items-center gap-2">
+            <Card className="glass-card animate-slide-up" style={{ animationDelay: '0.2s' }}>
+              <CardHeader className="p-6 bg-gradient-to-r from-[#7B4B28]/20 to-[#662B35]/20 border-b border-[#EAD7B7]/20">
+                <h2 className="text-2xl font-bold text-[#FAF7F2] flex items-center gap-2 drop-shadow-lg">
                   <span className="text-3xl">📋</span>
                   Order Details
                 </h2>
@@ -359,9 +358,9 @@ export default function CartPage() {
                   size="lg"
                   variant="bordered"
                   classNames={{
-                    input: "text-chocolate-brown",
-                    label: "text-chocolate-brown/70 font-semibold",
-                    inputWrapper: "border-2 hover:border-golden-orange"
+                    input: "text-[#FAF7F2]",
+                    label: "text-[#EAD7B7] font-semibold",
+                    inputWrapper: "border-2 border-[#EAD7B7]/40 hover:border-[#EAD7B7] bg-[#3A1F0F]/20"
                   }}
                 />
                 <Input
@@ -372,9 +371,9 @@ export default function CartPage() {
                   size="lg"
                   variant="bordered"
                   classNames={{
-                    input: "text-chocolate-brown",
-                    label: "text-chocolate-brown/70 font-semibold",
-                    inputWrapper: "border-2 hover:border-golden-orange"
+                    input: "text-[#FAF7F2]",
+                    label: "text-[#EAD7B7] font-semibold",
+                    inputWrapper: "border-2 border-[#EAD7B7]/40 hover:border-[#EAD7B7] bg-[#3A1F0F]/20"
                   }}
                 />
                 <Select
@@ -385,9 +384,9 @@ export default function CartPage() {
                   size="lg"
                   variant="bordered"
                   classNames={{
-                    label: "text-chocolate-brown/70 font-semibold",
-                    value: "text-chocolate-brown",
-                    trigger: "border-2 hover:border-golden-orange"
+                    label: "text-[#EAD7B7] font-semibold",
+                    value: "text-[#FAF7F2]",
+                    trigger: "border-2 border-[#EAD7B7]/40 hover:border-[#EAD7B7] bg-[#3A1F0F]/20"
                   }}
                 >
                   <SelectItem key="dine_in" value="dine_in">🍽️ Dine In</SelectItem>
@@ -402,9 +401,9 @@ export default function CartPage() {
                   size="lg"
                   variant="bordered"
                   classNames={{
-                    label: "text-chocolate-brown/70 font-semibold",
-                    value: "text-chocolate-brown",
-                    trigger: "border-2 hover:border-golden-orange"
+                    label: "text-[#EAD7B7] font-semibold",
+                    value: "text-[#FAF7F2]",
+                    trigger: "border-2 border-[#EAD7B7]/40 hover:border-[#EAD7B7] bg-[#3A1F0F]/20"
                   }}
                 >
                   <SelectItem key="cash" value="cash">💵 Cash</SelectItem>
@@ -420,8 +419,7 @@ export default function CartPage() {
                     {!showReferenceInput && (
                       <Button
                         size="lg"
-                        color="primary"
-                        className="w-full"
+                        className="w-full bg-gradient-to-r from-[#7B4B28] to-[#662B35] text-[#FAF7F2] font-bold"
                         onPress={handleShowQRCode}
                         isLoading={loadingQR}
                       >
@@ -432,8 +430,8 @@ export default function CartPage() {
                     {/* Reference Number Input - shows after payment */}
                     {showReferenceInput && (
                       <div className="space-y-3">
-                        <div className="bg-success-50 p-4 rounded-lg border-2 border-success-200">
-                          <p className="text-sm text-success-700 font-semibold">
+                        <div className="glass-button p-4 rounded-lg border-2 border-[#7B4B28]/50">
+                          <p className="text-sm text-[#FAF7F2] font-semibold">
                             ✅ Payment Complete? Enter your reference number below:
                           </p>
                         </div>
@@ -446,18 +444,17 @@ export default function CartPage() {
                           variant="bordered"
                           required
                           classNames={{
-                            input: "text-chocolate-brown",
-                            label: "text-chocolate-brown/70 font-semibold",
-                            inputWrapper: "border-2 hover:border-golden-orange"
+                            input: "text-[#FAF7F2]",
+                            label: "text-[#EAD7B7] font-semibold",
+                            inputWrapper: "border-2 border-[#EAD7B7]/40 hover:border-[#EAD7B7] bg-[#3A1F0F]/20"
                           }}
                           description="Enter the reference number from your payment confirmation"
                         />
                         <Button
                           size="sm"
                           variant="flat"
-                          color="warning"
+                          className="w-full bg-[#EAD7B7]/20 text-[#FAF7F2]"
                           onPress={() => setShowReferenceInput(false)}
-                          className="w-full"
                         >
                           View QR Code Again
                         </Button>
@@ -474,57 +471,57 @@ export default function CartPage() {
                   size="lg"
                   variant="bordered"
                   classNames={{
-                    input: "text-chocolate-brown",
-                    label: "text-chocolate-brown/70 font-semibold",
-                    inputWrapper: "border-2 hover:border-golden-orange"
+                    input: "text-[#FAF7F2]",
+                    label: "text-[#EAD7B7] font-semibold",
+                    inputWrapper: "border-2 border-[#EAD7B7]/40 hover:border-[#EAD7B7] bg-[#3A1F0F]/20"
                   }}
                 />
               </CardBody>
             </Card>
 
             {/* Order Summary */}
-            <Card className="card-transparent animate-slide-up sticky top-24" style={{ animationDelay: '0.3s' }}>
-              <CardHeader className="p-6 bg-gradient-to-r from-golden-orange to-deep-amber">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+            <Card className="glass-card animate-slide-up sticky top-24" style={{ animationDelay: '0.3s' }}>
+              <CardHeader className="p-6 bg-gradient-to-r from-[#7B4B28] to-[#662B35]">
+                <h2 className="text-2xl font-bold text-[#FAF7F2] flex items-center gap-2 drop-shadow-lg">
                   <span className="text-3xl">💰</span>
                   Order Summary
                 </h2>
               </CardHeader>
               <CardBody className="p-6">
                 <div className="space-y-4">
-                  <div className="flex justify-between text-lg text-chocolate-brown">
+                  <div className="flex justify-between text-lg text-[#FAF7F2]">
                     <span>Subtotal ({getItemCount()} items)</span>
-                    <span className="font-semibold">${getSubtotal().toFixed(2)}</span>
+                    <span className="font-semibold">₱{getSubtotal().toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-lg text-chocolate-brown">
+                  <div className="flex justify-between text-lg text-[#FAF7F2]">
                     <span>Tax (12% VAT)</span>
-                    <span className="font-semibold">${getTax().toFixed(2)}</span>
+                    <span className="font-semibold">₱{getTax().toFixed(2)}</span>
                   </div>
-                  <Divider className="my-4" />
+                  <Divider className="my-4 bg-[#EAD7B7]/20" />
                   <div className="flex justify-between text-2xl font-bold">
-                    <span className="text-chocolate-brown">Total</span>
-                    <span className="bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent">
-                      ${getTotal().toFixed(2)}
+                    <span className="text-[#FAF7F2]">Total</span>
+                    <span className="bg-gradient-to-r from-[#EAD7B7] to-[#7B4B28] bg-clip-text text-transparent drop-shadow-lg">
+                      ₱{getTotal().toFixed(2)}
                     </span>
                   </div>
                 </div>
 
                 {error && (
-                  <div className="mt-4 p-4 bg-red-50 border-2 border-red-300 rounded-xl animate-scale-in">
-                    <p className="text-red-700 font-semibold">⚠️ {error}</p>
+                  <div className="mt-4 p-4 bg-[#662B35]/30 border-2 border-[#662B35] rounded-xl animate-scale-in">
+                    <p className="text-[#FAF7F2] font-semibold">⚠️ {error}</p>
                   </div>
                 )}
 
                 <Button
                   size="lg"
-                  className="w-full mt-6 bg-gradient-to-r from-golden-orange to-deep-amber text-white font-bold text-xl py-7 shadow-2xl hover:scale-105 transition-transform"
+                  className="w-full mt-6 bg-gradient-to-r from-[#7B4B28] to-[#662B35] text-[#FAF7F2] font-bold text-xl py-7 shadow-[0_0_30px_rgba(234,215,183,0.4)] hover:scale-105 transition-transform"
                   onClick={handleCheckout}
                   isLoading={isProcessing}
                 >
-                  {isProcessing ? "Processing..." : `💳 Place Order - $${getTotal().toFixed(2)}`}
+                  {isProcessing ? "Processing..." : `💳 Place Order - ₱${getTotal().toFixed(2)}`}
                 </Button>
 
-                <p className="text-xs text-chocolate-brown/60 text-center mt-3">
+                <p className="text-xs text-[#EAD7B7] text-center mt-3">
                   🔒 Secure checkout • By placing this order, you agree to our terms
                 </p>
               </CardBody>
@@ -540,7 +537,7 @@ export default function CartPage() {
         size="2xl"
         isDismissable={false}
         classNames={{
-          base: "",
+          base: "glass-card",
           header: "border-b-0",
           body: "py-8",
           footer: "border-t-0"
@@ -551,51 +548,51 @@ export default function CartPage() {
             <>
               <ModalHeader className="flex flex-col gap-1 text-center pt-8">
                 <div className="text-8xl mb-4 animate-bounce-slow">🎉</div>
-                <h2 className="text-4xl font-bold bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent">
+                <h2 className="text-4xl font-bold bg-gradient-to-r from-[#EAD7B7] to-[#7B4B28] bg-clip-text text-transparent drop-shadow-lg">
                   Order Successful!
                 </h2>
               </ModalHeader>
               <ModalBody className="text-center px-8">
                 {completedOrder && (
                   <>
-                    <p className="text-2xl text-chocolate-brown mb-6 font-semibold">
+                    <p className="text-2xl text-[#FAF7F2] mb-6 font-semibold">
                       Thank you for your order! 🙏
                     </p>
-                    <Card className="card-transparent mb-6 animate-scale-in">
+                    <Card className="glass-button mb-6 animate-scale-in border-2 border-[#EAD7B7]/30">
                       <CardBody className="p-8">
-                        <p className="text-chocolate-brown/70 text-lg mb-3">
+                        <p className="text-[#EAD7B7] text-lg mb-3">
                           Order Number
                         </p>
-                        <p className="text-2xl font-bold text-chocolate-brown mb-6">
+                        <p className="text-2xl font-bold text-[#FAF7F2] mb-6 drop-shadow-lg">
                           #{completedOrder.order_number}
                         </p>
 
-                        <div className="bg-gradient-to-r from-golden-orange to-deep-amber p-6 rounded-2xl mb-4">
-                          <p className="text-white/90 text-sm mb-2">
+                        <div className="bg-gradient-to-r from-[#7B4B28] to-[#662B35] p-6 rounded-2xl mb-4 shadow-[0_0_30px_rgba(234,215,183,0.3)]">
+                          <p className="text-[#EAD7B7] text-sm mb-2">
                             Your Verification Code
                           </p>
-                          <p className="text-5xl font-black text-white tracking-wider selectable">
+                          <p className="text-5xl font-black text-[#FAF7F2] tracking-wider selectable drop-shadow-lg">
                             {completedOrder.verification_code}
                           </p>
-                          <p className="text-white/80 text-xs mt-3">
+                          <p className="text-[#EAD7B7] text-xs mt-3">
                             📋 Please save this code
                           </p>
                         </div>
 
-                        <div className="flex items-center justify-between p-4 bg-golden-orange/10 rounded-xl">
-                          <span className="text-chocolate-brown font-semibold">Total Amount</span>
-                          <span className="text-2xl font-bold bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent">
-                            ${completedOrder.final_amount.toFixed(2)}
+                        <div className="flex items-center justify-between p-4 glass-button rounded-xl border border-[#EAD7B7]/30">
+                          <span className="text-[#FAF7F2] font-semibold">Total Amount</span>
+                          <span className="text-2xl font-bold bg-gradient-to-r from-[#EAD7B7] to-[#7B4B28] bg-clip-text text-transparent">
+                            ₱{completedOrder.final_amount.toFixed(2)}
                           </span>
                         </div>
                       </CardBody>
                     </Card>
 
-                    <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-4">
-                      <p className="text-blue-900 font-semibold mb-2">
+                    <div className="glass-button border-2 border-[#7B4B28]/50 rounded-xl p-6 mb-4">
+                      <p className="text-[#FAF7F2] font-semibold mb-2">
                         ✨ Your order is being prepared!
                       </p>
-                      <p className="text-blue-700 text-sm">
+                      <p className="text-[#EAD7B7] text-sm">
                         Present your verification code at the counter when ready
                       </p>
                     </div>
@@ -605,7 +602,7 @@ export default function CartPage() {
               <ModalFooter className="flex justify-center gap-4 pb-8">
                 <Button
                   size="lg"
-                  className="bg-gradient-to-r from-golden-orange to-deep-amber text-white font-bold px-10 shadow-xl"
+                  className="bg-gradient-to-r from-[#7B4B28] to-[#662B35] text-[#FAF7F2] font-bold px-10 shadow-[0_0_30px_rgba(234,215,183,0.4)]"
                   onClick={handleNewOrder}
                 >
                   🏠 Back to Menu
@@ -623,13 +620,14 @@ export default function CartPage() {
         size="2xl"
         backdrop="blur"
         classNames={{
-          backdrop: "bg-black/80"
+          backdrop: "bg-[#3A1F0F]/90",
+          base: "glass-card"
         }}
       >
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">
-            <h2 className="text-2xl font-bold capitalize">{paymentMethod} Payment</h2>
-            <p className="text-sm text-default-500 font-normal">
+            <h2 className="text-2xl font-bold capitalize text-[#FAF7F2]">{paymentMethod} Payment</h2>
+            <p className="text-sm text-[#EAD7B7] font-normal">
               Scan this QR code with your {paymentMethod === 'gcash' ? 'GCash' : 'PayMaya'} app
             </p>
           </ModalHeader>
@@ -638,7 +636,7 @@ export default function CartPage() {
               <div className="space-y-6">
                 {/* QR Code Display */}
                 <div className="flex justify-center">
-                  <div className="relative w-full max-w-md aspect-square bg-white rounded-xl p-6 shadow-lg border-4 border-primary">
+                  <div className="relative w-full max-w-md aspect-square bg-[#FAF7F2] rounded-xl p-6 shadow-lg border-4 border-[#7B4B28]">
                     <Image
                       src={qrCodeUrl}
                       alt={`${paymentMethod.toUpperCase()} QR Code`}
@@ -650,17 +648,17 @@ export default function CartPage() {
                 </div>
 
                 {/* Amount Display */}
-                <div className="bg-primary-50 p-6 rounded-xl border-2 border-primary-200 text-center">
-                  <p className="text-sm text-primary-700 mb-2">Amount to Pay:</p>
-                  <p className="text-4xl font-bold text-primary">
+                <div className="glass-button p-6 rounded-xl border-2 border-[#7B4B28]/50 text-center">
+                  <p className="text-sm text-[#EAD7B7] mb-2">Amount to Pay:</p>
+                  <p className="text-4xl font-bold text-[#FAF7F2] drop-shadow-lg">
                     ₱{getTotal().toFixed(2)}
                   </p>
                 </div>
 
                 {/* Instructions */}
-                <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
-                  <h3 className="font-semibold text-blue-900 mb-3">Payment Instructions:</h3>
-                  <ol className="text-sm text-blue-800 space-y-2 list-decimal list-inside">
+                <div className="glass-button p-4 rounded-lg border-2 border-[#EAD7B7]/30">
+                  <h3 className="font-semibold text-[#FAF7F2] mb-3">Payment Instructions:</h3>
+                  <ol className="text-sm text-[#EAD7B7] space-y-2 list-decimal list-inside">
                     <li>Open your {paymentMethod === 'gcash' ? 'GCash' : 'PayMaya'} app</li>
                     <li>Tap "Scan QR" in your app</li>
                     <li>Scan the QR code shown above</li>
@@ -671,16 +669,16 @@ export default function CartPage() {
                   </ol>
                 </div>
 
-                <div className="bg-warning-50 p-3 rounded-lg border-2 border-warning-200">
-                  <p className="text-sm text-warning-700 text-center">
+                <div className="glass-button p-3 rounded-lg border-2 border-[#EAD7B7]/30">
+                  <p className="text-sm text-[#EAD7B7] text-center">
                     ⚠️ <strong>Important:</strong> Make sure to complete the payment and get your reference number before clicking "I've Paid"
                   </p>
                 </div>
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-lg text-danger">QR Code not available</p>
-                <p className="text-sm text-default-500 mt-2">
+                <p className="text-lg text-[#662B35]">QR Code not available</p>
+                <p className="text-sm text-[#EAD7B7] mt-2">
                   Please contact staff for assistance with {paymentMethod} payments
                 </p>
               </div>
@@ -689,13 +687,14 @@ export default function CartPage() {
           <ModalFooter>
             <Button
               variant="light"
+              className="text-[#EAD7B7]"
               onPress={onQRClose}
             >
               Cancel
             </Button>
             <Button
-              color="success"
               size="lg"
+              className="bg-gradient-to-r from-[#7B4B28] to-[#662B35] text-[#FAF7F2] font-bold"
               onPress={handlePaymentComplete}
               isDisabled={!qrCodeUrl}
             >

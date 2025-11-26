@@ -61,7 +61,7 @@ export default function CustomCakePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <AnimatePresence mode="wait">
         {/* Welcome Screen */}
         {step === 'welcome' && (
@@ -72,23 +72,23 @@ export default function CustomCakePage() {
             exit={{ opacity: 0, scale: 0.9 }}
             className="max-w-2xl w-full"
           >
-            <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12">
+            <div className="glass-card rounded-3xl shadow-[0_0_40px_rgba(234,215,183,0.3)] p-8 md:p-12">
               {/* Header */}
               <div className="text-center mb-8">
                 <motion.div
                   initial={{ y: -20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full mb-6 shadow-lg"
+                  className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-[#7B4B28] to-[#662B35] rounded-full mb-6 shadow-[0_0_30px_rgba(234,215,183,0.4)]"
                 >
-                  <Cake className="w-12 h-12 text-white" />
+                  <Cake className="w-12 h-12 text-[#FAF7F2]" />
                 </motion.div>
 
                 <motion.h1
                   initial={{ y: -20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="text-4xl md:text-5xl font-bold text-gray-800 mb-4"
+                  className="text-4xl md:text-5xl font-bold text-[#FAF7F2] mb-4 drop-shadow-lg"
                 >
                   Design Your Dream Cake
                 </motion.h1>
@@ -97,7 +97,7 @@ export default function CustomCakePage() {
                   initial={{ y: -20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.4 }}
-                  className="text-xl text-gray-600"
+                  className="text-xl text-[#EAD7B7]"
                 >
                   Create a custom 3D cake design on your phone!
                 </motion.p>
@@ -136,7 +136,7 @@ export default function CustomCakePage() {
                 whileTap={{ scale: 0.95 }}
                 onClick={generateQR}
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white py-6 rounded-2xl text-2xl font-bold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-[#7B4B28] to-[#662B35] text-[#FAF7F2] py-6 rounded-2xl text-2xl font-bold shadow-[0_0_30px_rgba(234,215,183,0.4)] hover:shadow-[0_0_40px_rgba(234,215,183,0.6)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Start Designing
               </motion.button>
@@ -145,7 +145,7 @@ export default function CustomCakePage() {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-center"
+                  className="mt-4 p-4 glass-button border border-[#662B35] rounded-lg text-[#FAF7F2] text-center"
                 >
                   {error}
                 </motion.div>
@@ -163,19 +163,19 @@ export default function CustomCakePage() {
             exit={{ opacity: 0 }}
             className="max-w-md w-full text-center"
           >
-            <div className="bg-white rounded-3xl shadow-2xl p-12">
+            <div className="glass-card rounded-3xl shadow-[0_0_40px_rgba(234,215,183,0.3)] p-12">
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full mb-6"
+                className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-[#7B4B28] to-[#662B35] rounded-full mb-6 shadow-[0_0_30px_rgba(234,215,183,0.4)]"
               >
-                <Cake className="w-12 h-12 text-white" />
+                <Cake className="w-12 h-12 text-[#FAF7F2]" />
               </motion.div>
 
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">
+              <h2 className="text-3xl font-bold text-[#FAF7F2] mb-4 drop-shadow-lg">
                 Preparing Your Canvas
               </h2>
-              <p className="text-gray-600 text-lg">
+              <p className="text-[#EAD7B7] text-lg">
                 Setting up your custom cake designer...
               </p>
             </div>
@@ -191,18 +191,18 @@ export default function CustomCakePage() {
             exit={{ opacity: 0, scale: 0.9 }}
             className="max-w-2xl w-full"
           >
-            <div className="bg-white rounded-3xl shadow-2xl p-8 md:p-12">
+            <div className="glass-card rounded-3xl shadow-[0_0_40px_rgba(234,215,183,0.3)] p-8 md:p-12">
               {/* Timer */}
               <motion.div
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 className="flex items-center justify-center gap-3 mb-6"
               >
-                <Clock className="w-6 h-6 text-orange-500" />
-                <span className="text-2xl font-bold text-gray-800">
+                <Clock className="w-6 h-6 text-[#EAD7B7]" />
+                <span className="text-2xl font-bold text-[#FAF7F2] drop-shadow-lg">
                   {formatTime(timeRemaining)}
                 </span>
-                <span className="text-gray-600">remaining</span>
+                <span className="text-[#EAD7B7]">remaining</span>
               </motion.div>
 
               {/* Instructions */}
@@ -213,12 +213,12 @@ export default function CustomCakePage() {
                 className="text-center mb-8"
               >
                 <div className="inline-flex items-center gap-3 mb-4">
-                  <Smartphone className="w-8 h-8 text-orange-500" />
-                  <h2 className="text-3xl font-bold text-gray-800">
+                  <Smartphone className="w-8 h-8 text-[#EAD7B7]" />
+                  <h2 className="text-3xl font-bold text-[#FAF7F2] drop-shadow-lg">
                     Scan with Your Phone
                   </h2>
                 </div>
-                <p className="text-lg text-gray-600">
+                <p className="text-lg text-[#EAD7B7]">
                   Open your camera app and point it at the QR code below
                 </p>
               </motion.div>
@@ -242,17 +242,17 @@ export default function CustomCakePage() {
                       repeat: Infinity,
                       ease: "easeInOut"
                     }}
-                    className="absolute inset-0 border-4 border-orange-500 rounded-3xl blur-sm"
+                    className="absolute inset-0 border-4 border-[#EAD7B7] rounded-3xl blur-sm"
                   />
 
-                  <div className="relative bg-white p-8 rounded-3xl shadow-xl">
+                  <div className="relative bg-[#FAF7F2] p-8 rounded-3xl shadow-xl">
                     <QRCodeSVG
                       value={qrSession.editorUrl}
                       size={300}
                       level="H"
                       includeMargin
-                      fgColor="#000000"
-                      bgColor="#FFFFFF"
+                      fgColor="#3A1F0F"
+                      bgColor="#FAF7F2"
                     />
                   </div>
                 </div>
@@ -265,9 +265,9 @@ export default function CustomCakePage() {
                 transition={{ delay: 0.3 }}
                 className="mb-6"
               >
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-2 bg-[#3A1F0F]/30 rounded-full overflow-hidden">
                   <motion.div
-                    className="h-full bg-gradient-to-r from-amber-500 to-orange-600"
+                    className="h-full bg-gradient-to-r from-[#7B4B28] to-[#662B35]"
                     initial={{ width: '100%' }}
                     animate={{ width: `${(timeRemaining / qrSession.expiresIn) * 100}%` }}
                     transition={{ duration: 1 }}
@@ -293,7 +293,7 @@ export default function CustomCakePage() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
                 onClick={() => setStep('welcome')}
-                className="w-full mt-6 py-3 text-gray-600 hover:text-gray-800 font-medium transition-colors"
+                className="w-full mt-6 py-3 text-[#EAD7B7] hover:text-[#FAF7F2] font-medium transition-colors"
               >
                 Cancel & Go Back
               </motion.button>
@@ -310,15 +310,15 @@ export default function CustomCakePage() {
             exit={{ opacity: 0, scale: 0.9 }}
             className="max-w-md w-full"
           >
-            <div className="bg-white rounded-3xl shadow-2xl p-12 text-center">
-              <div className="inline-flex items-center justify-center w-24 h-24 bg-red-100 rounded-full mb-6">
-                <Clock className="w-12 h-12 text-red-500" />
+            <div className="glass-card rounded-3xl shadow-[0_0_40px_rgba(234,215,183,0.3)] p-12 text-center">
+              <div className="inline-flex items-center justify-center w-24 h-24 glass-button rounded-full mb-6 border-2 border-[#662B35]">
+                <Clock className="w-12 h-12 text-[#662B35]" />
               </div>
 
-              <h2 className="text-3xl font-bold text-gray-800 mb-4">
+              <h2 className="text-3xl font-bold text-[#FAF7F2] mb-4 drop-shadow-lg">
                 Session Expired
               </h2>
-              <p className="text-gray-600 text-lg mb-8">
+              <p className="text-[#EAD7B7] text-lg mb-8">
                 Your QR code session has timed out. Please generate a new one to continue.
               </p>
 
@@ -327,7 +327,7 @@ export default function CustomCakePage() {
                   setStep('welcome');
                   setQrSession(null);
                 }}
-                className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white py-4 rounded-2xl text-xl font-bold shadow-lg hover:shadow-xl transition-all"
+                className="w-full bg-gradient-to-r from-[#7B4B28] to-[#662B35] text-[#FAF7F2] py-4 rounded-2xl text-xl font-bold shadow-[0_0_30px_rgba(234,215,183,0.4)] hover:shadow-[0_0_40px_rgba(234,215,183,0.6)] transition-all"
               >
                 Generate New QR Code
               </button>
@@ -343,11 +343,11 @@ export default function CustomCakePage() {
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
     <div className="text-center p-4">
-      <div className="inline-flex items-center justify-center w-12 h-12 bg-orange-100 rounded-full mb-3 text-orange-600">
+      <div className="inline-flex items-center justify-center w-12 h-12 glass-button rounded-full mb-3 text-[#EAD7B7] border border-[#EAD7B7]/30">
         {icon}
       </div>
-      <h3 className="font-bold text-gray-800 mb-1">{title}</h3>
-      <p className="text-sm text-gray-600">{description}</p>
+      <h3 className="font-bold text-[#FAF7F2] mb-1 drop-shadow-md">{title}</h3>
+      <p className="text-sm text-[#EAD7B7]">{description}</p>
     </div>
   );
 }
@@ -355,10 +355,10 @@ function FeatureCard({ icon, title, description }: { icon: React.ReactNode; titl
 function StepIndicator({ number, text }: { number: number; text: string }) {
   return (
     <div className="flex flex-col items-center">
-      <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-full flex items-center justify-center font-bold mb-2">
+      <div className="w-10 h-10 bg-gradient-to-br from-[#7B4B28] to-[#662B35] text-[#FAF7F2] rounded-full flex items-center justify-center font-bold mb-2 shadow-lg">
         {number}
       </div>
-      <span className="text-sm text-gray-600">{text}</span>
+      <span className="text-sm text-[#EAD7B7]">{text}</span>
     </div>
   );
 }

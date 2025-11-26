@@ -130,15 +130,15 @@ export default function HomePage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="relative mb-8">
-            <Spinner size="lg" color="warning" className="w-24 h-24" />
+            <Spinner size="lg" className="w-24 h-24" style={{ color: '#EAD7B7' }} />
             <div className="absolute inset-0 animate-ping opacity-20">
-              <div className="w-24 h-24 rounded-full bg-golden-orange/30"></div>
+              <div className="w-24 h-24 rounded-full bg-[#EAD7B7]/30"></div>
             </div>
           </div>
-          <h2 className="text-4xl font-bold text-chocolate-brown mb-3 animate-pulse">
+          <h2 className="text-4xl font-bold text-[#FAF7F2] mb-3 animate-pulse">
             ✨ Loading Delights...
           </h2>
-          <p className="text-xl text-chocolate-brown/70">
+          <p className="text-xl text-[#EAD7B7]">
             Preparing something amazing
           </p>
         </div>
@@ -152,13 +152,13 @@ export default function HomePage() {
         <Card className="glass-card max-w-xl">
           <CardBody className="text-center p-12">
             <div className="text-9xl mb-6">⚠️</div>
-            <h2 className="text-4xl font-bold text-chocolate-brown mb-4">
+            <h2 className="text-4xl font-bold text-[#FAF7F2] mb-4">
               Oops! Something went wrong
             </h2>
-            <p className="text-xl text-chocolate-brown/70 mb-8">{error}</p>
+            <p className="text-xl text-[#EAD7B7] mb-8">{error}</p>
             <Button
               size="lg"
-              className="bg-gradient-to-r from-golden-orange to-deep-amber text-white font-bold text-xl px-12 py-6 shadow-xl-golden touch-target"
+              className="bg-gradient-to-r from-[#7B4B28] to-[#662B35] text-[#FAF7F2] font-bold text-xl px-12 py-6 shadow-xl touch-target"
               onClick={() => window.location.reload()}
             >
               🔄 Try Again
@@ -173,14 +173,14 @@ export default function HomePage() {
     <div className="min-h-screen pb-32">
       {/* Hero Header - Portrait Optimized */}
       <div className="relative">
-        <div className="glass-header border-b-4 border-golden-orange/30 p-8">
+        <div className="glass-header border-b-4 border-[#EAD7B7]/30 p-8">
           <div className="text-center space-y-4">
             {/* Logo / Branding */}
             <div className="text-8xl animate-float mx-auto">🍰</div>
-            <h1 className="text-6xl font-black bg-gradient-to-br from-golden-orange via-deep-amber to-orange-600 bg-clip-text text-transparent">
+            <h1 className="text-6xl font-black bg-gradient-to-br from-[#EAD7B7] via-[#7B4B28] to-[#662B35] bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(234,215,183,0.3)]">
               Golden Munch
             </h1>
-            <p className="text-2xl text-chocolate-brown/80 font-semibold">
+            <p className="text-2xl text-[#FAF7F2] font-semibold drop-shadow-lg">
               Fresh • Delicious • Made with Love
             </p>
           </div>
@@ -192,11 +192,12 @@ export default function HomePage() {
             as={NextLink}
             href="/cart"
             size="lg"
-            className="absolute top-8 right-8 bg-gradient-to-br from-golden-orange to-deep-amber text-white font-bold text-xl px-8 py-6 shadow-xl-golden animate-glow rounded-full touch-target"
+            className="absolute top-8 right-8 bg-gradient-to-br from-[#7B4B28] to-[#662B35] text-[#FAF7F2] font-bold text-xl px-8 py-6 rounded-full touch-target shadow-[0_0_30px_rgba(234,215,183,0.4)]"
+            style={{ animation: 'glow 2s ease-in-out infinite' }}
           >
             <span className="text-3xl mr-2">🛒</span>
             <span className="text-2xl">{getItemCount()}</span>
-            <Chip size="lg" color="danger" className="ml-3 text-xl px-4">
+            <Chip size="lg" className="ml-3 text-xl px-4 bg-[#662B35] text-[#FAF7F2] font-bold">
               ₱{getTotal().toFixed(0)}
             </Chip>
           </Button>
@@ -207,7 +208,7 @@ export default function HomePage() {
         {/* Categories - Horizontal Scroll */}
         {categories.length > 0 && (
           <div>
-            <h2 className="text-3xl font-bold text-chocolate-brown mb-6 flex items-center gap-3">
+            <h2 className="text-3xl font-bold text-[#FAF7F2] mb-6 flex items-center gap-3 drop-shadow-lg">
               <span className="text-5xl">📂</span>
               Categories
             </h2>
@@ -216,8 +217,8 @@ export default function HomePage() {
                 size="lg"
                 className={`${
                   selectedCategory === null
-                    ? 'bg-gradient-to-br from-golden-orange to-deep-amber text-white shadow-xl-golden scale-110'
-                    : 'glass-button border-2 border-golden-orange/40 text-chocolate-brown'
+                    ? 'bg-gradient-to-br from-[#7B4B28] to-[#662B35] text-[#FAF7F2] scale-110 shadow-[0_0_20px_rgba(234,215,183,0.4)]'
+                    : 'glass-button border-2 border-[#EAD7B7]/40 text-[#FAF7F2]'
                 } font-bold text-2xl px-8 py-7 rounded-2xl min-w-[200px] snap-center transition-all touch-target`}
                 onClick={() => setSelectedCategory(null)}
               >
@@ -229,8 +230,8 @@ export default function HomePage() {
                   size="lg"
                   className={`${
                     selectedCategory === category.category_id
-                      ? 'bg-gradient-to-br from-golden-orange to-deep-amber text-white shadow-xl-golden scale-110'
-                      : 'glass-button border-2 border-golden-orange/40 text-chocolate-brown'
+                      ? 'bg-gradient-to-br from-[#7B4B28] to-[#662B35] text-[#FAF7F2] scale-110 shadow-[0_0_20px_rgba(234,215,183,0.4)]'
+                      : 'glass-button border-2 border-[#EAD7B7]/40 text-[#FAF7F2]'
                   } font-bold text-2xl px-8 py-7 rounded-2xl min-w-[200px] snap-center transition-all touch-target`}
                   onClick={() => setSelectedCategory(category.category_id)}
                 >
@@ -246,16 +247,16 @@ export default function HomePage() {
           <Card className="glass-card">
             <CardBody className="text-center py-20">
               <div className="text-9xl mb-6 animate-float">🍽️</div>
-              <h3 className="text-5xl font-bold text-chocolate-brown mb-4">
+              <h3 className="text-5xl font-bold text-[#FAF7F2] mb-4 drop-shadow-lg">
                 No items found
               </h3>
-              <p className="text-2xl text-chocolate-brown/70 mb-8">
+              <p className="text-2xl text-[#EAD7B7] mb-8">
                 No items in this category
               </p>
               {selectedCategory !== null && (
                 <Button
                   size="lg"
-                  className="bg-gradient-to-r from-golden-orange to-deep-amber text-white font-bold px-12 py-6 text-2xl touch-target"
+                  className="bg-gradient-to-r from-[#7B4B28] to-[#662B35] text-[#FAF7F2] font-bold px-12 py-6 text-2xl touch-target"
                   onClick={() => setSelectedCategory(null)}
                 >
                   Clear Filter
@@ -266,7 +267,7 @@ export default function HomePage() {
         ) : (
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-bold text-chocolate-brown">
+              <h2 className="text-3xl font-bold text-[#FAF7F2] drop-shadow-lg">
                 🍴 {filteredItems.length} Delicious Items
               </h2>
             </div>
@@ -284,7 +285,7 @@ export default function HomePage() {
                   >
                     <CardBody className="p-0">
                       {/* Image/Icon Section */}
-                      <div className="relative h-48 bg-gradient-to-br from-golden-orange/20 to-deep-amber/20 flex items-center justify-center rounded-t-xl overflow-hidden">
+                      <div className="relative h-48 bg-gradient-to-br from-[#7B4B28]/20 to-[#662B35]/20 flex items-center justify-center rounded-t-xl overflow-hidden">
                         {getImageUrl(item.image_url) ? (
                           <div className="w-full h-full relative">
                             <Image
@@ -301,17 +302,17 @@ export default function HomePage() {
                         {/* Badges */}
                         <div className="absolute top-3 right-3 flex flex-col gap-2">
                           {item.is_featured && (
-                            <Chip color="warning" size="lg" className="font-bold text-lg animate-pulse-slow">
+                            <Chip size="lg" className="font-bold text-lg animate-pulse-slow bg-[#EAD7B7] text-[#3A1F0F]">
                               🔥 Hot
                             </Chip>
                           )}
                           {!isAvailable && (
-                            <Chip color="danger" size="lg" className="font-bold text-lg">
+                            <Chip size="lg" className="font-bold text-lg bg-[#662B35] text-[#FAF7F2]">
                               Sold Out
                             </Chip>
                           )}
                           {cartQty > 0 && (
-                            <Chip color="success" size="lg" className="font-bold text-xl">
+                            <Chip size="lg" className="font-bold text-xl bg-[#7B4B28] text-[#FAF7F2]">
                               {cartQty} in cart
                             </Chip>
                           )}
@@ -321,19 +322,19 @@ export default function HomePage() {
                       {/* Content Section */}
                       <div className="p-5 space-y-4">
                         <div>
-                          <h3 className="text-2xl font-bold text-chocolate-brown mb-2 line-clamp-2">
+                          <h3 className="text-2xl font-bold text-[#FAF7F2] mb-2 line-clamp-2 drop-shadow-md">
                             {item.name}
                           </h3>
-                          <p className="text-lg text-chocolate-brown/60 line-clamp-2">
+                          <p className="text-lg text-[#EAD7B7] line-clamp-2">
                             {item.description || 'Delicious treat made fresh daily'}
                           </p>
                         </div>
 
                         <div className="flex items-center justify-between">
-                          <span className="text-4xl font-black bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent">
+                          <span className="text-4xl font-black bg-gradient-to-r from-[#EAD7B7] to-[#7B4B28] bg-clip-text text-transparent drop-shadow-lg">
                             ₱{(Number(item.current_price) || 0).toFixed(0)}
                           </span>
-                          <Chip size="lg" variant="flat" className="text-lg">
+                          <Chip size="lg" variant="flat" className="text-lg bg-[#EAD7B7]/20 text-[#FAF7F2] border border-[#EAD7B7]/30">
                             {item.item_type}
                           </Chip>
                         </div>
@@ -341,7 +342,7 @@ export default function HomePage() {
                         {isAvailable ? (
                           <Button
                             size="lg"
-                            className="w-full bg-gradient-to-r from-golden-orange to-deep-amber text-white font-bold text-xl py-6 shadow-lg hover:shadow-xl-golden touch-target touch-feedback"
+                            className="w-full bg-gradient-to-r from-[#7B4B28] to-[#662B35] text-[#FAF7F2] font-bold text-xl py-6 shadow-lg hover:shadow-[0_0_25px_rgba(234,215,183,0.5)] touch-target touch-feedback transition-all"
                             onClick={() => handleAddToCart(item)}
                           >
                             {cartQty > 0 ? '🛒 Add More' : '+ Add to Cart'}
@@ -350,7 +351,7 @@ export default function HomePage() {
                           <Button
                             disabled
                             size="lg"
-                            className="w-full bg-gray-300 text-gray-600 font-semibold text-xl py-6 touch-target"
+                            className="w-full bg-[#3A1F0F]/50 text-[#EAD7B7]/50 font-semibold text-xl py-6 touch-target"
                           >
                             Unavailable
                           </Button>
