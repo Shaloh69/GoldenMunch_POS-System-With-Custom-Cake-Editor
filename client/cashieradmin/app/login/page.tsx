@@ -30,28 +30,39 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-mesh-gradient p-4">
-      <Card className="w-full max-w-md shadow-xl-golden">
-        <CardHeader className="flex flex-col gap-3 items-center pt-8 pb-4">
-          <div className="text-4xl animate-float">🥐</div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent">
-            GoldenMunch POS
-          </h1>
-          <p className="text-sm text-default-500">Admin & Cashier Portal</p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-cream-white via-soft-sand to-warm-beige p-4 relative overflow-hidden">
+      {/* Decorative Elements */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-light-caramel/20 rounded-full blur-3xl animate-drift"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-muted-clay/20 rounded-full blur-3xl animate-drift"></div>
+
+      <Card className="w-full max-w-md shadow-caramel border-2 border-light-caramel/30 backdrop-blur-xl animate-scale-in z-10">
+        <CardHeader className="flex flex-col gap-4 items-center pt-10 pb-6 bg-gradient-to-b from-soft-sand/30 to-transparent border-b border-light-caramel/20">
+          <div className="text-6xl animate-float-slow drop-shadow-lg">🥐</div>
+          <div className="text-center">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-light-caramel via-muted-clay to-light-caramel bg-clip-text text-transparent animate-shimmer bg-[length:200%_auto]">
+              GoldenMunch POS
+            </h1>
+            <p className="text-sm text-warm-beige font-medium mt-2">Admin & Cashier Portal</p>
+          </div>
         </CardHeader>
-        <CardBody className="px-8 pb-8">
+        <CardBody className="px-8 pb-10 pt-6">
           <Tabs
             selectedKey={loginType}
             onSelectionChange={(key) => setLoginType(key as 'admin' | 'cashier')}
             fullWidth
             color="primary"
-            className="mb-6"
+            className="mb-8"
+            classNames={{
+              tabList: "bg-soft-sand/50 p-1 border border-light-caramel/20",
+              cursor: "bg-gradient-to-r from-light-caramel to-muted-clay shadow-caramel",
+              tab: "text-warm-beige data-[selected=true]:text-white font-semibold",
+            }}
           >
             <Tab key="admin" title="Admin Login" />
             <Tab key="cashier" title="Cashier Login" />
           </Tabs>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             <Input
               label={loginType === 'admin' ? 'Username' : 'Cashier Code'}
               placeholder={loginType === 'admin' ? 'Enter your username' : 'Enter cashier code'}
@@ -60,6 +71,11 @@ export default function LoginPage() {
               required
               variant="bordered"
               color="primary"
+              classNames={{
+                input: "text-muted-clay font-medium",
+                label: "text-warm-beige font-semibold",
+                inputWrapper: "border-light-caramel/40 hover:border-muted-clay focus-within:border-muted-clay bg-cream-white/50",
+              }}
             />
             <Input
               label={loginType === 'admin' ? 'Password' : 'PIN'}
@@ -71,24 +87,34 @@ export default function LoginPage() {
               variant="bordered"
               color="primary"
               maxLength={loginType === 'cashier' ? 4 : undefined}
+              classNames={{
+                input: "text-muted-clay font-medium",
+                label: "text-warm-beige font-semibold",
+                inputWrapper: "border-light-caramel/40 hover:border-muted-clay focus-within:border-muted-clay bg-cream-white/50",
+              }}
             />
 
             {error && (
-              <div className="text-danger text-sm p-2 bg-danger-50 rounded-lg">
+              <div className="text-red-600 text-sm p-3 bg-red-50 rounded-xl border border-red-200 animate-slide-up">
                 {error}
               </div>
             )}
 
             <Button
               type="submit"
-              color="primary"
               size="lg"
               isLoading={isLoading}
-              className="mt-2 bg-gradient-to-r from-golden-orange to-deep-amber hover:shadow-xl-golden transition-all"
+              className="mt-3 bg-gradient-to-r from-light-caramel via-muted-clay to-light-caramel text-white font-bold shadow-caramel hover:shadow-xl hover:scale-105 transition-all duration-300 border border-light-caramel/30 animate-shimmer bg-[length:200%_auto]"
             >
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-xs text-warm-beige">
+              Powered by GoldenMunch • Soft & Airy Theme
+            </p>
+          </div>
         </CardBody>
       </Card>
     </div>

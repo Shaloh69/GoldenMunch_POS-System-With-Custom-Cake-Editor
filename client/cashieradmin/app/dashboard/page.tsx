@@ -69,15 +69,18 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-6 animate-scale-in">
+    <div className="space-y-8 animate-fade-in">
       {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-golden-orange to-deep-amber p-8 rounded-lg shadow-xl-golden">
-        <h1 className="text-3xl font-bold text-white">
-          Welcome back, {user?.name}!
-        </h1>
-        <p className="text-white/90 mt-2">
-          {isAdmin() ? 'Admin Dashboard' : 'Cashier Dashboard'}
-        </p>
+      <div className="bg-gradient-to-r from-light-caramel via-muted-clay to-light-caramel p-10 rounded-2xl shadow-caramel border-2 border-light-caramel/30 relative overflow-hidden animate-scale-in bg-[length:200%_auto] animate-shimmer">
+        <div className="absolute inset-0 bg-gradient-to-br from-cream-white/10 to-transparent"></div>
+        <div className="relative z-10">
+          <h1 className="text-4xl font-bold text-white drop-shadow-lg">
+            Welcome back, {user?.name}! 👋
+          </h1>
+          <p className="text-white/90 mt-3 text-lg font-medium">
+            {isAdmin() ? '🔧 Admin Dashboard' : '💰 Cashier Dashboard'}
+          </p>
+        </div>
       </div>
 
       {/* Quick Stats */}
@@ -86,50 +89,56 @@ export default function DashboardPage() {
           title="Today's Orders"
           value={loading ? '...' : stats.todayOrders.toString()}
           icon={ShoppingCartIcon}
-          color="bg-blue-500"
+          color="from-light-caramel to-warm-beige"
         />
         <StatCard
           title="Revenue"
           value={loading ? '...' : `₱${stats.todayRevenue.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`}
           icon={CurrencyDollarIcon}
-          color="bg-green-500"
+          color="from-muted-clay to-light-caramel"
         />
         <StatCard
           title="Customers"
           value={loading ? '...' : stats.totalCustomers.toString()}
           icon={UserGroupIcon}
-          color="bg-purple-500"
+          color="from-warm-beige to-soft-sand"
         />
         <StatCard
           title="Avg Order Value"
           value={loading ? '...' : `₱${stats.avgOrderValue.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`}
           icon={ChartBarIcon}
-          color="bg-orange-500"
+          color="from-soft-sand to-light-caramel"
         />
       </div>
 
       {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <h3 className="text-xl font-bold">Recent Orders</h3>
+      <Card className="shadow-caramel border-2 border-light-caramel/20">
+        <CardHeader className="bg-gradient-to-r from-soft-sand/30 to-transparent border-b border-light-caramel/20 p-6">
+          <h3 className="text-2xl font-bold text-muted-clay">Recent Orders</h3>
         </CardHeader>
-        <CardBody>
+        <CardBody className="p-6">
           {loading ? (
-            <p className="text-default-500">Loading...</p>
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-10 w-10 border-4 border-light-caramel border-t-transparent"></div>
+            </div>
           ) : recentOrders.length > 0 ? (
-            <div className="space-y-3">
-              {recentOrders.map((order) => (
-                <div key={order.order_id} className="flex justify-between items-center p-3 bg-default-50 rounded-lg">
+            <div className="space-y-4">
+              {recentOrders.map((order, index) => (
+                <div
+                  key={order.order_id}
+                  className="flex justify-between items-center p-4 bg-gradient-to-r from-cream-white to-soft-sand/50 rounded-xl border border-light-caramel/20 hover:shadow-caramel transition-all duration-300 hover:scale-102 animate-slide-up"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
                   <div>
-                    <p className="font-semibold">Order #{order.order_id}</p>
-                    <p className="text-sm text-default-500">{order.customer_name}</p>
+                    <p className="font-bold text-muted-clay text-lg">Order #{order.order_id}</p>
+                    <p className="text-sm text-warm-beige font-medium">{order.customer_name}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold">₱{parseFloat(order.total_amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</p>
-                    <p className={`text-sm ${
-                      order.order_status === 'completed' ? 'text-success' :
-                      order.order_status === 'pending' ? 'text-warning' :
-                      'text-default-500'
+                    <p className="font-bold text-lg text-muted-clay">₱{parseFloat(order.total_amount).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</p>
+                    <p className={`text-sm font-semibold px-3 py-1 rounded-full inline-block ${
+                      order.order_status === 'completed' ? 'bg-green-100 text-green-700' :
+                      order.order_status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-gray-100 text-gray-700'
                     }`}>
                       {order.order_status}
                     </p>
@@ -138,7 +147,7 @@ export default function DashboardPage() {
               ))}
             </div>
           ) : (
-            <p className="text-default-500">No recent orders</p>
+            <p className="text-center text-warm-beige py-8 font-medium">No recent orders</p>
           )}
         </CardBody>
       </Card>
@@ -155,14 +164,14 @@ interface StatCardProps {
 
 function StatCard({ title, value, icon: Icon, color }: StatCardProps) {
   return (
-    <Card>
-      <CardBody className="flex flex-row items-center gap-4 p-6">
-        <div className={`${color} p-3 rounded-lg`}>
-          <Icon className="h-8 w-8 text-white" />
+    <Card className="shadow-caramel border border-light-caramel/20 hover:shadow-xl hover:scale-105 transition-all duration-300 hover:border-light-caramel/40">
+      <CardBody className="flex flex-row items-center gap-5 p-6">
+        <div className={`bg-gradient-to-br ${color} p-4 rounded-xl shadow-md`}>
+          <Icon className="h-10 w-10 text-white drop-shadow-lg" />
         </div>
-        <div>
-          <p className="text-sm text-default-500">{title}</p>
-          <p className="text-2xl font-bold">{value}</p>
+        <div className="flex-1">
+          <p className="text-sm text-warm-beige font-semibold uppercase tracking-wide">{title}</p>
+          <p className="text-3xl font-bold text-muted-clay mt-1">{value}</p>
         </div>
       </CardBody>
     </Card>

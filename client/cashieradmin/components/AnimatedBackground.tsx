@@ -20,7 +20,7 @@ export default function AnimatedBackground() {
     setCanvasSize();
     window.addEventListener('resize', setCanvasSize);
 
-    // Particle system for floating elements
+    // Enhanced particle system with more variety
     class Particle {
       x: number;
       y: number;
@@ -29,94 +29,147 @@ export default function AnimatedBackground() {
       speedY: number;
       opacity: number;
       color: string;
+      angle: number;
+      angleSpeed: number;
+      pulseSpeed: number;
+      pulsePhase: number;
 
       constructor() {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
-        this.size = Math.random() * 3 + 1;
-        this.speedX = Math.random() * 0.5 - 0.25;
-        this.speedY = Math.random() * 0.5 - 0.25;
-        this.opacity = Math.random() * 0.3 + 0.1;
+        this.size = Math.random() * 5 + 2;
+        this.speedX = Math.random() * 0.8 - 0.4;
+        this.speedY = Math.random() * 0.8 - 0.4;
+        this.opacity = Math.random() * 0.4 + 0.2;
+        this.angle = Math.random() * Math.PI * 2;
+        this.angleSpeed = (Math.random() - 0.5) * 0.02;
+        this.pulseSpeed = Math.random() * 0.02 + 0.01;
+        this.pulsePhase = Math.random() * Math.PI * 2;
 
-        // Golden/warm colors for bakery theme
-        const colors = ['rgba(255, 223, 186, ', 'rgba(255, 200, 124, ', 'rgba(255, 183, 77, ', 'rgba(251, 192, 147, '];
+        // Light Caramel & Cream color palette
+        const colors = [
+          'rgba(217, 179, 140, ', // Light Caramel
+          'rgba(255, 249, 242, ', // Cream White
+          'rgba(232, 220, 200, ', // Soft Sand
+          'rgba(201, 184, 165, ', // Warm Beige
+          'rgba(198, 123, 87, ',  // Muted Clay
+        ];
         this.color = colors[Math.floor(Math.random() * colors.length)];
       }
 
       update() {
-        this.x += this.speedX;
-        this.y += this.speedY;
+        // Add wave-like motion
+        this.angle += this.angleSpeed;
+        this.x += this.speedX + Math.cos(this.angle) * 0.5;
+        this.y += this.speedY + Math.sin(this.angle) * 0.5;
 
-        // Wrap around edges
-        if (this.x > canvas.width) this.x = 0;
-        if (this.x < 0) this.x = canvas.width;
-        if (this.y > canvas.height) this.y = 0;
-        if (this.y < 0) this.y = canvas.height;
+        // Pulsing opacity
+        this.pulsePhase += this.pulseSpeed;
+        const pulseOpacity = Math.sin(this.pulsePhase) * 0.2;
+
+        // Wrap around edges with smooth transition
+        if (this.x > canvas.width + 50) this.x = -50;
+        if (this.x < -50) this.x = canvas.width + 50;
+        if (this.y > canvas.height + 50) this.y = -50;
+        if (this.y < -50) this.y = canvas.height + 50;
+
+        return pulseOpacity;
       }
 
-      draw() {
+      draw(pulseOpacity: number) {
         if (!ctx) return;
-        ctx.fillStyle = this.color + this.opacity + ')';
+
+        // Draw glowing effect
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = this.color + (this.opacity + pulseOpacity) + ')';
+
+        ctx.fillStyle = this.color + (this.opacity + pulseOpacity) + ')';
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
+
+        ctx.shadowBlur = 0;
       }
     }
 
-    // Create particles
+    // Create more particles for a fuller effect
     const particles: Particle[] = [];
-    const particleCount = 50;
+    const particleCount = 80;
     for (let i = 0; i < particleCount; i++) {
       particles.push(new Particle());
     }
 
-    // Gradient animation
+    // Gradient animation with smoother transitions
     let gradientOffset = 0;
+    let time = 0;
 
     const animate = () => {
       if (!ctx) return;
 
-      // Create animated gradient background
-      gradientOffset += 0.001;
+      time += 0.005;
+      gradientOffset += 0.0008;
 
+      // Create multi-layered animated gradient background
       const gradient1 = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-      const hue1 = (gradientOffset * 360) % 360;
-      const hue2 = (gradientOffset * 360 + 120) % 360;
 
-      // Warm golden gradient for bakery theme
-      gradient1.addColorStop(0, `hsl(${hue1}, 70%, 95%)`);
-      gradient1.addColorStop(0.5, `hsl(${hue2}, 60%, 97%)`);
-      gradient1.addColorStop(1, `hsl(${hue1 + 60}, 65%, 96%)`);
+      // Light Caramel & Cream gradient with subtle animation
+      const offset = Math.sin(gradientOffset * Math.PI * 2) * 0.1;
+      gradient1.addColorStop(0, '#FFF9F2');       // Cream White
+      gradient1.addColorStop(0.3 + offset, '#F5EFE6');
+      gradient1.addColorStop(0.6 + offset, '#E8DCC8'); // Soft Sand
+      gradient1.addColorStop(1, '#D9B38C');       // Light Caramel
 
       ctx.fillStyle = gradient1;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Add subtle radial gradient overlay
+      // Add animated radial gradient overlay
       const radialGradient = ctx.createRadialGradient(
-        canvas.width / 2, canvas.height / 2, 0,
-        canvas.width / 2, canvas.height / 2, canvas.width / 2
+        canvas.width / 2 + Math.cos(time) * 100,
+        canvas.height / 2 + Math.sin(time * 0.8) * 100,
+        0,
+        canvas.width / 2,
+        canvas.height / 2,
+        Math.max(canvas.width, canvas.height) / 1.5
       );
-      radialGradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
-      radialGradient.addColorStop(1, 'rgba(255, 200, 100, 0.1)');
+      radialGradient.addColorStop(0, 'rgba(255, 249, 242, 0.4)');
+      radialGradient.addColorStop(0.5, 'rgba(232, 220, 200, 0.2)');
+      radialGradient.addColorStop(1, 'rgba(217, 179, 140, 0.1)');
       ctx.fillStyle = radialGradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Add warm glow overlay at corners
+      const cornerGlow1 = ctx.createRadialGradient(0, 0, 0, 0, 0, canvas.width * 0.6);
+      cornerGlow1.addColorStop(0, 'rgba(198, 123, 87, 0.15)');
+      cornerGlow1.addColorStop(1, 'rgba(198, 123, 87, 0)');
+      ctx.fillStyle = cornerGlow1;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const cornerGlow2 = ctx.createRadialGradient(
+        canvas.width, canvas.height, 0,
+        canvas.width, canvas.height, canvas.width * 0.6
+      );
+      cornerGlow2.addColorStop(0, 'rgba(217, 179, 140, 0.15)');
+      cornerGlow2.addColorStop(1, 'rgba(217, 179, 140, 0)');
+      ctx.fillStyle = cornerGlow2;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Update and draw particles
       particles.forEach(particle => {
-        particle.update();
-        particle.draw();
+        const pulseOpacity = particle.update();
+        particle.draw(pulseOpacity);
       });
 
-      // Draw connecting lines between nearby particles
+      // Draw enhanced connecting lines between nearby particles
+      ctx.lineWidth = 1;
       particles.forEach((p1, i) => {
         particles.slice(i + 1).forEach(p2 => {
           const dx = p1.x - p2.x;
           const dy = p1.y - p2.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
 
-          if (distance < 150) {
-            ctx.strokeStyle = `rgba(255, 200, 100, ${0.15 * (1 - distance / 150)})`;
-            ctx.lineWidth = 0.5;
+          if (distance < 180) {
+            const opacity = 0.25 * (1 - distance / 180);
+            ctx.strokeStyle = `rgba(217, 179, 140, ${opacity})`;
             ctx.beginPath();
             ctx.moveTo(p1.x, p1.y);
             ctx.lineTo(p2.x, p2.y);
@@ -139,7 +192,7 @@ export default function AnimatedBackground() {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 -z-10 pointer-events-none"
-      style={{ background: 'linear-gradient(135deg, #FFF8F0 0%, #FFEFD5 50%, #FFE4B5 100%)' }}
+      style={{ background: 'linear-gradient(135deg, #FFF9F2 0%, #E8DCC8 50%, #D9B38C 100%)' }}
     />
   );
 }

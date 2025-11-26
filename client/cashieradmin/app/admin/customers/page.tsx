@@ -10,7 +10,6 @@ import { Chip } from '@heroui/chip';
 import { Spinner } from '@heroui/spinner';
 import { Pagination } from '@heroui/pagination';
 import { Tabs, Tab } from '@heroui/tabs';
-import { ProtectedRoute } from '@/components/protected-route';
 import { CustomerService } from '@/services/customer.service';
 import type { Customer, CreateCustomerRequest, CustomerOrder } from '@/types/api';
 import {
@@ -42,14 +41,6 @@ interface PaginationState {
 }
 
 export default function AdminCustomersPage() {
-  return (
-    <ProtectedRoute adminOnly>
-      <CustomerManagementContent />
-    </ProtectedRoute>
-  );
-}
-
-function CustomerManagementContent() {
   // State
   const [customers, setCustomers] = useState<CustomerWithStats[]>([]);
   const [loading, setLoading] = useState(true);

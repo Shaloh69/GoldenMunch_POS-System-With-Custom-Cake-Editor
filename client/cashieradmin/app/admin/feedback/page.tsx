@@ -17,7 +17,6 @@ import {
   ClockIcon,
 } from '@heroicons/react/24/outline';
 import { FeedbackService } from '@/services/feedback.service';
-import { ProtectedRoute } from '@/components/protected-route';
 import type { CustomerFeedback } from '@/types/api';
 
 // TypeScript Types for Feedback Management
@@ -39,14 +38,6 @@ interface FeedbackStats {
 }
 
 export default function AdminFeedbackPage() {
-  return (
-    <ProtectedRoute adminOnly>
-      <FeedbackManagementContent />
-    </ProtectedRoute>
-  );
-}
-
-function FeedbackManagementContent() {
   const [feedbackList, setFeedbackList] = useState<CustomerFeedback[]>([]);
   const [stats, setStats] = useState<FeedbackStats | null>(null);
   const [loading, setLoading] = useState(true);

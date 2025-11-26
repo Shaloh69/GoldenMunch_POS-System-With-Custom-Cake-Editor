@@ -11,7 +11,6 @@ import { Spinner } from '@heroui/spinner';
 import { Select, SelectItem } from '@heroui/select';
 import { Textarea } from '@heroui/input';
 import { SupplierService } from '@/services/supplier.service';
-import { ProtectedRoute } from '@/components/protected-route';
 import type { Supplier, CreateSupplierRequest } from '@/types/api';
 import { PlusIcon, MagnifyingGlassIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 
@@ -26,15 +25,6 @@ interface FilterOptions {
 
 // Main Page Component
 export default function AdminSuppliersPage() {
-  return (
-    <ProtectedRoute adminOnly>
-      <SuppliersManagementContent />
-    </ProtectedRoute>
-  );
-}
-
-// Suppliers Management Content Component
-function SuppliersManagementContent() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

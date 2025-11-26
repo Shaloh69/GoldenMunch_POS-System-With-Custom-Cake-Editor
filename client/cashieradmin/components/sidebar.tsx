@@ -72,7 +72,7 @@ export function Sidebar() {
       {/* Mobile Toggle Button */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-golden-orange text-white shadow-lg"
+        className="lg:hidden fixed top-4 left-4 z-50 p-3 rounded-xl bg-gradient-to-r from-light-caramel to-muted-clay text-white shadow-caramel hover:shadow-xl transition-all duration-300 hover:scale-105"
       >
         {isCollapsed ? <Bars3Icon className="h-6 w-6" /> : <XMarkIcon className="h-6 w-6" />}
       </button>
@@ -81,24 +81,24 @@ export function Sidebar() {
       <aside
         className={`
           fixed lg:sticky top-0 left-0 h-screen
-          bg-gradient-to-b from-deep-amber/10 to-golden-orange/5
-          border-r border-divider
-          transition-all duration-300 z-40
-          ${isCollapsed ? '-translate-x-full lg:w-20' : 'w-64'}
+          bg-gradient-to-b from-cream-white via-soft-sand to-warm-beige
+          border-r border-light-caramel/30
+          transition-all duration-300 z-40 shadow-soft
+          ${isCollapsed ? '-translate-x-full lg:w-20' : 'w-72'}
           lg:translate-x-0
           flex flex-col
         `}
       >
         {/* Header */}
-        <div className="p-4 border-b border-divider">
+        <div className="p-5 border-b border-light-caramel/20">
           <div className="flex items-center gap-3">
-            <div className="text-3xl animate-float">🥐</div>
+            <div className="text-4xl animate-float-slow">🥐</div>
             {!isCollapsed && (
               <div>
-                <h2 className="font-bold text-lg bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent">
+                <h2 className="font-bold text-xl bg-gradient-to-r from-light-caramel to-muted-clay bg-clip-text text-transparent">
                   GoldenMunch
                 </h2>
-                <p className="text-xs text-default-500">
+                <p className="text-xs font-medium text-warm-beige">
                   {isAdmin() ? 'Admin Portal' : 'Cashier Portal'}
                 </p>
               </div>
@@ -107,17 +107,17 @@ export function Sidebar() {
         </div>
 
         {/* User Info */}
-        <div className="p-4 border-b border-divider">
+        <div className="p-5 border-b border-light-caramel/20 bg-gradient-to-r from-soft-sand/30 to-transparent">
           <div className="flex items-center gap-3">
             <Avatar
               name={user?.name}
               size="sm"
-              className="bg-gradient-to-r from-golden-orange to-deep-amber"
+              className="bg-gradient-to-r from-light-caramel to-muted-clay ring-2 ring-light-caramel/30"
             />
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold truncate">{user?.name}</p>
-                <p className="text-xs text-default-500 capitalize">{user?.type}</p>
+                <p className="text-sm font-semibold truncate text-muted-clay">{user?.name}</p>
+                <p className="text-xs text-warm-beige capitalize font-medium">{user?.type}</p>
               </div>
             )}
           </div>
@@ -134,17 +134,17 @@ export function Sidebar() {
                 key={item.name}
                 href={item.href}
                 className={`
-                  flex items-center gap-3 px-3 py-2 rounded-lg
-                  transition-all duration-200
+                  flex items-center gap-3 px-4 py-3 rounded-xl
+                  transition-all duration-300 transform hover:scale-105
                   ${active
-                    ? 'bg-gradient-to-r from-golden-orange to-deep-amber text-white shadow-lg'
-                    : 'hover:bg-default-100 text-default-700'
+                    ? 'bg-gradient-to-r from-light-caramel to-muted-clay text-white shadow-caramel border border-light-caramel/30'
+                    : 'hover:bg-soft-sand/50 text-muted-clay hover:text-muted-clay border border-transparent hover:border-light-caramel/20'
                   }
                   ${isCollapsed ? 'justify-center' : ''}
                 `}
               >
-                <Icon className="h-5 w-5 flex-shrink-0" />
-                {!isCollapsed && <span className="text-sm font-medium">{item.name}</span>}
+                <Icon className={`h-5 w-5 flex-shrink-0 ${active ? 'animate-pulse-slow' : ''}`} />
+                {!isCollapsed && <span className="text-sm font-semibold">{item.name}</span>}
               </Link>
             );
 
@@ -161,12 +161,10 @@ export function Sidebar() {
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-divider">
+        <div className="p-4 border-t border-light-caramel/20 bg-gradient-to-r from-soft-sand/30 to-transparent">
           <Button
             onClick={logout}
-            variant="flat"
-            color="danger"
-            className={`w-full ${isCollapsed ? 'px-2' : ''}`}
+            className={`w-full bg-gradient-to-r from-red-400 to-red-500 text-white hover:from-red-500 hover:to-red-600 shadow-md hover:shadow-lg transition-all duration-300 ${isCollapsed ? 'px-2' : ''}`}
             startContent={!isCollapsed && <ArrowRightOnRectangleIcon className="h-5 w-5" />}
           >
             {isCollapsed ? (
@@ -181,7 +179,7 @@ export function Sidebar() {
               onClick={() => setIsCollapsed(true)}
               variant="light"
               size="sm"
-              className="w-full mt-2 hidden lg:flex"
+              className="w-full mt-2 hidden lg:flex text-warm-beige hover:text-muted-clay hover:bg-soft-sand/30"
             >
               Collapse
             </Button>
@@ -192,7 +190,7 @@ export function Sidebar() {
               onClick={() => setIsCollapsed(false)}
               variant="light"
               size="sm"
-              className="w-full mt-2 hidden lg:flex px-2"
+              className="w-full mt-2 hidden lg:flex px-2 text-warm-beige hover:text-muted-clay"
             >
               <Bars3Icon className="h-5 w-5" />
             </Button>
@@ -203,7 +201,7 @@ export function Sidebar() {
       {/* Mobile Overlay */}
       {!isCollapsed && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/50 z-30"
+          className="lg:hidden fixed inset-0 bg-warm-beige/80 backdrop-blur-sm z-30 animate-fade-in"
           onClick={() => setIsCollapsed(true)}
         />
       )}

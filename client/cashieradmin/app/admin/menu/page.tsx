@@ -11,7 +11,6 @@ import { Spinner } from '@heroui/spinner';
 import { Select, SelectItem } from '@heroui/select';
 import { Textarea } from '@heroui/input';
 import { MenuService } from '@/services/menu.service';
-import { ProtectedRoute } from '@/components/protected-route';
 import type { MenuItem, CreateMenuItemRequest } from '@/types/api';
 import { PlusIcon, MagnifyingGlassIcon, FunnelIcon, TrashIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import { Checkbox } from '@heroui/checkbox';
@@ -47,14 +46,6 @@ const formatStock = (item: MenuItem): string => {
 };
 
 export default function AdminMenuPage() {
-  return (
-    <ProtectedRoute adminOnly>
-      <MenuManagementContent />
-    </ProtectedRoute>
-  );
-}
-
-function MenuManagementContent() {
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { isOpen, onOpen, onClose } = useDisclosure();
