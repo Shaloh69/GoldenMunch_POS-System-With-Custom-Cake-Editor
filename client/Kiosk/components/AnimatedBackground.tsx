@@ -18,11 +18,22 @@ interface Bubble {
   size: number;
 }
 
+interface Sparkle {
+  left: number;
+  top: number;
+  delay: number;
+  duration: number;
+}
+
 export const AnimatedBackground: React.FC = () => {
+  const [mounted, setMounted] = useState(false);
   const [particles, setParticles] = useState<Particle[]>([]);
   const [bubbles, setBubbles] = useState<Bubble[]>([]);
+  const [sparkles, setSparkles] = useState<Sparkle[]>([]);
 
   useEffect(() => {
+    setMounted(true);
+
     // Food-themed emojis for particles
     const emojis = ['🍰', '🧁', '🍪', '🥐', '🍩', '☕', '🎂', '🍞', '✨', '⭐'];
 
@@ -44,9 +55,28 @@ export const AnimatedBackground: React.FC = () => {
       size: 40 + Math.random() * 100,
     }));
 
+    // Generate sparkles
+    const generatedSparkles = [...Array(30)].map(() => ({
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      delay: Math.random() * 3,
+      duration: 2 + Math.random() * 2,
+    }));
+
     setParticles(generatedParticles);
     setBubbles(generatedBubbles);
+    setSparkles(generatedSparkles);
   }, []);
+
+  // Prevent hydration mismatch by not rendering random elements on server
+  if (!mounted) {
+    return (
+      <div className="fixed inset-0 -z-10 overflow-hidden">
+        {/* Base Gradient - Portrait optimized with vertical flow */}
+        <div className="absolute inset-0 bg-gradient-to-b from-amber-50 via-orange-50 to-yellow-50" />
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden">
@@ -103,15 +133,15 @@ export const AnimatedBackground: React.FC = () => {
 
       {/* Sparkle Effect */}
       <div className="absolute inset-0">
-        {[...Array(30)].map((_, i) => (
+        {sparkles.map((sparkle, i) => (
           <div
             key={`sparkle-${i}`}
             className="absolute w-1 h-1 bg-golden-orange/40 rounded-full animate-twinkle"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${2 + Math.random() * 2}s`,
+              left: `${sparkle.left}%`,
+              top: `${sparkle.top}%`,
+              animationDelay: `${sparkle.delay}s`,
+              animationDuration: `${sparkle.duration}s`,
             }}
           />
         ))}
