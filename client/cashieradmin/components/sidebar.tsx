@@ -92,7 +92,7 @@ export function Sidebar() {
         {/* Header */}
         <div className="p-5 border-b border-light-caramel/20">
           <div className="flex items-center gap-3">
-            <div className="text-4xl animate-float-slow">🥐</div>
+            <div className="text-4xl">🥐</div>
             {!isCollapsed && (
               <div>
                 <h2 className="font-bold text-xl bg-gradient-to-r from-light-caramel to-muted-clay bg-clip-text text-transparent">

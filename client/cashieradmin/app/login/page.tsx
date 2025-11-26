@@ -32,14 +32,14 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-cream-white via-soft-sand to-warm-beige p-4 relative overflow-hidden">
       {/* Decorative Elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-light-caramel/20 rounded-full blur-3xl animate-drift"></div>
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-muted-clay/20 rounded-full blur-3xl animate-drift"></div>
+      <div className="absolute top-0 right-0 w-96 h-96 bg-light-caramel/20 rounded-full blur-3xl"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-muted-clay/20 rounded-full blur-3xl"></div>
 
       <Card className="w-full max-w-md shadow-caramel border-2 border-light-caramel/30 backdrop-blur-xl animate-scale-in z-10">
         <CardHeader className="flex flex-col gap-4 items-center pt-10 pb-6 bg-gradient-to-b from-soft-sand/30 to-transparent border-b border-light-caramel/20">
-          <div className="text-6xl animate-float-slow drop-shadow-lg">🥐</div>
+          <div className="text-6xl drop-shadow-lg">🥐</div>
           <div className="text-center">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-light-caramel via-muted-clay to-light-caramel bg-clip-text text-transparent animate-shimmer bg-[length:200%_auto]">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-light-caramel via-muted-clay to-light-caramel bg-clip-text text-transparent">
               GoldenMunch POS
             </h1>
             <p className="text-sm text-warm-beige font-medium mt-2">Admin & Cashier Portal</p>
@@ -104,7 +104,7 @@ export default function LoginPage() {
               type="submit"
               size="lg"
               isLoading={isLoading}
-              className="mt-3 bg-gradient-to-r from-light-caramel via-muted-clay to-light-caramel text-white font-bold shadow-caramel hover:shadow-xl hover:scale-105 transition-all duration-300 border border-light-caramel/30 animate-shimmer bg-[length:200%_auto]"
+              className="mt-3 bg-gradient-to-r from-light-caramel via-muted-clay to-light-caramel text-white font-bold shadow-caramel hover:shadow-xl hover:scale-105 transition-all duration-300 border border-light-caramel/30"
             >
               {isLoading ? 'Signing in...' : 'Sign In'}
             </Button>

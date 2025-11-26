@@ -12,6 +12,7 @@ import { Select, SelectItem } from '@heroui/select';
 import { useDisclosure } from '@heroui/modal';
 import { MenuService } from '@/services/menu.service';
 import type { Category, MenuItem } from '@/types/api';
+import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 
 // Utility function to safely format prices
 const formatPrice = (price: any): string => {
@@ -33,6 +34,7 @@ export default function CategoriesPage() {
   const [error, setError] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isAssignOpen, onOpen: onAssignOpen, onClose: onAssignClose } = useDisclosure();
@@ -187,18 +189,40 @@ export default function CategoriesPage() {
     setSelectedMenuItems(newSelection);
   };
 
+  const toggleCategoryExpansion = (categoryId: number) => {
+    const newExpanded = new Set(expandedCategories);
+    if (newExpanded.has(categoryId)) {
+      newExpanded.delete(categoryId);
+    } else {
+      newExpanded.add(categoryId);
+    }
+    setExpandedCategories(newExpanded);
+  };
+
+  const getCategoryItems = (categoryId: number) => {
+    return menuItems.filter(item =>
+      item.categories?.some(cat => cat.category_id === categoryId)
+    );
+  };
+
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Category Management</h1>
-          <p className="text-default-500 mt-1">
-            Create and manage categories for organizing menu items
-          </p>
+    <div className="space-y-6">
+      <div className="bg-gradient-to-r from-light-caramel via-muted-clay to-light-caramel p-8 rounded-2xl shadow-caramel border-2 border-light-caramel/30">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-white drop-shadow-lg">Category Management</h1>
+            <p className="text-white/90 mt-2">
+              Create and manage categories for organizing menu items
+            </p>
+          </div>
+          <Button
+            onPress={onOpen}
+            size="lg"
+            className="bg-white text-muted-clay font-bold hover:bg-cream-white shadow-md hover:shadow-lg transition-all"
+          >
+            Add Category
+          </Button>
         </div>
-        <Button color="primary" onPress={onOpen} size="lg">
-          Add Category
-        </Button>
       </div>
 
       {error && !isOpen && !isAssignOpen && (
@@ -207,9 +231,9 @@ export default function CategoriesPage() {
         </div>
       )}
 
-      <Card>
-        <CardHeader>
-          <h2 className="text-xl font-semibold">All Categories ({categories.length})</h2>
+      <Card className="shadow-caramel border-2 border-light-caramel/20">
+        <CardHeader className="bg-gradient-to-r from-soft-sand/30 to-transparent border-b border-light-caramel/20 p-6">
+          <h2 className="text-2xl font-bold text-muted-clay">All Categories ({categories.length})</h2>
         </CardHeader>
         <CardBody>
           {loading ? (
@@ -222,70 +246,63 @@ export default function CategoriesPage() {
               <p className="text-default-300 text-sm mt-2">Create your first category to get started</p>
             </div>
           ) : (
-            <Table aria-label="Categories table">
-              <TableHeader>
-                <TableColumn>IMAGE</TableColumn>
-                <TableColumn>NAME</TableColumn>
-                <TableColumn>DESCRIPTION</TableColumn>
-                <TableColumn>ITEMS</TableColumn>
-                <TableColumn>ORDER</TableColumn>
-                <TableColumn>STATUS</TableColumn>
-                <TableColumn>ACTIONS</TableColumn>
-              </TableHeader>
-              <TableBody>
-                {categories.map((category) => {
-                  const itemCount = menuItems.filter(item =>
-                    item.categories?.some(cat => cat.category_id === category.category_id)
-                  ).length;
+            <div className="space-y-4">
+              {categories.map((category) => {
+                const categoryItems = getCategoryItems(category.category_id);
+                const isExpanded = expandedCategories.has(category.category_id);
 
-                  return (
-                    <TableRow key={category.category_id}>
-                      <TableCell>
-                        {category.image_url ? (
-                          <div className="w-12 h-12 rounded-lg overflow-hidden border-2 border-default-200">
-                            <img
-                              src={category.image_url}
-                              alt={category.name}
-                              className="w-full h-full object-cover"
-                            />
+                return (
+                  <div key={category.category_id} className="border border-light-caramel/20 rounded-xl overflow-hidden shadow-sm hover:shadow-caramel transition-all">
+                    {/* Category Header */}
+                    <div className="bg-gradient-to-r from-cream-white to-soft-sand/50 p-4">
+                      <div className="flex items-center gap-4">
+                        {/* Image */}
+                        <div className="flex-shrink-0">
+                          {category.image_url ? (
+                            <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-light-caramel/30 shadow-sm">
+                              <img
+                                src={category.image_url}
+                                alt={category.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-16 h-16 rounded-xl bg-soft-sand/50 flex items-center justify-center border-2 border-light-caramel/20">
+                              <span className="text-warm-beige text-xs font-medium">No image</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Category Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 mb-1">
+                            <h3 className="text-lg font-bold text-muted-clay">{category.name}</h3>
+                            <Chip
+                              size="sm"
+                              color={category.is_active !== false ? 'success' : 'default'}
+                              variant="flat"
+                            >
+                              {category.is_active !== false ? 'Active' : 'Inactive'}
+                            </Chip>
+                            <Chip size="sm" variant="flat" className="bg-light-caramel/20 text-muted-clay">
+                              Order: {category.display_order || 0}
+                            </Chip>
                           </div>
-                        ) : (
-                          <div className="w-12 h-12 rounded-lg bg-default-100 flex items-center justify-center">
-                            <span className="text-default-400 text-xs">No image</span>
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <p className="font-semibold">{category.name}</p>
-                      </TableCell>
-                      <TableCell>
-                        <p className="text-sm text-default-500 max-w-xs truncate">
-                          {category.description || '-'}
-                        </p>
-                      </TableCell>
-                      <TableCell>
-                        <Chip size="sm" variant="flat">
-                          {itemCount} items
-                        </Chip>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm">{category.display_order || 0}</span>
-                      </TableCell>
-                      <TableCell>
-                        <Chip
-                          size="sm"
-                          color={category.is_active !== false ? 'success' : 'default'}
-                          variant="flat"
-                        >
-                          {category.is_active !== false ? 'Active' : 'Inactive'}
-                        </Chip>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
+                          <p className="text-sm text-warm-beige truncate">
+                            {category.description || 'No description'}
+                          </p>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <Chip size="sm" variant="flat" className="bg-muted-clay/20 text-muted-clay font-semibold">
+                            {categoryItems.length} {categoryItems.length === 1 ? 'item' : 'items'}
+                          </Chip>
                           <Button
                             size="sm"
                             variant="flat"
                             onPress={() => handleEdit(category)}
+                            className="bg-light-caramel/20 hover:bg-light-caramel/30 text-muted-clay"
                           >
                             Edit
                           </Button>
@@ -294,16 +311,84 @@ export default function CategoriesPage() {
                             variant="flat"
                             color="secondary"
                             onPress={() => handleAssignOpen(category)}
+                            className="bg-muted-clay/20 hover:bg-muted-clay/30"
                           >
                             Assign Items
                           </Button>
+                          <Button
+                            size="sm"
+                            isIconOnly
+                            variant="flat"
+                            onPress={() => toggleCategoryExpansion(category.category_id)}
+                            className="bg-soft-sand/50 hover:bg-soft-sand"
+                          >
+                            {isExpanded ? (
+                              <ChevronUpIcon className="h-5 w-5 text-muted-clay" />
+                            ) : (
+                              <ChevronDownIcon className="h-5 w-5 text-muted-clay" />
+                            )}
+                          </Button>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                      </div>
+                    </div>
+
+                    {/* Expanded Items View */}
+                    {isExpanded && categoryItems.length > 0 && (
+                      <div className="bg-white border-t border-light-caramel/20">
+                        <div className="p-4">
+                          <h4 className="text-sm font-semibold text-warm-beige uppercase tracking-wide mb-3">
+                            Menu Items in this Category
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            {categoryItems.map((item) => (
+                              <div
+                                key={item.menu_item_id}
+                                className="flex items-center gap-3 p-3 bg-gradient-to-r from-cream-white to-soft-sand/30 rounded-lg border border-light-caramel/20 hover:shadow-md transition-all"
+                              >
+                                {item.image_url && (
+                                  <div className="w-12 h-12 rounded-lg overflow-hidden border border-light-caramel/30 flex-shrink-0">
+                                    <img
+                                      src={item.image_url}
+                                      alt={item.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-semibold text-muted-clay text-sm truncate">{item.name}</p>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <Chip size="sm" variant="flat" className="bg-muted-clay/20 text-muted-clay text-xs">
+                                      ₱{formatPrice(item.current_price)}
+                                    </Chip>
+                                    <span className="text-xs text-warm-beige capitalize">{item.item_type}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Empty State for Expanded Category */}
+                    {isExpanded && categoryItems.length === 0 && (
+                      <div className="bg-white border-t border-light-caramel/20 p-6 text-center">
+                        <p className="text-warm-beige text-sm">No items assigned to this category yet.</p>
+                        <Button
+                          size="sm"
+                          color="secondary"
+                          variant="flat"
+                          onPress={() => handleAssignOpen(category)}
+                          className="mt-3"
+                        >
+                          Assign Items Now
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           )}
         </CardBody>
       </Card>

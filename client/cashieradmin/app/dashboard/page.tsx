@@ -69,9 +69,9 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8">
       {/* Welcome Header */}
-      <div className="bg-gradient-to-r from-light-caramel via-muted-clay to-light-caramel p-10 rounded-2xl shadow-caramel border-2 border-light-caramel/30 relative overflow-hidden animate-scale-in bg-[length:200%_auto] animate-shimmer">
+      <div className="bg-gradient-to-r from-light-caramel via-muted-clay to-light-caramel p-10 rounded-2xl shadow-caramel border-2 border-light-caramel/30 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-cream-white/10 to-transparent"></div>
         <div className="relative z-10">
           <h1 className="text-4xl font-bold text-white drop-shadow-lg">
@@ -123,11 +123,10 @@ export default function DashboardPage() {
             </div>
           ) : recentOrders.length > 0 ? (
             <div className="space-y-4">
-              {recentOrders.map((order, index) => (
+              {recentOrders.map((order) => (
                 <div
                   key={order.order_id}
-                  className="flex justify-between items-center p-4 bg-gradient-to-r from-cream-white to-soft-sand/50 rounded-xl border border-light-caramel/20 hover:shadow-caramel transition-all duration-300 hover:scale-102 animate-slide-up"
-                  style={{ animationDelay: `${index * 100}ms` }}
+                  className="flex justify-between items-center p-4 bg-gradient-to-r from-cream-white to-soft-sand/50 rounded-xl border border-light-caramel/20 hover:shadow-caramel transition-all duration-300"
                 >
                   <div>
                     <p className="font-bold text-muted-clay text-lg">Order #{order.order_id}</p>
