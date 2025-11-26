@@ -36,7 +36,7 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-const TAX_RATE = 0.12; // 12% VAT (Philippines)
+const TAX_RATE = 0; // No tax
 const CART_STORAGE_KEY = 'goldenmunch_cart';
 
 export function CartProvider({ children }: { children: React.ReactNode }) {

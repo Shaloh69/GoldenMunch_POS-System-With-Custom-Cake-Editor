@@ -95,6 +95,7 @@ export const isValidPhone = (phone: string): boolean => {
 
 /**
  * Calculate order total with taxes and discounts
+ * NOTE: Tax is disabled system-wide (always 0)
  */
 export const calculateOrderTotal = (
   subtotal: number,
@@ -106,12 +107,12 @@ export const calculateOrderTotal = (
   discount: number;
   total: number;
 } => {
-  const tax = subtotal * (taxRate / 100);
-  const total = subtotal + tax - discountAmount;
+  const tax = 0; // Tax disabled
+  const total = subtotal - discountAmount;
 
   return {
     subtotal: parseFloat(subtotal.toFixed(2)),
-    tax: parseFloat(tax.toFixed(2)),
+    tax: 0,
     discount: parseFloat(discountAmount.toFixed(2)),
     total: parseFloat(total.toFixed(2)),
   };

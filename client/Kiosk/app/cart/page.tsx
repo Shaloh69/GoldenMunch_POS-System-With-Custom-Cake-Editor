@@ -489,17 +489,8 @@ export default function CartPage() {
               </CardHeader>
               <CardBody className="p-6">
                 <div className="space-y-4">
-                  <div className="flex justify-between text-lg text-[#FAF7F2]">
-                    <span>Subtotal ({getItemCount()} items)</span>
-                    <span className="font-semibold">₱{getSubtotal().toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-lg text-[#FAF7F2]">
-                    <span>Tax (12% VAT)</span>
-                    <span className="font-semibold">₱{getTax().toFixed(2)}</span>
-                  </div>
-                  <Divider className="my-4 bg-[#EAD7B7]/20" />
                   <div className="flex justify-between text-2xl font-bold">
-                    <span className="text-[#FAF7F2]">Total</span>
+                    <span className="text-[#FAF7F2]">Total ({getItemCount()} items)</span>
                     <span className="bg-gradient-to-r from-[#EAD7B7] to-[#7B4B28] bg-clip-text text-transparent drop-shadow-lg">
                       ₱{getTotal().toFixed(2)}
                     </span>
