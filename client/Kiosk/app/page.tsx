@@ -170,59 +170,40 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen pb-32">
-      {/* Hero Header - Portrait Optimized */}
+    <div className="min-h-screen pb-48">
+      {/* Hero Header - 24-inch Display Optimized */}
       <div className="relative">
-        <div className="glass-header border-b-4 border-[#D9B38C]/40 p-8">
-          <div className="text-center space-y-4">
-            {/* Logo / Branding */}
-            <div className="text-8xl animate-float mx-auto">🍰</div>
-            <h1 className="text-6xl font-black bg-gradient-to-br from-[#C67B57] via-[#D9B38C] to-[#C9B8A5] bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(198,123,87,0.4)]">
-              Golden Munch
-            </h1>
-            <p className="text-2xl text-[#C67B57] font-semibold drop-shadow-lg">
-              Fresh • Delicious • Made with Love
-            </p>
+        <div className="glass-header border-b-4 border-[#D9B38C]/40 py-8 px-12">
+          <div className="max-w-[1800px] mx-auto">
+            <div className="text-center space-y-4">
+              {/* Logo / Branding */}
+              <div className="text-9xl animate-float mx-auto">🍰</div>
+              <h1 className="text-7xl font-black bg-gradient-to-br from-[#C67B57] via-[#D9B38C] to-[#C9B8A5] bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(198,123,87,0.4)]">
+                Golden Munch
+              </h1>
+              <p className="text-3xl text-[#C67B57] font-semibold drop-shadow-lg">
+                Fresh • Delicious • Made with Love
+              </p>
+            </div>
           </div>
         </div>
-
-        {/* Floating Cart Badge */}
-        {getItemCount() > 0 && (
-          <Button
-            as={NextLink}
-            href="/cart"
-            size="lg"
-            className="absolute top-8 right-8 bg-gradient-to-br from-[#D9B38C] to-[#C67B57] text-white font-bold text-xl px-8 py-6 rounded-full touch-target shadow-[0_0_30px_rgba(198,123,87,0.5)]"
-            style={{ animation: 'glow 2s ease-in-out infinite' }}
-          >
-            <span className="text-3xl mr-2">🛒</span>
-            <span className="text-2xl">{getItemCount()}</span>
-            <Chip size="lg" className="ml-3 text-xl px-4 bg-[#C67B57] text-white font-bold">
-              ₱{getTotal().toFixed(0)}
-            </Chip>
-          </Button>
-        )}
       </div>
 
-      <div className="px-8 pt-8 space-y-8">
-        {/* Categories - Horizontal Scroll */}
+      <div className="max-w-[1800px] mx-auto px-12 pt-8 space-y-8">
+        {/* Categories */}
         {categories.length > 0 && (
           <div>
-            <h2 className="text-3xl font-bold text-[#C67B57] mb-6 flex items-center gap-3 drop-shadow-lg">
-              <span className="text-5xl">📂</span>
-              Categories
-            </h2>
-            <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
+            <div className="flex gap-4 justify-center flex-wrap mb-10">
               <Button
                 size="lg"
                 className={`${
                   selectedCategory === null
-                    ? 'bg-gradient-to-br from-[#D9B38C] to-[#C67B57] text-white scale-110 shadow-[0_0_20px_rgba(198,123,87,0.5)]'
+                    ? 'bg-gradient-to-br from-[#D9B38C] to-[#C67B57] text-white scale-105 shadow-lg'
                     : 'glass-button text-[#C67B57]'
-                } font-bold text-2xl px-8 py-7 rounded-2xl min-w-[200px] snap-center transition-all touch-target`}
+                } font-bold text-xl px-10 py-7 rounded-2xl transition-all touch-target`}
                 onClick={() => setSelectedCategory(null)}
               >
-                ✨ All Items
+                All Items
               </Button>
               {categories.map((category) => (
                 <Button
@@ -230,9 +211,9 @@ export default function HomePage() {
                   size="lg"
                   className={`${
                     selectedCategory === category.category_id
-                      ? 'bg-gradient-to-br from-[#D9B38C] to-[#C67B57] text-white scale-110 shadow-[0_0_20px_rgba(198,123,87,0.5)]'
+                      ? 'bg-gradient-to-br from-[#D9B38C] to-[#C67B57] text-white scale-105 shadow-lg'
                       : 'glass-button text-[#C67B57]'
-                  } font-bold text-2xl px-8 py-7 rounded-2xl min-w-[200px] snap-center transition-all touch-target`}
+                  } font-bold text-xl px-10 py-7 rounded-2xl transition-all touch-target`}
                   onClick={() => setSelectedCategory(category.category_id)}
                 >
                   {category.name}
@@ -242,21 +223,21 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Menu Items Grid - 2 Column for Portrait */}
+        {/* Menu Items Grid - 4 Columns for 24-inch Display */}
         {filteredItems.length === 0 ? (
           <Card className="glass-card">
-            <CardBody className="text-center py-20">
-              <div className="text-9xl mb-6 animate-float">🍽️</div>
-              <h3 className="text-5xl font-bold text-[#C67B57] mb-4 drop-shadow-lg">
+            <CardBody className="text-center py-24">
+              <div className="text-[120px] mb-8 animate-float">🍽️</div>
+              <h3 className="text-5xl font-bold text-[#C67B57] mb-6 drop-shadow-lg">
                 No items found
               </h3>
-              <p className="text-2xl text-[#D9B38C] mb-8">
+              <p className="text-2xl text-[#D9B38C] mb-10">
                 No items in this category
               </p>
               {selectedCategory !== null && (
                 <Button
                   size="lg"
-                  className="bg-gradient-to-r from-[#D9B38C] to-[#C67B57] text-white font-bold px-12 py-6 text-2xl touch-target"
+                  className="bg-gradient-to-r from-[#D9B38C] to-[#C67B57] text-white font-bold px-12 py-8 text-2xl touch-target"
                   onClick={() => setSelectedCategory(null)}
                 >
                   Clear Filter
@@ -266,13 +247,13 @@ export default function HomePage() {
           </Card>
         ) : (
           <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-bold text-[#C67B57] drop-shadow-lg">
-                🍴 {filteredItems.length} Delicious Items
+            <div className="text-center mb-8">
+              <h2 className="text-4xl font-bold text-[#C67B57] drop-shadow-lg">
+                {filteredItems.length} Delicious {filteredItems.length === 1 ? 'Item' : 'Items'}
               </h2>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-4 gap-8">
               {filteredItems.map((item) => {
                 const cartQty = getCartQuantity(item.menu_item_id);
                 const isAvailable = item.status === 'available' &&
@@ -281,38 +262,39 @@ export default function HomePage() {
                 return (
                   <Card
                     key={item.menu_item_id}
-                    className={`glass-card hover:scale-105 transition-transform duration-300 ${!isAvailable && 'opacity-60'}`}
+                    className={`glass-card hover:border-[#C67B57] hover:shadow-2xl hover:scale-105 transition-all duration-300 ${!isAvailable && 'opacity-60'}`}
                   >
                     <CardBody className="p-0">
                       {/* Image/Icon Section */}
-                      <div className="relative h-48 bg-gradient-to-br from-[#E8DCC8]/30 to-[#D9B38C]/30 flex items-center justify-center rounded-t-xl overflow-hidden">
+                      <div className="relative h-64 bg-gradient-to-br from-[#E8DCC8]/30 to-[#D9B38C]/30 flex items-center justify-center rounded-t-xl overflow-hidden">
                         {getImageUrl(item.image_url) ? (
                           <div className="w-full h-full relative">
                             <Image
                               src={getImageUrl(item.image_url) || ''}
                               alt={item.name}
                               fill
-                              className="object-cover"
+                              className="object-cover hover:scale-110 transition-transform duration-300"
+                              sizes="(max-width: 1920px) 25vw"
                             />
                           </div>
                         ) : (
-                          <div className="text-8xl animate-float">🍰</div>
+                          <div className="text-9xl animate-float">🍰</div>
                         )}
 
                         {/* Badges */}
                         <div className="absolute top-3 right-3 flex flex-col gap-2">
                           {item.is_featured && (
-                            <Chip size="lg" className="font-bold text-lg animate-pulse-slow bg-[#C67B57] text-white">
-                              🔥 Hot
+                            <Chip size="lg" className="font-bold text-base px-4 py-2 bg-[#C67B57] text-white">
+                              Popular
                             </Chip>
                           )}
                           {!isAvailable && (
-                            <Chip size="lg" className="font-bold text-lg bg-[#C9B8A5] text-white">
+                            <Chip size="lg" className="font-bold text-base px-4 py-2 bg-red-500 text-white">
                               Sold Out
                             </Chip>
                           )}
                           {cartQty > 0 && (
-                            <Chip size="lg" className="font-bold text-xl bg-[#D9B38C] text-white">
+                            <Chip size="lg" className="font-bold text-base px-4 py-2 bg-green-500 text-white">
                               {cartQty} in cart
                             </Chip>
                           )}
@@ -320,21 +302,21 @@ export default function HomePage() {
                       </div>
 
                       {/* Content Section */}
-                      <div className="p-5 space-y-4">
+                      <div className="p-6 space-y-4">
                         <div>
-                          <h3 className="text-2xl font-bold text-[#C67B57] mb-2 line-clamp-2 drop-shadow-md">
+                          <h3 className="text-2xl font-bold text-[#C67B57] mb-2 line-clamp-1 drop-shadow-md">
                             {item.name}
                           </h3>
-                          <p className="text-lg text-[#C9B8A5] line-clamp-2">
+                          <p className="text-base text-[#C9B8A5] line-clamp-2 h-12">
                             {item.description || 'Delicious treat made fresh daily'}
                           </p>
                         </div>
 
-                        <div className="flex items-center justify-between">
-                          <span className="text-4xl font-black bg-gradient-to-r from-[#C67B57] to-[#D9B38C] bg-clip-text text-transparent drop-shadow-lg">
-                            ₱{(Number(item.current_price) || 0).toFixed(0)}
+                        <div className="flex items-center justify-between mb-5">
+                          <span className="text-4xl font-black text-[#C67B57] drop-shadow-lg">
+                            ${(Number(item.current_price) || 0).toFixed(2)}
                           </span>
-                          <Chip size="lg" variant="flat" className="text-lg bg-[#E8DCC8]/40 text-[#C67B57] border border-[#D9B38C]/30">
+                          <Chip size="md" className="bg-[#E8DCC8] text-[#C67B57] font-semibold">
                             {item.item_type}
                           </Chip>
                         </div>
@@ -342,16 +324,16 @@ export default function HomePage() {
                         {isAvailable ? (
                           <Button
                             size="lg"
-                            className="w-full bg-gradient-to-r from-[#D9B38C] to-[#C67B57] text-white font-bold text-xl py-6 shadow-lg hover:shadow-[0_0_25px_rgba(198,123,87,0.6)] touch-target touch-feedback transition-all"
+                            className="w-full bg-gradient-to-r from-[#D9B38C] to-[#C67B57] text-white font-bold text-xl py-7 shadow-lg hover:shadow-xl hover:scale-105 touch-target touch-feedback transition-all"
                             onClick={() => handleAddToCart(item)}
                           >
-                            {cartQty > 0 ? '🛒 Add More' : '+ Add to Cart'}
+                            {cartQty > 0 ? 'Add Another' : 'Add to Cart'}
                           </Button>
                         ) : (
                           <Button
                             disabled
                             size="lg"
-                            className="w-full bg-[#C9B8A5]/50 text-[#E8DCC8]/60 font-semibold text-xl py-6 touch-target"
+                            className="w-full bg-gray-300 text-gray-500 font-semibold text-xl py-7 touch-target"
                           >
                             Unavailable
                           </Button>
