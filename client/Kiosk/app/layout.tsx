@@ -7,9 +7,7 @@ import { usePathname } from "next/navigation";
 import { Providers } from "./providers";
 
 import { fontSans } from "@/config/fonts";
-import { KioskSidebar } from "@/components/KioskSidebar";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
-import { CartFooter } from "@/components/CartFooter";
 
 interface RootLayoutProps {
   children: React.ReactNode;
@@ -47,18 +45,15 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Portrait mode - full screen without sidebar for better space utilization
+  // Full screen layout - Sidebar is handled within pages
   return (
     <>
       <AnimatedBackground />
       <div className="relative min-h-screen">
-        {/* Main Content Area - Full width for portrait */}
-        <main className="w-full overflow-y-auto pb-32">
+        {/* Main Content Area */}
+        <main className="w-full overflow-y-auto">
           {children}
         </main>
-
-        {/* Floating Cart Footer */}
-        <CartFooter />
       </div>
     </>
   );

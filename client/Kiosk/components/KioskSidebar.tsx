@@ -1,308 +1,309 @@
 'use client';
 
 import React, { useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@heroui/button';
 import { Card, CardBody } from '@heroui/card';
-import { Badge } from '@heroui/badge';
-import { Divider } from '@heroui/divider';
-import { ScrollShadow } from '@heroui/scroll-shadow';
 import { Chip } from '@heroui/chip';
-import { useCart } from '@/contexts/CartContext';
+import Link from 'next/link';
 import Image from 'next/image';
-import CustomCakeQRModal from './CustomCakeQRModal';
+import { useCart } from '@/contexts/CartContext';
+import { usePathname } from 'next/navigation';
+import type { MenuItem } from '@/types/api';
+import { getImageUrl } from '@/utils/imageUtils';
 
 interface KioskSidebarProps {
-  onCustomCakeComplete?: (data: any) => void;
+  selectedItem: MenuItem | null;
+  onClose: () => void;
 }
 
-export const KioskSidebar: React.FC<KioskSidebarProps> = ({ onCustomCakeComplete }) => {
+export const KioskSidebar: React.FC<KioskSidebarProps> = ({ selectedItem, onClose }) => {
   const pathname = usePathname();
-  const router = useRouter();
-  const { items, removeItem, updateQuantity, getTotal, getItemCount, clearCart } = useCart();
-  const [isCustomCakeModalOpen, setIsCustomCakeModalOpen] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const { addItem, items: cartItems, getItemCount, getTotal, updateQuantity, removeItem } = useCart();
+  const [quantity, setQuantity] = useState(1);
+  const [isCartHidden, setIsCartHidden] = useState(false);
 
-  const getKioskSessionId = (): string => {
-    // Check if we're in the browser (client-side)
-    if (typeof window === 'undefined') {
-      // Return a temporary ID for SSR
-      return `kiosk_temp_${Date.now()}`;
-    }
+  // Don't show sidebar on cart, idle, or custom-cake pages
+  if (pathname === '/cart' || pathname === '/idle' || pathname === '/custom-cake') {
+    return null;
+  }
 
-    let sessionId = sessionStorage.getItem('kiosk_session_id');
-    if (!sessionId) {
-      sessionId = `kiosk_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-      sessionStorage.setItem('kiosk_session_id', sessionId);
+  const handleAddToCart = () => {
+    if (selectedItem) {
+      addItem({
+        menuItem: selectedItem,
+        quantity: quantity,
+      });
+      // Reset and close
+      setQuantity(1);
+      onClose();
     }
-    return sessionId;
   };
 
-  const handleCustomCakeComplete = (customizationData: any) => {
-    console.log('Custom cake customization completed:', customizationData);
-    if (onCustomCakeComplete) {
-      onCustomCakeComplete(customizationData);
+  const handleQuantityChange = (delta: number) => {
+    const newQty = quantity + delta;
+    if (newQty >= 1 && newQty <= 99) {
+      setQuantity(newQty);
     }
-    // TODO: Add custom cake to cart with customization data
-    alert('Custom cake design completed! (Cart integration coming soon)');
   };
 
-  const handleCheckout = () => {
-    router.push('/cart');
-  };
-
-  const isCartPage = pathname === '/cart';
+  const itemCount = getItemCount();
+  const total = getTotal();
+  const isAvailable = selectedItem?.status === 'available' &&
+    (selectedItem?.is_infinite_stock || (selectedItem?.stock_quantity ?? 0) > 0);
 
   return (
-    <>
-      {/* Sidebar Toggle Button - Mobile */}
-      <Button
-        isIconOnly
-        className={`
-          fixed top-6 right-6 z-50 lg:hidden
-          bg-gradient-to-r from-golden-orange to-deep-amber text-white
-          shadow-2xl-golden hover:scale-110 transition-all duration-300
-          ${isSidebarCollapsed ? 'animate-bounce' : ''}
-        `}
-        size="lg"
-        onPress={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-      >
-        {isSidebarCollapsed ? (
-          <Badge content={getItemCount()} color="danger" size="sm" placement="top-left">
-            <span className="text-2xl">🍰</span>
-          </Badge>
-        ) : (
-          <span className="text-2xl">✕</span>
-        )}
-      </Button>
+    <div className="fixed right-0 top-0 bottom-0 w-[30vw] max-w-[576px] bg-gradient-to-b from-[#FFF9F2] to-[#E8DCC8] border-l-4 border-[#D9B38C]/40 shadow-[-10px_0_40px_rgba(198,123,87,0.35)] z-30 flex flex-col">
+      {/* Item Detail Section (Top 60%) */}
+      <div className={`flex-1 overflow-y-auto transition-all duration-500 ${selectedItem ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+        {selectedItem && (
+          <div className="p-6 h-full">
+            <Card className="bg-white/90 backdrop-blur-lg border-2 border-[#D9B38C]/30 shadow-xl h-full">
+              <CardBody className="p-0 flex flex-col h-full">
+                {/* Large Image */}
+                <div className="relative h-80 bg-gradient-to-br from-[#E8DCC8]/30 to-[#D9B38C]/30 flex items-center justify-center overflow-hidden">
+                  {getImageUrl(selectedItem.image_url) ? (
+                    <Image
+                      src={getImageUrl(selectedItem.image_url) || ''}
+                      alt={selectedItem.name}
+                      fill
+                      className="object-cover"
+                      sizes="30vw"
+                    />
+                  ) : (
+                    <div className="text-9xl">🍰</div>
+                  )}
 
-      {/* Sidebar */}
-      <aside
-        className={`
-          fixed top-0 right-0 h-screen sidebar-glass
-          shadow-2xl-golden
-          transition-all duration-500 ease-in-out z-40
-          ${isSidebarCollapsed ? 'translate-x-full lg:translate-x-0' : 'translate-x-0'}
-          w-full sm:w-96 lg:w-[420px]
-          flex flex-col
-        `}
-      >
-        {/* Header */}
-        <div className="bg-gradient-to-r from-golden-orange to-deep-amber p-6 shadow-lg">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-3xl font-bold text-white flex items-center gap-2">
-              <span className="text-4xl animate-float">🛒</span>
-              Your Order
-            </h2>
-            <Badge content={getItemCount()} color="danger" size="lg" className="animate-pulse-slow">
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-                <span className="text-2xl">🍰</span>
-              </div>
-            </Badge>
-          </div>
-          <div className="flex items-center justify-between text-white/90">
-            <span className="text-lg">Total:</span>
-            <span className="text-3xl font-bold animate-glow">${getTotal().toFixed(2)}</span>
-          </div>
-        </div>
+                  {/* Close Button */}
+                  <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center text-[#C67B57] hover:bg-[#C67B57] hover:text-white transition-all shadow-lg hover:scale-110"
+                  >
+                    <span className="text-2xl font-bold">×</span>
+                  </button>
 
-        {/* Custom Cake Button - Prominent */}
-        <div className="p-4 bg-gradient-to-br from-golden-orange/10 to-deep-amber/10 border-b-2 border-golden-orange/20">
-          <Button
-            size="lg"
-            className="w-full bg-gradient-to-r from-golden-orange to-deep-amber text-white font-bold text-lg shadow-xl-golden hover:scale-105 transition-all duration-300 h-16 animate-pulse-slow"
-            onClick={() => setIsCustomCakeModalOpen(true)}
-          >
-            <span className="text-2xl mr-2">🎨</span>
-            Design Custom Cake
-          </Button>
-        </div>
-
-        {/* Cart Items */}
-        <ScrollShadow className="flex-1 overflow-y-auto px-4 py-6">
-          {items.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center animate-fade-in px-4">
-              <div className="text-9xl mb-6 animate-bounce-slow opacity-30">🛒</div>
-              <h3 className="text-2xl font-bold text-chocolate-brown mb-3">
-                Your cart is empty
-              </h3>
-              <p className="text-chocolate-brown/70 mb-4 text-lg">
-                Start adding delicious treats!
-              </p>
-
-              {/* Feature Highlights */}
-              <div className="space-y-3 mb-6 text-left bg-golden-orange/10 rounded-xl p-4 border-2 border-golden-orange/20">
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">🍰</span>
-                  <div>
-                    <p className="font-semibold text-chocolate-brown">Fresh Daily</p>
-                    <p className="text-sm text-chocolate-brown/60">All items baked fresh</p>
+                  {/* Badges */}
+                  <div className="absolute top-4 left-4 flex flex-col gap-2">
+                    {selectedItem.is_featured && (
+                      <Chip size="lg" className="font-bold text-base px-4 py-2 bg-[#C67B57] text-white shadow-lg">
+                        Popular
+                      </Chip>
+                    )}
+                    {!isAvailable && (
+                      <Chip size="lg" className="font-bold text-base px-4 py-2 bg-red-500 text-white shadow-lg">
+                        Sold Out
+                      </Chip>
+                    )}
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">🎨</span>
-                  <div>
-                    <p className="font-semibold text-chocolate-brown">Custom Cakes</p>
-                    <p className="text-sm text-chocolate-brown/60">Design your dream cake</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <span className="text-2xl">⚡</span>
-                  <div>
-                    <p className="font-semibold text-chocolate-brown">Quick Service</p>
-                    <p className="text-sm text-chocolate-brown/60">Fast checkout process</p>
-                  </div>
-                </div>
-              </div>
 
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-golden-orange to-deep-amber text-white font-bold text-lg px-8 shadow-xl-golden hover:scale-105 transition-all"
-                onClick={() => router.push('/menu')}
-              >
-                🍽️ Browse Menu
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {items.map((item, index) => (
-                <Card
-                  key={`${item.menuItem.menu_item_id}-${index}`}
-                  className="card-transparent hover:shadow-xl-golden transition-all duration-300 hover:scale-[1.02] animate-slide-right"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <CardBody className="p-4">
-                    <div className="flex gap-4">
-                      {/* Item Image */}
-                      <div className="relative w-20 h-20 flex-shrink-0 rounded-xl overflow-hidden bg-golden-orange/10">
-                        {item.menuItem.image_url ? (
-                          <Image
-                            src={item.menuItem.image_url}
-                            alt={item.menuItem.name}
-                            fill
-                            className="object-cover"
-                          />
+                {/* Item Details */}
+                <div className="p-6 flex-1 flex flex-col justify-between">
+                  <div>
+                    {/* Name */}
+                    <h2 className="text-3xl font-black text-[#C67B57] mb-3 drop-shadow-md">
+                      {selectedItem.name}
+                    </h2>
+
+                    {/* Description */}
+                    <p className="text-lg text-[#C9B8A5] mb-4 leading-relaxed">
+                      {selectedItem.description || 'Delicious treat made fresh daily with the finest ingredients.'}
+                    </p>
+
+                    {/* Category & Type */}
+                    <div className="flex gap-3 mb-4">
+                      <Chip size="lg" className="bg-[#E8DCC8] text-[#C67B57] font-semibold text-base px-4">
+                        {selectedItem.item_type}
+                      </Chip>
+                      {selectedItem.categories && selectedItem.categories.length > 0 && (
+                        <Chip size="lg" className="bg-[#D9B38C]/30 text-[#C67B57] font-semibold text-base px-4">
+                          {selectedItem.categories[0].name}
+                        </Chip>
+                      )}
+                    </div>
+
+                    {/* Price */}
+                    <div className="mb-4">
+                      <span className="text-5xl font-black text-[#C67B57] drop-shadow-lg">
+                        ${(Number(selectedItem.current_price) || 0).toFixed(2)}
+                      </span>
+                    </div>
+
+                    {/* Stock Info */}
+                    {!selectedItem.is_infinite_stock && (
+                      <p className="text-base text-[#C9B8A5] mb-4">
+                        {isAvailable ? (
+                          <span>📦 {selectedItem.stock_quantity} available</span>
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-4xl">
-                            🍰
-                          </div>
+                          <span className="text-red-500">❌ Out of stock</span>
                         )}
-                      </div>
+                      </p>
+                    )}
+                  </div>
 
-                      {/* Item Details */}
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-bold text-chocolate-brown truncate text-lg">
-                          {item.menuItem.name}
-                        </h4>
-                        <p className="text-deep-amber font-semibold text-lg">
-                          ${(Number(item.menuItem.current_price) || 0).toFixed(2)}
-                        </p>
-
-                        {/* Quantity Controls */}
-                        <div className="flex items-center gap-2 mt-2">
+                  {/* Quantity Selector & Add Button */}
+                  {isAvailable && (
+                    <div className="space-y-4">
+                      {/* Quantity Selector */}
+                      <div className="flex items-center gap-4">
+                        <span className="text-lg font-semibold text-[#C67B57]">Quantity:</span>
+                        <div className="flex items-center gap-3">
                           <Button
+                            size="lg"
                             isIconOnly
-                            size="sm"
-                            variant="flat"
-                            className="rounded-full bg-red-100 hover:bg-red-200 text-red-600 min-w-8 h-8"
-                            onClick={() => {
-                              if (item.quantity === 1) {
-                                removeItem(item.menuItem.menu_item_id);
-                              } else {
-                                updateQuantity(item.menuItem.menu_item_id, item.quantity - 1);
-                              }
-                            }}
+                            className="bg-[#E8DCC8] text-[#C67B57] font-bold text-2xl hover:bg-[#D9B38C] hover:text-white transition-all w-14 h-14"
+                            onClick={() => handleQuantityChange(-1)}
                           >
-                            {item.quantity === 1 ? '🗑️' : '−'}
+                            −
                           </Button>
-                          <span className="font-bold text-chocolate-brown min-w-8 text-center">
-                            {item.quantity}
+                          <span className="text-3xl font-bold text-[#C67B57] min-w-[60px] text-center">
+                            {quantity}
                           </span>
                           <Button
+                            size="lg"
                             isIconOnly
-                            size="sm"
-                            className="rounded-full bg-golden-orange hover:bg-deep-amber text-white min-w-8 h-8"
-                            onClick={() => updateQuantity(item.menuItem.menu_item_id, item.quantity + 1)}
+                            className="bg-[#E8DCC8] text-[#C67B57] font-bold text-2xl hover:bg-[#D9B38C] hover:text-white transition-all w-14 h-14"
+                            onClick={() => handleQuantityChange(1)}
                           >
                             +
                           </Button>
-                          <Chip size="sm" color="warning" variant="flat" className="ml-auto">
-                            ${((Number(item.menuItem.current_price) || 0) * item.quantity).toFixed(2)}
-                          </Chip>
                         </div>
-
-                        {/* Special Instructions */}
-                        {item.special_instructions && (
-                          <p className="text-xs text-chocolate-brown/60 mt-2 italic">
-                            📝 {item.special_instructions}
-                          </p>
-                        )}
                       </div>
+
+                      {/* Add to Cart Button */}
+                      <Button
+                        size="lg"
+                        className="w-full bg-gradient-to-r from-[#D9B38C] to-[#C67B57] text-white font-bold text-2xl py-8 shadow-xl hover:shadow-2xl hover:scale-105 transition-all"
+                        onClick={handleAddToCart}
+                      >
+                        🛒 Add to Cart
+                      </Button>
                     </div>
-                  </CardBody>
-                </Card>
-              ))}
-            </div>
-          )}
-        </ScrollShadow>
+                  )}
 
-        {/* Footer Actions */}
-        {items.length > 0 && (
-          <div className="p-4 bg-white/80 backdrop-blur-lg border-t-2 border-golden-orange/20 space-y-3">
-            {/* Summary */}
-            <div className="space-y-2 mb-4">
-              <div className="flex justify-between text-chocolate-brown">
-                <span>Items ({getItemCount()})</span>
-                <span className="font-semibold">${getTotal().toFixed(2)}</span>
-              </div>
-              <Divider />
-              <div className="flex justify-between text-xl font-bold text-chocolate-brown">
-                <span>Total</span>
-                <span className="text-deep-amber">${getTotal().toFixed(2)}</span>
-              </div>
-            </div>
-
-            {/* Action Buttons */}
-            {!isCartPage && (
-              <Button
-                size="lg"
-                className="w-full bg-gradient-to-r from-golden-orange to-deep-amber text-white font-bold text-xl shadow-xl-golden hover:scale-105 transition-all h-16"
-                onClick={handleCheckout}
-              >
-                <span className="text-2xl mr-2">💳</span>
-                Proceed to Checkout
-              </Button>
-            )}
-
-            <Button
-              size="lg"
-              variant="bordered"
-              className="w-full border-2 border-red-300 text-red-600 hover:bg-red-50 font-semibold"
-              onClick={clearCart}
-            >
-              <span className="mr-2">🗑️</span>
-              Clear Cart
-            </Button>
+                  {!isAvailable && (
+                    <Button
+                      disabled
+                      size="lg"
+                      className="w-full bg-gray-300 text-gray-500 font-semibold text-2xl py-8"
+                    >
+                      Unavailable
+                    </Button>
+                  )}
+                </div>
+              </CardBody>
+            </Card>
           </div>
         )}
-      </aside>
+      </div>
 
-      {/* Custom Cake QR Modal */}
-      <CustomCakeQRModal
-        isOpen={isCustomCakeModalOpen}
-        onClose={() => setIsCustomCakeModalOpen(false)}
-        onComplete={handleCustomCakeComplete}
-        kioskSessionId={getKioskSessionId()}
-      />
+      {/* Cart Section (Bottom 40%) - Always Present */}
+      <div className={`border-t-4 border-[#D9B38C]/40 bg-gradient-to-b from-[#FFF9F2] to-[#E8DCC8] transition-all duration-500 ${isCartHidden ? 'h-16' : 'h-[40vh]'}`}>
+        {/* Toggle Button */}
+        <button
+          onClick={() => setIsCartHidden(!isCartHidden)}
+          className="w-full px-6 py-4 flex items-center justify-between hover:bg-[#D9B38C]/20 transition-all"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-3xl">🛒</span>
+            <span className="text-xl font-bold text-[#C67B57]">
+              Your Cart {itemCount > 0 && `(${itemCount})`}
+            </span>
+          </div>
+          <span className="text-2xl text-[#C67B57]">
+            {isCartHidden ? '▲' : '▼'}
+          </span>
+        </button>
 
-      {/* Overlay for mobile */}
-      {!isSidebarCollapsed && (
-        <div
-          className="fixed inset-0 bg-black/50 z-30 lg:hidden animate-fade-in"
-          onClick={() => setIsSidebarCollapsed(true)}
-        />
-      )}
-    </>
+        {/* Cart Content */}
+        {!isCartHidden && (
+          <div className="px-6 pb-6 h-[calc(40vh-4rem)] flex flex-col">
+            {itemCount === 0 ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-center">
+                <div className="text-6xl mb-4">🛒</div>
+                <p className="text-xl text-[#C9B8A5] font-semibold">
+                  Your cart is empty
+                </p>
+                <p className="text-base text-[#C9B8A5]/70 mt-2">
+                  Select items to get started
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Cart Items List */}
+                <div className="flex-1 overflow-y-auto mb-4 space-y-2">
+                  {cartItems.map((cartItem) => (
+                    <Card key={cartItem.menuItem.menu_item_id} className="bg-white/80 backdrop-blur-sm border border-[#D9B38C]/30">
+                      <CardBody className="p-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-16 h-16 bg-gradient-to-br from-[#E8DCC8] to-[#D9B38C]/30 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+                            {getImageUrl(cartItem.menuItem.image_url) ? (
+                              <Image
+                                src={getImageUrl(cartItem.menuItem.image_url) || ''}
+                                alt={cartItem.menuItem.name}
+                                width={64}
+                                height={64}
+                                className="object-cover w-full h-full"
+                              />
+                            ) : (
+                              <span className="text-3xl">🍰</span>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-base font-bold text-[#C67B57] truncate">
+                              {cartItem.menuItem.name}
+                            </h4>
+                            <p className="text-sm text-[#C9B8A5]">
+                              {cartItem.quantity} × ${(Number(cartItem.menuItem.current_price) || 0).toFixed(2)}
+                            </p>
+                          </div>
+                          <div className="text-lg font-bold text-[#C67B57]">
+                            ${((Number(cartItem.menuItem.current_price) || 0) * cartItem.quantity).toFixed(2)}
+                          </div>
+                        </div>
+                      </CardBody>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Total */}
+                <div className="border-t-2 border-[#D9B38C]/30 pt-4 mb-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-2xl font-bold text-[#C67B57]">Total:</span>
+                    <span className="text-3xl font-black text-[#C67B57]">
+                      ${total.toFixed(2)}
+                    </span>
+                  </div>
+
+                  {/* Buttons */}
+                  <div className="space-y-3">
+                    <Button
+                      as={Link}
+                      href="/cart"
+                      size="lg"
+                      className="w-full bg-gradient-to-r from-[#D9B38C] to-[#C67B57] text-white font-bold text-xl py-6 shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+                    >
+                      View Cart & Checkout →
+                    </Button>
+
+                    <Button
+                      as={Link}
+                      href="/custom-cake"
+                      size="lg"
+                      className="w-full bg-gradient-to-r from-[#C67B57] via-[#D9B38C] to-[#C9B8A5] text-white font-bold text-xl py-6 shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <span>🎂 Custom Cake</span>
+                        <span className="text-sm bg-white/20 px-3 py-1 rounded-lg">📱 Scan QR</span>
+                      </div>
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
