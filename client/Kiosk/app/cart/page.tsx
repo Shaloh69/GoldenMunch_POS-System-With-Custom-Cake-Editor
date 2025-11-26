@@ -122,6 +122,7 @@ export default function CartPage() {
         order_type: orderType,
         order_source: 'kiosk',
         payment_method: paymentMethod,
+        payment_reference_number: referenceNumber.trim() || undefined,
         special_instructions: specialInstructions || undefined,
         items: getOrderItems(),
       };

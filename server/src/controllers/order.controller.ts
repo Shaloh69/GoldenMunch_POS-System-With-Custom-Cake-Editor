@@ -137,9 +137,10 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
       `INSERT INTO customer_order
        (order_number, verification_code, customer_id, order_type, order_source,
         scheduled_pickup_datetime, payment_method, payment_status, order_status,
-        subtotal, discount_amount, tax_amount, total_amount,
+        total_amount, discount_amount, tax_amount, final_amount,
+        gcash_reference_number, paymaya_reference_number, card_transaction_ref,
         special_instructions, kiosk_session_id, is_preorder)
-       VALUES ('', '', ?, ?, ?, ?, ?, 'pending', 'pending', ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES ('', '', ?, ?, ?, ?, ?, 'pending', 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         orderData.customer_id || null,
         orderData.order_type,
@@ -150,6 +151,9 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
         totals.discount,
         totals.tax,
         totals.total,
+        orderData.payment_method === 'gcash' ? orderData.payment_reference_number : null,
+        orderData.payment_method === 'paymaya' ? orderData.payment_reference_number : null,
+        orderData.payment_method === 'card' ? orderData.payment_reference_number : null,
         orderData.special_instructions || null,
         orderData.kiosk_session_id || generateSessionId(),
         orderData.order_type === 'custom_cake',

@@ -15,6 +15,8 @@ export interface CartItem {
   quantity: number;
   flavor_id?: number;
   size_id?: number;
+  flavor?: { flavor_id: number; additional_cost: number; flavor_name: string };
+  size?: { size_id: number; size_multiplier: number; size_name: string };
   custom_cake_design?: CustomCakeDesignRequest;
   special_instructions?: string;
 }
@@ -70,12 +72,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const addItem = useCallback((newItem: CartItem) => {
     setItems((currentItems) => {
       // Check if item already exists (same menu item and customizations)
-      const existingIndex = currentItems.findIndex(
-        (item) =>
-          item.menuItem.menu_item_id === newItem.menuItem.menu_item_id &&
-          item.flavor_id === newItem.flavor_id &&
-          item.size_id === newItem.size_id
-      );
+      // For custom cakes, always treat as unique (don't merge)
+      const existingIndex = newItem.custom_cake_design
+        ? -1
+        : currentItems.findIndex(
+            (item) =>
+              item.menuItem.menu_item_id === newItem.menuItem.menu_item_id &&
+              item.flavor_id === newItem.flavor_id &&
+              item.size_id === newItem.size_id &&
+              !item.custom_cake_design // Also ensure existing item isn't a custom cake
+          );
 
       if (existingIndex >= 0) {
         // Update quantity if item exists
@@ -124,7 +130,25 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const getSubtotal = useCallback(() => {
     return items.reduce((total, item) => {
       const basePrice = item.menuItem.current_price || 0;
-      return total + basePrice * item.quantity;
+      const flavorCost = item.flavor?.additional_cost || 0;
+      const sizeMultiplier = item.size?.size_multiplier || 1;
+
+      // Calculate design cost for custom cakes
+      let designCost = 0;
+      if (item.custom_cake_design) {
+        // Basic design complexity cost estimation (could be fetched from theme if available)
+        const complexityCosts = {
+          simple: 0,
+          moderate: 50,
+          complex: 100,
+          intricate: 200
+        };
+        designCost = complexityCosts[item.custom_cake_design.design_complexity] || 0;
+      }
+
+      // Match backend calculation: (basePrice + flavorCost + designCost) * sizeMultiplier * quantity
+      const itemTotal = (basePrice + flavorCost + designCost) * sizeMultiplier * item.quantity;
+      return total + itemTotal;
     }, 0);
   }, [items]);
 

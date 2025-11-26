@@ -647,6 +647,7 @@ export interface CreateOrderRequest {
   order_source: OrderSource;
   scheduled_pickup_datetime?: string;
   payment_method: PaymentMethod;
+  payment_reference_number?: string;
   special_instructions?: string;
   kiosk_session_id?: string;
   items: OrderItemRequest[];
