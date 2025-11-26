@@ -11,6 +11,7 @@ import type { MenuItem, Category } from '@/types/api';
 import NextLink from 'next/link';
 import Image from 'next/image';
 import { getImageUrl } from '@/utils/imageUtils';
+import HidableFooter from '@/components/HidableFooter';
 
 export default function HomePage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -127,18 +128,18 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-cream-white via-soft-sand to-warm-beige">
         <div className="text-center">
           <div className="relative mb-8">
-            <Spinner size="lg" className="w-24 h-24" style={{ color: '#C67B57' }} />
+            <Spinner size="lg" className="w-24 h-24 text-muted-clay" />
             <div className="absolute inset-0 animate-ping opacity-20">
-              <div className="w-24 h-24 rounded-full bg-[#D9B38C]/40"></div>
+              <div className="w-24 h-24 rounded-full bg-light-caramel/40"></div>
             </div>
           </div>
-          <h2 className="text-4xl font-bold text-[#C67B57] mb-3 animate-pulse">
+          <h2 className="text-5xl font-bold bg-gradient-to-r from-light-caramel to-muted-clay bg-clip-text text-transparent mb-4">
             ✨ Loading Delights...
           </h2>
-          <p className="text-xl text-[#D9B38C]">
+          <p className="text-2xl text-warm-beige font-medium">
             Preparing something amazing
           </p>
         </div>
@@ -148,17 +149,17 @@ export default function HomePage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-8">
-        <Card className="glass-card max-w-xl">
+      <div className="min-h-screen flex items-center justify-center p-8 bg-gradient-to-br from-cream-white via-soft-sand to-warm-beige">
+        <Card className="max-w-2xl shadow-caramel border-2 border-light-caramel/30 bg-cream-white/80 backdrop-blur-xl">
           <CardBody className="text-center p-12">
             <div className="text-9xl mb-6">⚠️</div>
-            <h2 className="text-4xl font-bold text-[#C67B57] mb-4">
+            <h2 className="text-5xl font-bold bg-gradient-to-r from-light-caramel to-muted-clay bg-clip-text text-transparent mb-6">
               Oops! Something went wrong
             </h2>
-            <p className="text-xl text-[#D9B38C] mb-8">{error}</p>
+            <p className="text-2xl text-warm-beige font-medium mb-8">{error}</p>
             <Button
               size="lg"
-              className="bg-gradient-to-r from-[#D9B38C] to-[#C67B57] text-white font-bold text-xl px-12 py-6 shadow-xl touch-target"
+              className="bg-gradient-to-r from-light-caramel to-muted-clay text-white font-bold text-xl px-12 py-6 shadow-caramel hover:shadow-glow transition-all duration-300 hover:scale-105"
               onClick={() => window.location.reload()}
             >
               🔄 Try Again
@@ -170,45 +171,28 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen pb-32">
-      {/* Hero Header - Portrait Optimized */}
+    <div className="min-h-screen bg-gradient-to-br from-cream-white via-soft-sand to-warm-beige">
+      {/* Hero Header - 24-inch TV Optimized */}
       <div className="relative">
-        <div className="glass-header border-b-4 border-[#D9B38C]/40 p-8">
+        <div className="bg-gradient-to-r from-cream-white via-soft-sand to-cream-white backdrop-blur-xl border-b-4 border-light-caramel/40 shadow-soft p-8">
           <div className="text-center space-y-4">
             {/* Logo / Branding */}
-            <div className="text-8xl animate-float mx-auto">🍰</div>
-            <h1 className="text-6xl font-black bg-gradient-to-br from-[#C67B57] via-[#D9B38C] to-[#C9B8A5] bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(198,123,87,0.4)]">
+            <div className="text-8xl mx-auto drop-shadow-lg">🍰</div>
+            <h1 className="text-6xl font-black bg-gradient-to-r from-light-caramel via-muted-clay to-light-caramel bg-clip-text text-transparent drop-shadow-lg">
               Golden Munch
             </h1>
-            <p className="text-2xl text-[#C67B57] font-semibold drop-shadow-lg">
+            <p className="text-3xl text-muted-clay font-bold drop-shadow-md">
               Fresh • Delicious • Made with Love
             </p>
           </div>
         </div>
-
-        {/* Floating Cart Badge */}
-        {getItemCount() > 0 && (
-          <Button
-            as={NextLink}
-            href="/cart"
-            size="lg"
-            className="absolute top-8 right-8 bg-gradient-to-br from-[#D9B38C] to-[#C67B57] text-white font-bold text-xl px-8 py-6 rounded-full touch-target shadow-[0_0_30px_rgba(198,123,87,0.5)]"
-            style={{ animation: 'glow 2s ease-in-out infinite' }}
-          >
-            <span className="text-3xl mr-2">🛒</span>
-            <span className="text-2xl">{getItemCount()}</span>
-            <Chip size="lg" className="ml-3 text-xl px-4 bg-[#C67B57] text-white font-bold">
-              ₱{getTotal().toFixed(0)}
-            </Chip>
-          </Button>
-        )}
       </div>
 
-      <div className="px-8 pt-8 space-y-8">
+      <div className="px-8 pt-8 pb-40 space-y-8">
         {/* Categories - Horizontal Scroll */}
         {categories.length > 0 && (
           <div>
-            <h2 className="text-3xl font-bold text-[#C67B57] mb-6 flex items-center gap-3 drop-shadow-lg">
+            <h2 className="text-4xl font-bold bg-gradient-to-r from-light-caramel to-muted-clay bg-clip-text text-transparent mb-6 flex items-center gap-3 drop-shadow-lg">
               <span className="text-5xl">📂</span>
               Categories
             </h2>
@@ -217,9 +201,9 @@ export default function HomePage() {
                 size="lg"
                 className={`${
                   selectedCategory === null
-                    ? 'bg-gradient-to-br from-[#D9B38C] to-[#C67B57] text-white scale-110 shadow-[0_0_20px_rgba(198,123,87,0.5)]'
-                    : 'glass-button text-[#C67B57]'
-                } font-bold text-2xl px-8 py-7 rounded-2xl min-w-[200px] snap-center transition-all touch-target`}
+                    ? 'bg-gradient-to-r from-light-caramel to-muted-clay text-white scale-105 shadow-caramel'
+                    : 'bg-cream-white/50 border-2 border-light-caramel/30 text-muted-clay hover:bg-soft-sand/50'
+                } font-bold text-2xl px-8 py-7 rounded-2xl min-w-[220px] snap-center transition-all duration-300 hover:scale-105 shadow-soft`}
                 onClick={() => setSelectedCategory(null)}
               >
                 ✨ All Items
@@ -230,9 +214,9 @@ export default function HomePage() {
                   size="lg"
                   className={`${
                     selectedCategory === category.category_id
-                      ? 'bg-gradient-to-br from-[#D9B38C] to-[#C67B57] text-white scale-110 shadow-[0_0_20px_rgba(198,123,87,0.5)]'
-                      : 'glass-button text-[#C67B57]'
-                  } font-bold text-2xl px-8 py-7 rounded-2xl min-w-[200px] snap-center transition-all touch-target`}
+                      ? 'bg-gradient-to-r from-light-caramel to-muted-clay text-white scale-105 shadow-caramel'
+                      : 'bg-cream-white/50 border-2 border-light-caramel/30 text-muted-clay hover:bg-soft-sand/50'
+                  } font-bold text-2xl px-8 py-7 rounded-2xl min-w-[220px] snap-center transition-all duration-300 hover:scale-105 shadow-soft`}
                   onClick={() => setSelectedCategory(category.category_id)}
                 >
                   {category.name}
@@ -242,21 +226,21 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Menu Items Grid - 2 Column for Portrait */}
+        {/* Menu Items Grid - 4 Column for 24-inch TV */}
         {filteredItems.length === 0 ? (
-          <Card className="glass-card">
+          <Card className="shadow-caramel border-2 border-light-caramel/30 bg-cream-white/80 backdrop-blur-xl">
             <CardBody className="text-center py-20">
-              <div className="text-9xl mb-6 animate-float">🍽️</div>
-              <h3 className="text-5xl font-bold text-[#C67B57] mb-4 drop-shadow-lg">
+              <div className="text-9xl mb-6">🍽️</div>
+              <h3 className="text-5xl font-bold bg-gradient-to-r from-light-caramel to-muted-clay bg-clip-text text-transparent mb-6 drop-shadow-lg">
                 No items found
               </h3>
-              <p className="text-2xl text-[#D9B38C] mb-8">
+              <p className="text-2xl text-warm-beige font-medium mb-8">
                 No items in this category
               </p>
               {selectedCategory !== null && (
                 <Button
                   size="lg"
-                  className="bg-gradient-to-r from-[#D9B38C] to-[#C67B57] text-white font-bold px-12 py-6 text-2xl touch-target"
+                  className="bg-gradient-to-r from-light-caramel to-muted-clay text-white font-bold px-12 py-6 text-2xl shadow-caramel hover:shadow-glow transition-all duration-300 hover:scale-105"
                   onClick={() => setSelectedCategory(null)}
                 >
                   Clear Filter
@@ -267,12 +251,12 @@ export default function HomePage() {
         ) : (
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-3xl font-bold text-[#C67B57] drop-shadow-lg">
+              <h2 className="text-4xl font-bold bg-gradient-to-r from-light-caramel to-muted-clay bg-clip-text text-transparent drop-shadow-lg">
                 🍴 {filteredItems.length} Delicious Items
               </h2>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-4 gap-6">
               {filteredItems.map((item) => {
                 const cartQty = getCartQuantity(item.menu_item_id);
                 const isAvailable = item.status === 'available' &&
@@ -281,11 +265,11 @@ export default function HomePage() {
                 return (
                   <Card
                     key={item.menu_item_id}
-                    className={`glass-card hover:scale-105 transition-transform duration-300 ${!isAvailable && 'opacity-60'}`}
+                    className={`shadow-caramel border-2 border-light-caramel/30 bg-cream-white/80 backdrop-blur-xl hover:scale-105 transition-all duration-300 hover:shadow-glow ${!isAvailable && 'opacity-60'}`}
                   >
                     <CardBody className="p-0">
                       {/* Image/Icon Section */}
-                      <div className="relative h-48 bg-gradient-to-br from-[#E8DCC8]/30 to-[#D9B38C]/30 flex items-center justify-center rounded-t-xl overflow-hidden">
+                      <div className="relative h-48 bg-gradient-to-br from-soft-sand/40 to-light-caramel/30 flex items-center justify-center rounded-t-xl overflow-hidden">
                         {getImageUrl(item.image_url) ? (
                           <div className="w-full h-full relative">
                             <Image
@@ -296,23 +280,23 @@ export default function HomePage() {
                             />
                           </div>
                         ) : (
-                          <div className="text-8xl animate-float">🍰</div>
+                          <div className="text-8xl">🍰</div>
                         )}
 
                         {/* Badges */}
                         <div className="absolute top-3 right-3 flex flex-col gap-2">
                           {item.is_featured && (
-                            <Chip size="lg" className="font-bold text-lg animate-pulse-slow bg-[#C67B57] text-white">
+                            <Chip size="lg" className="font-bold text-lg bg-gradient-to-r from-light-caramel to-muted-clay text-white shadow-caramel">
                               🔥 Hot
                             </Chip>
                           )}
                           {!isAvailable && (
-                            <Chip size="lg" className="font-bold text-lg bg-[#C9B8A5] text-white">
+                            <Chip size="lg" className="font-bold text-lg bg-warm-beige text-white shadow-soft">
                               Sold Out
                             </Chip>
                           )}
                           {cartQty > 0 && (
-                            <Chip size="lg" className="font-bold text-xl bg-[#D9B38C] text-white">
+                            <Chip size="lg" className="font-bold text-xl bg-light-caramel text-white shadow-caramel">
                               {cartQty} in cart
                             </Chip>
                           )}
@@ -322,19 +306,19 @@ export default function HomePage() {
                       {/* Content Section */}
                       <div className="p-5 space-y-4">
                         <div>
-                          <h3 className="text-2xl font-bold text-[#C67B57] mb-2 line-clamp-2 drop-shadow-md">
+                          <h3 className="text-2xl font-bold text-muted-clay mb-2 line-clamp-2 drop-shadow-md">
                             {item.name}
                           </h3>
-                          <p className="text-lg text-[#C9B8A5] line-clamp-2">
+                          <p className="text-lg text-warm-beige line-clamp-2">
                             {item.description || 'Delicious treat made fresh daily'}
                           </p>
                         </div>
 
                         <div className="flex items-center justify-between">
-                          <span className="text-4xl font-black bg-gradient-to-r from-[#C67B57] to-[#D9B38C] bg-clip-text text-transparent drop-shadow-lg">
+                          <span className="text-4xl font-black bg-gradient-to-r from-light-caramel to-muted-clay bg-clip-text text-transparent drop-shadow-lg">
                             ₱{(Number(item.current_price) || 0).toFixed(0)}
                           </span>
-                          <Chip size="lg" variant="flat" className="text-lg bg-[#E8DCC8]/40 text-[#C67B57] border border-[#D9B38C]/30">
+                          <Chip size="lg" variant="flat" className="text-lg bg-soft-sand/50 text-muted-clay border border-light-caramel/30 font-semibold">
                             {item.item_type}
                           </Chip>
                         </div>
@@ -342,7 +326,7 @@ export default function HomePage() {
                         {isAvailable ? (
                           <Button
                             size="lg"
-                            className="w-full bg-gradient-to-r from-[#D9B38C] to-[#C67B57] text-white font-bold text-xl py-6 shadow-lg hover:shadow-[0_0_25px_rgba(198,123,87,0.6)] touch-target touch-feedback transition-all"
+                            className="w-full bg-gradient-to-r from-light-caramel to-muted-clay text-white font-bold text-xl py-6 shadow-caramel hover:shadow-glow transition-all duration-300 hover:scale-105"
                             onClick={() => handleAddToCart(item)}
                           >
                             {cartQty > 0 ? '🛒 Add More' : '+ Add to Cart'}
@@ -351,7 +335,7 @@ export default function HomePage() {
                           <Button
                             disabled
                             size="lg"
-                            className="w-full bg-[#C9B8A5]/50 text-[#E8DCC8]/60 font-semibold text-xl py-6 touch-target"
+                            className="w-full bg-warm-beige/50 text-soft-sand font-semibold text-xl py-6"
                           >
                             Unavailable
                           </Button>
@@ -365,6 +349,9 @@ export default function HomePage() {
           </div>
         )}
       </div>
+
+      {/* Hidable Footer with Cart and Custom Cake */}
+      <HidableFooter />
     </div>
   );
 }
