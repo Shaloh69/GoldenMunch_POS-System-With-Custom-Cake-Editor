@@ -80,8 +80,8 @@ export default function CakePage() {
   const fetchFlavors = async () => {
     try {
       const response = await CakeService.getFlavors();
-      if (response.data?.success) {
-        setFlavors(response.data.data || []);
+      if (response.success) {
+        setFlavors(Array.isArray(response.data) ? response.data : []);
       }
     } catch (error) {
       console.error('Failed to fetch flavors:', error);
@@ -134,8 +134,8 @@ export default function CakePage() {
   const fetchSizes = async () => {
     try {
       const response = await CakeService.getSizes();
-      if (response.data?.success) {
-        setSizes(response.data.data || []);
+      if (response.success) {
+        setSizes(Array.isArray(response.data) ? response.data : []);
       }
     } catch (error) {
       console.error('Failed to fetch sizes:', error);
@@ -190,8 +190,8 @@ export default function CakePage() {
   const fetchThemes = async () => {
     try {
       const response = await CakeService.getThemes();
-      if (response.data?.success) {
-        setThemes(response.data.data || []);
+      if (response.success) {
+        setThemes(Array.isArray(response.data) ? response.data : []);
       }
     } catch (error) {
       console.error('Failed to fetch themes:', error);
