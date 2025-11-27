@@ -134,4 +134,8 @@ export class MenuService {
   }) {
     return apiClient.post('/admin/categories/unassign', data);
   }
+
+  static async deleteCategory(id: number) {
+    return apiClient.delete(`/admin/categories/${id}`);
+  }
 }

@@ -37,8 +37,10 @@ export default function CategoriesPage() {
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const { isOpen: isAssignOpen, onOpen: onAssignOpen, onClose: onAssignClose } = useDisclosure();
+  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
 
   const [selectedCategoryForAssign, setSelectedCategoryForAssign] = useState<Category | null>(null);
+  const [selectedCategoryForDelete, setSelectedCategoryForDelete] = useState<Category | null>(null);
   const [selectedMenuItems, setSelectedMenuItems] = useState<Set<number>>(new Set());
   const [originallyAssignedItems, setOriginallyAssignedItems] = useState<Set<number>>(new Set());
 
@@ -231,6 +233,41 @@ export default function CategoriesPage() {
     );
   };
 
+  const handleDeleteClick = (category: Category) => {
+    setSelectedCategoryForDelete(category);
+    onDeleteOpen();
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedCategoryForDelete) return;
+
+    try {
+      setSaving(true);
+      setError(null);
+
+      const response = await MenuService.deleteCategory(selectedCategoryForDelete.category_id);
+
+      if (response.success) {
+        // Close modal and reload data
+        onDeleteClose();
+        setSelectedCategoryForDelete(null);
+        await loadData();
+      } else {
+        setError(response.message || 'Failed to delete category');
+      }
+    } catch (error: any) {
+      console.error('Failed to delete category:', error);
+      setError(error?.message || 'Failed to delete category');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setSelectedCategoryForDelete(null);
+    onDeleteClose();
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-gradient-to-r from-light-caramel via-muted-clay to-light-caramel p-8 rounded-2xl shadow-caramel border-2 border-light-caramel/30">
@@ -323,6 +360,15 @@ export default function CategoriesPage() {
                             className="bg-muted-clay/20 hover:bg-muted-clay/30"
                           >
                             Assign Items
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="flat"
+                            color="danger"
+                            onPress={() => handleDeleteClick(category)}
+                            className="bg-danger/10 hover:bg-danger/20 text-danger"
+                          >
+                            Delete
                           </Button>
                           <Button
                             size="sm"
@@ -529,6 +575,53 @@ export default function CategoriesPage() {
               isLoading={saving}
             >
               Assign {selectedMenuItems.size} Items
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={isDeleteOpen} onClose={handleDeleteCancel}>
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">
+            <h3 className="text-xl font-bold text-danger">Delete Category</h3>
+          </ModalHeader>
+          <ModalBody>
+            {error && (
+              <div className="p-3 bg-danger-50 border border-danger rounded-lg mb-4">
+                <p className="text-danger text-sm">{error}</p>
+              </div>
+            )}
+            {selectedCategoryForDelete && (
+              <div className="space-y-4">
+                <p className="text-default-600">
+                  Are you sure you want to delete the category <span className="font-bold text-danger">"{selectedCategoryForDelete.name}"</span>?
+                </p>
+                <div className="p-4 bg-warning-50 border border-warning-200 rounded-lg">
+                  <p className="text-warning-800 text-sm font-medium mb-2">⚠️ Warning:</p>
+                  <ul className="text-warning-700 text-sm space-y-1 list-disc list-inside">
+                    <li>This action cannot be undone</li>
+                    <li>All menu items will be unassigned from this category</li>
+                    <li>The category will be permanently removed</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="light"
+              onPress={handleDeleteCancel}
+              isDisabled={saving}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="danger"
+              onPress={handleDeleteConfirm}
+              isLoading={saving}
+            >
+              Delete Category
             </Button>
           </ModalFooter>
         </ModalContent>
