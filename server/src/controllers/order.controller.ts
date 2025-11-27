@@ -138,24 +138,18 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
     // Create order
     const [orderResult] = await conn.query(
       `INSERT INTO customer_order
-       (customer_id, order_type,
-        scheduled_pickup_datetime, payment_method, payment_status, order_status,
+       (customer_id, order_type, payment_method, payment_status, order_status,
         total_amount, discount_amount, tax_amount, final_amount,
-        gcash_reference_number, paymaya_reference_number, card_transaction_ref,
         special_instructions, kiosk_session_id, is_preorder)
-       VALUES (?, ?, ?, ?, 'pending', 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, 'pending', 'pending', ?, ?, ?, ?, ?, ?, ?)`,
       [
         orderData.customer_id || null,
         orderData.order_type,
-        orderData.scheduled_pickup_datetime || null,
         orderData.payment_method,
         totals.subtotal,
         totals.discount,
         totals.tax,
         totals.total,
-        orderData.payment_method === 'gcash' ? orderData.payment_reference_number : null,
-        orderData.payment_method === 'paymaya' ? orderData.payment_reference_number : null,
-        orderData.payment_method === 'card' ? orderData.payment_reference_number : null,
         orderData.special_instructions || null,
         orderData.kiosk_session_id || generateSessionId(),
         orderData.order_type === 'custom_order',

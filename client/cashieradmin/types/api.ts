@@ -37,10 +37,7 @@ export enum OrderStatus {
 
 export enum PaymentMethod {
   CASH = 'cash',
-  GCASH = 'gcash',
-  PAYMAYA = 'paymaya',
-  CARD = 'card',
-  BANK_TRANSFER = 'bank_transfer'
+  CASHLESS = 'cashless'
 }
 
 export enum PaymentStatus {
