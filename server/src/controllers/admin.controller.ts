@@ -37,7 +37,8 @@ export const createMenuItem = async (req: AuthRequest, res: Response) => {
     ]
   );
 
-  res.status(201).json(successResponse('Menu item created', { id: getInsertId(result) }));
+  const menuItemId = getInsertId(result);
+  res.status(201).json(successResponse('Menu item created', { menu_item_id: menuItemId }));
 };
 
 // Update menu item

@@ -53,7 +53,10 @@ export default function AdminMenuPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState<{isOpen: boolean; item: MenuItem | null}>({isOpen: false, item: null});
+  const [bulkDeleteConfirmModal, setBulkDeleteConfirmModal] = useState(false);
   const [stockAdjusting, setStockAdjusting] = useState<Record<number, boolean>>({});
   const [priceModalItem, setPriceModalItem] = useState<MenuItem | null>(null);
   const [newPrice, setNewPrice] = useState('');
@@ -201,6 +204,9 @@ export default function AdminMenuPage() {
       }
 
       if (response.success) {
+        setSuccessMessage(editingItem ? 'Menu item updated successfully!' : 'Menu item created successfully!');
+        setTimeout(() => setSuccessMessage(null), 5000);
+
         // If creating a new item with an initial price, set the price
         if (!editingItem && initialPrice && parseFloat(initialPrice) > 0 && response.data?.menu_item_id) {
           try {
@@ -272,20 +278,28 @@ export default function AdminMenuPage() {
     onOpen();
   };
 
-  const handleDelete = async (id: number) => {
-    if (confirm('Are you sure you want to delete this item?')) {
-      try {
-        setError(null);
-        const response = await MenuService.deleteMenuItem(id);
-        if (response.success) {
-          loadMenuItems();
-        } else {
-          setError(response.message || 'Failed to delete item');
-        }
-      } catch (error: any) {
-        console.error('Failed to delete item:', error);
-        setError(error?.message || 'An error occurred while deleting the item');
+  const handleDelete = async (item: MenuItem) => {
+    setDeleteConfirmModal({isOpen: true, item});
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmModal.item) return;
+
+    try {
+      setError(null);
+      const response = await MenuService.deleteMenuItem(deleteConfirmModal.item.menu_item_id);
+      if (response.success) {
+        setSuccessMessage('Menu item deleted successfully!');
+        setTimeout(() => setSuccessMessage(null), 5000);
+        loadMenuItems();
+      } else {
+        setError(response.message || 'Failed to delete item');
       }
+    } catch (error: any) {
+      console.error('Failed to delete item:', error);
+      setError(error?.message || 'An error occurred while deleting the item');
+    } finally {
+      setDeleteConfirmModal({isOpen: false, item: null});
     }
   };
 
@@ -301,6 +315,8 @@ export default function AdminMenuPage() {
       });
 
       if (response.success) {
+        setSuccessMessage(`Stock updated to ${newStock}`);
+        setTimeout(() => setSuccessMessage(null), 3000);
         loadMenuItems();
       } else {
         setError(response.message || 'Failed to update stock');
@@ -321,6 +337,8 @@ export default function AdminMenuPage() {
       });
 
       if (response.success) {
+        setSuccessMessage(`Status updated to ${newStatus}`);
+        setTimeout(() => setSuccessMessage(null), 3000);
         loadMenuItems();
       } else {
         setError(response.message || 'Failed to update status');
@@ -363,6 +381,8 @@ export default function AdminMenuPage() {
         throw new Error(response.message || 'Failed to update price');
       }
 
+      setSuccessMessage('Price updated successfully!');
+      setTimeout(() => setSuccessMessage(null), 5000);
       setPriceModalItem(null);
       setNewPrice('');
       loadMenuItems();
@@ -395,20 +415,25 @@ export default function AdminMenuPage() {
 
   const handleBulkDelete = async () => {
     if (selectedItems.size === 0) return;
+    setBulkDeleteConfirmModal(true);
+  };
 
-    if (confirm(`Are you sure you want to delete ${selectedItems.size} items?`)) {
-      try {
-        setError(null);
-        const promises = Array.from(selectedItems).map(id =>
-          MenuService.deleteMenuItem(id)
-        );
-        await Promise.all(promises);
-        setSelectedItems(new Set());
-        loadMenuItems();
-      } catch (error: any) {
-        console.error('Failed to delete items:', error);
-        setError(error?.message || 'An error occurred while deleting items');
-      }
+  const confirmBulkDelete = async () => {
+    try {
+      setError(null);
+      const promises = Array.from(selectedItems).map(id =>
+        MenuService.deleteMenuItem(id)
+      );
+      await Promise.all(promises);
+      setSuccessMessage(`Successfully deleted ${selectedItems.size} items`);
+      setTimeout(() => setSuccessMessage(null), 5000);
+      setSelectedItems(new Set());
+      loadMenuItems();
+    } catch (error: any) {
+      console.error('Failed to delete items:', error);
+      setError(error?.message || 'An error occurred while deleting items');
+    } finally {
+      setBulkDeleteConfirmModal(false);
     }
   };
 
@@ -421,6 +446,8 @@ export default function AdminMenuPage() {
         MenuService.updateMenuItem(id, { status: status as any })
       );
       await Promise.all(promises);
+      setSuccessMessage(`Successfully updated ${selectedItems.size} items to ${status}`);
+      setTimeout(() => setSuccessMessage(null), 5000);
       setSelectedItems(new Set());
       loadMenuItems();
     } catch (error: any) {
@@ -433,6 +460,7 @@ export default function AdminMenuPage() {
     setFormData({});
     setImageFile(null);
     setError(null);
+    setSuccessMessage(null);
     setEditingItem(null);
     setInitialPrice('');
   };
@@ -528,6 +556,14 @@ export default function AdminMenuPage() {
         <Card className="bg-danger-50 border-danger">
           <CardBody>
             <p className="text-danger">{error}</p>
+          </CardBody>
+        </Card>
+      )}
+
+      {successMessage && (
+        <Card className="bg-success-50 border-success">
+          <CardBody>
+            <p className="text-success">{successMessage}</p>
           </CardBody>
         </Card>
       )}
@@ -835,7 +871,7 @@ export default function AdminMenuPage() {
                           size="sm"
                           color="danger"
                           variant="flat"
-                          onPress={() => handleDelete(item.menu_item_id)}
+                          onPress={() => handleDelete(item)}
                         >
                           Delete
                         </Button>
@@ -1194,6 +1230,68 @@ export default function AdminMenuPage() {
               isDisabled={!newPrice || parseFloat(newPrice) < 0}
             >
               {saving ? 'Updating...' : 'Update Price'}
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={deleteConfirmModal.isOpen}
+        onClose={() => setDeleteConfirmModal({isOpen: false, item: null})}
+        size="md"
+      >
+        <ModalContent>
+          <ModalHeader className="text-danger">Confirm Delete</ModalHeader>
+          <ModalBody>
+            <p>Are you sure you want to delete <strong>{deleteConfirmModal.item?.name}</strong>?</p>
+            <p className="text-sm text-default-500 mt-2">
+              This action cannot be undone. The item will be marked as discontinued.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="light"
+              onPress={() => setDeleteConfirmModal({isOpen: false, item: null})}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="danger"
+              onPress={confirmDelete}
+            >
+              Delete
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Bulk Delete Confirmation Modal */}
+      <Modal
+        isOpen={bulkDeleteConfirmModal}
+        onClose={() => setBulkDeleteConfirmModal(false)}
+        size="md"
+      >
+        <ModalContent>
+          <ModalHeader className="text-danger">Confirm Bulk Delete</ModalHeader>
+          <ModalBody>
+            <p>Are you sure you want to delete <strong>{selectedItems.size} items</strong>?</p>
+            <p className="text-sm text-default-500 mt-2">
+              This action cannot be undone. All selected items will be marked as discontinued.
+            </p>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="light"
+              onPress={() => setBulkDeleteConfirmModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              color="danger"
+              onPress={confirmBulkDelete}
+            >
+              Delete {selectedItems.size} Items
             </Button>
           </ModalFooter>
         </ModalContent>
