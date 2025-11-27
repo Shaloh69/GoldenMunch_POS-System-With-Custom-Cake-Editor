@@ -167,8 +167,9 @@ export default function CashierOrdersPage() {
   };
 
   const filteredOrders = orders.filter(order =>
-    order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.verification_code.includes(searchTerm)
+    order.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    order.verification_code?.includes(searchTerm) ||
+    order.order_id.toString().includes(searchTerm)
   );
 
   return (
@@ -232,10 +233,10 @@ export default function CashierOrdersPage() {
               <TableBody emptyContent="No orders found">
                 {filteredOrders.map((order) => (
                   <TableRow key={order.order_id}>
-                    <TableCell>{order.order_number}</TableCell>
+                    <TableCell>{order.order_number || `#${order.order_id}`}</TableCell>
                     <TableCell>
                       <code className="bg-default-100 px-2 py-1 rounded">
-                        {order.verification_code}
+                        {order.verification_code || order.order_id.toString().padStart(6, '0')}
                       </code>
                     </TableCell>
                     <TableCell className="capitalize">{order.order_type.replace('_', ' ')}</TableCell>

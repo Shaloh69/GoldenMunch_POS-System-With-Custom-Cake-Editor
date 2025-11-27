@@ -512,7 +512,7 @@ export default function AdminCustomersPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-sm text-default-500">Order #</p>
-                          <p className="font-semibold">{order.order_number}</p>
+                          <p className="font-semibold">{order.order_number || `#${order.order_id}`}</p>
                         </div>
                         <div>
                           <p className="text-sm text-default-500">Status</p>

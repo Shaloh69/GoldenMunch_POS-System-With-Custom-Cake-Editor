@@ -128,13 +128,14 @@ export default function PaymentPage() {
     setSearchError('');
 
     try {
-      // Try searching by order number first
+      // Try searching by order number, verification code, or order ID
       const response = await OrderService.getOrders();
       if (response.success && response.data) {
         const found = response.data.find(
           (order: CustomerOrder) =>
             order.order_number === searchQuery.trim() ||
-            order.verification_code === searchQuery.trim()
+            order.verification_code === searchQuery.trim() ||
+            order.order_id.toString() === searchQuery.trim()
         );
 
         if (found) {
@@ -378,8 +379,8 @@ export default function PaymentPage() {
                         <TableRow key={order.order_id}>
                           <TableCell>
                             <div>
-                              <p className="font-semibold">{order.order_number}</p>
-                              <p className="text-xs text-default-400">Code: {order.verification_code}</p>
+                              <p className="font-semibold">{order.order_number || `#${order.order_id}`}</p>
+                              <p className="text-xs text-default-400">Code: {order.verification_code || order.order_id.toString().padStart(6, '0')}</p>
                             </div>
                           </TableCell>
                           <TableCell>{formatDateTime(order.order_datetime)}</TableCell>
@@ -457,8 +458,8 @@ export default function PaymentPage() {
                         <TableRow key={order.order_id}>
                           <TableCell>
                             <div>
-                              <p className="font-semibold">{order.order_number}</p>
-                              <p className="text-xs text-default-400">Code: {order.verification_code}</p>
+                              <p className="font-semibold">{order.order_number || `#${order.order_id}`}</p>
+                              <p className="text-xs text-default-400">Code: {order.verification_code || order.order_id.toString().padStart(6, '0')}</p>
                             </div>
                           </TableCell>
                           <TableCell>{formatDateTime(order.order_datetime)}</TableCell>

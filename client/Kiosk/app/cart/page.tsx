@@ -555,7 +555,7 @@ export default function CartPage() {
                           Order Number
                         </p>
                         <p className="text-2xl font-bold text-[#FAF7F2] mb-6 drop-shadow-lg">
-                          #{completedOrder.order_number}
+                          #{completedOrder.order_number || completedOrder.order_id}
                         </p>
 
                         <div className="bg-gradient-to-r from-[#7B4B28] to-[#662B35] p-6 rounded-2xl mb-4 shadow-[0_0_30px_rgba(234,215,183,0.3)]">
@@ -563,7 +563,7 @@ export default function CartPage() {
                             Your Verification Code
                           </p>
                           <p className="text-5xl font-black text-[#FAF7F2] tracking-wider selectable drop-shadow-lg">
-                            {completedOrder.verification_code}
+                            {completedOrder.verification_code || completedOrder.order_id.toString().padStart(6, '0')}
                           </p>
                           <p className="text-[#EAD7B7] text-xs mt-3">
                             📋 Please save this code
