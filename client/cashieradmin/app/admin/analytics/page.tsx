@@ -36,16 +36,16 @@ export default function AnalyticsPage() {
         AnalyticsService.getWasteReport(dateRange),
       ]);
 
-      if (salesRes.data?.success) {
-        setSalesData(salesRes.data.data);
+      if (salesRes.success) {
+        setSalesData(salesRes.data);
       }
 
-      if (trendingRes.data?.success) {
-        setTrendingItems(trendingRes.data.data || []);
+      if (trendingRes.success) {
+        setTrendingItems(trendingRes.data || []);
       }
 
-      if (wasteRes.data?.success) {
-        setWasteData(wasteRes.data.data);
+      if (wasteRes.success) {
+        setWasteData(wasteRes.data);
       }
     } catch (error) {
       console.error('Failed to fetch analytics:', error);
