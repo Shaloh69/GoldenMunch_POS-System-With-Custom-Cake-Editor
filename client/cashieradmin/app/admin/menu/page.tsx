@@ -11,7 +11,7 @@ import { Spinner } from '@heroui/spinner';
 import { Select, SelectItem } from '@heroui/select';
 import { Textarea } from '@heroui/input';
 import { MenuService } from '@/services/menu.service';
-import type { MenuItem, CreateMenuItemRequest } from '@/types/api';
+import type { MenuItem, CreateMenuItemRequest, Category } from '@/types/api';
 import { PlusIcon, MagnifyingGlassIcon, FunnelIcon, TrashIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import { Checkbox } from '@heroui/checkbox';
 import { getImageUrl } from '@/utils/imageUtils';
@@ -47,6 +47,8 @@ const formatStock = (item: MenuItem): string => {
 
 export default function AdminMenuPage() {
   const [items, setItems] = useState<MenuItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(true);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [formData, setFormData] = useState<Partial<CreateMenuItemRequest>>({});
@@ -74,6 +76,7 @@ export default function AdminMenuPage() {
 
   useEffect(() => {
     loadMenuItems();
+    loadCategories();
   }, []);
 
   // Analytics stats
@@ -166,6 +169,17 @@ export default function AdminMenuPage() {
     }
   };
 
+  const loadCategories = async () => {
+    try {
+      const response = await MenuService.getCategories();
+      if (response.success && response.data) {
+        setCategories(response.data);
+      }
+    } catch (error: any) {
+      console.error('Failed to load categories:', error);
+    }
+  };
+
   const handleSubmit = async () => {
     try {
       // Validate required fields
@@ -205,6 +219,42 @@ export default function AdminMenuPage() {
       }
 
       if (response.success) {
+        const itemId = editingItem?.menu_item_id || response.data?.menu_item_id;
+
+        // Assign categories
+        if (itemId && selectedCategoryIds.size > 0) {
+          try {
+            // If editing, first unassign all existing categories
+            if (editingItem && editingItem.categories) {
+              for (const category of editingItem.categories) {
+                try {
+                  await MenuService.unassignItemFromCategory({
+                    menu_item_id: itemId,
+                    category_id: category.category_id
+                  });
+                } catch (err) {
+                  console.error('Failed to unassign category:', err);
+                }
+              }
+            }
+
+            // Assign selected categories
+            for (const categoryId of selectedCategoryIds) {
+              try {
+                await MenuService.assignItemToCategory({
+                  menu_item_id: itemId,
+                  category_id: categoryId
+                });
+              } catch (err: any) {
+                console.error('Failed to assign category:', err);
+              }
+            }
+          } catch (categoryError: any) {
+            console.error('Failed to assign categories:', categoryError);
+            setError('Item saved but failed to assign categories: ' + (categoryError?.message || 'Unknown error'));
+          }
+        }
+
         setSuccessMessage(editingItem ? 'Menu item updated successfully!' : 'Menu item created successfully!');
         setTimeout(() => setSuccessMessage(null), 5000);
 
@@ -277,6 +327,12 @@ export default function AdminMenuPage() {
       allergen_info: item.allergen_info,
       nutritional_info: item.nutritional_info,
     });
+    // Set selected categories
+    if (item.categories && item.categories.length > 0) {
+      setSelectedCategoryIds(new Set(item.categories.map(cat => cat.category_id)));
+    } else {
+      setSelectedCategoryIds(new Set());
+    }
     onOpen();
   };
 
@@ -465,6 +521,7 @@ export default function AdminMenuPage() {
     setSuccessMessage(null);
     setEditingItem(null);
     setInitialPrice('');
+    setSelectedCategoryIds(new Set());
   };
 
   const handleModalClose = () => {
@@ -994,6 +1051,43 @@ export default function AdminMenuPage() {
                 <SelectItem key="box">Box</SelectItem>
                 <SelectItem key="pack">Pack</SelectItem>
               </Select>
+
+              {/* Categories Selection */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-default-700">Categories</label>
+                <p className="text-xs text-default-500 mb-2">Select which categories this item belongs to</p>
+                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-3 bg-default-50 rounded-lg border border-default-200">
+                  {categories.length === 0 ? (
+                    <p className="text-sm text-default-400 col-span-2">No categories available. Create categories first.</p>
+                  ) : (
+                    categories.map((category) => (
+                      <label key={category.category_id} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedCategoryIds.has(category.category_id)}
+                          onChange={(e) => {
+                            const newSet = new Set(selectedCategoryIds);
+                            if (e.target.checked) {
+                              newSet.add(category.category_id);
+                            } else {
+                              newSet.delete(category.category_id);
+                            }
+                            setSelectedCategoryIds(newSet);
+                          }}
+                          className="w-4 h-4 rounded border-default-300 text-primary focus:ring-2 focus:ring-primary"
+                        />
+                        <span className="text-sm text-default-700">{category.name}</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+                {selectedCategoryIds.size > 0 && (
+                  <p className="text-xs text-primary">
+                    {selectedCategoryIds.size} {selectedCategoryIds.size === 1 ? 'category' : 'categories'} selected
+                  </p>
+                )}
+              </div>
+
               {!editingItem && (
                 <Input
                   label="Initial Price (₱)"
