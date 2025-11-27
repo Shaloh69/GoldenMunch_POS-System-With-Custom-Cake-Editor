@@ -23,8 +23,7 @@ interface AdminUser {
 interface CashierUser {
   cashier_code: string;
   pin: string;
-  first_name: string;
-  last_name: string;
+  name: string;
   email: string;
 }
 
@@ -99,8 +98,7 @@ async function seedCashier(connection: mysql.Connection) {
   const cashier: CashierUser = {
     cashier_code: 'CASH001',
     pin: '1234',
-    first_name: 'John',
-    last_name: 'Doe',
+    name: 'John Doe',
     email: 'cashier@goldenmunch.com',
   };
 
@@ -118,17 +116,17 @@ async function seedCashier(connection: mysql.Connection) {
       // Update existing cashier
       await connection.execute(
         `UPDATE cashier
-         SET pin_hash = ?, first_name = ?, last_name = ?, email = ?, updated_at = NOW()
+         SET pin_hash = ?, name = ?, email = ?, updated_at = NOW()
          WHERE cashier_code = ?`,
-        [pinHash, cashier.first_name, cashier.last_name, cashier.email, cashier.cashier_code]
+        [pinHash, cashier.name, cashier.email, cashier.cashier_code]
       );
       console.log('✨ Cashier account updated');
     } else {
       // Insert new cashier
       await connection.execute(
-        `INSERT INTO cashier (cashier_code, pin_hash, first_name, last_name, email, status, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, 'active', NOW(), NOW())`,
-        [cashier.cashier_code, pinHash, cashier.first_name, cashier.last_name, cashier.email]
+        `INSERT INTO cashier (cashier_code, pin_hash, name, email, is_active, created_at, updated_at)
+         VALUES (?, ?, ?, ?, TRUE, NOW(), NOW())`,
+        [cashier.cashier_code, pinHash, cashier.name, cashier.email]
       );
       console.log('✨ Cashier account created');
     }
@@ -137,7 +135,7 @@ async function seedCashier(connection: mysql.Connection) {
 📋 Cashier Credentials:
    Cashier Code: ${cashier.cashier_code}
    PIN: ${cashier.pin}
-   Name: ${cashier.first_name} ${cashier.last_name}
+   Name: ${cashier.name}
    Email: ${cashier.email}
     `);
 

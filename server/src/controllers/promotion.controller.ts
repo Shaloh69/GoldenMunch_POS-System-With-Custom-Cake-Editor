@@ -145,7 +145,7 @@ export const getPromotionUsageLog = async (req: AuthRequest, res: Response) => {
   }
 
   let sql = `
-    SELECT pul.*, co.order_number, cust.first_name, cust.last_name
+    SELECT pul.*, co.order_number, cust.name
     FROM promotion_usage_log pul
     JOIN customer_order co ON pul.order_id = co.order_id
     LEFT JOIN customer cust ON pul.customer_id = cust.customer_id
