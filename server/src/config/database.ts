@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Database connection pool configuration
-const dbConfig = {
+const dbConfig: mysql.PoolOptions = {
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '3306'),
   user: process.env.DB_USER || 'root',
@@ -15,6 +15,11 @@ const dbConfig = {
   queueLimit: 0,
   enableKeepAlive: true,
   keepAliveInitialDelay: 0,
+  // SSL Configuration for cloud databases (Aiven, AWS RDS, etc.)
+  // Only enable SSL if DB_SSL environment variable is set to 'true'
+  ssl: process.env.DB_SSL === 'true' ? {
+    rejectUnauthorized: true,
+  } : undefined,
 };
 
 // Create connection pool
