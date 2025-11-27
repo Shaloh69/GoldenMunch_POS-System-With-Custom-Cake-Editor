@@ -26,10 +26,7 @@ import {
 
 const paymentMethodIcons: Record<PaymentMethod, React.ReactNode> = {
   cash: <BanknotesIcon className="h-5 w-5" />,
-  card: <CreditCardIcon className="h-5 w-5" />,
-  gcash: <DevicePhoneMobileIcon className="h-5 w-5" />,
-  paymaya: <DevicePhoneMobileIcon className="h-5 w-5" />,
-  bank_transfer: <BanknotesIcon className="h-5 w-5" />,
+  cashless: <DevicePhoneMobileIcon className="h-5 w-5" />,
 };
 
 const paymentStatusColors: Record<PaymentStatus, 'default' | 'primary' | 'success' | 'warning' | 'danger'> = {
@@ -140,12 +137,7 @@ export default function PaymentPage() {
 
         if (found) {
           setSelectedOrder(found);
-          setReferenceNumber(
-            found.gcash_reference_number ||
-            found.paymaya_reference_number ||
-            found.card_transaction_ref ||
-            ''
-          );
+          setReferenceNumber(found.gcash_reference_number || '');
           onOpen();
         } else {
           setSearchError('Order not found');
@@ -163,12 +155,7 @@ export default function PaymentPage() {
     if (!selectedOrder) return;
 
     // Validate reference number for cashless payments
-    if (
-      (selectedOrder.payment_method === 'gcash' ||
-       selectedOrder.payment_method === 'paymaya' ||
-       selectedOrder.payment_method === 'card') &&
-      !referenceNumber.trim()
-    ) {
+    if (selectedOrder.payment_method === 'cashless' && !referenceNumber.trim()) {
       setVerifyError('Please enter the payment reference number');
       return;
     }
@@ -203,12 +190,7 @@ export default function PaymentPage() {
 
   const handleSelectOrder = (order: CustomerOrder) => {
     setSelectedOrder(order);
-    setReferenceNumber(
-      order.gcash_reference_number ||
-      order.paymaya_reference_number ||
-      order.card_transaction_ref ||
-      ''
-    );
+    setReferenceNumber(order.gcash_reference_number || '');
     setVerifyError('');
     onOpen();
   };
@@ -399,10 +381,7 @@ export default function PaymentPage() {
                           </TableCell>
                           <TableCell>
                             <code className="text-xs bg-default-100 px-2 py-1 rounded">
-                              {order.gcash_reference_number ||
-                               order.paymaya_reference_number ||
-                               order.card_transaction_ref ||
-                               '-'}
+                              {order.gcash_reference_number || '-'}
                             </code>
                           </TableCell>
                           <TableCell>
@@ -478,10 +457,7 @@ export default function PaymentPage() {
                           </TableCell>
                           <TableCell>
                             <code className="text-xs bg-default-100 px-2 py-1 rounded">
-                              {order.gcash_reference_number ||
-                               order.paymaya_reference_number ||
-                               order.card_transaction_ref ||
-                               '-'}
+                              {order.gcash_reference_number || '-'}
                             </code>
                           </TableCell>
                           <TableCell>
@@ -549,9 +525,7 @@ export default function PaymentPage() {
                   </Chip>
                 </div>
 
-                {(selectedOrder.payment_method === 'gcash' ||
-                  selectedOrder.payment_method === 'paymaya' ||
-                  selectedOrder.payment_method === 'card') && (
+                {selectedOrder.payment_method === 'cashless' && (
                   <Input
                     label="Reference Number *"
                     placeholder="Enter payment reference number"
@@ -559,7 +533,7 @@ export default function PaymentPage() {
                     onChange={(e) => setReferenceNumber(e.target.value)}
                     size="lg"
                     isRequired
-                    description="The reference number from the customer's payment confirmation"
+                    description="The reference number from the customer's payment confirmation (GCash, PayMaya, Bank Transfer, etc.)"
                     errorMessage={verifyError}
                     isInvalid={!!verifyError}
                   />

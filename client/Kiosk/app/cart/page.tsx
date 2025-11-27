@@ -56,22 +56,23 @@ export default function CartPage() {
 
   // Fetch QR code when payment method changes to cashless
   useEffect(() => {
-    if (paymentMethod === 'gcash' || paymentMethod === 'paymaya') {
-      fetchQRCode(paymentMethod);
+    if (paymentMethod === 'cashless') {
+      fetchQRCode();
       setShowReferenceInput(false);
     } else {
       setQrCodeUrl(null);
       setShowReferenceInput(false);
+      setReferenceNumber(''); // Clear reference number for cash payments
     }
   }, [paymentMethod]);
 
-  const fetchQRCode = async (method: 'gcash' | 'paymaya') => {
+  const fetchQRCode = async () => {
     setLoadingQR(true);
     try {
-      const url = await SettingsService.getPaymentQR(method);
+      const url = await SettingsService.getPaymentQR('cashless');
       setQrCodeUrl(url);
     } catch (error) {
-      console.error(`Failed to fetch ${method} QR code:`, error);
+      console.error('Failed to fetch cashless payment QR code:', error);
       setQrCodeUrl(null);
     } finally {
       setLoadingQR(false);
@@ -110,8 +111,8 @@ export default function CartPage() {
     setIsProcessing(true);
     setError(null);
 
-    // ✅ FIX: Validate reference number for cashless payments
-    if ((paymentMethod === 'gcash' || paymentMethod === 'paymaya') && !referenceNumber.trim()) {
+    // Validate reference number for cashless payments
+    if (paymentMethod === 'cashless' && !referenceNumber.trim()) {
       setError('Please enter your payment reference number');
       setIsProcessing(false);
       return;
@@ -406,14 +407,12 @@ export default function CartPage() {
                     trigger: "border-2 border-[#EAD7B7]/40 hover:border-[#EAD7B7] bg-[#3A1F0F]/20"
                   }}
                 >
-                  <SelectItem key="cash" value="cash">💵 Cash</SelectItem>
-                  <SelectItem key="gcash" value="gcash">📱 GCash</SelectItem>
-                  <SelectItem key="paymaya" value="paymaya">💳 PayMaya</SelectItem>
-                  <SelectItem key="card" value="card">💳 Card</SelectItem>
+                  <SelectItem key="cash" value="cash">💵 Cash Payment</SelectItem>
+                  <SelectItem key="cashless" value="cashless">📱 Cashless Payment (GCash, PayMaya, Bank)</SelectItem>
                 </Select>
 
-                {/* ✅ FIX: Show QR code and reference number input for cashless payments */}
-                {(paymentMethod === 'gcash' || paymentMethod === 'paymaya') && (
+                {/* Show QR code and reference number input for cashless payments */}
+                {paymentMethod === 'cashless' && (
                   <div className="space-y-4">
                     {/* Show QR Code Button */}
                     {!showReferenceInput && (
@@ -423,7 +422,7 @@ export default function CartPage() {
                         onPress={handleShowQRCode}
                         isLoading={loadingQR}
                       >
-                        {loadingQR ? 'Loading QR Code...' : `Show ${paymentMethod.toUpperCase()} QR Code`}
+                        {loadingQR ? 'Loading QR Code...' : '📱 Show Payment QR Code'}
                       </Button>
                     )}
 
