@@ -131,15 +131,19 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
 
     const totals = calculateOrderTotal(subtotal, taxRate, 0);
 
+    // Generate order number and verification code
+    const orderNumber = `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
+
     // Create order
     const [orderResult] = await conn.query(
       `INSERT INTO customer_order
-       (order_number, verification_code, customer_id, order_type, order_source,
+       (customer_id, order_type, order_source,
         scheduled_pickup_datetime, payment_method, payment_status, order_status,
         total_amount, discount_amount, tax_amount, final_amount,
         gcash_reference_number, paymaya_reference_number, card_transaction_ref,
         special_instructions, kiosk_session_id, is_preorder)
-       VALUES ('', '', ?, ?, ?, ?, ?, 'pending', 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, 'pending', 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         orderData.customer_id || null,
         orderData.order_type,
@@ -160,15 +164,6 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
     );
 
     const orderId = (orderResult as any).insertId;
-
-    // Get the generated verification code and order number
-    const [orderInfoRows] = await conn.query(
-      'SELECT order_number, verification_code FROM customer_order WHERE order_id = ?',
-      [orderId]
-    );
-
-    const orderNumber = Array.isArray(orderInfoRows) && orderInfoRows.length > 0 ? (orderInfoRows[0] as any).order_number : '';
-    const verificationCode = Array.isArray(orderInfoRows) && orderInfoRows.length > 0 ? (orderInfoRows[0] as any).verification_code : '';
 
     // Insert order items
     for (const orderItem of orderItems) {
@@ -207,16 +202,33 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
   res.status(201).json(successResponse('Order created successfully', result));
 };
 
-// Get order by verification code
+// Get order by verification code (using order_id as fallback)
 export const getOrderByVerificationCode = async (req: AuthRequest, res: Response) => {
   const { code } = req.params;
 
-  const order = getFirstRow<any>(await query(
-    `SELECT * FROM customer_order
-     WHERE verification_code = ?
-     AND DATE(created_at) = CURDATE()`,
-    [code]
-  ));
+  // Try to find order by order_id (numeric) or kiosk_session_id
+  let order = null;
+
+  // If code is numeric, try order_id first
+  if (!isNaN(Number(code))) {
+    order = getFirstRow<any>(await query(
+      `SELECT * FROM customer_order
+       WHERE order_id = ?`,
+      [code]
+    ));
+  }
+
+  // If not found, try kiosk_session_id
+  if (!order) {
+    order = getFirstRow<any>(await query(
+      `SELECT * FROM customer_order
+       WHERE kiosk_session_id = ?
+       AND DATE(order_datetime) = CURDATE()
+       ORDER BY order_datetime DESC
+       LIMIT 1`,
+      [code]
+    ));
+  }
 
   if (!order) {
     throw new AppError('Order not found', 404);
