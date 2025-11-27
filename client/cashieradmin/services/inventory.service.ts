@@ -2,7 +2,8 @@ import { apiClient } from '@/lib/api-client';
 import type {
   InventoryAlert,
   InventoryTransaction,
-  StockAdjustmentRequest
+  StockAdjustmentRequest,
+  AdjustmentReason
 } from '@/types/api';
 
 export class InventoryService {
@@ -25,7 +26,7 @@ export class InventoryService {
   }
 
   static async getAdjustmentReasons() {
-    return apiClient.get('/admin/inventory/reasons');
+    return apiClient.get<AdjustmentReason[]>('/admin/inventory/reasons');
   }
 
   static async createAdjustmentReason(data: { reason_name: string; description?: string }) {

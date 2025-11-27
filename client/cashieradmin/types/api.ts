@@ -641,6 +641,15 @@ export interface StockAdjustmentRequest {
   notes?: string;
 }
 
+export interface AdjustmentReason {
+  reason_id: number;
+  reason_name: string;
+  description?: string;
+  requires_approval: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // Auth Types
 export interface AuthUser {
   id: number;

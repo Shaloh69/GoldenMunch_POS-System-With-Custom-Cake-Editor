@@ -26,7 +26,7 @@ export default function InventoryPage() {
 
   const [adjustmentForm, setAdjustmentForm] = useState({
     menu_item_id: 0,
-    quantity_change: 0,
+    quantity: 0,
     reason_id: 0,
     notes: '',
   });
@@ -48,12 +48,12 @@ export default function InventoryPage() {
         InventoryService.getAdjustmentReasons(),
       ]);
 
-      if (alertsRes.data?.success) {
-        setAlerts(alertsRes.data.data || []);
+      if (alertsRes.success) {
+        setAlerts(alertsRes.data || []);
       }
 
-      if (reasonsRes.data?.success) {
-        setReasons(reasonsRes.data.data || []);
+      if (reasonsRes.success) {
+        setReasons(reasonsRes.data || []);
       }
     } catch (error) {
       console.error('Failed to fetch inventory data:', error);
@@ -77,7 +77,7 @@ export default function InventoryPage() {
       setShowAdjustModal(false);
       setAdjustmentForm({
         menu_item_id: 0,
-        quantity_change: 0,
+        quantity: 0,
         reason_id: 0,
         notes: '',
       });
@@ -278,8 +278,8 @@ export default function InventoryPage() {
               <Input
                 label="Quantity Change (use negative for decrease)"
                 type="number"
-               
-                onValueChange={(v) => setAdjustmentForm({ ...adjustmentForm, quantity_change: parseInt(v) || 0 })}
+
+                onValueChange={(v) => setAdjustmentForm({ ...adjustmentForm, quantity: parseInt(v) || 0 })}
               />
               <Select
                 label="Reason"

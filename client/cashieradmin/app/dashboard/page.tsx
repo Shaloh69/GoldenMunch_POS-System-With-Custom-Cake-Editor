@@ -46,20 +46,20 @@ export default function DashboardPage() {
       });
 
       // Fetch recent orders
-      const ordersResponse = await OrderService.getOrders({ limit: 5, page: 1 });
+      const ordersResponse = await OrderService.getOrders();
 
-      if (analyticsResponse.data?.success && analyticsResponse.data.data) {
-        const data = analyticsResponse.data.data;
+      if (analyticsResponse.success && analyticsResponse.data) {
+        const data = analyticsResponse.data;
         setStats({
-          todayOrders: data.total_orders || 0,
-          todayRevenue: data.total_revenue || 0,
-          totalCustomers: data.unique_customers || 0,
-          avgOrderValue: data.average_order_value || 0,
+          todayOrders: data.totalOrders || 0,
+          todayRevenue: data.totalRevenue || 0,
+          totalCustomers: 0, // unique_customers not available in SalesAnalytics
+          avgOrderValue: data.averageOrderValue || 0,
         });
       }
 
-      if (ordersResponse.data?.success && ordersResponse.data.data?.orders) {
-        setRecentOrders(ordersResponse.data.data.orders.slice(0, 5));
+      if (ordersResponse.success && ordersResponse.data) {
+        setRecentOrders(ordersResponse.data.slice(0, 5));
       }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
