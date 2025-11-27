@@ -34,6 +34,9 @@ RUN npm ci --omit=dev && npm cache clean --force
 # Copy built application from builder
 COPY --from=builder /app/dist ./dist
 
+# Copy environment configuration
+COPY .env.production ./.env.production
+
 # Create uploads directory
 RUN mkdir -p uploads && chown -R nodejs:nodejs uploads
 

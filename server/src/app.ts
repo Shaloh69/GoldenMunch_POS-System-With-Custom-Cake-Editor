@@ -14,7 +14,12 @@ import logger from './utils/logger';
 import routes from './routes';
 
 // Load environment variables
-dotenv.config();
+// In production, explicitly load .env.production file
+if (process.env.NODE_ENV === 'production') {
+  dotenv.config({ path: '.env.production' });
+} else {
+  dotenv.config();
+}
 
 const app: Express = express();
 
