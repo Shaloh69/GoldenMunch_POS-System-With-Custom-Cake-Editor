@@ -126,6 +126,19 @@ class ApiClient {
     }
   }
 
+  async putFormData<T>(url: string, formData: FormData): Promise<ApiResponse<T>> {
+    try {
+      const response = await this.client.put<ApiResponse<T>>(url, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return this.handleError(error);
+    }
+  }
+
   private handleError(error: any): ApiResponse {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError<ApiResponse>;

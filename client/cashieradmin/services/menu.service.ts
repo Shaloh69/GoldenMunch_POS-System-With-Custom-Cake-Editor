@@ -60,7 +60,7 @@ export class MenuService {
         }
       });
       formData.append('image', imageFile);
-      return apiClient.postFormData<MenuItem>(`/admin/menu/${id}`, formData);
+      return apiClient.putFormData<MenuItem>(`/admin/menu/${id}`, formData);
     }
     return apiClient.put<MenuItem>(`/admin/menu/${id}`, data);
   }
@@ -115,7 +115,7 @@ export class MenuService {
         }
       });
       formData.append('image', imageFile);
-      return apiClient.postFormData<Category>(`/admin/categories/${id}`, formData);
+      return apiClient.putFormData<Category>(`/admin/categories/${id}`, formData);
     }
     return apiClient.put<Category>(`/admin/categories/${id}`, data);
   }
