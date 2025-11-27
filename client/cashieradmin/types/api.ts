@@ -679,14 +679,6 @@ export enum CustomCakeRequestStatus {
   COMPLETED = 'completed'
 }
 
-export enum FrostingType {
-  BUTTERCREAM = 'buttercream',
-  FONDANT = 'fondant',
-  WHIPPED_CREAM = 'whipped_cream',
-  GANACHE = 'ganache',
-  CREAM_CHEESE = 'cream_cheese'
-}
-
 export enum CandleType {
   NUMBER = 'number',
   REGULAR = 'regular',

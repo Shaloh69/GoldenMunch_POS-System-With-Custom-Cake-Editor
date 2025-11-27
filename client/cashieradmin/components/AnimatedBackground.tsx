@@ -33,10 +33,14 @@ export default function AnimatedBackground() {
       angleSpeed: number;
       pulseSpeed: number;
       pulsePhase: number;
+      canvasWidth: number;
+      canvasHeight: number;
 
-      constructor() {
-        this.x = Math.random() * canvas.width;
-        this.y = Math.random() * canvas.height;
+      constructor(canvasWidth: number, canvasHeight: number) {
+        this.canvasWidth = canvasWidth;
+        this.canvasHeight = canvasHeight;
+        this.x = Math.random() * canvasWidth;
+        this.y = Math.random() * canvasHeight;
         this.size = Math.random() * 5 + 2;
         this.speedX = Math.random() * 0.8 - 0.4;
         this.speedY = Math.random() * 0.8 - 0.4;
@@ -68,10 +72,10 @@ export default function AnimatedBackground() {
         const pulseOpacity = Math.sin(this.pulsePhase) * 0.2;
 
         // Wrap around edges with smooth transition
-        if (this.x > canvas.width + 50) this.x = -50;
-        if (this.x < -50) this.x = canvas.width + 50;
-        if (this.y > canvas.height + 50) this.y = -50;
-        if (this.y < -50) this.y = canvas.height + 50;
+        if (this.x > this.canvasWidth + 50) this.x = -50;
+        if (this.x < -50) this.x = this.canvasWidth + 50;
+        if (this.y > this.canvasHeight + 50) this.y = -50;
+        if (this.y < -50) this.y = this.canvasHeight + 50;
 
         return pulseOpacity;
       }
@@ -96,7 +100,7 @@ export default function AnimatedBackground() {
     const particles: Particle[] = [];
     const particleCount = 80;
     for (let i = 0; i < particleCount; i++) {
-      particles.push(new Particle());
+      particles.push(new Particle(canvas.width, canvas.height));
     }
 
     // Gradient animation with smoother transitions

@@ -201,7 +201,7 @@ export default function AdminMenuPage() {
 
       if (response.success) {
         // If creating a new item with an initial price, set the price
-        if (!editingItem && initialPrice && parseFloat(initialPrice) > 0 && response.data?.id) {
+        if (!editingItem && initialPrice && parseFloat(initialPrice) > 0 && response.data?.menu_item_id) {
           try {
             const today = new Date().toISOString().split('T')[0];
             const nextYear = new Date();
@@ -209,7 +209,7 @@ export default function AdminMenuPage() {
             const validUntil = nextYear.toISOString().split('T')[0];
 
             console.log('Creating initial price:', {
-              menu_item_id: response.data.id,
+              menu_item_id: response.data.menu_item_id,
               unit_price: parseFloat(initialPrice),
               valid_from: today,
               valid_until: validUntil,
@@ -218,7 +218,7 @@ export default function AdminMenuPage() {
             });
 
             const priceResponse = await MenuService.addMenuItemPrice({
-              menu_item_id: response.data.id,
+              menu_item_id: response.data.menu_item_id,
               unit_price: parseFloat(initialPrice),
               valid_from: today,
               valid_until: validUntil,

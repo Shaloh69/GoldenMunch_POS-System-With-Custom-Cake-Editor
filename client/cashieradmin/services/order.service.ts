@@ -1,6 +1,7 @@
 import { apiClient } from '@/lib/api-client';
 import type {
   CustomerOrder,
+  OrderTimelineEntry,
   UpdateOrderStatusRequest,
   VerifyPaymentRequest
 } from '@/types/api';
@@ -18,7 +19,7 @@ export class OrderService {
   }
 
   static async getOrderTimeline(id: number) {
-    return apiClient.get(`/cashier/orders/${id}/timeline`);
+    return apiClient.get<OrderTimelineEntry[]>(`/cashier/orders/${id}/timeline`);
   }
 
   static async verifyOrder(code: string) {
