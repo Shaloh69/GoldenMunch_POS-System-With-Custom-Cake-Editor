@@ -81,10 +81,10 @@ export default function RefundsPage() {
       if (statusFilter) params.status = statusFilter;
 
       const response = await RefundService.getAllRefunds(params);
-      if (response.data?.success) {
-        setRefunds(response.data.data || []);
+      if (response.success) {
+        setRefunds(Array.isArray(response.data) ? response.data : []);
       } else {
-        console.error('Failed to fetch refunds:', response.data?.message);
+        console.error('Failed to fetch refunds:', response.message);
       }
     } catch (error) {
       console.error('Failed to fetch refunds:', error);
@@ -98,12 +98,12 @@ export default function RefundsPage() {
 
     try {
       const response = await RefundService.approveRefund(selectedRefund.refund_id);
-      if (response.data?.success) {
+      if (response.success) {
         setShowApproveModal(false);
         setSelectedRefund(null);
         fetchRefunds();
       } else {
-        console.error('Failed to approve refund:', response.data?.message);
+        console.error('Failed to approve refund:', response.message);
       }
     } catch (error) {
       console.error('Failed to approve refund:', error);
@@ -115,13 +115,13 @@ export default function RefundsPage() {
 
     try {
       const response = await RefundService.rejectRefund(selectedRefund.refund_id, rejectReason);
-      if (response.data?.success) {
+      if (response.success) {
         setShowRejectModal(false);
         setSelectedRefund(null);
         setRejectReason('');
         fetchRefunds();
       } else {
-        console.error('Failed to reject refund:', response.data?.message);
+        console.error('Failed to reject refund:', response.message);
       }
     } catch (error) {
       console.error('Failed to reject refund:', error);
@@ -133,13 +133,13 @@ export default function RefundsPage() {
 
     try {
       const response = await RefundService.completeRefund(selectedRefund.refund_id, completeForm);
-      if (response.data?.success) {
+      if (response.success) {
         setShowCompleteModal(false);
         setSelectedRefund(null);
         setCompleteForm({ refund_method: RefundMethod.CASH, refund_reference: '' });
         fetchRefunds();
       } else {
-        console.error('Failed to complete refund:', response.data?.message);
+        console.error('Failed to complete refund:', response.message);
       }
     } catch (error) {
       console.error('Failed to complete refund:', error);

@@ -82,10 +82,10 @@ export default function SettingsPage() {
     try {
       setLoading(true);
       const response = await SettingsService.getAllSettings();
-      if (response.data?.success) {
-        setSettings(response.data.data || []);
+      if (response.success) {
+        setSettings(Array.isArray(response.data) ? response.data : []);
       } else {
-        console.error('Failed to fetch settings:', response.data?.message);
+        console.error('Failed to fetch settings:', response.message);
       }
     } catch (error) {
       console.error('Failed to fetch settings:', error);
@@ -97,12 +97,12 @@ export default function SettingsPage() {
   const handleCreateSetting = async () => {
     try {
       const response = await SettingsService.createSetting(formState);
-      if (response.data?.success) {
+      if (response.success) {
         setShowCreateModal(false);
         resetForm();
         fetchSettings();
       } else {
-        console.error('Failed to create setting:', response.data?.message);
+        console.error('Failed to create setting:', response.message);
       }
     } catch (error) {
       console.error('Failed to create setting:', error);
@@ -117,12 +117,12 @@ export default function SettingsPage() {
         setting_value: formState.setting_value,
         description: formState.description,
       });
-      if (response.data?.success) {
+      if (response.success) {
         setShowEditModal(false);
         resetForm();
         fetchSettings();
       } else {
-        console.error('Failed to update setting:', response.data?.message);
+        console.error('Failed to update setting:', response.message);
       }
     } catch (error) {
       console.error('Failed to update setting:', error);

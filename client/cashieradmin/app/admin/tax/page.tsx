@@ -77,10 +77,10 @@ export default function TaxPage() {
     try {
       setLoading(true);
       const response = await TaxService.getTaxRules();
-      if (response.data?.success) {
-        setTaxRules(response.data.data || []);
+      if (response.success) {
+        setTaxRules(Array.isArray(response.data) ? response.data : []);
       } else {
-        console.error('Failed to fetch tax rules:', response.data?.message);
+        console.error('Failed to fetch tax rules:', response.message);
       }
     } catch (error) {
       console.error('Failed to fetch tax rules:', error);
@@ -92,12 +92,12 @@ export default function TaxPage() {
   const handleCreateTaxRule = async () => {
     try {
       const response = await TaxService.createTaxRule(formState);
-      if (response.data?.success) {
+      if (response.success) {
         setShowCreateModal(false);
         resetForm();
         fetchTaxRules();
       } else {
-        console.error('Failed to create tax rule:', response.data?.message);
+        console.error('Failed to create tax rule:', response.message);
       }
     } catch (error) {
       console.error('Failed to create tax rule:', error);
@@ -115,12 +115,12 @@ export default function TaxPage() {
         selectedTaxRule.tax_id,
         updateData
       );
-      if (response.data?.success) {
+      if (response.success) {
         setShowEditModal(false);
         resetForm();
         fetchTaxRules();
       } else {
-        console.error('Failed to update tax rule:', response.data?.message);
+        console.error('Failed to update tax rule:', response.message);
       }
     } catch (error) {
       console.error('Failed to update tax rule:', error);

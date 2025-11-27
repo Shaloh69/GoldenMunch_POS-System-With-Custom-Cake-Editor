@@ -93,10 +93,10 @@ export default function PromotionsPage() {
     try {
       setLoading(true);
       const response = await PromotionService.getPromotions();
-      if (response.data?.success) {
-        setPromotions(response.data.data || []);
+      if (response.success) {
+        setPromotions(Array.isArray(response.data) ? response.data : []);
       } else {
-        console.error('Failed to fetch promotions:', response.data?.message);
+        console.error('Failed to fetch promotions:', response.message);
       }
     } catch (error) {
       console.error('Failed to fetch promotions:', error);
@@ -108,12 +108,12 @@ export default function PromotionsPage() {
   const handleCreatePromotion = async () => {
     try {
       const response = await PromotionService.createPromotion(formState as CreatePromotionRequest);
-      if (response.data?.success) {
+      if (response.success) {
         setShowCreateModal(false);
         resetForm();
         fetchPromotions();
       } else {
-        console.error('Failed to create promotion:', response.data?.message);
+        console.error('Failed to create promotion:', response.message);
       }
     } catch (error) {
       console.error('Failed to create promotion:', error);
@@ -131,12 +131,12 @@ export default function PromotionsPage() {
         selectedPromotion.promotion_id,
         updateData
       );
-      if (response.data?.success) {
+      if (response.success) {
         setShowEditModal(false);
         resetForm();
         fetchPromotions();
       } else {
-        console.error('Failed to update promotion:', response.data?.message);
+        console.error('Failed to update promotion:', response.message);
       }
     } catch (error) {
       console.error('Failed to update promotion:', error);
@@ -148,12 +148,12 @@ export default function PromotionsPage() {
 
     try {
       const response = await PromotionService.deletePromotion(selectedPromotion.promotion_id);
-      if (response.data?.success) {
+      if (response.success) {
         setShowDeleteModal(false);
         setSelectedPromotion(null);
         fetchPromotions();
       } else {
-        console.error('Failed to delete promotion:', response.data?.message);
+        console.error('Failed to delete promotion:', response.message);
       }
     } catch (error) {
       console.error('Failed to delete promotion:', error);

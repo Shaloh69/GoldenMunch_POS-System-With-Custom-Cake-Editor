@@ -73,10 +73,10 @@ export default function WastePage() {
       if (reasonFilter) params.reason = reasonFilter;
 
       const response = await WasteService.getWaste(params);
-      if (response.data?.success) {
-        setWasteEntries(response.data.data || []);
+      if (response.success) {
+        setWasteEntries(Array.isArray(response.data) ? response.data : []);
       } else {
-        console.error('Failed to fetch waste entries:', response.data?.message);
+        console.error('Failed to fetch waste entries:', response.message);
       }
     } catch (error) {
       console.error('Failed to fetch waste entries:', error);
