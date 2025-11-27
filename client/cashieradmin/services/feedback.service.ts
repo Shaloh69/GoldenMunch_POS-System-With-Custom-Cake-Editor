@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/api-client';
-import type { CustomerFeedback } from '@/types/api';
+import type { CustomerFeedback, FeedbackStats } from '@/types/api';
 
 export class FeedbackService {
   // Cashier endpoints
@@ -22,7 +22,7 @@ export class FeedbackService {
   }
 
   static async getFeedbackStats() {
-    return apiClient.get('/admin/feedback/stats');
+    return apiClient.get<FeedbackStats>('/admin/feedback/stats');
   }
 
   static async respondToFeedback(id: number, response: string) {

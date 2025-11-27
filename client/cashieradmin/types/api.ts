@@ -505,6 +505,16 @@ export interface DailyStats {
   menu_item?: MenuItem;
 }
 
+export interface FeedbackStats {
+  total_feedback: number;
+  average_rating: number;
+  positive_count: number;
+  neutral_count: number;
+  negative_count: number;
+  responded_count: number;
+  pending_response_count: number;
+}
+
 // Request Types
 export interface LoginRequest {
   username?: string;
