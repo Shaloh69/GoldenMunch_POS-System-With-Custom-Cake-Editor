@@ -186,8 +186,9 @@ export default function AdminMenuPage() {
         can_customize: formData.can_customize || false,
         can_preorder: formData.can_preorder || false,
         preparation_time_minutes: toNumber(formData.preparation_time_minutes, 0),
-        allergen_info: formData.allergen_info?.trim(),
-        nutritional_info: formData.nutritional_info?.trim(),
+        // Send null for empty strings to avoid JSON parsing errors in database
+        allergen_info: formData.allergen_info?.trim() || null,
+        nutritional_info: formData.nutritional_info?.trim() || null,
       };
 
       let response;
