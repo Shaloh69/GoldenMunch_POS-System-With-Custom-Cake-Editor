@@ -185,9 +185,10 @@ export default function AdminMenuPage() {
         unit_of_measure: formData.unit_of_measure?.trim() || 'piece',
         stock_quantity: toNumber(formData.stock_quantity, 0),
         min_stock_level: toNumber(formData.min_stock_level, 0),
-        is_infinite_stock: formData.is_infinite_stock || false,
-        can_customize: formData.can_customize || false,
-        can_preorder: formData.can_preorder || false,
+        is_infinite_stock: Boolean(formData.is_infinite_stock),
+        can_customize: false, // Always false - feature disabled
+        can_preorder: false, // Always false - feature disabled
+        is_featured: Boolean(formData.is_featured),
         preparation_time_minutes: toNumber(formData.preparation_time_minutes, 0),
         // Send null for empty strings to avoid JSON parsing errors in database
         allergen_info: formData.allergen_info?.trim() || null,
@@ -271,6 +272,7 @@ export default function AdminMenuPage() {
       is_infinite_stock: item.is_infinite_stock,
       can_customize: false, // Disabled feature
       can_preorder: false, // Disabled feature
+      is_featured: item.is_featured,
       preparation_time_minutes: item.preparation_time_minutes,
       allergen_info: item.allergen_info,
       nutritional_info: item.nutritional_info,
@@ -1011,7 +1013,7 @@ export default function AdminMenuPage() {
                     label="Stock Quantity"
                     type="number"
                     placeholder="Enter stock quantity"
-
+                    value={formData.stock_quantity?.toString() || '0'}
                     onChange={(e) => {
                       const value = e.target.value;
                       setFormData({
@@ -1026,7 +1028,7 @@ export default function AdminMenuPage() {
                     label="Minimum Stock Level"
                     type="number"
                     placeholder="Enter minimum stock level for alerts"
-
+                    value={formData.min_stock_level?.toString() || '0'}
                     onChange={(e) => {
                       const value = e.target.value;
                       setFormData({
