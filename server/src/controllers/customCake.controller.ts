@@ -813,7 +813,7 @@ export const processPayment = async (req: AuthRequest, res: Response) => {
     }
 
     // Verify amount
-    if (parseFloat(amount_paid) < parseFloat(request.approved_price)) {
+    if (Number(amount_paid) < Number(request.approved_price)) {
       throw new AppError('Insufficient payment amount', 400);
     }
 
