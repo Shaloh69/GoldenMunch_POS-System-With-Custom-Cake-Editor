@@ -33,7 +33,6 @@ export default function CategoriesPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
 
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -86,7 +85,6 @@ export default function CategoriesPage() {
       is_active: true,
     });
     setEditingCategory(null);
-    setImageFile(null);
     setError(null);
   };
 
@@ -128,11 +126,10 @@ export default function CategoriesPage() {
       if (editingCategory) {
         response = await MenuService.updateCategory(
           editingCategory.category_id,
-          apiData,
-          imageFile || undefined
+          apiData
         );
       } else {
-        response = await MenuService.createCategory(apiData, imageFile || undefined);
+        response = await MenuService.createCategory(apiData);
       }
 
       if (response.success) {
@@ -472,30 +469,6 @@ export default function CategoriesPage() {
                   <p className="text-xs text-default-500">Show this category in the kiosk</p>
                 </div>
               </label>
-              {editingCategory?.image_url && !imageFile && (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Current Image</p>
-                  <div className="relative w-32 h-32 border-2 border-default-200 rounded-lg overflow-hidden">
-                    <img
-                      src={editingCategory.image_url}
-                      alt={editingCategory.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </div>
-              )}
-              <Input
-                type="file"
-                label={editingCategory?.image_url ? 'Replace Image' : 'Category Image'}
-                accept="image/*"
-                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                description="Optional category image"
-              />
-              {imageFile && (
-                <p className="text-sm text-success">
-                  Selected: {imageFile.name}
-                </p>
-              )}
             </div>
           </ModalBody>
           <ModalFooter>
