@@ -24,7 +24,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({ item, onClick, cartQuantity 
       className={`
         relative overflow-hidden cursor-pointer h-[330px]
         border-2 border-sunny-yellow/40
-        bg-pure-white/90 backdrop-blur-sm
+        bg-pure-white/70 backdrop-blur-sm
         transition-all duration-300
         ${isAvailable
           ? 'hover:border-deep-orange-yellow hover:shadow-[0_0_30px_rgba(251,205,47,0.5)] hover:scale-103'
@@ -79,7 +79,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({ item, onClick, cartQuantity 
         </div>
 
         {/* Info Section - 40% (130px) - Solid Background, Perfect Contrast */}
-        <div className="h-[130px] bg-pure-white/95 backdrop-blur-sm p-4 flex flex-col justify-between">
+        <div className="h-[130px] bg-pure-white/85 backdrop-blur-sm p-4 flex flex-col justify-between">
           {/* Item Name */}
           <h3 className="text-lg font-bold text-charcoal-gray line-clamp-1 leading-tight">
             {item.name}

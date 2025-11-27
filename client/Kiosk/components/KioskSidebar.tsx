@@ -52,12 +52,12 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({ selectedItem, onClos
     (selectedItem?.is_infinite_stock || (selectedItem?.stock_quantity ?? 0) > 0);
 
   return (
-    <div className="fixed right-0 top-0 bottom-0 w-[30vw] max-w-[576px] bg-pure-white/95 backdrop-blur-md border-l-4 border-sunny-yellow/40 shadow-[-10px_0_40px_rgba(251,205,47,0.3)] z-30 flex flex-col">
+    <div className="fixed right-0 top-0 bottom-0 w-[30vw] max-w-[576px] bg-pure-white/80 backdrop-blur-md border-l-4 border-sunny-yellow/40 shadow-[-10px_0_40px_rgba(251,205,47,0.3)] z-30 flex flex-col">
       {/* Item Detail Section (Top 60%) */}
       <div className={`flex-1 overflow-y-auto transition-all duration-500 ${selectedItem ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         {selectedItem && (
           <div className="p-6 h-full">
-            <Card className="bg-pure-white/90 backdrop-blur-sm border-2 border-sunny-yellow/40 shadow-xl h-full">
+            <Card className="bg-pure-white/75 backdrop-blur-sm border-2 border-sunny-yellow/40 shadow-xl h-full">
               <CardBody className="p-0 flex flex-col h-full">
                 {/* Large Image */}
                 <div className="relative h-80 bg-gradient-to-br from-sunny-yellow/10 to-deep-orange-yellow/10 flex items-center justify-center overflow-hidden">
@@ -97,7 +97,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({ selectedItem, onClos
                 </div>
 
                 {/* Item Details - White Background with Dark Text */}
-                <div className="p-6 flex-1 flex flex-col justify-between bg-pure-white/95 backdrop-blur-sm">
+                <div className="p-6 flex-1 flex flex-col justify-between bg-pure-white/80 backdrop-blur-sm">
                   <div>
                     {/* Name */}
                     <h2 className="text-3xl font-black text-charcoal-gray mb-3">
@@ -197,7 +197,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({ selectedItem, onClos
       </div>
 
       {/* Cart Section (Bottom 40%) - Always Present */}
-      <div className={`border-t-4 border-sunny-yellow/40 bg-pure-white/90 backdrop-blur-md transition-all duration-500 ${isCartHidden ? 'h-16' : 'h-[40vh]'}`}>
+      <div className={`border-t-4 border-sunny-yellow/40 bg-pure-white/75 backdrop-blur-md transition-all duration-500 ${isCartHidden ? 'h-16' : 'h-[40vh]'}`}>
         {/* Toggle Button */}
         <button
           onClick={() => setIsCartHidden(!isCartHidden)}
@@ -216,7 +216,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({ selectedItem, onClos
 
         {/* Cart Content */}
         {!isCartHidden && (
-          <div className="px-6 pb-6 h-[calc(40vh-4rem)] flex flex-col bg-pure-white/95">
+          <div className="px-6 pb-6 h-[calc(40vh-4rem)] flex flex-col bg-pure-white/70">
             {itemCount === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center">
                 <div className="text-6xl mb-4">🛒</div>
@@ -232,7 +232,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({ selectedItem, onClos
                 {/* Cart Items List */}
                 <div className="flex-1 overflow-y-auto mb-4 space-y-2">
                   {cartItems.map((cartItem) => (
-                    <Card key={cartItem.menuItem.menu_item_id} className="bg-pure-white/90 backdrop-blur-sm border border-sunny-yellow/30">
+                    <Card key={cartItem.menuItem.menu_item_id} className="bg-pure-white/70 backdrop-blur-sm border border-sunny-yellow/30">
                       <CardBody className="p-3">
                         <div className="flex items-center gap-3">
                           <div className="w-16 h-16 bg-gradient-to-br from-sunny-yellow/20 to-deep-orange-yellow/20 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
@@ -266,7 +266,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({ selectedItem, onClos
                 </div>
 
                 {/* Total */}
-                <div className="border-t-2 border-sunny-yellow/40 pt-4 mb-4 bg-pure-white/95">
+                <div className="border-t-2 border-sunny-yellow/40 pt-4 mb-4 bg-pure-white/70">
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-2xl font-bold text-charcoal-gray">Total:</span>
                     <span className="text-3xl font-black text-charcoal-gray">
