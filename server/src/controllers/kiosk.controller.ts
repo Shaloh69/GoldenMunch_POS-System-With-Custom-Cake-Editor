@@ -79,6 +79,18 @@ export const getMenuItems = async (req: AuthRequest, res: Response) => {
 
   const items = await query(sql, params);
 
+  // Fetch categories for each menu item
+  for (const item of items as any[]) {
+    const categories = await query(
+      `SELECT c.* FROM category c
+       INNER JOIN category_has_menu_item chmi ON c.category_id = chmi.category_id
+       WHERE chmi.menu_item_id = ?
+       ORDER BY chmi.display_order ASC`,
+      [item.menu_item_id]
+    );
+    item.categories = categories;
+  }
+
   res.json(successResponse('Menu items retrieved', items));
 };
 

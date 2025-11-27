@@ -601,9 +601,13 @@ export default function CategoriesPage() {
                   <p className="text-warning-800 text-sm font-medium mb-2">⚠️ Warning:</p>
                   <ul className="text-warning-700 text-sm space-y-1 list-disc list-inside">
                     <li>This action cannot be undone</li>
-                    <li>All menu items will be unassigned from this category</li>
                     <li>The category will be permanently removed</li>
+                    <li>All menu items will be unassigned from this category</li>
                   </ul>
+                </div>
+                <div className="p-4 bg-success-50 border border-success-200 rounded-lg">
+                  <p className="text-success-800 text-sm font-medium mb-1">✓ Menu Items Are Safe:</p>
+                  <p className="text-success-700 text-sm">Menu items assigned to this category will NOT be deleted. They will remain available and can be assigned to other categories.</p>
                 </div>
               </div>
             )}
