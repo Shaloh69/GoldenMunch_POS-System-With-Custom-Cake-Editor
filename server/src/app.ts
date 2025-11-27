@@ -14,9 +14,15 @@ import logger from './utils/logger';
 import routes from './routes';
 
 // Load environment variables
-// In production, explicitly load .env.production file
+// In production, explicitly load .env.production file with absolute path
 if (process.env.NODE_ENV === 'production') {
-  dotenv.config({ path: '.env.production' });
+  const envPath = path.join(__dirname, '../.env.production');
+  const result = dotenv.config({ path: envPath });
+  if (result.error) {
+    logger.error('Failed to load .env.production:', result.error);
+  } else {
+    logger.info(`.env.production loaded from: ${envPath}`);
+  }
 } else {
   dotenv.config();
 }
