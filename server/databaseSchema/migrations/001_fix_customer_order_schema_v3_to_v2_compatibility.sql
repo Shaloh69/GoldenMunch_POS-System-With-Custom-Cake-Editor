@@ -25,91 +25,91 @@ SELECT '════════════════════════
 
 -- verification_code
 SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'verification_code');
-SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN verification_code VARCHAR(6) NOT NULL DEFAULT ''000000'' COMMENT ''Random 6-digit code for order pickup'' AFTER order_number', 'SELECT "⊘ Column verification_code already exists" as Status');
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN verification_code VARCHAR(6) NOT NULL DEFAULT ''000000'' COMMENT ''Random 6-digit code for order pickup'' AFTER order_number', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@col_exists = 0, '✓ Added column: verification_code', '⊘ Column already exists: verification_code') as Status;
 
 -- order_datetime
 SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'order_datetime');
-SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN order_datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER customer_id', 'SELECT "⊘ Column order_datetime already exists" as Status');
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN order_datetime TIMESTAMP DEFAULT CURRENT_TIMESTAMP AFTER customer_id', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@col_exists = 0, '✓ Added column: order_datetime', '⊘ Column already exists: order_datetime') as Status;
 
 -- order_source
 SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'order_source');
-SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN order_source ENUM(''kiosk'', ''cashier'', ''admin'') NOT NULL DEFAULT ''kiosk'' AFTER order_type', 'SELECT "⊘ Column order_source already exists" as Status');
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN order_source ENUM(''kiosk'', ''cashier'', ''admin'') NOT NULL DEFAULT ''kiosk'' AFTER order_type', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@col_exists = 0, '✓ Added column: order_source', '⊘ Column already exists: order_source') as Status;
 
 -- is_preorder
 SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'is_preorder');
-SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN is_preorder BOOLEAN DEFAULT FALSE AFTER order_source', 'SELECT "⊘ Column is_preorder already exists" as Status');
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN is_preorder BOOLEAN DEFAULT FALSE AFTER order_source', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@col_exists = 0, '✓ Added column: is_preorder', '⊘ Column already exists: is_preorder') as Status;
 
 -- advance_payment_required
 SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'advance_payment_required');
-SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN advance_payment_required BOOLEAN DEFAULT FALSE AFTER is_preorder', 'SELECT "⊘ Column advance_payment_required already exists" as Status');
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN advance_payment_required BOOLEAN DEFAULT FALSE AFTER is_preorder', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@col_exists = 0, '✓ Added column: advance_payment_required', '⊘ Column already exists: advance_payment_required') as Status;
 
 -- advance_payment_amount
 SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'advance_payment_amount');
-SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN advance_payment_amount DECIMAL(10,2) DEFAULT 0.00 AFTER advance_payment_required', 'SELECT "⊘ Column advance_payment_amount already exists" as Status');
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN advance_payment_amount DECIMAL(10,2) DEFAULT 0.00 AFTER advance_payment_required', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@col_exists = 0, '✓ Added column: advance_payment_amount', '⊘ Column already exists: advance_payment_amount') as Status;
 
 -- final_amount
 SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'final_amount');
-SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN final_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00 COMMENT ''Grand total = total_amount (same value for compatibility)'' AFTER total_amount', 'SELECT "⊘ Column final_amount already exists" as Status');
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN final_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00 COMMENT ''Grand total = total_amount (same value for compatibility)'' AFTER total_amount', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@col_exists = 0, '✓ Added column: final_amount', '⊘ Column already exists: final_amount') as Status;
 
 -- gcash_reference_number
 SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'gcash_reference_number');
-SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN gcash_reference_number VARCHAR(100) NULL COMMENT ''GCash transaction reference'' AFTER payment_method', 'SELECT "⊘ Column gcash_reference_number already exists" as Status');
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN gcash_reference_number VARCHAR(100) NULL COMMENT ''GCash transaction reference'' AFTER payment_method', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@col_exists = 0, '✓ Added column: gcash_reference_number', '⊘ Column already exists: gcash_reference_number') as Status;
 
 -- paymaya_reference_number
 SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'paymaya_reference_number');
-SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN paymaya_reference_number VARCHAR(100) NULL COMMENT ''PayMaya transaction reference'' AFTER gcash_reference_number', 'SELECT "⊘ Column paymaya_reference_number already exists" as Status');
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN paymaya_reference_number VARCHAR(100) NULL COMMENT ''PayMaya transaction reference'' AFTER gcash_reference_number', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@col_exists = 0, '✓ Added column: paymaya_reference_number', '⊘ Column already exists: paymaya_reference_number') as Status;
 
 -- card_transaction_ref
 SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'card_transaction_ref');
-SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN card_transaction_ref VARCHAR(100) NULL COMMENT ''Card payment reference'' AFTER paymaya_reference_number', 'SELECT "⊘ Column card_transaction_ref already exists" as Status');
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN card_transaction_ref VARCHAR(100) NULL COMMENT ''Card payment reference'' AFTER paymaya_reference_number', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@col_exists = 0, '✓ Added column: card_transaction_ref', '⊘ Column already exists: card_transaction_ref') as Status;
 
 -- payment_verified_at
 SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'payment_verified_at');
-SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN payment_verified_at TIMESTAMP NULL AFTER payment_status', 'SELECT "⊘ Column payment_verified_at already exists" as Status');
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN payment_verified_at TIMESTAMP NULL AFTER payment_status', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@col_exists = 0, '✓ Added column: payment_verified_at', '⊘ Column already exists: payment_verified_at') as Status;
 
 -- payment_verified_by
 SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'payment_verified_by');
-SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN payment_verified_by INT NULL COMMENT ''Cashier who verified payment'' AFTER payment_verified_at', 'SELECT "⊘ Column payment_verified_by already exists" as Status');
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN payment_verified_by INT NULL COMMENT ''Cashier who verified payment'' AFTER payment_verified_at', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@col_exists = 0, '✓ Added column: payment_verified_by', '⊘ Column already exists: payment_verified_by') as Status;
 
 -- kiosk_session_id
 SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'kiosk_session_id');
-SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN kiosk_session_id VARCHAR(100) NULL COMMENT ''Kiosk session identifier'' AFTER kiosk_id', 'SELECT "⊘ Column kiosk_session_id already exists" as Status');
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN kiosk_session_id VARCHAR(100) NULL COMMENT ''Kiosk session identifier'' AFTER kiosk_id', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@col_exists = 0, '✓ Added column: kiosk_session_id', '⊘ Column already exists: kiosk_session_id') as Status;
 
 -- is_printed
 SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'is_printed');
-SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN is_printed BOOLEAN DEFAULT FALSE COMMENT ''Has receipt been printed'' AFTER completed_at', 'SELECT "⊘ Column is_printed already exists" as Status');
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN is_printed BOOLEAN DEFAULT FALSE COMMENT ''Has receipt been printed'' AFTER completed_at', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@col_exists = 0, '✓ Added column: is_printed', '⊘ Column already exists: is_printed') as Status;
 
 -- is_deleted
 SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'is_deleted');
-SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN is_deleted BOOLEAN DEFAULT FALSE AFTER is_printed', 'SELECT "⊘ Column is_deleted already exists" as Status');
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN is_deleted BOOLEAN DEFAULT FALSE AFTER is_printed', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@col_exists = 0, '✓ Added column: is_deleted', '⊘ Column already exists: is_deleted') as Status;
 
@@ -125,14 +125,14 @@ SELECT '════════════════════════
 -- scheduled_pickup_time → scheduled_pickup_datetime
 SET @old_col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'scheduled_pickup_time');
 SET @new_col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'scheduled_pickup_datetime');
-SET @sql = IF(@old_col_exists > 0 AND @new_col_exists = 0, 'ALTER TABLE customer_order CHANGE COLUMN scheduled_pickup_time scheduled_pickup_datetime TIMESTAMP NULL', 'SELECT "⊘ Rename not needed or already done" as Status');
+SET @sql = IF(@old_col_exists > 0 AND @new_col_exists = 0, 'ALTER TABLE customer_order CHANGE COLUMN scheduled_pickup_time scheduled_pickup_datetime TIMESTAMP NULL', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@old_col_exists > 0 AND @new_col_exists = 0, '✓ Renamed: scheduled_pickup_time → scheduled_pickup_datetime', '⊘ Rename not needed or already done') as Status;
 
 -- actual_pickup_time → actual_pickup_datetime
 SET @old_col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'actual_pickup_time');
 SET @new_col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'actual_pickup_datetime');
-SET @sql = IF(@old_col_exists > 0 AND @new_col_exists = 0, 'ALTER TABLE customer_order CHANGE COLUMN actual_pickup_time actual_pickup_datetime TIMESTAMP NULL', 'SELECT "⊘ Rename not needed or already done" as Status');
+SET @sql = IF(@old_col_exists > 0 AND @new_col_exists = 0, 'ALTER TABLE customer_order CHANGE COLUMN actual_pickup_time actual_pickup_datetime TIMESTAMP NULL', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@old_col_exists > 0 AND @new_col_exists = 0, '✓ Renamed: actual_pickup_time → actual_pickup_datetime', '⊘ Rename not needed or already done') as Status;
 
@@ -147,55 +147,55 @@ SELECT '════════════════════════
 
 -- idx_verification_code
 SET @idx_exists = (SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND INDEX_NAME = 'idx_verification_code');
-SET @sql = IF(@idx_exists = 0, 'ALTER TABLE customer_order ADD INDEX idx_verification_code (verification_code)', 'SELECT "⊘ Index idx_verification_code already exists" as Status');
+SET @sql = IF(@idx_exists = 0, 'ALTER TABLE customer_order ADD INDEX idx_verification_code (verification_code)', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@idx_exists = 0, '✓ Added index: idx_verification_code', '⊘ Index already exists: idx_verification_code') as Status;
 
 -- idx_order_datetime
 SET @idx_exists = (SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND INDEX_NAME = 'idx_order_datetime');
-SET @sql = IF(@idx_exists = 0, 'ALTER TABLE customer_order ADD INDEX idx_order_datetime (order_datetime)', 'SELECT "⊘ Index idx_order_datetime already exists" as Status');
+SET @sql = IF(@idx_exists = 0, 'ALTER TABLE customer_order ADD INDEX idx_order_datetime (order_datetime)', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@idx_exists = 0, '✓ Added index: idx_order_datetime', '⊘ Index already exists: idx_order_datetime') as Status;
 
 -- idx_gcash_ref
 SET @idx_exists = (SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND INDEX_NAME = 'idx_gcash_ref');
-SET @sql = IF(@idx_exists = 0, 'ALTER TABLE customer_order ADD INDEX idx_gcash_ref (gcash_reference_number)', 'SELECT "⊘ Index idx_gcash_ref already exists" as Status');
+SET @sql = IF(@idx_exists = 0, 'ALTER TABLE customer_order ADD INDEX idx_gcash_ref (gcash_reference_number)', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@idx_exists = 0, '✓ Added index: idx_gcash_ref', '⊘ Index already exists: idx_gcash_ref') as Status;
 
 -- idx_paymaya_ref
 SET @idx_exists = (SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND INDEX_NAME = 'idx_paymaya_ref');
-SET @sql = IF(@idx_exists = 0, 'ALTER TABLE customer_order ADD INDEX idx_paymaya_ref (paymaya_reference_number)', 'SELECT "⊘ Index idx_paymaya_ref already exists" as Status');
+SET @sql = IF(@idx_exists = 0, 'ALTER TABLE customer_order ADD INDEX idx_paymaya_ref (paymaya_reference_number)', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@idx_exists = 0, '✓ Added index: idx_paymaya_ref', '⊘ Index already exists: idx_paymaya_ref') as Status;
 
 -- idx_order_source
 SET @idx_exists = (SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND INDEX_NAME = 'idx_order_source');
-SET @sql = IF(@idx_exists = 0, 'ALTER TABLE customer_order ADD INDEX idx_order_source (order_source)', 'SELECT "⊘ Index idx_order_source already exists" as Status');
+SET @sql = IF(@idx_exists = 0, 'ALTER TABLE customer_order ADD INDEX idx_order_source (order_source)', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@idx_exists = 0, '✓ Added index: idx_order_source', '⊘ Index already exists: idx_order_source') as Status;
 
 -- idx_preorder
 SET @idx_exists = (SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND INDEX_NAME = 'idx_preorder');
-SET @sql = IF(@idx_exists = 0, 'ALTER TABLE customer_order ADD INDEX idx_preorder (is_preorder)', 'SELECT "⊘ Index idx_preorder already exists" as Status');
+SET @sql = IF(@idx_exists = 0, 'ALTER TABLE customer_order ADD INDEX idx_preorder (is_preorder)', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@idx_exists = 0, '✓ Added index: idx_preorder', '⊘ Index already exists: idx_preorder') as Status;
 
 -- idx_kiosk_session
 SET @idx_exists = (SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND INDEX_NAME = 'idx_kiosk_session');
-SET @sql = IF(@idx_exists = 0, 'ALTER TABLE customer_order ADD INDEX idx_kiosk_session (kiosk_session_id)', 'SELECT "⊘ Index idx_kiosk_session already exists" as Status');
+SET @sql = IF(@idx_exists = 0, 'ALTER TABLE customer_order ADD INDEX idx_kiosk_session (kiosk_session_id)', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@idx_exists = 0, '✓ Added index: idx_kiosk_session', '⊘ Index already exists: idx_kiosk_session') as Status;
 
 -- idx_is_deleted
 SET @idx_exists = (SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND INDEX_NAME = 'idx_is_deleted');
-SET @sql = IF(@idx_exists = 0, 'ALTER TABLE customer_order ADD INDEX idx_is_deleted (is_deleted)', 'SELECT "⊘ Index idx_is_deleted already exists" as Status');
+SET @sql = IF(@idx_exists = 0, 'ALTER TABLE customer_order ADD INDEX idx_is_deleted (is_deleted)', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@idx_exists = 0, '✓ Added index: idx_is_deleted', '⊘ Index already exists: idx_is_deleted') as Status;
 
 -- idx_verification_date (composite index)
 SET @idx_exists = (SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND INDEX_NAME = 'idx_verification_date');
-SET @sql = IF(@idx_exists = 0, 'ALTER TABLE customer_order ADD INDEX idx_verification_date (verification_code, created_at)', 'SELECT "⊘ Index idx_verification_date already exists" as Status');
+SET @sql = IF(@idx_exists = 0, 'ALTER TABLE customer_order ADD INDEX idx_verification_date (verification_code, created_at)', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@idx_exists = 0, '✓ Added index: idx_verification_date', '⊘ Index already exists: idx_verification_date') as Status;
 
@@ -210,7 +210,7 @@ SELECT '════════════════════════
 
 -- fk_payment_verified_by
 SET @fk_exists = (SELECT COUNT(*) FROM information_schema.TABLE_CONSTRAINTS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND CONSTRAINT_NAME = 'fk_payment_verified_by');
-SET @sql = IF(@fk_exists = 0, 'ALTER TABLE customer_order ADD CONSTRAINT fk_payment_verified_by FOREIGN KEY (payment_verified_by) REFERENCES cashier(cashier_id) ON DELETE SET NULL', 'SELECT "⊘ Foreign key fk_payment_verified_by already exists" as Status');
+SET @sql = IF(@fk_exists = 0, 'ALTER TABLE customer_order ADD CONSTRAINT fk_payment_verified_by FOREIGN KEY (payment_verified_by) REFERENCES cashier(cashier_id) ON DELETE SET NULL', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@fk_exists = 0, '✓ Added foreign key: fk_payment_verified_by', '⊘ Foreign key already exists: fk_payment_verified_by') as Status;
 
