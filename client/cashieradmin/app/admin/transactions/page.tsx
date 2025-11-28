@@ -8,13 +8,20 @@ import { Select, SelectItem } from '@heroui/select';
 import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from '@heroui/table';
 import { Chip } from '@heroui/chip';
 import { Spinner } from '@heroui/spinner';
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from '@heroui/modal';
+import { Divider } from '@heroui/divider';
 import { OrderService } from '@/services/order.service';
 import { CustomerOrder, PaymentMethod, PaymentStatus } from '@/types/api';
 import {
   BanknotesIcon,
   DocumentArrowDownIcon,
   CalendarIcon,
-  FunnelIcon
+  FunnelIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  EyeIcon,
+  CreditCardIcon,
+  ShoppingBagIcon
 } from '@heroicons/react/24/outline';
 
 export default function TransactionsPage() {
@@ -26,6 +33,9 @@ export default function TransactionsPage() {
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+  const [selectedTransaction, setSelectedTransaction] = useState<CustomerOrder | null>(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   useEffect(() => {
     loadTransactions();
@@ -40,11 +50,27 @@ export default function TransactionsPage() {
       setLoading(true);
       const response = await OrderService.getOrders();
       if (response.success && response.data) {
-        // Only show completed/paid orders as transactions
-        const completedOrders = response.data.filter(
-          order => order.payment_status === 'paid' || order.order_status === 'completed'
+        // Get orders data (handle both array and paginated response)
+        const orders = Array.isArray(response.data) ? response.data : response.data.orders || [];
+
+        // Only show paid orders as transactions
+        const completedOrders = orders.filter(
+          (order: CustomerOrder) => order.payment_status === 'paid'
         );
-        setTransactions(completedOrders);
+
+        // Fetch full details for each transaction including items
+        const detailedTransactions = await Promise.all(
+          completedOrders.map(async (order: CustomerOrder) => {
+            try {
+              const detailResponse = await OrderService.getOrderById(order.order_id);
+              return detailResponse.success && detailResponse.data ? detailResponse.data : order;
+            } catch {
+              return order;
+            }
+          })
+        );
+
+        setTransactions(detailedTransactions);
       }
     } catch (error) {
       console.error('Failed to load transactions:', error);
@@ -86,19 +112,50 @@ export default function TransactionsPage() {
     setFilteredTransactions(filtered);
   };
 
+  const toggleRow = (orderId: number) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(orderId)) {
+      newExpanded.delete(orderId);
+    } else {
+      newExpanded.add(orderId);
+    }
+    setExpandedRows(newExpanded);
+  };
+
   const exportToCSV = () => {
-    const headers = ['Order ID', 'Date', 'Payment Method', 'Status', 'Amount'];
+    const headers = [
+      'Order ID',
+      'Date',
+      'Payment Method',
+      'Status',
+      'Items',
+      'Subtotal',
+      'Tax',
+      'Discount',
+      'Final Amount',
+      'Amount Paid',
+      'Change',
+      'Cashier'
+    ];
+
     const rows = filteredTransactions.map(t => [
       t.order_number || t.order_id,
       new Date(t.order_datetime).toLocaleString(),
       t.payment_method,
       t.payment_status,
-      `₱${Number(t.final_amount || 0).toFixed(2)}`
+      t.items?.map(item => `${item.item_name || 'Item'} x${item.quantity}`).join('; ') || 'N/A',
+      Number(t.total_amount || 0).toFixed(2),
+      Number(t.tax_amount || 0).toFixed(2),
+      Number(t.discount_amount || 0).toFixed(2),
+      Number(t.final_amount || 0).toFixed(2),
+      Number(t.amount_paid || t.final_amount || 0).toFixed(2),
+      Number(t.change_amount || 0).toFixed(2),
+      t.cashier?.name || 'N/A'
     ]);
 
     const csvContent = [
       headers.join(','),
-      ...rows.map(row => row.join(','))
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -111,7 +168,23 @@ export default function TransactionsPage() {
   };
 
   const getTotalAmount = () => {
-    return filteredTransactions.reduce((sum, t) => sum + t.final_amount, 0);
+    return filteredTransactions.reduce((sum, t) => sum + Number(t.final_amount || 0), 0);
+  };
+
+  const getTotalCashCollected = () => {
+    return filteredTransactions
+      .filter(t => t.payment_method === 'cash')
+      .reduce((sum, t) => sum + Number(t.amount_paid || t.final_amount || 0), 0);
+  };
+
+  const getTotalChangeGiven = () => {
+    return filteredTransactions
+      .filter(t => t.payment_method === 'cash')
+      .reduce((sum, t) => sum + Number(t.change_amount || 0), 0);
+  };
+
+  const formatCurrency = (amount: number | string) => {
+    return `₱${Number(amount || 0).toFixed(2)}`;
   };
 
   const formatDate = (dateString: string) => {
@@ -122,6 +195,11 @@ export default function TransactionsPage() {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const handleViewDetails = (transaction: CustomerOrder) => {
+    setSelectedTransaction(transaction);
+    onOpen();
   };
 
   if (loading) {
@@ -141,7 +219,7 @@ export default function TransactionsPage() {
             Transaction History
           </h1>
           <p className="text-default-500 mt-1">
-            View and export all completed transactions
+            Detailed view of all completed transactions with items and payment info
           </p>
         </div>
         <Button
@@ -155,7 +233,7 @@ export default function TransactionsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardBody>
             <div className="flex items-center gap-3">
@@ -164,7 +242,7 @@ export default function TransactionsPage() {
               </div>
               <div>
                 <p className="text-sm text-default-500">Total Revenue</p>
-                <p className="text-2xl font-bold">₱{Number(getTotalAmount()).toFixed(2)}</p>
+                <p className="text-2xl font-bold">{formatCurrency(getTotalAmount())}</p>
               </div>
             </div>
           </CardBody>
@@ -193,8 +271,23 @@ export default function TransactionsPage() {
               <div>
                 <p className="text-sm text-default-500">Average Amount</p>
                 <p className="text-2xl font-bold">
-                  ₱{filteredTransactions.length > 0 ? Number(getTotalAmount() / filteredTransactions.length).toFixed(2) : '0.00'}
+                  {formatCurrency(filteredTransactions.length > 0 ? getTotalAmount() / filteredTransactions.length : 0)}
                 </p>
+              </div>
+            </div>
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardBody>
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-secondary-100 rounded-lg">
+                <CreditCardIcon className="h-6 w-6 text-secondary-600" />
+              </div>
+              <div>
+                <p className="text-sm text-default-500">Cash Collected</p>
+                <p className="text-lg font-bold">{formatCurrency(getTotalCashCollected())}</p>
+                <p className="text-xs text-default-400">Change: {formatCurrency(getTotalChangeGiven())}</p>
               </div>
             </div>
           </CardBody>
@@ -221,6 +314,8 @@ export default function TransactionsPage() {
               <SelectItem key="all" value="all">All Methods</SelectItem>
               <SelectItem key="cash" value="cash">Cash</SelectItem>
               <SelectItem key="cashless" value="cashless">Cashless</SelectItem>
+              <SelectItem key="gcash" value="gcash">GCash</SelectItem>
+              <SelectItem key="paymaya" value="paymaya">PayMaya</SelectItem>
             </Select>
 
             <Select
@@ -257,61 +352,321 @@ export default function TransactionsPage() {
       {/* Transactions Table */}
       <Card>
         <CardBody className="p-0">
-          <Table aria-label="Transactions table">
-            <TableHeader>
-              <TableColumn>ORDER ID</TableColumn>
-              <TableColumn>DATE</TableColumn>
-              <TableColumn>PAYMENT METHOD</TableColumn>
-              <TableColumn>STATUS</TableColumn>
-              <TableColumn>AMOUNT</TableColumn>
-            </TableHeader>
-            <TableBody emptyContent="No transactions found">
-              {filteredTransactions.map((transaction) => (
-                <TableRow key={transaction.order_id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-semibold">{transaction.order_number || `#${transaction.order_id}`}</p>
-                      {transaction.verification_code && (
-                        <code className="text-xs text-default-400">
-                          {transaction.verification_code}
-                        </code>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>{formatDate(transaction.order_datetime)}</TableCell>
-                  <TableCell>
-                    <Chip
-                      size="sm"
-                      variant="flat"
-                      color={transaction.payment_method === 'cash' ? 'success' : 'primary'}
-                      className="uppercase"
-                    >
-                      {transaction.payment_method}
-                    </Chip>
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      size="sm"
-                      color={
-                        transaction.payment_status === 'paid' ? 'success' :
-                        transaction.payment_status === 'refunded' ? 'danger' :
-                        'warning'
-                      }
-                      variant="flat"
-                      className="capitalize"
-                    >
-                      {transaction.payment_status.replace('_', ' ')}
-                    </Chip>
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-semibold">₱{Number(transaction.final_amount || 0).toFixed(2)}</span>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-default-100">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-default-600 uppercase tracking-wider">
+                    Order Details
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-default-600 uppercase tracking-wider">
+                    Items
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-default-600 uppercase tracking-wider">
+                    Payment
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-default-600 uppercase tracking-wider">
+                    Amount
+                  </th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-default-600 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-default-200">
+                {filteredTransactions.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-8 text-center text-default-400">
+                      No transactions found
+                    </td>
+                  </tr>
+                ) : (
+                  filteredTransactions.map((transaction) => {
+                    const isExpanded = expandedRows.has(transaction.order_id);
+                    const itemsCount = transaction.items?.length || 0;
+
+                    return (
+                      <>
+                        <tr key={transaction.order_id} className="hover:bg-default-50">
+                          <td className="px-4 py-4">
+                            <div className="space-y-1">
+                              <p className="font-semibold text-sm">
+                                {transaction.order_number || `#${transaction.order_id}`}
+                              </p>
+                              <p className="text-xs text-default-500">
+                                {formatDate(transaction.order_datetime)}
+                              </p>
+                              {transaction.verification_code && (
+                                <code className="text-xs text-default-400 bg-default-100 px-1 rounded">
+                                  {transaction.verification_code}
+                                </code>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="flex items-center gap-2">
+                              <ShoppingBagIcon className="h-4 w-4 text-default-400" />
+                              <span className="text-sm">{itemsCount} item{itemsCount !== 1 ? 's' : ''}</span>
+                              {itemsCount > 0 && (
+                                <Button
+                                  size="sm"
+                                  variant="flat"
+                                  isIconOnly
+                                  onPress={() => toggleRow(transaction.order_id)}
+                                >
+                                  {isExpanded ? (
+                                    <ChevronUpIcon className="h-4 w-4" />
+                                  ) : (
+                                    <ChevronDownIcon className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="space-y-2">
+                              <Chip
+                                size="sm"
+                                variant="flat"
+                                color={transaction.payment_method === 'cash' ? 'success' : 'primary'}
+                                className="uppercase"
+                              >
+                                {transaction.payment_method}
+                              </Chip>
+                              {transaction.payment_method === 'cash' && transaction.change_amount && Number(transaction.change_amount) > 0 && (
+                                <p className="text-xs text-default-500">
+                                  Change: {formatCurrency(transaction.change_amount)}
+                                </p>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-right">
+                            <div className="space-y-1">
+                              <p className="font-bold text-lg">{formatCurrency(transaction.final_amount)}</p>
+                              {transaction.payment_method === 'cash' && transaction.amount_paid && Number(transaction.amount_paid) > Number(transaction.final_amount || 0) && (
+                                <p className="text-xs text-default-500">
+                                  Paid: {formatCurrency(transaction.amount_paid)}
+                                </p>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4 text-center">
+                            <Button
+                              size="sm"
+                              color="primary"
+                              variant="flat"
+                              startContent={<EyeIcon className="h-4 w-4" />}
+                              onPress={() => handleViewDetails(transaction)}
+                            >
+                              View
+                            </Button>
+                          </td>
+                        </tr>
+
+                        {/* Expanded Row - Items Detail */}
+                        {isExpanded && transaction.items && transaction.items.length > 0 && (
+                          <tr>
+                            <td colSpan={5} className="px-4 py-4 bg-default-50">
+                              <div className="space-y-2">
+                                <p className="text-sm font-semibold text-default-700 mb-3">Order Items:</p>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                  {transaction.items.map((item, idx) => (
+                                    <div key={idx} className="flex justify-between items-center bg-white p-3 rounded border border-default-200">
+                                      <div className="flex-1">
+                                        <p className="font-medium text-sm">{item.item_name || 'Item'}</p>
+                                        <p className="text-xs text-default-500">
+                                          {formatCurrency(item.unit_price)} × {item.quantity}
+                                        </p>
+                                      </div>
+                                      <p className="font-semibold text-sm">
+                                        {formatCurrency(item.item_total || (Number(item.unit_price || 0) * Number(item.quantity || 0)))}
+                                      </p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </CardBody>
       </Card>
+
+      {/* Transaction Details Modal */}
+      <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside">
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">
+            <h3>Transaction Details</h3>
+            <p className="text-sm font-normal text-default-500">
+              {selectedTransaction?.order_number || `Order #${selectedTransaction?.order_id}`}
+            </p>
+          </ModalHeader>
+          <ModalBody>
+            {selectedTransaction && (
+              <div className="space-y-6">
+                {/* Order Info */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-default-500">Order Number</p>
+                    <p className="font-semibold">{selectedTransaction.order_number}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-default-500">Verification Code</p>
+                    <code className="font-semibold bg-default-100 px-2 py-1 rounded">
+                      {selectedTransaction.verification_code}
+                    </code>
+                  </div>
+                  <div>
+                    <p className="text-sm text-default-500">Order Date</p>
+                    <p className="font-semibold">{formatDate(selectedTransaction.order_datetime)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-default-500">Order Type</p>
+                    <p className="font-semibold capitalize">{selectedTransaction.order_type?.replace('_', ' ')}</p>
+                  </div>
+                </div>
+
+                <Divider />
+
+                {/* Items */}
+                <div>
+                  <p className="text-sm font-semibold text-default-700 mb-3">Items Purchased:</p>
+                  <div className="space-y-2">
+                    {selectedTransaction.items?.map((item, idx) => (
+                      <div key={idx} className="flex justify-between items-start p-3 bg-default-50 rounded">
+                        <div className="flex-1">
+                          <p className="font-medium">{item.item_name || 'Item'}</p>
+                          <p className="text-sm text-default-500">
+                            {formatCurrency(item.unit_price)} × {item.quantity}
+                          </p>
+                        </div>
+                        <p className="font-semibold">
+                          {formatCurrency(item.item_total || (Number(item.unit_price || 0) * Number(item.quantity || 0)))}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <Divider />
+
+                {/* Payment Breakdown */}
+                <div>
+                  <p className="text-sm font-semibold text-default-700 mb-3">Payment Details:</p>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Subtotal:</span>
+                      <span>{formatCurrency(selectedTransaction.total_amount)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Tax:</span>
+                      <span>{formatCurrency(selectedTransaction.tax_amount)}</span>
+                    </div>
+                    {Number(selectedTransaction.discount_amount || 0) > 0 && (
+                      <div className="flex justify-between text-success">
+                        <span>Discount:</span>
+                        <span>-{formatCurrency(selectedTransaction.discount_amount)}</span>
+                      </div>
+                    )}
+                    <Divider />
+                    <div className="flex justify-between font-bold text-lg">
+                      <span>Final Amount:</span>
+                      <span>{formatCurrency(selectedTransaction.final_amount)}</span>
+                    </div>
+
+                    {/* Cash Handling Details */}
+                    {selectedTransaction.payment_method === 'cash' && (
+                      <>
+                        <Divider />
+                        <div className="bg-success-50 p-4 rounded-lg space-y-2">
+                          <p className="font-semibold text-sm text-success-700">Cash Payment Details</p>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Amount Received:</span>
+                            <span className="font-semibold">{formatCurrency(selectedTransaction.amount_paid || selectedTransaction.final_amount)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm">Change Given:</span>
+                            <span className="font-semibold">{formatCurrency(selectedTransaction.change_amount)}</span>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Cashless Payment Details */}
+                    {selectedTransaction.payment_method !== 'cash' && (
+                      <>
+                        <Divider />
+                        <div className="bg-primary-50 p-4 rounded-lg">
+                          <p className="font-semibold text-sm text-primary-700 mb-2">Payment Reference</p>
+                          <code className="text-sm bg-white px-2 py-1 rounded">
+                            {selectedTransaction.gcash_reference_number ||
+                             selectedTransaction.paymaya_reference_number ||
+                             selectedTransaction.card_transaction_ref ||
+                             'N/A'}
+                          </code>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <Divider />
+
+                {/* Additional Info */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-default-500">Payment Method</p>
+                    <Chip color="primary" variant="flat" className="uppercase mt-1">
+                      {selectedTransaction.payment_method}
+                    </Chip>
+                  </div>
+                  <div>
+                    <p className="text-sm text-default-500">Payment Status</p>
+                    <Chip color="success" variant="flat" className="capitalize mt-1">
+                      {selectedTransaction.payment_status}
+                    </Chip>
+                  </div>
+                  {selectedTransaction.cashier && (
+                    <div>
+                      <p className="text-sm text-default-500">Processed By</p>
+                      <p className="font-semibold">{selectedTransaction.cashier.name || 'Cashier'}</p>
+                    </div>
+                  )}
+                  <div>
+                    <p className="text-sm text-default-500">Order Status</p>
+                    <Chip color="default" variant="flat" className="capitalize mt-1">
+                      {selectedTransaction.order_status}
+                    </Chip>
+                  </div>
+                </div>
+
+                {selectedTransaction.special_instructions && (
+                  <>
+                    <Divider />
+                    <div>
+                      <p className="text-sm text-default-500 mb-2">Special Instructions</p>
+                      <p className="text-sm bg-warning-50 p-3 rounded">
+                        {selectedTransaction.special_instructions}
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="light" onPress={onClose}>
+              Close
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }
