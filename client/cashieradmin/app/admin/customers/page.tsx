@@ -232,8 +232,8 @@ export default function AdminCustomersPage() {
 
   // Stats
   const totalCustomers = customers.length;
-  const totalRevenue = customers.reduce((sum, c) => sum + c.totalSpent, 0);
-  const averageOrderValue = customers.length > 0 ? totalRevenue / customers.reduce((sum, c) => sum + c.orderCount, 0) : 0;
+  const totalRevenue = customers.reduce((sum, c) => sum + parseFloat(c.totalSpent), 0);
+  const averageOrderValue = customers.length > 0 ? totalRevenue / customers.reduce((sum, c) => sum + parseFloat(c.orderCount), 0) : 0;
 
   return (
     <div className="space-y-6">
@@ -369,7 +369,7 @@ export default function AdminCustomersPage() {
                         </Chip>
                       </TableCell>
                       <TableCell>
-                        <p className="font-semibold">₱{customer.totalSpent.toFixed(2)}</p>
+                        <p className="font-semibold">₱{parseFloat(customer.totalSpent).toFixed(2)}</p>
                       </TableCell>
                       <TableCell>
                         <Chip
@@ -534,7 +534,7 @@ export default function AdminCustomersPage() {
                         </div>
                         <div>
                           <p className="text-sm text-default-500">Amount</p>
-                          <p className="font-semibold">₱{order.final_amount.toFixed(2)}</p>
+                          <p className="font-semibold">₱{parseFloat(order.final_amount).toFixed(2)}</p>
                         </div>
                         <div>
                           <p className="text-sm text-default-500">Order Type</p>

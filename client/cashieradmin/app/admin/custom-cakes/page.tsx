@@ -302,7 +302,7 @@ export default function CustomCakesPage() {
               <div>
                 <p className="text-sm text-gray-600 mb-1">Total Value</p>
                 <p className="text-2xl font-bold text-purple-700">
-                  ₱{stats.totalValue.toFixed(0)}
+                  ₱{parseFloat(stats.totalValue).toFixed(0)}
                 </p>
               </div>
               <div className="p-3 bg-purple-200 rounded-full">

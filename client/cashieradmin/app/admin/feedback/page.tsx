@@ -197,7 +197,7 @@ export default function AdminFeedbackPage() {
                 </div>
                 <div>
                   <p className="text-sm text-default-500">Average Rating</p>
-                  <p className="text-2xl font-bold">{stats.averageRating.toFixed(1)}/5</p>
+                  <p className="text-2xl font-bold">{parseFloat(stats.averageRating).toFixed(1)}/5</p>
                 </div>
               </div>
             </CardBody>
@@ -368,7 +368,7 @@ export default function AdminFeedbackPage() {
                           color={getRatingColor(feedback.rating)}
                           className="text-white"
                         >
-                          {feedback.rating.toFixed(1)}★
+                          {parseFloat(feedback.rating).toFixed(1)}★
                         </Chip>
                       </div>
                     </TableCell>
@@ -458,7 +458,7 @@ export default function AdminFeedbackPage() {
                           color={getRatingColor(selectedFeedback.rating)}
                           className="text-white"
                         >
-                          {selectedFeedback.rating.toFixed(1)}★
+                          {parseFloat(selectedFeedback.rating).toFixed(1)}★
                         </Chip>
                         <span className="text-sm">
                           {selectedFeedback.service_rating && `Service: ${selectedFeedback.service_rating}★`}

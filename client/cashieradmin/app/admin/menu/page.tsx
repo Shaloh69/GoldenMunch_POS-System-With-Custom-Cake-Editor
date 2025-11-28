@@ -21,7 +21,7 @@ const formatPrice = (price: any): string => {
   if (price === null || price === undefined || price === '') {
     return '0.00';
   }
-  const numPrice = typeof price === 'string' ? parseFloat(price) : Number(price);
+  const numPrice = parseFloat(price);
   if (isNaN(numPrice)) {
     return '0.00';
   }

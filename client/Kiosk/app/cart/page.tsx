@@ -572,7 +572,7 @@ export default function CartPage() {
                         <div className="flex items-center justify-between p-4 bg-sunny-yellow/20 rounded-xl border-2 border-sunny-yellow/60 shadow-md">
                           <span className="text-black font-semibold">Total Amount</span>
                           <span className="text-2xl font-bold bg-gradient-to-r from-deep-orange-yellow to-sunny-yellow bg-clip-text text-transparent">
-                            ₱{completedOrder.final_amount.toFixed(2)}
+                            ₱{parseFloat(completedOrder.final_amount).toFixed(2)}
                           </span>
                         </div>
                       </CardBody>

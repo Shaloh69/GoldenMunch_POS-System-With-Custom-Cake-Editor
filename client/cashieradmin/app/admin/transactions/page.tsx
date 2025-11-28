@@ -93,7 +93,7 @@ export default function TransactionsPage() {
       new Date(t.order_datetime).toLocaleString(),
       t.payment_method,
       t.payment_status,
-      `₱${t.final_amount.toFixed(2)}`
+      `₱${parseFloat(t.final_amount).toFixed(2)}`
     ]);
 
     const csvContent = [
@@ -111,7 +111,7 @@ export default function TransactionsPage() {
   };
 
   const getTotalAmount = () => {
-    return filteredTransactions.reduce((sum, t) => sum + t.final_amount, 0);
+    return filteredTransactions.reduce((sum, t) => sum + parseFloat(t.final_amount), 0);
   };
 
   const formatDate = (dateString: string) => {
@@ -304,7 +304,7 @@ export default function TransactionsPage() {
                     </Chip>
                   </TableCell>
                   <TableCell>
-                    <span className="font-semibold">₱{transaction.final_amount.toFixed(2)}</span>
+                    <span className="font-semibold">₱{parseFloat(transaction.final_amount).toFixed(2)}</span>
                   </TableCell>
                 </TableRow>
               ))}

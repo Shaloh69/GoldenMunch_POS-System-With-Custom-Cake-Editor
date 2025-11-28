@@ -200,7 +200,7 @@ export default function PaymentPage() {
   };
 
   const formatCurrency = (amount: number) => {
-    return `₱${amount.toFixed(2)}`;
+    return `₱${parseFloat(amount).toFixed(2)}`;
   };
 
   const formatDateTime = (dateString: string) => {

@@ -253,7 +253,7 @@ export default function CashierOrdersPage() {
                         </Chip>
                       </div>
                     </TableCell>
-                    <TableCell>₱{order.final_amount.toFixed(2)}</TableCell>
+                    <TableCell>₱{parseFloat(order.final_amount).toFixed(2)}</TableCell>
                     <TableCell>
                       <Chip color={statusColors[order.order_status]} size="sm" className="capitalize">
                         {order.order_status}
@@ -341,7 +341,7 @@ export default function CashierOrdersPage() {
                             <span className="font-medium">{item.menu_item?.name}</span>
                             <span className="text-sm text-default-500 ml-2">x{item.quantity}</span>
                           </div>
-                          <span className="font-semibold">₱{item.item_total.toFixed(2)}</span>
+                          <span className="font-semibold">₱{parseFloat(item.item_total).toFixed(2)}</span>
                         </div>
                       ))}
                     </div>
@@ -349,21 +349,21 @@ export default function CashierOrdersPage() {
                     <div className="border-t pt-4">
                       <div className="flex justify-between mb-2">
                         <span>Subtotal:</span>
-                        <span>₱{selectedOrder.total_amount.toFixed(2)}</span>
+                        <span>₱{parseFloat(selectedOrder.total_amount).toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between mb-2">
                         <span>Tax:</span>
-                        <span>₱{selectedOrder.tax_amount.toFixed(2)}</span>
+                        <span>₱{parseFloat(selectedOrder.tax_amount).toFixed(2)}</span>
                       </div>
-                      {selectedOrder.discount_amount > 0 && (
+                      {parseFloat(selectedOrder.discount_amount) > 0 && (
                         <div className="flex justify-between mb-2 text-success">
                           <span>Discount:</span>
-                          <span>-₱{selectedOrder.discount_amount.toFixed(2)}</span>
+                          <span>-₱{parseFloat(selectedOrder.discount_amount).toFixed(2)}</span>
                         </div>
                       )}
                       <div className="flex justify-between font-bold text-lg">
                         <span>Total:</span>
-                        <span>₱{selectedOrder.final_amount.toFixed(2)}</span>
+                        <span>₱{parseFloat(selectedOrder.final_amount).toFixed(2)}</span>
                       </div>
                     </div>
 
@@ -529,7 +529,7 @@ export default function CashierOrdersPage() {
                 <div>
                   <p className="text-sm text-default-500">Amount</p>
                   <p className="text-2xl font-bold text-primary">
-                    ₱{selectedOrder.final_amount.toFixed(2)}
+                    ₱{parseFloat(selectedOrder.final_amount).toFixed(2)}
                   </p>
                 </div>
 
@@ -565,7 +565,7 @@ export default function CashierOrdersPage() {
                 {selectedOrder.payment_method === 'cash' && (
                   <div className="bg-success-50 p-3 rounded">
                     <p className="text-sm text-success-700">
-                      Confirm that you have received ₱{selectedOrder.final_amount.toFixed(2)} in cash from the customer.
+                      Confirm that you have received ₱{parseFloat(selectedOrder.final_amount).toFixed(2)} in cash from the customer.
                     </p>
                   </div>
                 )}
