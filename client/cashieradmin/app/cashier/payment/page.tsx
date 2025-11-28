@@ -76,7 +76,9 @@ export default function PaymentPage() {
       // Load pending payments (orders with payment_status = 'pending')
       const pendingResponse = await OrderService.getOrders();
       if (pendingResponse.success && pendingResponse.data) {
-        const pending = pendingResponse.data.filter(
+        // Server returns { orders: [...], pagination: {...} }
+        const orders = pendingResponse.data.orders || [];
+        const pending = orders.filter(
           (order: CustomerOrder) => order.payment_status === 'pending'
         );
         setPendingOrders(pending);
@@ -93,8 +95,10 @@ export default function PaymentPage() {
       // Load recent verified payments (today's paid orders)
       const allResponse = await OrderService.getOrders();
       if (allResponse.success && allResponse.data) {
+        // Server returns { orders: [...], pagination: {...} }
+        const orders = allResponse.data.orders || [];
         const today = new Date().toISOString().split('T')[0];
-        const recentPaid = allResponse.data.filter((order: CustomerOrder) => {
+        const recentPaid = orders.filter((order: CustomerOrder) => {
           const orderDate = new Date(order.order_datetime).toISOString().split('T')[0];
           return order.payment_status === 'paid' && orderDate === today;
         });

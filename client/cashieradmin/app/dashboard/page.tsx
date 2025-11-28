@@ -59,7 +59,8 @@ export default function DashboardPage() {
       }
 
       if (ordersResponse.success && ordersResponse.data) {
-        setRecentOrders(ordersResponse.data.slice(0, 5));
+        // Server returns { orders: [...], pagination: {...} }
+        setRecentOrders((ordersResponse.data.orders || []).slice(0, 5));
       }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
