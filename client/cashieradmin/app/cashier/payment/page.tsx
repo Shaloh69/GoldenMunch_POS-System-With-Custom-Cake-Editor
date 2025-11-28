@@ -70,13 +70,13 @@ export default function PaymentPage() {
     try {
       setLoading(true);
 
-      // Load pending payments (orders with payment_status = 'pending')
+      // Load pending payments (orders with payment_status = 'unpaid')
       const pendingResponse = await OrderService.getOrders();
       if (pendingResponse.success && pendingResponse.data) {
         // Server returns { orders: [...], pagination: {...} }
         const orders = pendingResponse.data.orders || [];
         const pending = orders.filter(
-          (order: CustomerOrder) => order.payment_status === 'pending'
+          (order: CustomerOrder) => order.payment_status === 'unpaid'
         );
         setPendingOrders(pending);
 
