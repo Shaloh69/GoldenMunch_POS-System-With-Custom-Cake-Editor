@@ -152,6 +152,21 @@ export const getSuppliers = async (req: AuthRequest, res: Response) => {
   res.json(successResponse('Suppliers retrieved', suppliers));
 };
 
+export const getSupplierById = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+
+  const supplier = getFirstRow<any>(await query(
+    'SELECT * FROM suppliers WHERE supplier_id = ?',
+    [id]
+  ));
+
+  if (!supplier) {
+    throw new AppError('Supplier not found', 404);
+  }
+
+  res.json(successResponse('Supplier retrieved', supplier));
+};
+
 export const updateSupplier = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const updates = req.body;
@@ -205,6 +220,21 @@ export const getCashiers = async (req: AuthRequest, res: Response) => {
   const cashiers = await query(sql, params);
 
   res.json(successResponse('Cashiers retrieved', cashiers));
+};
+
+export const getCashierById = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+
+  const cashier = getFirstRow<any>(await query(
+    'SELECT cashier_id, name, cashier_code, phone, email, hire_date, hourly_rate, is_active, created_at FROM cashier WHERE cashier_id = ?',
+    [id]
+  ));
+
+  if (!cashier) {
+    throw new AppError('Cashier not found', 404);
+  }
+
+  res.json(successResponse('Cashier retrieved', cashier));
 };
 
 export const updateCashier = async (req: AuthRequest, res: Response) => {
@@ -262,6 +292,21 @@ export const getTaxRules = async (req: AuthRequest, res: Response) => {
   const rules = await query(sql, params);
 
   res.json(successResponse('Tax rules retrieved', rules));
+};
+
+export const getTaxRuleById = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+
+  const taxRule = getFirstRow<any>(await query(
+    'SELECT * FROM tax_rules WHERE tax_id = ?',
+    [id]
+  ));
+
+  if (!taxRule) {
+    throw new AppError('Tax rule not found', 404);
+  }
+
+  res.json(successResponse('Tax rule retrieved', taxRule));
 };
 
 export const updateTaxRule = async (req: AuthRequest, res: Response) => {

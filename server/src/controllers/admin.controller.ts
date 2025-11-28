@@ -152,13 +152,76 @@ export const adjustInventory = async (req: AuthRequest, res: Response) => {
   // Record transaction
   await query(
     `INSERT INTO inventory_transaction
-     (menu_item_id, transaction_type, quantity, previous_quantity, new_quantity,
-      reason_id, notes, performed_by, performed_by_role)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'admin')`,
-    [menu_item_id, transaction_type, quantity, previousQuantity, newQuantity, reason_id, notes, admin_id]
+     (menu_item_id, transaction_type, quantity, reason_id, notes, performed_by)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [menu_item_id, transaction_type, quantity, reason_id, notes, admin_id]
   );
 
   res.json(successResponse('Inventory adjusted'));
+};
+
+// Get inventory transactions
+export const getInventoryTransactions = async (req: AuthRequest, res: Response) => {
+  const { menu_item_id, transaction_type, date_from, date_to, page = '1', limit = '50' } = req.query;
+
+  // Parse and validate pagination parameters
+  const pageNum = Math.max(1, parseInt(page as string, 10) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit as string, 10) || 50));
+  const offset = (pageNum - 1) * limitNum;
+
+  let sql = `
+    SELECT it.*, mi.name as item_name, mi.unit_of_measure,
+           sar.reason_description,
+           CONCAT(a.name) as performed_by_name
+    FROM inventory_transaction it
+    JOIN menu_item mi ON it.menu_item_id = mi.menu_item_id
+    LEFT JOIN stock_adjustment_reason sar ON it.reason_id = sar.reason_id
+    LEFT JOIN admin a ON it.performed_by = a.admin_id
+    WHERE 1=1
+  `;
+
+  const params: any[] = [];
+
+  if (menu_item_id) {
+    sql += ' AND it.menu_item_id = ?';
+    params.push(menu_item_id);
+  }
+
+  if (transaction_type) {
+    sql += ' AND it.transaction_type = ?';
+    params.push(transaction_type);
+  }
+
+  if (date_from) {
+    sql += ' AND DATE(it.created_at) >= ?';
+    params.push(date_from);
+  }
+
+  if (date_to) {
+    sql += ' AND DATE(it.created_at) <= ?';
+    params.push(date_to);
+  }
+
+  // Get total count
+  const countSql = sql.replace(/SELECT it\.\*.*FROM/, 'SELECT COUNT(*) as total FROM');
+  const countResult = getFirstRow<any>(await query(countSql, params));
+  const total = countResult?.total || 0;
+
+  sql += ' ORDER BY it.created_at DESC';
+  sql += ' LIMIT ? OFFSET ?';
+  params.push(limitNum, offset);
+
+  const transactions = await query(sql, params);
+
+  res.json(successResponse('Inventory transactions retrieved', {
+    transactions,
+    pagination: {
+      page: pageNum,
+      limit: limitNum,
+      total,
+      totalPages: Math.ceil(total / limitNum)
+    }
+  }));
 };
 
 // ==== ANALYTICS & REPORTS ====
@@ -268,6 +331,21 @@ export const getPromotions = async (req: AuthRequest, res: Response) => {
   const promotions = await query(sql, params);
 
   res.json(successResponse('Promotions retrieved', promotions));
+};
+
+export const getPromotionById = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+
+  const promotion = getFirstRow<any>(await query(
+    'SELECT * FROM promotion_rules WHERE promotion_id = ?',
+    [id]
+  ));
+
+  if (!promotion) {
+    throw new AppError('Promotion not found', 404);
+  }
+
+  res.json(successResponse('Promotion retrieved', promotion));
 };
 
 // ==== CATEGORIES ====

@@ -479,6 +479,7 @@ router.post('/admin/categories/unassign', authenticateAdmin, asyncHandler(adminC
 router.get('/admin/inventory/alerts', authenticateAdmin, asyncHandler(adminController.getInventoryAlerts));
 router.patch('/admin/inventory/alerts/:id/acknowledge', authenticateAdmin, asyncHandler(adminController.acknowledgeAlert));
 router.post('/admin/inventory/adjust', authenticateAdmin, asyncHandler(adminController.adjustInventory));
+router.get('/admin/inventory/transactions', authenticateAdmin, asyncHandler(adminController.getInventoryTransactions));
 
 // Stock Adjustment Reasons
 router.get('/admin/inventory/reasons', authenticateAdmin, asyncHandler(additionalController.getStockReasons));
@@ -497,6 +498,7 @@ router.get('/admin/stats/popularity-history', authenticateAdmin, asyncHandler(ad
 // Promotions
 router.post('/admin/promotions', authenticateAdmin, asyncHandler(adminController.createPromotion));
 router.get('/admin/promotions', authenticateAdmin, asyncHandler(adminController.getPromotions));
+router.get('/admin/promotions/:id', authenticateAdmin, asyncHandler(adminController.getPromotionById));
 router.put('/admin/promotions/:id', authenticateAdmin, asyncHandler(promotionController.updatePromotion));
 router.delete('/admin/promotions/:id', authenticateAdmin, asyncHandler(promotionController.deletePromotion));
 
@@ -527,18 +529,21 @@ router.put('/admin/customers/:id', authenticateAdmin, asyncHandler(additionalCon
 // Supplier Management
 router.post('/admin/suppliers', authenticateAdmin, asyncHandler(additionalController.createSupplier));
 router.get('/admin/suppliers', authenticateAdmin, asyncHandler(additionalController.getSuppliers));
+router.get('/admin/suppliers/:id', authenticateAdmin, asyncHandler(additionalController.getSupplierById));
 router.put('/admin/suppliers/:id', authenticateAdmin, asyncHandler(additionalController.updateSupplier));
 router.delete('/admin/suppliers/:id', authenticateAdmin, asyncHandler(additionalController.deleteSupplier));
 
 // Cashier Management
 router.post('/admin/cashiers', authenticateAdmin, asyncHandler(additionalController.createCashier));
 router.get('/admin/cashiers', authenticateAdmin, asyncHandler(additionalController.getCashiers));
+router.get('/admin/cashiers/:id', authenticateAdmin, asyncHandler(additionalController.getCashierById));
 router.put('/admin/cashiers/:id', authenticateAdmin, asyncHandler(additionalController.updateCashier));
 router.delete('/admin/cashiers/:id', authenticateAdmin, asyncHandler(additionalController.deleteCashier));
 
 // Tax Rules
 router.post('/admin/tax-rules', authenticateAdmin, asyncHandler(additionalController.createTaxRule));
 router.get('/admin/tax-rules', authenticateAdmin, asyncHandler(additionalController.getTaxRules));
+router.get('/admin/tax-rules/:id', authenticateAdmin, asyncHandler(additionalController.getTaxRuleById));
 router.put('/admin/tax-rules/:id', authenticateAdmin, asyncHandler(additionalController.updateTaxRule));
 
 // Cake Customization Management
