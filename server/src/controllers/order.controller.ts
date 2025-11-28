@@ -221,13 +221,13 @@ export const getOrderByVerificationCode = async (req: AuthRequest, res: Response
 
 // Verify payment
 export const verifyPayment = async (req: AuthRequest, res: Response) => {
-  const { order_id, reference_number, payment_method } = req.body;
+  const { order_id, reference_number, payment_method, amount_tendered } = req.body;
   const cashier_id = req.user?.id;
 
   // Handle cash and cashless payments
   await transaction(async (conn: PoolConnection) => {
     const orderData = getFirstRow<any>(await conn.query(
-      'SELECT total_amount FROM customer_order WHERE order_id = ?',
+      'SELECT final_amount, payment_method FROM customer_order WHERE order_id = ?',
       [order_id]
     ));
 
@@ -235,20 +235,42 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
       throw new AppError('Order not found', 404);
     }
 
+    const finalAmount = parseFloat(orderData.final_amount || 0);
+    let amountPaid = finalAmount;
+    let changeAmount = 0;
+
+    // For cash payments, calculate change
+    if (payment_method === 'cash' && amount_tendered) {
+      const tendered = parseFloat(amount_tendered);
+
+      // Validate that amount tendered is sufficient
+      if (tendered < finalAmount) {
+        throw new AppError(
+          `Insufficient amount. Need ₱${finalAmount.toFixed(2)}, received ₱${tendered.toFixed(2)}`,
+          400
+        );
+      }
+
+      amountPaid = tendered;
+      changeAmount = tendered - finalAmount;
+    }
+
     await conn.query(
       `UPDATE customer_order
        SET payment_status = 'paid',
+           amount_paid = ?,
+           change_amount = ?,
            payment_verified_by = ?,
            payment_verified_at = NOW()
        WHERE order_id = ?`,
-      [cashier_id, order_id]
+      [amountPaid, changeAmount, cashier_id, order_id]
     );
 
     await conn.query(
       `INSERT INTO payment_transaction
        (order_id, transaction_type, payment_method, amount, reference_number, status, processed_by, completed_at)
        VALUES (?, 'payment', ?, ?, ?, 'completed', ?, NOW())`,
-      [order_id, payment_method, orderData.total_amount, reference_number || null, cashier_id]
+      [order_id, payment_method, amountPaid, reference_number || null, cashier_id]
     );
   });
 

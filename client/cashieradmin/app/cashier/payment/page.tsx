@@ -54,6 +54,10 @@ export default function PaymentPage() {
   const [verifying, setVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState('');
 
+  // Cash payment handling
+  const [amountTendered, setAmountTendered] = useState('');
+  const [calculatedChange, setCalculatedChange] = useState(0);
+
   // Stats
   const [stats, setStats] = useState({
     pendingCount: 0,
@@ -158,6 +162,21 @@ export default function PaymentPage() {
   const handleVerifyPayment = async () => {
     if (!selectedOrder) return;
 
+    const finalAmount = Number(selectedOrder.final_amount || 0);
+
+    // Validate cash payment
+    if (selectedOrder.payment_method === 'cash') {
+      const tendered = Number(amountTendered || 0);
+      if (!amountTendered || tendered <= 0) {
+        setVerifyError('Please enter amount received from customer');
+        return;
+      }
+      if (tendered < finalAmount) {
+        setVerifyError(`Insufficient amount. Need ₱${finalAmount.toFixed(2)}`);
+        return;
+      }
+    }
+
     // Validate reference number for cashless payments
     if (selectedOrder.payment_method === 'cashless' && !referenceNumber.trim()) {
       setVerifyError('Please enter the payment reference number');
@@ -172,15 +191,13 @@ export default function PaymentPage() {
         order_id: selectedOrder.order_id,
         payment_method: selectedOrder.payment_method,
         reference_number: referenceNumber.trim() || undefined,
+        amount_tendered: selectedOrder.payment_method === 'cash' ? Number(amountTendered) : undefined,
       });
 
       if (response.success) {
         // Success - refresh data and close modal
         await loadPaymentData();
-        onClose();
-        setReferenceNumber('');
-        setSelectedOrder(null);
-        setSearchQuery('');
+        handleCloseModal();
       } else {
         setVerifyError(response.error || 'Payment verification failed');
       }
@@ -190,6 +207,31 @@ export default function PaymentPage() {
     } finally {
       setVerifying(false);
     }
+  };
+
+  const handleCloseModal = () => {
+    onClose();
+    setReferenceNumber('');
+    setAmountTendered('');
+    setCalculatedChange(0);
+    setSelectedOrder(null);
+    setSearchQuery('');
+    setVerifyError('');
+  };
+
+  const handleAmountTenderedChange = (value: string) => {
+    setAmountTendered(value);
+    if (selectedOrder && value) {
+      const tendered = Number(value);
+      const finalAmount = Number(selectedOrder.final_amount || 0);
+      setCalculatedChange(tendered >= finalAmount ? tendered - finalAmount : 0);
+    } else {
+      setCalculatedChange(0);
+    }
+  };
+
+  const handleQuickCashAmount = (amount: number) => {
+    handleAmountTenderedChange(amount.toString());
   };
 
   const handleSelectOrder = (order: CustomerOrder) => {
@@ -481,11 +523,7 @@ export default function PaymentPage() {
       </Card>
 
       {/* Payment Verification Modal */}
-      <Modal isOpen={isOpen} onClose={() => {
-        onClose();
-        setReferenceNumber('');
-        setVerifyError('');
-      }} size="lg">
+      <Modal isOpen={isOpen} onClose={handleCloseModal} size="lg">
         <ModalContent>
           <ModalHeader>Verify Payment</ModalHeader>
           <ModalBody>
@@ -544,10 +582,85 @@ export default function PaymentPage() {
                 )}
 
                 {selectedOrder.payment_method === 'cash' && (
-                  <div className="bg-success-50 p-4 rounded-lg border-2 border-success-200">
-                    <p className="text-sm text-success-700">
-                      ✅ Confirm that you have received {formatCurrency(selectedOrder.final_amount)} in cash from the customer.
-                    </p>
+                  <div className="space-y-4">
+                    {/* Amount Tendered Input */}
+                    <div>
+                      <Input
+                        label="Amount Received from Customer *"
+                        placeholder="Enter amount"
+                        type="number"
+                        value={amountTendered}
+                        onChange={(e) => handleAmountTenderedChange(e.target.value)}
+                        size="lg"
+                        isRequired
+                        startContent={<span className="text-default-500">₱</span>}
+                        description="Enter the cash amount given by the customer"
+                        classNames={{
+                          input: "text-2xl font-bold",
+                        }}
+                      />
+                    </div>
+
+                    {/* Quick Cash Buttons */}
+                    <div>
+                      <p className="text-sm text-default-500 mb-2">Quick Amount</p>
+                      <div className="grid grid-cols-4 gap-2">
+                        <Button
+                          color="primary"
+                          variant="flat"
+                          onPress={() => handleQuickCashAmount(Number(selectedOrder.final_amount || 0))}
+                        >
+                          Exact
+                        </Button>
+                        <Button
+                          color="primary"
+                          variant="flat"
+                          onPress={() => handleQuickCashAmount(100)}
+                        >
+                          ₱100
+                        </Button>
+                        <Button
+                          color="primary"
+                          variant="flat"
+                          onPress={() => handleQuickCashAmount(500)}
+                        >
+                          ₱500
+                        </Button>
+                        <Button
+                          color="primary"
+                          variant="flat"
+                          onPress={() => handleQuickCashAmount(1000)}
+                        >
+                          ₱1000
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Change Display */}
+                    {amountTendered && Number(amountTendered) >= Number(selectedOrder.final_amount || 0) && (
+                      <div className="bg-success-50 p-4 rounded-lg border-2 border-success-200">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="text-sm text-success-700 font-medium">Change to Return</p>
+                            <p className="text-xs text-success-600 mt-1">
+                              {formatCurrency(Number(amountTendered))} - {formatCurrency(Number(selectedOrder.final_amount || 0))}
+                            </p>
+                          </div>
+                          <p className="text-3xl font-bold text-success-700">
+                            {formatCurrency(calculatedChange)}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Insufficient Amount Warning */}
+                    {amountTendered && Number(amountTendered) < Number(selectedOrder.final_amount || 0) && (
+                      <div className="bg-warning-50 p-4 rounded-lg border-2 border-warning-200">
+                        <p className="text-sm text-warning-700 font-medium">
+                          ⚠️ Insufficient amount. Need {formatCurrency(Number(selectedOrder.final_amount || 0) - Number(amountTendered))} more
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -563,11 +676,7 @@ export default function PaymentPage() {
           <ModalFooter>
             <Button
               variant="light"
-              onPress={() => {
-                onClose();
-                setReferenceNumber('');
-                setVerifyError('');
-              }}
+              onPress={handleCloseModal}
             >
               Cancel
             </Button>

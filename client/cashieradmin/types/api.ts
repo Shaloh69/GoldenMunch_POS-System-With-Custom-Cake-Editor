@@ -588,6 +588,7 @@ export interface VerifyPaymentRequest {
   order_id: number;
   payment_method: PaymentMethod;
   reference_number?: string;
+  amount_tendered?: number;
 }
 
 export interface UpdateOrderStatusRequest {
