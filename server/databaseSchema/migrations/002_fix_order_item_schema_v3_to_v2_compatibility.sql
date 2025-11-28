@@ -158,7 +158,7 @@ BEGIN
     -- Sync special_requests and special_instructions
     IF NEW.special_instructions IS NOT NULL AND NEW.special_requests IS NULL THEN
         SET NEW.special_requests = NEW.special_instructions;
-    ELSIF NEW.special_requests IS NOT NULL AND NEW.special_instructions IS NULL THEN
+    ELSEIF NEW.special_requests IS NOT NULL AND NEW.special_instructions IS NULL THEN
         SET NEW.special_instructions = NEW.special_requests;
     END IF;
 END//
