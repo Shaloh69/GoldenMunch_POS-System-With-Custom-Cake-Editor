@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../models/types';
 import { successResponse } from '../utils/helpers';
 import { AppError } from '../middleware/error.middleware';
+import logger from '../utils/logger';
 import QRCode from 'qrcode';
 import crypto from 'crypto';
 

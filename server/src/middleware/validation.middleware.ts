@@ -14,7 +14,7 @@ export const ENUMS = {
   design_complexity: ['simple', 'moderate', 'complex', 'intricate'],
   order_type: ['dine_in', 'takeout', 'delivery', 'kiosk', 'custom_cake'],
   order_source: ['kiosk', 'cashier', 'admin'],
-  payment_method: ['cash', 'credit_card', 'debit_card', 'gcash', 'paymaya', 'bank_transfer', 'loyalty_points', 'other'],
+  payment_method: ['cash', 'cashless', 'credit_card', 'debit_card', 'gcash', 'paymaya', 'bank_transfer', 'loyalty_points', 'other'],
   payment_status: ['unpaid', 'partial', 'paid', 'refunded'],
   order_status: ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled'],
   refund_type: ['full', 'partial', 'item'],

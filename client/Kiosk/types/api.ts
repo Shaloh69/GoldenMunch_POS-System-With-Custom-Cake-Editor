@@ -31,10 +31,11 @@ export enum ItemStatus {
 }
 
 export enum OrderType {
-  WALK_IN = 'walk_in',
-  PICKUP = 'pickup',
-  PRE_ORDER = 'pre_order',
-  CUSTOM_ORDER = 'custom_order'
+  DINE_IN = 'dine_in',
+  TAKEOUT = 'takeout',
+  DELIVERY = 'delivery',
+  KIOSK = 'kiosk',
+  CUSTOM_CAKE = 'custom_cake'
 }
 
 export enum OrderSource {
