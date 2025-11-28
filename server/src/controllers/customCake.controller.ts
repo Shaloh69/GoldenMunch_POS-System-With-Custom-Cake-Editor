@@ -145,9 +145,18 @@ export const generateQRSession = async (req: AuthRequest, res: Response) => {
   const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
 
   // Mobile Editor URL - served from backend server (accessible via network)
-  // In production, set MOBILE_EDITOR_URL to http://SERVER_IP:3001
-  const baseUrl = process.env.MOBILE_EDITOR_URL || process.env.BACKEND_URL || 'http://localhost:3001';
-  const editorUrl = `${baseUrl}/?session=${sessionToken}`;
+  // In production, MOBILE_EDITOR_URL or BACKEND_URL must be set
+  const baseUrl = process.env.MOBILE_EDITOR_URL || process.env.BACKEND_URL;
+
+  if (!baseUrl) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new AppError('MOBILE_EDITOR_URL or BACKEND_URL environment variable is required in production', 500);
+    }
+    // Development fallback
+    logger.warn('⚠️  MOBILE_EDITOR_URL not set, using localhost fallback');
+  }
+
+  const editorUrl = `${baseUrl || 'http://localhost:3001'}/?session=${sessionToken}`;
 
   // Generate QR code as data URL
   let qrCodeDataUrl: string;

@@ -75,7 +75,7 @@ app.use(cors({
   credentials: true,
 }));
 
-// Rate limiting
+// Rate limiting - General API rate limiter
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
@@ -84,6 +84,21 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Stricter rate limiter for authentication endpoints to prevent brute force attacks
+const authLimiter = rateLimit({
+  windowMs: parseInt(process.env.AUTH_RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
+  max: parseInt(process.env.AUTH_RATE_LIMIT_MAX_REQUESTS || '5'), // Only 5 login attempts per 15 min
+  message: 'Too many login attempts from this IP, please try again after 15 minutes',
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true, // Don't count successful logins
+});
+
+// Apply strict rate limiting to auth endpoints
+app.use('/api/auth/admin/login', authLimiter);
+app.use('/api/auth/cashier/login', authLimiter);
+
+// Apply general rate limiting to all API routes
 app.use('/api', limiter);
 
 // ==== BODY PARSING MIDDLEWARE ====

@@ -7,6 +7,7 @@ import { AppError } from '../middleware/error.middleware';
 import { getFirstRow } from '../utils/typeGuards';
 import { JwtPayload } from '../models/types';
 import { diagnoseJWTConfig } from '../utils/jwtDiagnostic';
+import logger from '../utils/logger';
 
 // Admin login
 export const adminLogin = async (req: Request, res: Response) => {
@@ -25,13 +26,13 @@ export const adminLogin = async (req: Request, res: Response) => {
     // Check JWT configuration
     const jwtDiag = diagnoseJWTConfig();
     if (jwtDiag.usingDefaultSecret) {
-      console.error('⚠️  CRITICAL: Admin login attempted but server is using default JWT secret!');
-      console.error('    Create a .env file with secure JWT secrets to fix this issue.');
+      logger.error('⚠️  CRITICAL: Admin login attempted but server is using default JWT secret!');
+      logger.error('    Create a .env file with secure JWT secrets to fix this issue.');
     }
 
     // Find admin user
     const admin = getFirstRow<any>(await query(
-      `SELECT a.*, r.role_name
+      `SELECT a.admin_id, a.username, a.email, a.name, a.password_hash, r.role_name
        FROM admin a
        JOIN roles r ON a.role_id = r.role_id
        WHERE a.username = ? AND a.is_active = TRUE`,
@@ -69,7 +70,7 @@ export const adminLogin = async (req: Request, res: Response) => {
     } as jwt.SignOptions);
 
     // Log successful login with secret hash for debugging
-    console.log(`✓ Admin login successful: ${admin.username} (Secret hash: ${jwtDiag.adminJwtSecretHash})`);
+    logger.info(`✓ Admin login successful: ${admin.username} (Secret hash: ${jwtDiag.adminJwtSecretHash})`);
 
     res.json(
       successResponse('Login successful', {
@@ -91,7 +92,7 @@ export const adminLogin = async (req: Request, res: Response) => {
     }
 
     // Log unexpected errors
-    console.error('Admin login error:', error);
+    logger.error('Admin login error:', error);
     throw new AppError('Login failed', 500);
   }
 };
@@ -113,13 +114,13 @@ export const cashierLogin = async (req: Request, res: Response) => {
     // Check JWT configuration
     const jwtDiag = diagnoseJWTConfig();
     if (jwtDiag.usingDefaultSecret) {
-      console.error('⚠️  CRITICAL: Cashier login attempted but server is using default JWT secret!');
-      console.error('    Create a .env file with secure JWT secrets to fix this issue.');
+      logger.error('⚠️  CRITICAL: Cashier login attempted but server is using default JWT secret!');
+      logger.error('    Create a .env file with secure JWT secrets to fix this issue.');
     }
 
     // Find cashier
     const cashier = getFirstRow<any>(await query(
-      'SELECT * FROM cashier WHERE cashier_code = ? AND is_active = TRUE',
+      'SELECT cashier_id, cashier_code, name, pin_hash FROM cashier WHERE cashier_code = ? AND is_active = TRUE',
       [cashier_code.trim()]
     ));
 
@@ -147,7 +148,7 @@ export const cashierLogin = async (req: Request, res: Response) => {
     } as jwt.SignOptions);
 
     // Log successful login with secret hash for debugging
-    console.log(`✓ Cashier login successful: ${cashier.cashier_code} (Secret hash: ${jwtDiag.cashierJwtSecretHash})`);
+    logger.info(`✓ Cashier login successful: ${cashier.cashier_code} (Secret hash: ${jwtDiag.cashierJwtSecretHash})`);
 
     res.json(
       successResponse('Login successful', {
@@ -172,7 +173,7 @@ export const cashierLogin = async (req: Request, res: Response) => {
     }
 
     // Log unexpected errors
-    console.error('Cashier login error:', error);
+    logger.error('Cashier login error:', error);
     throw new AppError('Login failed', 500);
   }
 };
@@ -220,7 +221,7 @@ export const updateAdminUsername = async (req: any, res: Response) => {
 
     // Get current admin
     const admin = getFirstRow<any>(await query(
-      'SELECT * FROM admin WHERE admin_id = ?',
+      'SELECT admin_id, password_hash FROM admin WHERE admin_id = ?',
       [admin_id]
     ));
 
@@ -255,7 +256,7 @@ export const updateAdminUsername = async (req: any, res: Response) => {
     if (error instanceof AppError) {
       throw error;
     }
-    console.error('Update username error:', error);
+    logger.error('Update username error:', error);
     throw new AppError('Failed to update username', 500);
   }
 };
@@ -276,7 +277,7 @@ export const updateAdminPassword = async (req: any, res: Response) => {
 
     // Get current admin
     const admin = getFirstRow<any>(await query(
-      'SELECT * FROM admin WHERE admin_id = ?',
+      'SELECT admin_id, password_hash FROM admin WHERE admin_id = ?',
       [admin_id]
     ));
 
@@ -305,7 +306,7 @@ export const updateAdminPassword = async (req: any, res: Response) => {
     if (error instanceof AppError) {
       throw error;
     }
-    console.error('Update password error:', error);
+    logger.error('Update password error:', error);
     throw new AppError('Failed to update password', 500);
   }
 };

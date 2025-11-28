@@ -71,8 +71,17 @@ export const createCustomCakeSession = async (req: AuthRequest, res: Response) =
   customCakeSessions.set(sessionId, session);
 
   // Generate URL for mobile customization
-  const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3002';
-  const customizationUrl = `${baseUrl}/customize/${sessionId}`;
+  const baseUrl = process.env.FRONTEND_URL;
+
+  if (!baseUrl) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new AppError('FRONTEND_URL environment variable is required in production', 500);
+    }
+    // Development fallback
+    logger.warn('⚠️  FRONTEND_URL not set, using localhost fallback');
+  }
+
+  const customizationUrl = `${baseUrl || 'http://localhost:3002'}/customize/${sessionId}`;
 
   // Generate QR code as data URL
   try {

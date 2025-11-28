@@ -24,18 +24,9 @@ const startServer = async () => {
       logger.info(`🏪 Kiosk API: http://${HOST}:${PORT}/api/kiosk`);
       logger.info(`💳 Cashier API: http://${HOST}:${PORT}/api/cashier`);
       logger.info(`⚙️  Admin API: http://${HOST}:${PORT}/api/admin`);
-
-      console.log('\n============================================');
-      console.log('  GoldenMunch POS Server Started');
-      console.log('============================================');
-      console.log(`  Server: http://${HOST}:${PORT}`);
-      console.log(`  API:    http://${HOST}:${PORT}/api`);
-      console.log(`  Health: http://${HOST}:${PORT}/api/health`);
-      console.log('============================================\n');
     });
   } catch (error) {
     logger.error('Failed to start server:', error);
-    console.error('❌ Failed to start server:', error);
     process.exit(1);
   }
 };
@@ -43,14 +34,12 @@ const startServer = async () => {
 // Handle uncaught exceptions
 process.on('uncaughtException', (error: Error) => {
   logger.error('Uncaught Exception:', error);
-  console.error('❌ Uncaught Exception:', error);
   process.exit(1);
 });
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (reason: any) => {
   logger.error('Unhandled Rejection:', reason);
-  console.error('❌ Unhandled Rejection:', reason);
   process.exit(1);
 });
 

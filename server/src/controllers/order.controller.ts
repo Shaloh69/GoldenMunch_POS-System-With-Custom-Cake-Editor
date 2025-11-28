@@ -138,11 +138,13 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
     // Create order
     const [orderResult] = await conn.query(
       `INSERT INTO customer_order
-       (customer_id, order_type, payment_method, payment_status, order_status,
+       (order_number, verification_code, customer_id, order_type, payment_method, payment_status, order_status,
         total_amount, discount_amount, tax_amount, final_amount,
         special_instructions, kiosk_session_id, is_preorder, gcash_reference_number)
-       VALUES (?, ?, ?, 'pending', 'pending', ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, 'pending', 'pending', ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
+        orderNumber,
+        verificationCode,
         orderData.customer_id || null,
         orderData.order_type,
         orderData.payment_method,

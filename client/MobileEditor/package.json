@@ -9,9 +9,10 @@
     "export": "next build && next export"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "next": "^14.0.0",
+    "axios": "^1.6.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "next": "15.3.1",
     "@nextui-org/react": "^2.2.9",
     "@nextui-org/system": "^2.0.15",
     "@nextui-org/theme": "^2.1.17",

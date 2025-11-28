@@ -73,7 +73,7 @@
     "@react-aria/visually-hidden": "3.8.27",
     "@react-three/drei": "^9.114.3",
     "@react-three/fiber": "^8.17.10",
-    "axios": "^1.13.2",
+    "axios": "^1.6.0",
     "clsx": "2.1.1",
     "escpos": "^3.0.0-alpha.6",
     "framer-motion": "11.18.2",
