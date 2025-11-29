@@ -42,6 +42,46 @@ This starts a Next.js dev server on `http://localhost:3003`
 
 **Note:** In dev mode, you'll need to manually add `?session=SESSION_TOKEN` to test with a valid session.
 
+### 🐛 Debug Mode (Bypass QR Code)
+
+For development and testing, you can bypass the QR code session validation:
+
+**URL:** `http://localhost:3003/?debug=true`
+
+**Features:**
+- ✅ Bypasses session validation (no QR code needed)
+- ✅ Skips all API calls for saving/submitting
+- ✅ Shows visual debug banner at the top
+- ✅ Displays design data in console
+- ✅ Works in development mode only (NODE_ENV !== 'production')
+
+**Usage Example:**
+```bash
+# Start dev server
+npm run dev
+
+# Open in browser with debug mode
+http://localhost:3003/?debug=true
+
+# Or test on mobile (make sure you're on same network)
+http://YOUR_LOCAL_IP:3003/?debug=true
+```
+
+**Console Output:**
+When debug mode is active, you'll see:
+- `🔧 DEBUG MODE: Bypassing session validation`
+- `🔧 DEBUG MODE: Skipping draft save`
+- `🔧 DEBUG MODE: Simulating submission`
+
+**Visual Indicator:**
+A purple banner appears at the top: "🔧 DEBUG MODE ACTIVE - Session validation bypassed | No data will be saved"
+
+**Important Notes:**
+- Debug mode ONLY works in development (`NODE_ENV !== 'production`)
+- No data is saved to the database in debug mode
+- The submit button shows a preview alert instead of actual submission
+- Perfect for UI testing, screenshot capture, and design iterations
+
 ### Testing with Backend
 
 1. Start the backend server:

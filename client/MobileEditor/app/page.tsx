@@ -78,6 +78,7 @@ const STEPS = [
 function CakeEditorContent() {
   const searchParams = useSearchParams();
   const sessionToken = searchParams?.get('session');
+  const debugMode = searchParams?.get('debug') === 'true';
   const canvasRef = useRef<any>(null);
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -105,6 +106,15 @@ function CakeEditorContent() {
 
   // Validate session on mount
   useEffect(() => {
+    // Debug mode bypass - skip session validation in development
+    if (debugMode && process.env.NODE_ENV !== 'production') {
+      console.log('🔧 DEBUG MODE: Bypassing session validation');
+      setSessionValid(true);
+      setLoading(false);
+      fetchDesignOptions();
+      return;
+    }
+
     if (!sessionToken) {
       setSessionValid(false);
       setLoading(false);
@@ -113,7 +123,7 @@ function CakeEditorContent() {
 
     validateSession();
     fetchDesignOptions();
-  }, [sessionToken]);
+  }, [sessionToken, debugMode]);
 
   const validateSession = async () => {
     if (!sessionToken) {
@@ -204,6 +214,12 @@ function CakeEditorContent() {
   }, [design, currentStep]);
 
   const saveDraft = async () => {
+    // Skip saving in debug mode
+    if (debugMode && process.env.NODE_ENV !== 'production') {
+      console.log('🔧 DEBUG MODE: Skipping draft save');
+      return;
+    }
+
     if (!sessionToken || !sessionValid) return;
 
     try {
@@ -277,6 +293,20 @@ function CakeEditorContent() {
   const handleSubmit = async () => {
     try {
       setSubmitting(true);
+
+      // Debug mode - just show success message without API calls
+      if (debugMode && process.env.NODE_ENV !== 'production') {
+        console.log('🔧 DEBUG MODE: Simulating submission');
+        console.log('Design data:', design);
+
+        // Simulate a delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+
+        alert(`🔧 DEBUG MODE - Design Preview:\n\nCustomer: ${design.customer_name}\nEmail: ${design.customer_email}\nPhone: ${design.customer_phone}\nLayers: ${design.num_layers}\nFrosting: ${design.frosting_type}\nColor: ${design.frosting_color}\n\n(This is a debug preview - no actual submission occurred)`);
+
+        setSubmitting(false);
+        return;
+      }
 
       // Step 1: Save final draft to get request_id
       if (!requestId) {
@@ -410,6 +440,13 @@ function CakeEditorContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-pink-50">
+      {/* Debug Mode Banner */}
+      {debugMode && process.env.NODE_ENV !== 'production' && (
+        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 text-center text-sm font-semibold shadow-lg">
+          🔧 DEBUG MODE ACTIVE - Session validation bypassed | No data will be saved
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">
