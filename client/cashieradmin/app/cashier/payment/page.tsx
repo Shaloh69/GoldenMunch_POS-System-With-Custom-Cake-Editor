@@ -160,7 +160,7 @@ export default function PaymentPage() {
       addToast({
         title: "Error",
         description: "Failed to load payment data",
-        status: "error",
+        color: "danger",
       });
       console.error('Failed to load payment data:', error);
       addToast({
@@ -290,23 +290,13 @@ export default function PaymentPage() {
             description: `✅ Cash payment verified for ${orderNum}! Change: ₱${calculatedChange.toFixed(2)}`,
             color: "success",
             timeout: 5000,
-        if (selectedOrder.payment_method === 'cash') {
-          addToast({
-            title: 'Cash Payment Verified',
-            description: `Payment verified for ${orderNum}! Change: ₱${calculatedChange.toFixed(2)}`,
             icon: <CheckCircleIcon className="h-5 w-5 text-success" />,
-            timeout: 5000,
           });
         } else {
           addToast({
             title: "Success",
             description: `✅ ${paymentMethod} payment verified for ${orderNum}!`,
             color: "success",
-            timeout: 5000,
-          addToast({
-            title: 'Payment Verified',
-            description: `${paymentMethod.toUpperCase()} payment verified for ${orderNum}!`,
-            icon: <CheckCircleIcon className="h-5 w-5 text-success" />,
             timeout: 5000,
           });
         }
