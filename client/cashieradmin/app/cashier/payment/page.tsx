@@ -10,7 +10,7 @@ import { Divider } from '@heroui/divider';
 import { Tabs, Tab } from '@heroui/tabs';
 import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from '@heroui/table';
 import { Spinner } from '@heroui/spinner';
-import { toast } from '@heroui/toast';
+import { addToast } from '@heroui/react';
 import { OrderService } from '@/services/order.service';
 import type { CustomerOrder } from '@/types/api';
 import {
@@ -129,7 +129,10 @@ export default function PaymentPage() {
       }
     } catch (error) {
       console.error('Failed to load payment data:', error);
-      toast.error('Failed to load payment data');
+      addToast({
+        title: 'Failed to load payment data',
+        icon: <XCircleIcon className="h-5 w-5 text-danger" />
+      });
     } finally {
       setLoading(false);
     }
@@ -163,13 +166,19 @@ export default function PaymentPage() {
           onOpen();
         } else {
           setSearchError('Order not found');
-          toast.error('Order not found');
+          addToast({
+            title: 'Order not found',
+            icon: <XCircleIcon className="h-5 w-5 text-danger" />
+          });
         }
       }
     } catch (error) {
       console.error('Search error:', error);
       setSearchError('Failed to search order');
-      toast.error('Failed to search order');
+      addToast({
+        title: 'Failed to search order',
+        icon: <XCircleIcon className="h-5 w-5 text-danger" />
+      });
     } finally {
       setSearchLoading(false);
     }
@@ -216,12 +225,18 @@ export default function PaymentPage() {
         const orderNum = selectedOrder.order_number || `#${selectedOrder.order_id}`;
 
         if (selectedOrder.payment_method === 'cash') {
-          toast.success(`✅ Cash payment verified for ${orderNum}! Change: ₱${calculatedChange.toFixed(2)}`, {
-            duration: 5000,
+          addToast({
+            title: 'Cash Payment Verified',
+            description: `Payment verified for ${orderNum}! Change: ₱${calculatedChange.toFixed(2)}`,
+            icon: <CheckCircleIcon className="h-5 w-5 text-success" />,
+            timeout: 5000,
           });
         } else {
-          toast.success(`✅ ${paymentMethod} payment verified for ${orderNum}!`, {
-            duration: 5000,
+          addToast({
+            title: 'Payment Verified',
+            description: `${paymentMethod.toUpperCase()} payment verified for ${orderNum}!`,
+            icon: <CheckCircleIcon className="h-5 w-5 text-success" />,
+            timeout: 5000,
           });
         }
 
@@ -229,13 +244,21 @@ export default function PaymentPage() {
         handleCloseModal();
       } else {
         setVerifyError(response.error || 'Payment verification failed');
-        toast.error(response.error || 'Payment verification failed');
+        addToast({
+          title: 'Payment verification failed',
+          description: response.error,
+          icon: <XCircleIcon className="h-5 w-5 text-danger" />
+        });
       }
     } catch (error: any) {
       console.error('Payment verification error:', error);
       const errorMsg = error.response?.data?.error || 'Failed to verify payment';
       setVerifyError(errorMsg);
-      toast.error(errorMsg);
+      addToast({
+        title: 'Failed to verify payment',
+        description: errorMsg,
+        icon: <XCircleIcon className="h-5 w-5 text-danger" />
+      });
     } finally {
       setVerifying(false);
     }
