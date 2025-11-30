@@ -62,9 +62,9 @@ export default function CartPage() {
     setFailedImages(prev => new Set(prev).add(imageUrl));
   };
 
-  // Fetch QR code when payment method changes to cashless
+  // Fetch QR code when payment method changes to GCash
   useEffect(() => {
-    if (paymentMethod === 'cashless') {
+    if (paymentMethod === 'gcash') {
       fetchQRCode();
       setShowReferenceInput(false);
     } else {
@@ -120,9 +120,9 @@ export default function CartPage() {
     setIsProcessing(true);
     setError(null);
 
-    // Validate reference number for cashless payments
-    if (paymentMethod === 'cashless' && !referenceNumber.trim()) {
-      setError('Please enter your payment reference number');
+    // Validate reference number for GCash payments
+    if (paymentMethod === 'gcash' && !referenceNumber.trim()) {
+      setError('Please enter your GCash reference number');
       setIsProcessing(false);
       return;
     }
@@ -459,13 +459,13 @@ export default function CartPage() {
                   <SelectItem key="cash" value="cash" textValue="Cash Payment">
                     <span className="text-black font-semibold">💵 Cash Payment</span>
                   </SelectItem>
-                  <SelectItem key="cashless" value="cashless" textValue="Cashless Payment">
-                    <span className="text-black font-semibold">📱 Cashless Payment (GCash, PayMaya, Bank)</span>
+                  <SelectItem key="gcash" value="gcash" textValue="GCash Payment">
+                    <span className="text-black font-semibold">📱 GCash Payment</span>
                   </SelectItem>
                 </Select>
 
-                {/* Show QR code and reference number input for cashless payments */}
-                {paymentMethod === 'cashless' && (
+                {/* Show QR code and reference number input for GCash payments */}
+                {paymentMethod === 'gcash' && (
                   <div className="space-y-4">
                     {/* Show QR Code Button */}
                     {!showReferenceInput && (
