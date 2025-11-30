@@ -371,7 +371,7 @@ export default function CartPage() {
                   variant="bordered"
                   classNames={{
                     input: "text-black",
-                    label: "text-black/80 font-semibold",
+                    label: "text-black font-semibold",
                     inputWrapper: "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm"
                   }}
                 />
@@ -384,7 +384,7 @@ export default function CartPage() {
                   variant="bordered"
                   classNames={{
                     input: "text-black",
-                    label: "text-black/80 font-semibold",
+                    label: "text-black font-semibold",
                     inputWrapper: "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm"
                   }}
                 />
@@ -396,14 +396,16 @@ export default function CartPage() {
                   size="lg"
                   variant="bordered"
                   classNames={{
-                    label: "text-black/80 font-semibold",
-                    value: "text-black",
-                    trigger: "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm"
+                    label: "text-black font-semibold",
+                    value: "text-black font-semibold",
+                    trigger: "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm text-black",
+                    listboxWrapper: "text-black",
+                    popoverContent: "text-black"
                   }}
                 >
-                  <SelectItem key="dine_in" value="dine_in">🍽️ Dine In</SelectItem>
-                  <SelectItem key="takeout" value="takeout">🚗 Takeout</SelectItem>
-                  <SelectItem key="delivery" value="delivery">🚚 Delivery</SelectItem>
+                  <SelectItem key="dine_in" value="dine_in" className="text-black">🍽️ Dine In</SelectItem>
+                  <SelectItem key="takeout" value="takeout" className="text-black">🚗 Takeout</SelectItem>
+                  <SelectItem key="delivery" value="delivery" className="text-black">🚚 Delivery</SelectItem>
                 </Select>
                 <Select
                   label="Payment Method"
@@ -413,13 +415,15 @@ export default function CartPage() {
                   size="lg"
                   variant="bordered"
                   classNames={{
-                    label: "text-black/80 font-semibold",
-                    value: "text-black",
-                    trigger: "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm"
+                    label: "text-black font-semibold",
+                    value: "text-black font-semibold",
+                    trigger: "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm text-black",
+                    listboxWrapper: "text-black",
+                    popoverContent: "text-black"
                   }}
                 >
-                  <SelectItem key="cash" value="cash">💵 Cash Payment</SelectItem>
-                  <SelectItem key="cashless" value="cashless">📱 Cashless Payment (GCash, PayMaya, Bank)</SelectItem>
+                  <SelectItem key="cash" value="cash" className="text-black">💵 Cash Payment</SelectItem>
+                  <SelectItem key="cashless" value="cashless" className="text-black">📱 Cashless Payment (GCash, PayMaya, Bank)</SelectItem>
                 </Select>
 
                 {/* Show QR code and reference number input for cashless payments */}
@@ -455,7 +459,7 @@ export default function CartPage() {
                           required
                           classNames={{
                             input: "text-black",
-                            label: "text-black/80 font-semibold",
+                            label: "text-black font-semibold",
                             inputWrapper: "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm"
                           }}
                           description="Enter the reference number from your payment confirmation"
@@ -482,7 +486,7 @@ export default function CartPage() {
                   variant="bordered"
                   classNames={{
                     input: "text-black",
-                    label: "text-black/80 font-semibold",
+                    label: "text-black font-semibold",
                     inputWrapper: "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm"
                   }}
                 />
