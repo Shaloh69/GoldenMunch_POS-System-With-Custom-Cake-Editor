@@ -190,7 +190,7 @@ export default function CartPage() {
             <h1 className="text-5xl font-bold text-black mb-4 drop-shadow-lg">
               Your Cart is Empty
             </h1>
-            <p className="text-xl text-black/70 mb-8">
+            <p className="text-xl text-black mb-8">
               Looks like you haven't added any delicious treats yet!
             </p>
             <div className="flex flex-col gap-4">
@@ -227,7 +227,7 @@ export default function CartPage() {
             <div className="text-7xl animate-bounce-slow">🛒</div>
             <div>
               <h1 className="text-5xl font-bold text-black mb-2 drop-shadow-lg">Your Cart</h1>
-              <p className="text-xl text-black/80 font-semibold">
+              <p className="text-xl text-black font-semibold">
                 {getItemCount()} {getItemCount() === 1 ? 'item' : 'items'} • Ready to checkout?
               </p>
             </div>
@@ -254,11 +254,22 @@ export default function CartPage() {
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
                     <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-pure-white/95 to-sunny-yellow/10 rounded-2xl hover:scale-[1.02] transition-all border-2 border-sunny-yellow/40 hover:border-sunny-yellow shadow-md">
-                      {/* Item Image */}
-                      <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-sunny-yellow/30 to-deep-orange-yellow/30 flex items-center justify-center flex-shrink-0 shadow-inner">
-                        <div className="text-5xl">
-                          {item.menuItem.image_url || getItemEmoji(item.menuItem.item_type)}
-                        </div>
+                      {/* Item Image - Fixed to show actual images */}
+                      <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-sunny-yellow/30 to-deep-orange-yellow/30 flex items-center justify-center flex-shrink-0 shadow-inner overflow-hidden">
+                        {item.menuItem.image_url ? (
+                          <Image
+                            src={item.menuItem.image_url}
+                            alt={item.menuItem.name}
+                            width={96}
+                            height={96}
+                            className="object-cover w-full h-full"
+                            unoptimized
+                          />
+                        ) : (
+                          <div className="text-5xl">
+                            {getItemEmoji(item.menuItem.item_type)}
+                          </div>
+                        )}
                       </div>
 
                       {/* Item Details */}
@@ -270,12 +281,12 @@ export default function CartPage() {
                           <Chip size="sm" variant="flat" className="bg-sunny-yellow text-black font-semibold border border-sunny-yellow/60 shadow-sm">
                             {item.menuItem.item_type}
                           </Chip>
-                          <span className="text-lg font-semibold text-black/70">
+                          <span className="text-lg font-semibold text-black">
                             ₱{(Number(item.menuItem.current_price) || 0).toFixed(2)} each
                           </span>
                         </div>
                         {item.special_instructions && (
-                          <p className="text-sm text-black/60 mt-2 italic">
+                          <p className="text-sm text-black mt-2 italic">
                             📝 {item.special_instructions}
                           </p>
                         )}
@@ -314,7 +325,7 @@ export default function CartPage() {
                           <Button
                             size="sm"
                             variant="light"
-                            className="text-xs text-deep-orange-yellow hover:text-charcoal-gray font-semibold"
+                            className="text-xs text-black hover:text-black font-semibold underline"
                             onClick={() => removeItem(item.menuItem.menu_item_id)}
                           >
                             Remove
@@ -490,7 +501,7 @@ export default function CartPage() {
                 <div className="space-y-4">
                   <div className="flex justify-between text-2xl font-bold">
                     <span className="text-black">Total ({getItemCount()} items)</span>
-                    <span className="bg-gradient-to-r from-deep-orange-yellow to-sunny-yellow bg-clip-text text-transparent drop-shadow-lg">
+                    <span className="text-black">
                       ₱{getTotal().toFixed(2)}
                     </span>
                   </div>
@@ -511,7 +522,7 @@ export default function CartPage() {
                   {isProcessing ? "Processing..." : `💳 Place Order - ₱${getTotal().toFixed(2)}`}
                 </Button>
 
-                <p className="text-xs text-black/70 text-center mt-3 font-semibold">
+                <p className="text-xs text-black text-center mt-3 font-semibold">
                   🔒 Secure checkout • By placing this order, you agree to our terms
                 </p>
               </CardBody>
@@ -538,7 +549,7 @@ export default function CartPage() {
             <>
               <ModalHeader className="flex flex-col gap-1 text-center pt-8">
                 <div className="text-8xl mb-4 animate-bounce-slow">🎉</div>
-                <h2 className="text-4xl font-bold bg-gradient-to-r from-sunny-yellow via-deep-orange-yellow to-sunny-yellow bg-clip-text text-transparent drop-shadow-lg">
+                <h2 className="text-4xl font-bold text-black drop-shadow-lg">
                   Order Successful!
                 </h2>
               </ModalHeader>
@@ -550,7 +561,7 @@ export default function CartPage() {
                     </p>
                     <Card className="bg-gradient-to-br from-pure-white/90 to-sunny-yellow/20 mb-6 animate-scale-in border-2 border-sunny-yellow/60 shadow-lg">
                       <CardBody className="p-8">
-                        <p className="text-black/80 text-lg mb-3 font-semibold">
+                        <p className="text-black text-lg mb-3 font-semibold">
                           Order Number
                         </p>
                         <p className="text-2xl font-bold text-black mb-6 drop-shadow-sm">
@@ -558,20 +569,20 @@ export default function CartPage() {
                         </p>
 
                         <div className="bg-gradient-to-r from-sunny-yellow to-deep-orange-yellow p-6 rounded-2xl mb-4 shadow-xl">
-                          <p className="text-black/80 text-sm mb-2 font-semibold">
+                          <p className="text-black text-sm mb-2 font-semibold">
                             Your Verification Code
                           </p>
                           <p className="text-5xl font-black text-black tracking-wider selectable drop-shadow-lg">
                             {completedOrder.verification_code || completedOrder.order_id.toString().padStart(6, '0')}
                           </p>
-                          <p className="text-black/80 text-xs mt-3 font-semibold">
+                          <p className="text-black text-xs mt-3 font-semibold">
                             📋 Please save this code
                           </p>
                         </div>
 
                         <div className="flex items-center justify-between p-4 bg-sunny-yellow/20 rounded-xl border-2 border-sunny-yellow/60 shadow-md">
                           <span className="text-black font-semibold">Total Amount</span>
-                          <span className="text-2xl font-bold bg-gradient-to-r from-deep-orange-yellow to-sunny-yellow bg-clip-text text-transparent">
+                          <span className="text-2xl font-bold text-black">
                             ₱{completedOrder.final_amount.toFixed(2)}
                           </span>
                         </div>
@@ -582,7 +593,7 @@ export default function CartPage() {
                       <p className="text-black font-semibold mb-2">
                         ✨ Your order is being prepared!
                       </p>
-                      <p className="text-black/80 text-sm">
+                      <p className="text-black text-sm">
                         Present your verification code at the counter when ready
                       </p>
                     </div>
@@ -617,7 +628,7 @@ export default function CartPage() {
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">
             <h2 className="text-2xl font-bold capitalize text-black">{paymentMethod} Payment</h2>
-            <p className="text-sm text-black/80 font-normal">
+            <p className="text-sm text-black font-normal">
               Scan this QR code with your {paymentMethod === 'gcash' ? 'GCash' : 'PayMaya'} app
             </p>
           </ModalHeader>
@@ -639,7 +650,7 @@ export default function CartPage() {
 
                 {/* Amount Display */}
                 <div className="bg-sunny-yellow/20 p-6 rounded-xl border-2 border-sunny-yellow/60 text-center shadow-md">
-                  <p className="text-sm text-black/80 mb-2 font-semibold">Amount to Pay:</p>
+                  <p className="text-sm text-black mb-2 font-semibold">Amount to Pay:</p>
                   <p className="text-4xl font-bold text-black drop-shadow-sm">
                     ₱{getTotal().toFixed(2)}
                   </p>
@@ -648,7 +659,7 @@ export default function CartPage() {
                 {/* Instructions */}
                 <div className="bg-gradient-to-br from-pure-white/90 to-sunny-yellow/10 p-4 rounded-lg border-2 border-sunny-yellow/60 shadow-md">
                   <h3 className="font-semibold text-black mb-3">Payment Instructions:</h3>
-                  <ol className="text-sm text-black/80 space-y-2 list-decimal list-inside">
+                  <ol className="text-sm text-black space-y-2 list-decimal list-inside">
                     <li>Open your {paymentMethod === 'gcash' ? 'GCash' : 'PayMaya'} app</li>
                     <li>Tap "Scan QR" in your app</li>
                     <li>Scan the QR code shown above</li>
@@ -667,8 +678,8 @@ export default function CartPage() {
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-lg text-deep-orange-yellow font-semibold">QR Code not available</p>
-                <p className="text-sm text-black/70 mt-2">
+                <p className="text-lg text-black font-semibold">QR Code not available</p>
+                <p className="text-sm text-black mt-2">
                   Please contact staff for assistance with {paymentMethod} payments
                 </p>
               </div>
@@ -677,7 +688,7 @@ export default function CartPage() {
           <ModalFooter>
             <Button
               variant="light"
-              className="text-black/70 hover:text-black font-semibold"
+              className="text-black hover:text-black font-semibold"
               onPress={onQRClose}
             >
               Cancel
