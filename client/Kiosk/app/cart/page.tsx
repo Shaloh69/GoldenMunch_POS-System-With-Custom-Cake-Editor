@@ -54,6 +54,13 @@ export default function CartPage() {
   const [loadingQR, setLoadingQR] = useState(false);
   const [showReferenceInput, setShowReferenceInput] = useState(false);
 
+  // Track failed image URLs to show emoji fallback
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+
+  const handleImageError = (imageUrl: string) => {
+    setFailedImages(prev => new Set(prev).add(imageUrl));
+  };
+
   // Fetch QR code when payment method changes to cashless
   useEffect(() => {
     if (paymentMethod === 'cashless') {
@@ -69,7 +76,8 @@ export default function CartPage() {
   const fetchQRCode = async () => {
     setLoadingQR(true);
     try {
-      const url = await SettingsService.getPaymentQR('cashless');
+      // Use 'gcash' as the default for cashless payments
+      const url = await SettingsService.getPaymentQR('gcash');
       setQrCodeUrl(url);
     } catch (error) {
       console.error('Failed to fetch cashless payment QR code:', error);
@@ -256,7 +264,7 @@ export default function CartPage() {
                     <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-pure-white/95 to-sunny-yellow/10 rounded-2xl hover:scale-[1.02] transition-all border-2 border-sunny-yellow/40 hover:border-sunny-yellow shadow-md">
                       {/* Item Image - Fixed to show actual images */}
                       <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-sunny-yellow/30 to-deep-orange-yellow/30 flex items-center justify-center flex-shrink-0 shadow-inner overflow-hidden">
-                        {item.menuItem.image_url ? (
+                        {item.menuItem.image_url && !failedImages.has(item.menuItem.image_url) ? (
                           <Image
                             src={item.menuItem.image_url}
                             alt={item.menuItem.name}
@@ -264,6 +272,7 @@ export default function CartPage() {
                             height={96}
                             className="object-cover w-full h-full"
                             unoptimized
+                            onError={() => handleImageError(item.menuItem.image_url)}
                           />
                         ) : (
                           <div className="text-5xl">
