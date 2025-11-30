@@ -223,40 +223,41 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({ selectedItem, onClos
                 <p className="text-xl text-black font-semibold">
                   Your cart is empty
                 </p>
-                <p className="text-base text-black/70 mt-2">
+                <p className="text-base text-black mt-2">
                   Select items to get started
                 </p>
               </div>
             ) : (
               <>
-                {/* Cart Items List */}
-                <div className="flex-1 overflow-y-auto mb-4 space-y-2">
+                {/* Cart Items List - Larger images, all black text */}
+                <div className="flex-1 overflow-y-auto mb-4 space-y-3">
                   {cartItems.map((cartItem) => (
-                    <Card key={cartItem.menuItem.menu_item_id} className="bg-gradient-to-r from-pure-white/90 to-sunny-yellow/10 backdrop-blur-sm border-2 border-sunny-yellow/40">
-                      <CardBody className="p-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-16 h-16 bg-gradient-to-br from-sunny-yellow/20 to-deep-orange-yellow/20 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <Card key={cartItem.menuItem.menu_item_id} className="bg-gradient-to-r from-pure-white/90 to-sunny-yellow/10 backdrop-blur-sm border-3 border-sunny-yellow/40 shadow-md">
+                      <CardBody className="p-4">
+                        <div className="flex items-center gap-4">
+                          <div className="w-20 h-20 bg-gradient-to-br from-sunny-yellow/20 to-deep-orange-yellow/20 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                             {getImageUrl(cartItem.menuItem.image_url) ? (
                               <Image
                                 src={getImageUrl(cartItem.menuItem.image_url) || ''}
                                 alt={cartItem.menuItem.name}
-                                width={64}
-                                height={64}
+                                width={80}
+                                height={80}
                                 className="object-cover w-full h-full"
+                                unoptimized
                               />
                             ) : (
-                              <span className="text-3xl">🍰</span>
+                              <span className="text-4xl">🍰</span>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <h4 className="text-base font-bold text-black truncate">
+                            <h4 className="text-lg font-bold text-black truncate leading-tight">
                               {cartItem.menuItem.name}
                             </h4>
-                            <p className="text-sm text-black/70">
+                            <p className="text-base text-black font-semibold mt-1">
                               {cartItem.quantity} × ${(Number(cartItem.menuItem.current_price) || 0).toFixed(2)}
                             </p>
                           </div>
-                          <div className="text-lg font-bold text-black">
+                          <div className="text-xl font-black text-black">
                             ${((Number(cartItem.menuItem.current_price) || 0) * cartItem.quantity).toFixed(2)}
                           </div>
                         </div>
@@ -265,11 +266,11 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({ selectedItem, onClos
                   ))}
                 </div>
 
-                {/* Total */}
+                {/* Total - All black text */}
                 <div className="border-t-2 border-sunny-yellow pt-4 mb-4 bg-gradient-to-r from-sunny-yellow/15 to-deep-orange-yellow/10 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-2xl font-bold text-black">Total:</span>
-                    <span className="text-3xl font-black text-black drop-shadow-sm">
+                    <span className="text-3xl font-black text-black">
                       ${total.toFixed(2)}
                     </span>
                   </div>
