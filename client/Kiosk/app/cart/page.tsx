@@ -15,6 +15,7 @@ import { useCart } from '@/contexts/CartContext';
 import { OrderService } from '@/services/order.service';
 import { printerService } from '@/services/printer.service';
 import { SettingsService } from '@/services/settings.service';
+import { getImageUrl } from '@/utils/imageUtils';
 import type {
   OrderType,
   OrderSource,
@@ -264,9 +265,9 @@ export default function CartPage() {
                     <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-pure-white/95 to-sunny-yellow/10 rounded-2xl hover:scale-[1.02] transition-all border-2 border-sunny-yellow/40 hover:border-sunny-yellow shadow-md">
                       {/* Item Image - Fixed to show actual images */}
                       <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-sunny-yellow/30 to-deep-orange-yellow/30 flex items-center justify-center flex-shrink-0 shadow-inner overflow-hidden">
-                        {item.menuItem.image_url && !failedImages.has(item.menuItem.image_url) ? (
+                        {getImageUrl(item.menuItem.image_url) && !failedImages.has(item.menuItem.image_url) ? (
                           <Image
-                            src={item.menuItem.image_url}
+                            src={getImageUrl(item.menuItem.image_url) || ''}
                             alt={item.menuItem.name}
                             width={96}
                             height={96}
@@ -680,7 +681,7 @@ export default function CartPage() {
                 <div className="flex justify-center">
                   <div className="relative w-full max-w-md aspect-square bg-pure-white rounded-xl p-6 shadow-lg border-4 border-sunny-yellow">
                     <Image
-                      src={qrCodeUrl}
+                      src={getImageUrl(qrCodeUrl) || qrCodeUrl || ''}
                       alt={`${paymentMethod.toUpperCase()} QR Code`}
                       fill
                       className="object-contain p-4"
