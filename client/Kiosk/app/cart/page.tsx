@@ -399,13 +399,26 @@ export default function CartPage() {
                     label: "text-black font-semibold",
                     value: "text-black font-semibold",
                     trigger: "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm text-black",
-                    listboxWrapper: "text-black",
-                    popoverContent: "text-black"
+                    listboxWrapper: "bg-white",
+                    listbox: "bg-white",
+                    popoverContent: "bg-white"
+                  }}
+                  listboxProps={{
+                    itemClasses: {
+                      base: "text-black data-[hover=true]:bg-sunny-yellow/20 data-[hover=true]:text-black data-[selected=true]:text-black",
+                      title: "text-black font-semibold"
+                    }
                   }}
                 >
-                  <SelectItem key="dine_in" value="dine_in" className="text-black">🍽️ Dine In</SelectItem>
-                  <SelectItem key="takeout" value="takeout" className="text-black">🚗 Takeout</SelectItem>
-                  <SelectItem key="delivery" value="delivery" className="text-black">🚚 Delivery</SelectItem>
+                  <SelectItem key="dine_in" value="dine_in" textValue="Dine In">
+                    <span className="text-black font-semibold">🍽️ Dine In</span>
+                  </SelectItem>
+                  <SelectItem key="takeout" value="takeout" textValue="Takeout">
+                    <span className="text-black font-semibold">🚗 Takeout</span>
+                  </SelectItem>
+                  <SelectItem key="delivery" value="delivery" textValue="Delivery">
+                    <span className="text-black font-semibold">🚚 Delivery</span>
+                  </SelectItem>
                 </Select>
                 <Select
                   label="Payment Method"
@@ -418,12 +431,23 @@ export default function CartPage() {
                     label: "text-black font-semibold",
                     value: "text-black font-semibold",
                     trigger: "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm text-black",
-                    listboxWrapper: "text-black",
-                    popoverContent: "text-black"
+                    listboxWrapper: "bg-white",
+                    listbox: "bg-white",
+                    popoverContent: "bg-white"
+                  }}
+                  listboxProps={{
+                    itemClasses: {
+                      base: "text-black data-[hover=true]:bg-sunny-yellow/20 data-[hover=true]:text-black data-[selected=true]:text-black",
+                      title: "text-black font-semibold"
+                    }
                   }}
                 >
-                  <SelectItem key="cash" value="cash" className="text-black">💵 Cash Payment</SelectItem>
-                  <SelectItem key="cashless" value="cashless" className="text-black">📱 Cashless Payment (GCash, PayMaya, Bank)</SelectItem>
+                  <SelectItem key="cash" value="cash" textValue="Cash Payment">
+                    <span className="text-black font-semibold">💵 Cash Payment</span>
+                  </SelectItem>
+                  <SelectItem key="cashless" value="cashless" textValue="Cashless Payment">
+                    <span className="text-black font-semibold">📱 Cashless Payment (GCash, PayMaya, Bank)</span>
+                  </SelectItem>
                 </Select>
 
                 {/* Show QR code and reference number input for cashless payments */}
