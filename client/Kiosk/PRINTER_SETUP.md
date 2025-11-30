@@ -32,7 +32,15 @@ npm install
 
 This installs:
 - `escpos` - ESC/POS printer library
+- `escpos-usb` - USB adapter for escpos
+- `escpos-network` - Network adapter for escpos
+- `escpos-serialport` - Serial port adapter for escpos
 - `serialport` - For serial/USB communication
+
+**Important**: If you get errors about missing adapter packages, run:
+```bash
+npm install escpos-usb escpos-network escpos-serialport --save
+```
 
 ### 2. Find Your Printer's USB IDs
 
@@ -253,6 +261,23 @@ window.electron.printer.printTest()
 ```
 
 ## Troubleshooting
+
+### Error: "usb.on is not a function"
+
+This error occurs when the `escpos-usb` package is not installed.
+
+**Solution:**
+```bash
+cd client/Kiosk
+npm install escpos-usb escpos-network escpos-serialport --save
+```
+
+The packages have been added to `package.json`, so a fresh `npm install` should resolve this.
+
+**What went wrong:**
+- The base `escpos` package doesn't include adapter packages by default
+- USB, Network, and Serial adapters must be installed separately
+- The code now includes better error handling to identify missing adapters
 
 ### Printer Not Found
 

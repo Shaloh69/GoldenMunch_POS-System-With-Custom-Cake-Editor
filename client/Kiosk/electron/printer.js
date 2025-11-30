@@ -41,21 +41,40 @@ class ThermalPrinterService {
     try {
       if (this.config.type === 'usb') {
         // USB Printer
-        escpos.USB = require('escpos-usb');
-        this.device = new escpos.USB(this.config.vid, this.config.pid);
+        try {
+          const USB = require('escpos-usb');
+          escpos.USB = USB;
+          this.device = new escpos.USB(this.config.vid, this.config.pid);
+        } catch (usbError) {
+          throw new Error(`USB adapter not available: ${usbError.message}. Please install 'escpos-usb' package.`);
+        }
       } else if (this.config.type === 'network') {
         // Network Printer
-        escpos.Network = require('escpos-network');
-        this.device = new escpos.Network(this.config.address, this.config.port);
+        try {
+          const Network = require('escpos-network');
+          escpos.Network = Network;
+          this.device = new escpos.Network(this.config.address, this.config.port);
+        } catch (netError) {
+          throw new Error(`Network adapter not available: ${netError.message}. Please install 'escpos-network' package.`);
+        }
       } else if (this.config.type === 'serial') {
         // Serial Port Printer
-        escpos.Serial = require('escpos-serialport');
-        const serialAdapter = new SerialPort({
-          path: this.config.serialPath,
-          baudRate: this.config.baudRate,
-          autoOpen: false
-        });
-        this.device = new escpos.Serial(serialAdapter);
+        try {
+          const Serial = require('escpos-serialport');
+          escpos.Serial = Serial;
+          const serialAdapter = new SerialPort({
+            path: this.config.serialPath,
+            baudRate: this.config.baudRate,
+            autoOpen: false
+          });
+          this.device = new escpos.Serial(serialAdapter);
+        } catch (serialError) {
+          throw new Error(`Serial adapter not available: ${serialError.message}. Please install 'escpos-serialport' package.`);
+        }
+      }
+
+      if (!this.device) {
+        throw new Error('No printer device configured. Please check printer configuration.');
       }
 
       this.printer = new escpos.Printer(this.device, {
@@ -64,15 +83,19 @@ class ThermalPrinterService {
       });
 
       return new Promise((resolve, reject) => {
-        this.device.open((error) => {
-          if (error) {
-            console.error('Failed to connect to printer:', error);
-            reject(error);
-          } else {
-            console.log('Printer connected successfully');
-            resolve(true);
-          }
-        });
+        try {
+          this.device.open((error) => {
+            if (error) {
+              console.error('Failed to connect to printer:', error);
+              reject(new Error(`Printer connection failed: ${error.message}. Check USB cable and printer power.`));
+            } else {
+              console.log('Printer connected successfully');
+              resolve(true);
+            }
+          });
+        } catch (openError) {
+          reject(new Error(`Failed to open printer device: ${openError.message}`));
+        }
       });
     } catch (error) {
       console.error('Error connecting to printer:', error);
