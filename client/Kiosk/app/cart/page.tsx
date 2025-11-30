@@ -396,9 +396,11 @@ export default function CartPage() {
                   size="lg"
                   variant="bordered"
                   classNames={{
-                    label: "text-black font-semibold",
-                    value: "text-black font-semibold",
-                    trigger: "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm text-black",
+                    label: "!text-black font-semibold",
+                    value: "!text-black !font-semibold",
+                    innerWrapper: "!text-black",
+                    trigger: "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm !text-black",
+                    selectorIcon: "text-black",
                     listboxWrapper: "bg-white",
                     listbox: "bg-white",
                     popoverContent: "bg-white"
@@ -428,9 +430,11 @@ export default function CartPage() {
                   size="lg"
                   variant="bordered"
                   classNames={{
-                    label: "text-black font-semibold",
-                    value: "text-black font-semibold",
-                    trigger: "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm text-black",
+                    label: "!text-black font-semibold",
+                    value: "!text-black !font-semibold",
+                    innerWrapper: "!text-black",
+                    trigger: "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm !text-black",
+                    selectorIcon: "text-black",
                     listboxWrapper: "bg-white",
                     listbox: "bg-white",
                     popoverContent: "bg-white"
