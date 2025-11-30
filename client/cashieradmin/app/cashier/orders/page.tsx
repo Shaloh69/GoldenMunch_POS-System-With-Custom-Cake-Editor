@@ -226,6 +226,7 @@ export default function CashierOrdersPage() {
                 <TableColumn>VERIFICATION CODE</TableColumn>
                 <TableColumn>TYPE</TableColumn>
                 <TableColumn>PAYMENT</TableColumn>
+                <TableColumn>REFERENCE #</TableColumn>
                 <TableColumn>AMOUNT</TableColumn>
                 <TableColumn>STATUS</TableColumn>
                 <TableColumn>DATE</TableColumn>
@@ -252,6 +253,15 @@ export default function CashierOrdersPage() {
                           {order.payment_status}
                         </Chip>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      {order.gcash_reference_number || order.paymaya_reference_number ? (
+                        <code className="text-xs bg-default-100 px-2 py-1 rounded">
+                          {order.gcash_reference_number || order.paymaya_reference_number}
+                        </code>
+                      ) : (
+                        <span className="text-xs text-default-400">—</span>
+                      )}
                     </TableCell>
                     <TableCell>₱{Number(order.final_amount || 0).toFixed(2)}</TableCell>
                     <TableCell>

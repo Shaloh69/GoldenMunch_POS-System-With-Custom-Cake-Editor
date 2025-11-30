@@ -62,9 +62,9 @@ export default function CartPage() {
     setFailedImages(prev => new Set(prev).add(imageUrl));
   };
 
-  // Fetch QR code when payment method changes to GCash
+  // Fetch QR code when payment method changes to GCash or PayMaya
   useEffect(() => {
-    if (paymentMethod === 'gcash') {
+    if (paymentMethod === 'gcash' || paymentMethod === 'paymaya') {
       fetchQRCode();
       setShowReferenceInput(false);
     } else {
@@ -77,11 +77,11 @@ export default function CartPage() {
   const fetchQRCode = async () => {
     setLoadingQR(true);
     try {
-      // Use 'gcash' as the default for cashless payments
-      const url = await SettingsService.getPaymentQR('gcash');
+      // Fetch QR code for the selected payment method
+      const url = await SettingsService.getPaymentQR(paymentMethod as 'gcash' | 'paymaya');
       setQrCodeUrl(url);
     } catch (error) {
-      console.error('Failed to fetch cashless payment QR code:', error);
+      console.error(`Failed to fetch ${paymentMethod} payment QR code:`, error);
       setQrCodeUrl(null);
     } finally {
       setLoadingQR(false);
@@ -120,9 +120,10 @@ export default function CartPage() {
     setIsProcessing(true);
     setError(null);
 
-    // Validate reference number for GCash payments
-    if (paymentMethod === 'gcash' && !referenceNumber.trim()) {
-      setError('Please enter your GCash reference number');
+    // Validate reference number for GCash and PayMaya payments
+    if ((paymentMethod === 'gcash' || paymentMethod === 'paymaya') && !referenceNumber.trim()) {
+      const methodName = paymentMethod === 'gcash' ? 'GCash' : 'PayMaya';
+      setError(`Please enter your ${methodName} reference number`);
       setIsProcessing(false);
       return;
     }
@@ -462,10 +463,13 @@ export default function CartPage() {
                   <SelectItem key="gcash" value="gcash" textValue="GCash Payment">
                     <span className="text-black font-semibold">📱 GCash Payment</span>
                   </SelectItem>
+                  <SelectItem key="paymaya" value="paymaya" textValue="PayMaya Payment">
+                    <span className="text-black font-semibold">💳 PayMaya Payment</span>
+                  </SelectItem>
                 </Select>
 
-                {/* Show QR code and reference number input for GCash payments */}
-                {paymentMethod === 'gcash' && (
+                {/* Show QR code and reference number input for GCash and PayMaya payments */}
+                {(paymentMethod === 'gcash' || paymentMethod === 'paymaya') && (
                   <div className="space-y-4">
                     {/* Show QR Code Button */}
                     {!showReferenceInput && (
