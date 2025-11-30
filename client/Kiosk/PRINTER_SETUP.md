@@ -23,7 +23,18 @@ The GoldenMunch Kiosk Electron app now includes thermal receipt printer support 
 
 ### 1. Install Dependencies
 
-The printer packages are already added to `package.json`:
+**IMPORTANT - Windows Users**: The `usb` package requires native compilation. You need to install build tools first:
+
+```bash
+# On Windows (run as Administrator)
+npm install --global windows-build-tools
+
+# OR install Visual Studio Build Tools manually
+# Download from: https://visualstudio.microsoft.com/downloads/
+# Select "Desktop development with C++"
+```
+
+**For all platforms**, install dependencies:
 
 ```bash
 cd client/Kiosk
@@ -35,11 +46,17 @@ This installs:
 - `escpos-usb` - USB adapter for escpos (v3.0.0-alpha.4)
 - `escpos-network` - Network adapter for escpos (v3.0.0-alpha.5)
 - `escpos-serialport` - Serial port adapter for escpos (v3.0.0-alpha.4)
+- `usb` - USB device library (requires native compilation)
 - `serialport` - For serial/USB communication
 
-**Important**: If you get errors about missing adapter packages, run:
+**If you get compilation errors on Windows:**
+1. Make sure you have Visual Studio Build Tools installed
+2. Try using `npm install --legacy-peer-deps`
+3. Or use Network printer instead of USB (see configuration below)
+
+**If you get errors about missing adapter packages:**
 ```bash
-npm install escpos-usb escpos-network escpos-serialport --save
+npm install escpos-usb escpos-network escpos-serialport usb --save
 ```
 
 ### 2. Find Your Printer's USB IDs
@@ -264,20 +281,47 @@ window.electron.printer.printTest()
 
 ### Error: "usb.on is not a function"
 
-This error occurs when the `escpos-usb` package is not installed.
+This error occurs when the `usb` or `escpos-usb` packages are not installed or failed to compile.
 
-**Solution:**
-```bash
-cd client/Kiosk
-npm install escpos-usb escpos-network escpos-serialport --save
+**Quick Fix - Use Network Printer Instead:**
+If you're having USB issues, switch to a network printer:
+```json
+// In printer-config.json
+{
+  "printerType": "network",
+  "network": {
+    "address": "192.168.1.100",
+    "port": 9100
+  }
+}
 ```
 
-The packages have been added to `package.json`, so a fresh `npm install` should resolve this.
+**Solution for USB:**
+1. **On Windows** - Install build tools first:
+   ```bash
+   npm install --global windows-build-tools
+   ```
+
+2. **Install packages:**
+   ```bash
+   cd client/Kiosk
+   npm install
+   ```
+
+3. **If still failing** - Try with legacy peer deps:
+   ```bash
+   npm install --legacy-peer-deps
+   ```
 
 **What went wrong:**
+- The `usb` package requires native compilation (C++ bindings)
+- On Windows, this needs Visual Studio Build Tools
 - The base `escpos` package doesn't include adapter packages by default
 - USB, Network, and Serial adapters must be installed separately
 - The code now includes better error handling to identify missing adapters
+
+**Alternative - Network Printer:**
+Network printers don't require native compilation and are easier to set up. Most modern thermal printers support network connectivity.
 
 ### Printer Not Found
 
