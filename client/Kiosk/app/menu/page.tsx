@@ -175,8 +175,8 @@ export default function MenuPage() {
         <div className="max-w-full mx-auto px-4">
           {/* Horizontal Scrollable Categories */}
           {categories.length > 0 && (
-            <div className="mb-4 -mx-4 px-4">
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory">
+            <div className="mb-4 -mx-4 px-4 overflow-hidden">
+              <div className="flex flex-nowrap gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory touch-pan-x">
                 <Button
                   size="sm"
                   className={`
