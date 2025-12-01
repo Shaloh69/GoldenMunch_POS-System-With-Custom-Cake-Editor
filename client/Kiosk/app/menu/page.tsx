@@ -144,50 +144,47 @@ export default function MenuPage() {
 
   return (
     <>
-      <div className="min-h-screen pr-[35vw] max-pr-[500px] pt-20">
-        {/* Header - Portrait optimized */}
-        <div className="sticky top-0 z-40 bg-gradient-to-br from-sunny-yellow/25 via-pure-white/20 to-deep-orange-yellow/25 backdrop-blur-sm border-b-4 border-sunny-yellow py-8 px-8 mb-8 shadow-lg">
+      <div className="min-h-screen pr-[35vw] max-pr-[500px] pt-16">
+        {/* Compact Header */}
+        <div className="sticky top-0 z-40 bg-gradient-to-br from-sunny-yellow/25 via-pure-white/20 to-deep-orange-yellow/25 backdrop-blur-sm border-b-2 border-sunny-yellow py-3 px-4 mb-4 shadow-md">
           <div className="max-w-full mx-auto">
-            {/* Title */}
-            <div className="text-center mb-6">
-              <h1 className="text-6xl font-black text-black drop-shadow-lg mb-2">
+            {/* Compact Title */}
+            <div className="text-center mb-2">
+              <h1 className="text-3xl font-black text-black drop-shadow-md">
                 Golden Munch
               </h1>
-              <p className="text-2xl text-black font-bold">
-                Fresh • Delicious • Made with Love
-              </p>
             </div>
 
-            {/* Search Bar - Larger for touch */}
+            {/* Compact Search Bar */}
             <div className="max-w-full mx-auto">
               <Input
-                placeholder="Search for delicious treats..."
+                placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                size="lg"
-                startContent={<span className="text-4xl">🔍</span>}
+                size="sm"
+                startContent={<span className="text-xl">🔍</span>}
                 classNames={{
-                  input: "text-2xl py-5 text-black",
-                  inputWrapper: "bg-gradient-to-r from-pure-white/95 to-sunny-yellow/10 backdrop-blur-md shadow-lg border-3 border-sunny-yellow/60 hover:border-sunny-yellow hover:shadow-xl transition-all min-h-[88px] touch-target"
+                  input: "text-base py-2 text-black",
+                  inputWrapper: "bg-gradient-to-r from-pure-white/95 to-sunny-yellow/10 backdrop-blur-md shadow-md border-2 border-sunny-yellow/60 hover:border-sunny-yellow hover:shadow-lg transition-all min-h-[48px]"
                 }}
               />
             </div>
           </div>
         </div>
 
-        <div className="max-w-full mx-auto px-8">
-          {/* Categories - Touch optimized */}
+        <div className="max-w-full mx-auto px-4">
+          {/* Horizontal Scrollable Categories */}
           {categories.length > 0 && (
-            <div className="mb-8">
-              <div className="flex flex-wrap gap-5 justify-center">
+            <div className="mb-4 -mx-4 px-4">
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory">
                 <Button
-                  size="lg"
+                  size="sm"
                   className={`
                     ${selectedCategory === null
-                      ? 'bg-gradient-to-br from-sunny-yellow to-deep-orange-yellow text-black scale-105 shadow-xl shadow-sunny-yellow/40'
-                      : 'bg-gradient-to-br from-pure-white/80 to-sunny-yellow/10 backdrop-blur-sm border-2 border-sunny-yellow/50 text-black hover:border-sunny-yellow hover:shadow-lg'
+                      ? 'bg-gradient-to-br from-sunny-yellow to-deep-orange-yellow text-black shadow-lg'
+                      : 'bg-gradient-to-br from-pure-white/80 to-sunny-yellow/10 backdrop-blur-sm border-2 border-sunny-yellow/50 text-black'
                     }
-                    font-bold text-2xl px-12 py-8 rounded-2xl transition-all touch-target-lg
+                    font-bold text-base px-6 py-4 rounded-xl transition-all whitespace-nowrap flex-shrink-0 snap-start
                   `}
                   onClick={() => setSelectedCategory(null)}
                 >
@@ -196,13 +193,13 @@ export default function MenuPage() {
                 {categories.map((category) => (
                   <Button
                     key={category.category_id}
-                    size="lg"
+                    size="sm"
                     className={`
                       ${selectedCategory === category.category_id
-                        ? 'bg-gradient-to-br from-sunny-yellow to-deep-orange-yellow text-black scale-105 shadow-xl shadow-sunny-yellow/40'
-                        : 'bg-gradient-to-br from-pure-white/80 to-sunny-yellow/10 backdrop-blur-sm border-2 border-sunny-yellow/50 text-black hover:border-sunny-yellow hover:shadow-lg'
+                        ? 'bg-gradient-to-br from-sunny-yellow to-deep-orange-yellow text-black shadow-lg'
+                        : 'bg-gradient-to-br from-pure-white/80 to-sunny-yellow/10 backdrop-blur-sm border-2 border-sunny-yellow/50 text-black'
                       }
-                      font-bold text-2xl px-12 py-8 rounded-2xl transition-all touch-target-lg
+                      font-bold text-base px-6 py-4 rounded-xl transition-all whitespace-nowrap flex-shrink-0 snap-start
                     `}
                     onClick={() => setSelectedCategory(category.category_id)}
                   >
@@ -215,13 +212,13 @@ export default function MenuPage() {
 
           {/* Menu Items - 2 Column Portrait Grid */}
           {filteredItems.length === 0 ? (
-            <Card className="bg-gradient-to-br from-pure-white/90 via-sunny-yellow/10 to-deep-orange-yellow/15 backdrop-blur-lg border-2 border-sunny-yellow/60 shadow-xl">
-              <CardBody className="text-center py-24">
-                <div className="text-[120px] mb-8 animate-float drop-shadow-xl">🍽️</div>
-                <h3 className="text-5xl font-bold text-black mb-6">
+            <Card className="bg-gradient-to-br from-pure-white/90 via-sunny-yellow/10 to-deep-orange-yellow/15 backdrop-blur-lg border-2 border-sunny-yellow/60 shadow-lg">
+              <CardBody className="text-center py-12">
+                <div className="text-6xl mb-4 animate-float drop-shadow-lg">🍽️</div>
+                <h3 className="text-3xl font-bold text-black mb-3">
                   No items found
                 </h3>
-                <p className="text-2xl text-black mb-10">
+                <p className="text-lg text-black mb-6">
                   {searchQuery
                     ? `No results for "${searchQuery}"`
                     : "No items available right now."
@@ -229,8 +226,8 @@ export default function MenuPage() {
                 </p>
                 {(searchQuery || selectedCategory !== null) && (
                   <Button
-                    size="lg"
-                    className="bg-gradient-to-r from-sunny-yellow to-deep-orange-yellow text-black font-bold text-2xl px-12 py-8 touch-target-lg shadow-xl hover:scale-105 transition-all"
+                    size="md"
+                    className="bg-gradient-to-r from-sunny-yellow to-deep-orange-yellow text-black font-bold text-base px-6 py-4 shadow-lg hover:scale-105 transition-all"
                     onClick={() => {
                       setSearchQuery('');
                       setSelectedCategory(null);
@@ -243,14 +240,14 @@ export default function MenuPage() {
             </Card>
           ) : (
             <>
-              <div className="mb-8 text-center">
-                <h2 className="text-4xl font-bold text-black">
-                  {filteredItems.length} Delicious {filteredItems.length === 1 ? 'Item' : 'Items'}
+              <div className="mb-3 text-center">
+                <h2 className="text-xl font-bold text-black">
+                  {filteredItems.length} {filteredItems.length === 1 ? 'Item' : 'Items'}
                 </h2>
               </div>
 
-              {/* 2 Column Grid - Portrait 21-inch optimized */}
-              <div className="grid grid-cols-2 gap-8 pb-16">
+              {/* 2 Column Grid - Compact spacing */}
+              <div className="grid grid-cols-2 gap-4 pb-8">
                 {filteredItems.map((item) => (
                   <MenuCard
                     key={item.menu_item_id}
