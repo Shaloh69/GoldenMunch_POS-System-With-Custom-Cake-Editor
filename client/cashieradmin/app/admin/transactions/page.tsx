@@ -316,11 +316,11 @@ export default function TransactionsPage() {
               onChange={(e) => setPaymentMethodFilter(e.target.value)}
               size="sm"
             >
-              <SelectItem key="all" value="all">All Methods</SelectItem>
-              <SelectItem key="cash" value="cash">Cash</SelectItem>
-              <SelectItem key="cashless" value="cashless">Cashless</SelectItem>
-              <SelectItem key="gcash" value="gcash">GCash</SelectItem>
-              <SelectItem key="paymaya" value="paymaya">PayMaya</SelectItem>
+              <SelectItem key="all">All Methods</SelectItem>
+              <SelectItem key="cash">Cash</SelectItem>
+              <SelectItem key="cashless">Cashless</SelectItem>
+              <SelectItem key="gcash">GCash</SelectItem>
+              <SelectItem key="paymaya">PayMaya</SelectItem>
             </Select>
 
             <Select
@@ -329,10 +329,10 @@ export default function TransactionsPage() {
               onChange={(e) => setPaymentStatusFilter(e.target.value)}
               size="sm"
             >
-              <SelectItem key="all" value="all">All Status</SelectItem>
-              <SelectItem key="paid" value="paid">Paid</SelectItem>
-              <SelectItem key="pending" value="pending">Pending</SelectItem>
-              <SelectItem key="refunded" value="refunded">Refunded</SelectItem>
+              <SelectItem key="all">All Status</SelectItem>
+              <SelectItem key="paid">Paid</SelectItem>
+              <SelectItem key="pending">Pending</SelectItem>
+              <SelectItem key="refunded">Refunded</SelectItem>
             </Select>
 
             <Input
