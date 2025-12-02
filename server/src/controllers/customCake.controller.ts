@@ -7,6 +7,8 @@ import { getFirstRow, getInsertId } from '../utils/typeGuards';
 import QRCode from 'qrcode';
 import crypto from 'crypto';
 import mysql from 'mysql2/promise';
+import { emailService } from '../services/email.service';
+import { capacityService } from '../services/capacity.service';
 
 // ============================================================================
 // TYPES
@@ -554,6 +556,11 @@ export const submitForReview = async (req: AuthRequest, res: Response) => {
     );
   });
 
+  // Send admin notification email (async, don't wait for it)
+  emailService.notifyAdminNewRequest(request_id).catch((error) => {
+    console.error('Failed to send admin notification email:', error);
+  });
+
   res.json(successResponse('Request submitted for review'));
 };
 
@@ -628,6 +635,15 @@ export const approveRequest = async (req: AuthRequest, res: Response) => {
     throw new AppError('Approved price, preparation days, and pickup date are required', 400);
   }
 
+  // Check capacity availability
+  const availability = await capacityService.checkDateAvailability(scheduled_pickup_date);
+  if (!availability.available) {
+    throw new AppError(
+      `Selected pickup date is fully booked (${availability.currentOrders}/${availability.maxOrders} orders). Please choose another date.`,
+      400
+    );
+  }
+
   await transaction(async (conn: mysql.PoolConnection) => {
     // Update request
     await conn.query(
@@ -674,6 +690,14 @@ export const approveRequest = async (req: AuthRequest, res: Response) => {
         ]
       );
     }
+  });
+
+  // Reserve capacity slot for the pickup date
+  await capacityService.reserveSlot(scheduled_pickup_date);
+
+  // Process pending notifications (send approval email)
+  emailService.processPendingNotifications().catch((error) => {
+    console.error('Failed to send approval notification:', error);
   });
 
   res.json(successResponse('Request approved successfully'));
@@ -731,6 +755,11 @@ export const rejectRequest = async (req: AuthRequest, res: Response) => {
         ]
       );
     }
+  });
+
+  // Process pending notifications (send rejection email)
+  emailService.processPendingNotifications().catch((error) => {
+    console.error('Failed to send rejection notification:', error);
   });
 
   res.json(successResponse('Request rejected'));
@@ -887,6 +916,11 @@ export const processPayment = async (req: AuthRequest, res: Response) => {
     }
 
     return newOrderId;
+  });
+
+  // Process pending notifications (send payment confirmation email)
+  emailService.processPendingNotifications().catch((error) => {
+    console.error('Failed to send payment confirmation notification:', error);
   });
 
   res.json(successResponse('Payment processed successfully', { order_id: orderId }));

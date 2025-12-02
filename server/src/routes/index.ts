@@ -17,6 +17,7 @@ import * as promotionController from '../controllers/promotion.controller';
 import * as customCakeSessionController from '../controllers/customCakeSession.controller';
 import * as customCakeController from '../controllers/customCake.controller';
 import * as paymentQRController from '../controllers/paymentQR.controller';
+import * as capacityController from '../controllers/capacity.controller';
 
 const router = Router();
 
@@ -567,6 +568,19 @@ router.get('/admin/custom-cakes/pending', authenticateAdmin, asyncHandler(custom
 router.get('/admin/custom-cakes/:requestId', authenticateAdmin, asyncHandler(customCakeController.getRequestDetails));
 router.post('/admin/custom-cakes/:requestId/approve', authenticateAdmin, asyncHandler(customCakeController.approveRequest));
 router.post('/admin/custom-cakes/:requestId/reject', authenticateAdmin, asyncHandler(customCakeController.rejectRequest));
+
+// Capacity Management (Admin)
+router.get('/admin/capacity/available-dates', authenticateAdmin, asyncHandler(capacityController.getAvailableDates));
+router.get('/admin/capacity/check/:date', authenticateAdmin, asyncHandler(capacityController.checkDateCapacity));
+router.post('/admin/capacity/set', authenticateAdmin, asyncHandler(capacityController.setDateCapacity));
+router.post('/admin/capacity/block', authenticateAdmin, asyncHandler(capacityController.blockDate));
+router.post('/admin/capacity/unblock', authenticateAdmin, asyncHandler(capacityController.unblockDate));
+router.get('/admin/capacity/overview', authenticateAdmin, asyncHandler(capacityController.getCapacityOverview));
+router.post('/admin/capacity/sync', authenticateAdmin, asyncHandler(capacityController.syncCapacity));
+
+// Capacity Utilities (Public/Customer facing)
+router.get('/capacity/suggest', asyncHandler(capacityController.suggestPickupDates));
+router.post('/capacity/calculate-prep-days', asyncHandler(capacityController.calculatePreparationDays));
 
 // Kiosk Settings
 router.get('/admin/kiosk-settings', authenticateAdmin, asyncHandler(additionalController.getKioskSettings));
