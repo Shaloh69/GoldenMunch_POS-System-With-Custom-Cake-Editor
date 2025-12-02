@@ -166,7 +166,6 @@ export default function CartPage() {
     setSpecialInstructions("");
     setOrderType('takeout');
     setPaymentMethod('cash');
-    setReferenceNumber("");
     setCompletedOrder(null);
     onOpenChange();
     router.push('/');
@@ -627,11 +626,12 @@ export default function CartPage() {
                 <div className="flex justify-center">
                   <div className="relative w-full max-w-md aspect-square bg-pure-white rounded-xl p-6 shadow-lg border-4 border-sunny-yellow">
                     <Image
-                      src={getImageUrl(qrCodeUrl) || qrCodeUrl || ''}
+                      src={getImageUrl(qrCodeUrl) || ''}
                       alt={`${paymentMethod.toUpperCase()} QR Code`}
                       fill
                       className="object-contain p-4"
                       priority
+                      unoptimized
                     />
                   </div>
                 </div>
