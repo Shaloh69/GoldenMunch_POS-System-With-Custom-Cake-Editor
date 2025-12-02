@@ -84,14 +84,15 @@ export default function AdminFeedbackPage() {
     try {
       const response = await FeedbackService.getFeedbackStats();
       if (response.success && response.data) {
+        const data = response.data as any;
         setStats({
-          totalFeedback: response.data.total_feedback || 0,
-          averageRating: response.data.average_rating || 0,
-          positiveCount: response.data.positive_count || 0,
-          neutralCount: response.data.neutral_count || 0,
-          negativeCount: response.data.negative_count || 0,
-          respondedCount: response.data.responded_count || 0,
-          pendingResponseCount: response.data.pending_response_count || 0,
+          totalFeedback: data.total_feedback || 0,
+          averageRating: data.average_rating || 0,
+          positiveCount: data.positive_count || 0,
+          neutralCount: data.neutral_count || 0,
+          negativeCount: data.negative_count || 0,
+          respondedCount: data.responded_count || 0,
+          pendingResponseCount: data.pending_response_count || 0,
         });
       }
     } catch (error) {
