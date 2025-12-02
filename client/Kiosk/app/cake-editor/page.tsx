@@ -2,13 +2,13 @@
 
 import { useEffect, useState, Suspense, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardBody } from '@heroui/card';
 import { Button } from '@heroui/button';
 import { Progress } from '@heroui/progress';
 import { Spinner } from '@heroui/spinner';
 import { ArrowLeftIcon, ArrowRightIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
-import CakeCanvas3D from '@/components/cake-editor/CakeCanvas3D';
 import StepCustomerInfo from '@/components/cake-editor/steps/StepCustomerInfo';
 import StepLayers from '@/components/cake-editor/steps/StepLayers';
 import StepFlavor from '@/components/cake-editor/steps/StepFlavor';
@@ -18,6 +18,16 @@ import StepDecorations from '@/components/cake-editor/steps/StepDecorations';
 import StepText from '@/components/cake-editor/steps/StepText';
 import StepReview from '@/components/cake-editor/steps/StepReview';
 import { CustomCakeService } from '@/services/customCake.service';
+
+// Dynamic import for 3D Canvas to prevent SSR issues
+const CakeCanvas3D = dynamic(() => import('@/components/cake-editor/CakeCanvas3D'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center h-96">
+      <Spinner size="lg" />
+    </div>
+  ),
+});
 
 // Design Data Interface
 export interface CakeDesign {
