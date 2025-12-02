@@ -9,6 +9,7 @@ import crypto from 'crypto';
 import mysql from 'mysql2/promise';
 import { emailService } from '../services/email.service';
 import { capacityService } from '../services/capacity.service';
+import logger from '../utils/logger';
 
 // ============================================================================
 // TYPES
