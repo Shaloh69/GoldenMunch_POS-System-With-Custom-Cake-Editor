@@ -145,7 +145,7 @@ export default function TransactionsPage() {
       new Date(t.order_datetime).toLocaleString(),
       t.payment_method,
       t.payment_status,
-      t.items?.map(item => `${item.item_name || 'Item'} x${item.quantity}`).join('; ') || 'N/A',
+      t.items?.map(item => `${(item as any).item_name || 'Item'} x${item.quantity}`).join('; ') || 'N/A',
       Number(t.total_amount || 0).toFixed(2),
       Number(t.tax_amount || 0).toFixed(2),
       Number(t.discount_amount || 0).toFixed(2),

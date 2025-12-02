@@ -9,8 +9,9 @@ export class AuthService {
     });
 
     if (response.success && response.data) {
-      localStorage.setItem('auth_token', response.data.token);
-      localStorage.setItem('auth_user', JSON.stringify(response.data.user));
+      const data = response.data as any;
+      localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('auth_user', JSON.stringify(data.user));
       return response.data;
     }
 
@@ -24,8 +25,9 @@ export class AuthService {
     });
 
     if (response.success && response.data) {
-      localStorage.setItem('auth_token', response.data.token);
-      localStorage.setItem('auth_user', JSON.stringify(response.data.user));
+      const data = response.data as any;
+      localStorage.setItem('auth_token', data.token);
+      localStorage.setItem('auth_user', JSON.stringify(data.user));
       return response.data;
     }
 

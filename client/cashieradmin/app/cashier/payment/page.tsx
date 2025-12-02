@@ -187,7 +187,7 @@ export default function PaymentPage() {
       const response = await OrderService.getOrders();
 
       if (response.success && response.data) {
-        const orders = response.data.orders || [];
+        const orders = (response.data as any).orders || [];
         const found = orders.find(
           (order: CustomerOrder) =>
             order.order_number === searchQuery.trim() ||
