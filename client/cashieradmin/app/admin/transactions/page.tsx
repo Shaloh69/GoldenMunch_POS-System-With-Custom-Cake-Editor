@@ -140,20 +140,23 @@ export default function TransactionsPage() {
       'Cashier'
     ];
 
-    const rows = filteredTransactions.map(t => [
-      t.order_number || t.order_id,
-      new Date(t.order_datetime).toLocaleString(),
-      t.payment_method,
-      t.payment_status,
-      t.items?.map(item => `${(item as any).item_name || 'Item'} x${item.quantity}`).join('; ') || 'N/A',
-      Number(t.total_amount || 0).toFixed(2),
-      Number(t.tax_amount || 0).toFixed(2),
-      Number(t.discount_amount || 0).toFixed(2),
-      Number(t.final_amount || 0).toFixed(2),
-      Number(t.amount_paid || t.final_amount || 0).toFixed(2),
-      Number(t.change_amount || 0).toFixed(2),
-      t.cashier?.name || 'N/A'
-    ]);
+    const rows = filteredTransactions.map(t => {
+      const transaction = t as any;
+      return [
+        t.order_number || t.order_id,
+        new Date(t.order_datetime).toLocaleString(),
+        t.payment_method,
+        t.payment_status,
+        t.items?.map(item => `${(item as any).item_name || 'Item'} x${item.quantity}`).join('; ') || 'N/A',
+        Number(t.total_amount || 0).toFixed(2),
+        Number(t.tax_amount || 0).toFixed(2),
+        Number(t.discount_amount || 0).toFixed(2),
+        Number(t.final_amount || 0).toFixed(2),
+        Number(transaction.amount_paid || t.final_amount || 0).toFixed(2),
+        Number(transaction.change_amount || 0).toFixed(2),
+        transaction.cashier?.name || 'N/A'
+      ];
+    });
 
     const csvContent = [
       headers.join(','),
