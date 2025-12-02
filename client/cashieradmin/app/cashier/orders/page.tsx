@@ -60,7 +60,7 @@ export default function CashierOrdersPage() {
       const response = await OrderService.getOrders(statusFilter || undefined);
       if (response.success && response.data) {
         // Server returns { orders: [...], pagination: {...} }
-        setOrders(response.data.orders || []);
+        setOrders((response.data as any).orders || []);
       }
     } catch (error) {
       console.error('Failed to load orders:', error);

@@ -51,7 +51,9 @@ export default function TransactionsPage() {
       const response = await OrderService.getOrders();
       if (response.success && response.data) {
         // Get orders data (handle both array and paginated response)
-        const orders = Array.isArray(response.data) ? response.data : response.data.orders || [];
+        const orders = Array.isArray(response.data)
+          ? response.data
+          : (response.data as any).orders || [];
 
         // Only show paid orders as transactions
         const completedOrders = orders.filter(
