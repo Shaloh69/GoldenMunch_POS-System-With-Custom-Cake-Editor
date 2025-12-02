@@ -2,6 +2,8 @@ import app from './app';
 import { testConnection } from './config/database';
 import logger from './utils/logger';
 import { logJWTDiagnostic } from './utils/jwtDiagnostic';
+import { emailService } from './services/email.service';
+import { schedulerService } from './services/scheduler.service';
 
 const PORT = process.env.PORT || 5000;
 const HOST = process.env.HOST || 'localhost';
@@ -15,6 +17,14 @@ const startServer = async () => {
 
     // Check JWT configuration
     logJWTDiagnostic();
+
+    // Initialize email service and scheduler
+    logger.info('Initializing email and scheduler services...');
+    await emailService.testConnection();
+    schedulerService.initialize();
+
+    // Process any pending notifications immediately on startup
+    await emailService.processPendingNotifications();
 
     // Start Express server
     app.listen(Number(PORT), HOST, () => {
@@ -46,11 +56,13 @@ process.on('unhandledRejection', (reason: any) => {
 // Graceful shutdown
 process.on('SIGTERM', () => {
   logger.info('SIGTERM signal received: closing HTTP server');
+  schedulerService.stopAll();
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
   logger.info('SIGINT signal received: closing HTTP server');
+  schedulerService.stopAll();
   process.exit(0);
 });
 
