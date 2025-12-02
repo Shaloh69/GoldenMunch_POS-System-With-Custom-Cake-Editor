@@ -396,6 +396,8 @@ router.post('/kiosk/custom-cake/generate-qr', asyncHandler(customCakeController.
 
 // Mobile Editor - Public Routes
 router.get('/custom-cake/session/:token', asyncHandler(customCakeController.validateSession));
+router.get('/custom-cake/session/:token/debug', asyncHandler(customCakeController.debugSession));
+router.get('/custom-cake/sessions/recent', asyncHandler(customCakeController.listRecentSessions));
 router.get('/custom-cake/options', asyncHandler(customCakeController.getDesignOptions));
 router.post('/custom-cake/save-draft', asyncHandler(customCakeController.saveDraft));
 router.post('/custom-cake/upload-images', asyncHandler(customCakeController.uploadImages));

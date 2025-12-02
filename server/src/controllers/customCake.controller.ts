@@ -143,9 +143,6 @@ export const generateQRSession = async (req: AuthRequest, res: Response) => {
   // Generate unique session token
   const sessionToken = `session-${Date.now()}-${crypto.randomBytes(8).toString('hex')}`;
 
-  // QR session expires in 30 minutes
-  const expiresAt = new Date(Date.now() + 30 * 60 * 1000);
-
   // Mobile Editor URL - served from backend server (accessible via network)
   // In production, MOBILE_EDITOR_URL or BACKEND_URL must be set
   const baseUrl = process.env.MOBILE_EDITOR_URL || process.env.BACKEND_URL;
@@ -175,11 +172,12 @@ export const generateQRSession = async (req: AuthRequest, res: Response) => {
     throw new AppError('Failed to generate QR code', 500);
   }
 
-  // Save session to database
+  // Save session to database using MySQL DATE_ADD for timezone reliability
+  // This ensures the expiry time is calculated by MySQL server, avoiding timezone issues
   await query(
     `INSERT INTO qr_code_sessions
      (session_token, qr_code_data, editor_url, kiosk_id, ip_address, user_agent, status, expires_at)
-     VALUES (?, ?, ?, ?, ?, ?, 'active', ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, 'active', DATE_ADD(NOW(), INTERVAL 30 MINUTE))`,
     [
       sessionToken,
       qrCodeDataUrl,
@@ -187,9 +185,18 @@ export const generateQRSession = async (req: AuthRequest, res: Response) => {
       kiosk_id || null,
       req.ip,
       req.headers['user-agent'] || null,
-      expiresAt,
     ]
   );
+
+  // Get the actual expires_at value from database for response
+  const [sessions] = await query<any[]>(
+    `SELECT expires_at FROM qr_code_sessions WHERE session_token = ?`,
+    [sessionToken]
+  );
+
+  const actualExpiresAt = sessions[0]?.expires_at || new Date(Date.now() + 30 * 60 * 1000);
+
+  logger.info(`✅ QR Session created: ${sessionToken.substring(0, 20)}... (expires in 30 min)`);
 
   res.json(
     successResponse('QR session created successfully', {
@@ -197,7 +204,7 @@ export const generateQRSession = async (req: AuthRequest, res: Response) => {
       qrCodeUrl: qrCodeDataUrl,
       editorUrl,
       expiresIn: 1800, // 30 minutes in seconds
-      expiresAt: expiresAt.toISOString(),
+      expiresAt: actualExpiresAt,
     })
   );
 };
@@ -213,19 +220,35 @@ export const generateQRSession = async (req: AuthRequest, res: Response) => {
 export const validateSession = async (req: AuthRequest, res: Response) => {
   const { token } = req.params;
 
+  logger.info(`📲 Validating session: ${token.substring(0, 20)}...`);
+
   const sessions = await query<any[]>(
-    `SELECT * FROM qr_code_sessions WHERE session_token = ?`,
+    `SELECT *, NOW() as server_time FROM qr_code_sessions WHERE session_token = ?`,
     [token]
   );
 
   const session = getFirstRow<QRSessionRow>(sessions);
 
   if (!session) {
+    logger.warn(`❌ Session not found: ${token.substring(0, 20)}...`);
     throw new AppError('Invalid or expired session', 404);
   }
 
-  // Check if expired
-  if (new Date(session.expires_at) < new Date()) {
+  const serverTime = new Date((session as any).server_time);
+  const expiresAt = new Date(session.expires_at);
+  const timeUntilExpiry = expiresAt.getTime() - serverTime.getTime();
+  const minutesRemaining = Math.floor(timeUntilExpiry / 60000);
+
+  logger.info(`⏰ Session time check - Server: ${serverTime.toISOString()}, Expires: ${expiresAt.toISOString()}, Remaining: ${minutesRemaining} min`);
+
+  // Check if expired using MySQL time comparison (more reliable than JavaScript)
+  const [expiryCheck] = await query<any[]>(
+    `SELECT (expires_at > NOW()) as is_valid FROM qr_code_sessions WHERE session_token = ?`,
+    [token]
+  );
+
+  if (!expiryCheck[0]?.is_valid) {
+    logger.warn(`❌ Session expired: ${token.substring(0, 20)}... (was valid for ${minutesRemaining} min)`);
     await query(
       `UPDATE qr_code_sessions SET status = 'expired' WHERE session_token = ?`,
       [token]
@@ -235,6 +258,7 @@ export const validateSession = async (req: AuthRequest, res: Response) => {
 
   // Check if already used
   if (session.status === 'used') {
+    logger.warn(`❌ Session already used: ${token.substring(0, 20)}...`);
     throw new AppError('Session already used', 410);
   }
 
@@ -244,11 +268,95 @@ export const validateSession = async (req: AuthRequest, res: Response) => {
     [token]
   );
 
+  logger.info(`✅ Session valid: ${token.substring(0, 20)}... (${minutesRemaining} min remaining)`);
+
   res.json(
     successResponse('Session is valid', {
       sessionToken: session.session_token,
       expiresAt: session.expires_at,
       status: session.status,
+      minutesRemaining: Math.max(0, minutesRemaining),
+    })
+  );
+};
+
+// ============================================================================
+// 2a. DEBUG - Get Session Info (for troubleshooting)
+// ============================================================================
+
+/**
+ * Get diagnostic information about a session
+ * GET /api/custom-cake/session/:token/debug
+ */
+export const debugSession = async (req: AuthRequest, res: Response) => {
+  const { token } = req.params;
+
+  const [sessions] = await query<any[]>(
+    `SELECT
+      session_token,
+      status,
+      created_at,
+      expires_at,
+      accessed_at,
+      used_at,
+      NOW() as server_time,
+      TIMESTAMPDIFF(MINUTE, NOW(), expires_at) as minutes_remaining,
+      (expires_at > NOW()) as is_valid,
+      kiosk_id,
+      ip_address
+     FROM qr_code_sessions
+     WHERE session_token = ?`,
+    [token]
+  );
+
+  if (sessions.length === 0) {
+    throw new AppError('Session not found', 404);
+  }
+
+  const session = sessions[0];
+
+  res.json(
+    successResponse('Session debug info', {
+      ...session,
+      diagnosis: {
+        found: true,
+        isValid: !!session.is_valid,
+        minutesRemaining: session.minutes_remaining || 0,
+        status: session.status,
+        hasBeenAccessed: !!session.accessed_at,
+        hasBeenUsed: !!session.used_at,
+      },
+    })
+  );
+};
+
+/**
+ * List recent sessions (for debugging)
+ * GET /api/custom-cake/sessions/recent
+ */
+export const listRecentSessions = async (req: AuthRequest, res: Response) => {
+  const limit = parseInt(req.query.limit as string) || 10;
+
+  const [sessions] = await query<any[]>(
+    `SELECT
+      session_id,
+      LEFT(session_token, 30) as session_token_preview,
+      status,
+      created_at,
+      expires_at,
+      TIMESTAMPDIFF(MINUTE, NOW(), expires_at) as minutes_remaining,
+      (expires_at > NOW()) as is_valid,
+      kiosk_id
+     FROM qr_code_sessions
+     ORDER BY created_at DESC
+     LIMIT ?`,
+    [limit]
+  );
+
+  res.json(
+    successResponse('Recent sessions', {
+      total: sessions.length,
+      sessions,
     })
   );
 };
