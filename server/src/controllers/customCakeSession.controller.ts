@@ -56,8 +56,8 @@ export const createCustomCakeSession = async (req: AuthRequest, res: Response) =
   // Generate unique session ID
   const sessionId = crypto.randomBytes(16).toString('hex');
 
-  // Session expires in 15 minutes
-  const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+  // Session expires in 2 hours (increased from 15 minutes to give users more time)
+  const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000);
 
   // Create session
   const session: CustomCakeSession = {

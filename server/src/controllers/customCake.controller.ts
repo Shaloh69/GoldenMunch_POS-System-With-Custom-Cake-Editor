@@ -175,10 +175,11 @@ export const generateQRSession = async (req: AuthRequest, res: Response) => {
 
   // Save session to database using MySQL DATE_ADD for timezone reliability
   // This ensures the expiry time is calculated by MySQL server, avoiding timezone issues
+  // Session expires in 2 hours (increased from 30 minutes to give users more time)
   await query(
     `INSERT INTO qr_code_sessions
      (session_token, qr_code_data, editor_url, kiosk_id, ip_address, user_agent, status, expires_at)
-     VALUES (?, ?, ?, ?, ?, ?, 'active', DATE_ADD(NOW(), INTERVAL 30 MINUTE))`,
+     VALUES (?, ?, ?, ?, ?, ?, 'active', DATE_ADD(NOW(), INTERVAL 2 HOUR))`,
     [
       sessionToken,
       qrCodeDataUrl,
@@ -195,16 +196,16 @@ export const generateQRSession = async (req: AuthRequest, res: Response) => {
     [sessionToken]
   );
 
-  const actualExpiresAt = sessions[0]?.expires_at || new Date(Date.now() + 30 * 60 * 1000);
+  const actualExpiresAt = sessions[0]?.expires_at || new Date(Date.now() + 2 * 60 * 60 * 1000);
 
-  logger.info(`✅ QR Session created: ${sessionToken.substring(0, 20)}... (expires in 30 min)`);
+  logger.info(`✅ QR Session created: ${sessionToken.substring(0, 20)}... (expires in 2 hours)`);
 
   res.json(
     successResponse('QR session created successfully', {
       sessionToken,
       qrCodeUrl: qrCodeDataUrl,
       editorUrl,
-      expiresIn: 1800, // 30 minutes in seconds
+      expiresIn: 7200, // 2 hours in seconds
       expiresAt: actualExpiresAt,
     })
   );

@@ -39,36 +39,48 @@ export default function DashboardPage() {
       setLoading(true);
       const today = new Date().toISOString().split('T')[0];
 
-      // Fetch sales analytics for today
-      const analyticsResponse = await AnalyticsService.getSalesAnalytics({
-        start_date: today,
-        end_date: today,
-      });
-
-      // Fetch recent orders
+      // Fetch orders (accessible by both admin and cashier)
       const ordersResponse = await OrderService.getOrders();
 
-      if (analyticsResponse.success && analyticsResponse.data) {
-        // Server returns array of daily stats, aggregate them
-        const dailyStats = Array.isArray(analyticsResponse.data) ? analyticsResponse.data : [analyticsResponse.data];
+      if (ordersResponse.success && ordersResponse.data) {
+        const allOrders = (ordersResponse.data as any).orders || [];
 
-        const aggregated = dailyStats.reduce((acc, day: any) => ({
-          totalOrders: acc.totalOrders + (Number(day.total_orders) || 0),
-          totalRevenue: acc.totalRevenue + (Number(day.total_revenue) || 0),
-          uniqueCustomers: acc.uniqueCustomers + (Number(day.unique_customers) || 0),
-        }), { totalOrders: 0, totalRevenue: 0, uniqueCustomers: 0 });
+        // Filter orders for today
+        const todayOrders = allOrders.filter((order: any) => {
+          const orderDate = new Date(order.order_datetime).toISOString().split('T')[0];
+          return orderDate === today;
+        });
+
+        // Calculate stats from today's orders
+        const totalRevenue = todayOrders.reduce((sum: number, order: any) => {
+          // Only count paid orders for revenue
+          if (order.payment_status === 'paid') {
+            return sum + (Number(order.final_amount) || 0);
+          }
+          return sum;
+        }, 0);
+
+        // Count unique customers (by customer_id if available)
+        const uniqueCustomerIds = new Set(
+          todayOrders
+            .filter((order: any) => order.customer_id)
+            .map((order: any) => order.customer_id)
+        );
+        const uniqueCustomers = uniqueCustomerIds.size || todayOrders.length;
+
+        // Calculate average order value
+        const paidOrdersCount = todayOrders.filter((order: any) => order.payment_status === 'paid').length;
+        const avgOrderValue = paidOrdersCount > 0 ? totalRevenue / paidOrdersCount : 0;
 
         setStats({
-          todayOrders: aggregated.totalOrders,
-          todayRevenue: aggregated.totalRevenue,
-          totalCustomers: aggregated.uniqueCustomers,
-          avgOrderValue: aggregated.totalOrders > 0 ? aggregated.totalRevenue / aggregated.totalOrders : 0,
+          todayOrders: todayOrders.length,
+          todayRevenue: totalRevenue,
+          totalCustomers: uniqueCustomers,
+          avgOrderValue: avgOrderValue,
         });
-      }
 
-      if (ordersResponse.success && ordersResponse.data) {
-        // Server returns { orders: [...], pagination: {...} }
-        setRecentOrders(((ordersResponse.data as any).orders || []).slice(0, 5));
+        // Set recent orders (all orders, not just today's)
+        setRecentOrders(allOrders.slice(0, 5));
       }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
