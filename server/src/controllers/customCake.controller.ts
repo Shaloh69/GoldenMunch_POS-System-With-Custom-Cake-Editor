@@ -148,8 +148,16 @@ export const generateQRSession = async (req: AuthRequest, res: Response) => {
   // In production, MOBILE_EDITOR_URL or BACKEND_URL must be set
   const baseUrl = process.env.MOBILE_EDITOR_URL || process.env.BACKEND_URL;
 
+  logger.info('🔧 Environment check:', {
+    NODE_ENV: process.env.NODE_ENV,
+    MOBILE_EDITOR_URL: process.env.MOBILE_EDITOR_URL,
+    BACKEND_URL: process.env.BACKEND_URL,
+    baseUrl: baseUrl,
+  });
+
   if (!baseUrl) {
     if (process.env.NODE_ENV === 'production') {
+      logger.error('❌ CRITICAL: MOBILE_EDITOR_URL or BACKEND_URL not set in production!');
       throw new AppError('MOBILE_EDITOR_URL or BACKEND_URL environment variable is required in production', 500);
     }
     // Development fallback
@@ -157,6 +165,7 @@ export const generateQRSession = async (req: AuthRequest, res: Response) => {
   }
 
   const editorUrl = `${baseUrl || 'http://localhost:3001'}/?session=${sessionToken}`;
+  logger.info('📱 Generated editor URL:', editorUrl);
 
   // Generate QR code as data URL
   let qrCodeDataUrl: string;
@@ -192,13 +201,19 @@ export const generateQRSession = async (req: AuthRequest, res: Response) => {
 
   // Get the actual expires_at value from database for response
   const [sessions] = await query<any[]>(
-    `SELECT expires_at FROM qr_code_sessions WHERE session_token = ?`,
+    `SELECT session_id, expires_at, created_at FROM qr_code_sessions WHERE session_token = ?`,
     [sessionToken]
   );
 
   const actualExpiresAt = sessions[0]?.expires_at || new Date(Date.now() + 2 * 60 * 60 * 1000);
 
   logger.info(`✅ QR Session created: ${sessionToken.substring(0, 20)}... (expires in 2 hours)`);
+  logger.info(`💾 Session saved to database:`, {
+    session_id: sessions[0]?.session_id,
+    created_at: sessions[0]?.created_at,
+    expires_at: sessions[0]?.expires_at,
+    editorUrl: editorUrl,
+  });
 
   res.json(
     successResponse('QR session created successfully', {
@@ -223,6 +238,7 @@ export const validateSession = async (req: AuthRequest, res: Response) => {
   const { token } = req.params;
 
   logger.info(`📲 Validating session: ${token.substring(0, 20)}...`);
+  logger.info(`📍 Request origin: ${req.headers.origin || 'No origin'}, IP: ${req.ip}`);
 
   const sessions = await query<any[]>(
     `SELECT *, NOW() as server_time FROM qr_code_sessions WHERE session_token = ?`,
@@ -232,7 +248,18 @@ export const validateSession = async (req: AuthRequest, res: Response) => {
   const session = getFirstRow<QRSessionRow>(sessions);
 
   if (!session) {
-    logger.warn(`❌ Session not found: ${token.substring(0, 20)}...`);
+    logger.warn(`❌ Session not found in database: ${token.substring(0, 20)}...`);
+    logger.warn(`🔍 Checking recent sessions in database...`);
+
+    // Show last 5 sessions for debugging
+    const recentSessions = await query<any[]>(
+      `SELECT session_token, status, created_at, expires_at
+       FROM qr_code_sessions
+       ORDER BY created_at DESC
+       LIMIT 5`
+    );
+    logger.info(`📊 Last 5 sessions in DB:`, recentSessions);
+
     throw new AppError('Invalid or expired session', 404);
   }
 
