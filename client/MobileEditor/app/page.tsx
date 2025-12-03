@@ -139,21 +139,31 @@ function CakeEditorContent() {
     }
 
     try {
+      console.log('🔍 Validating session token:', sessionToken.substring(0, 20) + '...');
+
       // Call real API to validate session
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/custom-cake/session/${sessionToken}`);
 
+      console.log('📡 Session validation response status:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ Session validation data:', data);
+
         if (data.success) {
           setSessionValid(true);
+          console.log('✅ Session is valid!');
         } else {
+          console.warn('❌ Session validation failed:', data);
           setSessionValid(false);
         }
       } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('❌ Session validation HTTP error:', response.status, errorData);
         setSessionValid(false);
       }
     } catch (error) {
-      console.error('Session validation failed:', error);
+      console.error('❌ Session validation exception:', error);
       setSessionValid(false);
     } finally {
       setLoading(false);
@@ -423,17 +433,49 @@ function CakeEditorContent() {
   if (!sessionValid) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100 p-4">
-        <Card className="max-w-md">
+        <Card className="max-w-lg">
           <CardBody className="text-center p-8">
-            <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-              <span className="text-3xl">❌</span>
+            <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
+              <span className="text-5xl">❌</span>
             </div>
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">Session Expired</h1>
-            <p className="text-gray-600 mb-6">
-              Your design session has expired or is invalid. Please generate a new QR code from the kiosk.
+            <h1 className="text-3xl font-bold text-gray-800 mb-3">Session Expired</h1>
+            <p className="text-gray-600 mb-4">
+              Your design session has expired or is invalid.
             </p>
-            <Button color="warning" onClick={() => window.location.href = '/'}>
-              Start Over
+            <p className="text-gray-600 mb-6">
+              Please generate a new QR code from the kiosk.
+            </p>
+
+            {/* Help Instructions */}
+            <div className="bg-amber-50 border-2 border-amber-200 p-4 rounded-lg mb-6 text-left">
+              <p className="text-sm font-semibold text-amber-900 mb-2">📍 How to get a new QR code:</p>
+              <ol className="text-sm text-gray-700 space-y-1 ml-4 list-decimal">
+                <li>Go back to the kiosk</li>
+                <li>Select "Custom Cake" from the menu</li>
+                <li>Tap "Design Your Cake"</li>
+                <li>Scan the new QR code with your phone</li>
+              </ol>
+            </div>
+
+            {/* Debug Info */}
+            {sessionToken && (
+              <details className="text-left mb-6 bg-gray-50 p-3 rounded border">
+                <summary className="text-xs font-medium text-gray-600 cursor-pointer">Debug Info (for staff)</summary>
+                <div className="mt-2 text-xs font-mono text-gray-500 break-all">
+                  <p><strong>Session Token:</strong> {sessionToken.substring(0, 30)}...</p>
+                  <p><strong>API URL:</strong> {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}</p>
+                  <p><strong>Timestamp:</strong> {new Date().toLocaleString()}</p>
+                </div>
+              </details>
+            )}
+
+            <Button
+              color="warning"
+              size="lg"
+              className="w-full"
+              onClick={() => window.location.href = '/'}
+            >
+              Return to Kiosk
             </Button>
           </CardBody>
         </Card>
