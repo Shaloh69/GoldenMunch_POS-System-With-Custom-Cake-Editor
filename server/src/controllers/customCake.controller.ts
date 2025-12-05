@@ -271,14 +271,10 @@ export const validateSession = async (req: AuthRequest, res: Response) => {
 
   logger.info(`⏰ Session time check - Server: ${serverTime.toISOString()}, Expires: ${expiresAt.toISOString()}, Remaining: ${minutesRemaining} min`);
 
-  // Check if expired using MySQL time comparison (more reliable than JavaScript)
-  const [expiryCheck] = await query<any[]>(
-    `SELECT (expires_at > NOW()) as is_valid FROM qr_code_sessions WHERE session_token = ?`,
-    [token]
-  );
-
-  if (!expiryCheck[0]?.is_valid) {
-    logger.warn(`❌ Session expired: ${token.substring(0, 20)}... (was valid for ${minutesRemaining} min)`);
+  // Check if expired using the time difference calculated from the same query
+  // This is more reliable than a separate NOW() query which might have timezone issues
+  if (timeUntilExpiry <= 0) {
+    logger.warn(`❌ Session expired: ${token.substring(0, 20)}... (expired ${Math.abs(minutesRemaining)} min ago)`);
     await query(
       `UPDATE qr_code_sessions SET status = 'expired' WHERE session_token = ?`,
       [token]
