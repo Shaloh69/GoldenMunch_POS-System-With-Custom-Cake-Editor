@@ -94,18 +94,23 @@ export class CustomCakeService {
 
   /**
    * Cancel a session
+   * TODO: This still uses the old in-memory API endpoint and may not work.
+   * Need to implement cancel functionality in the new database-backed API.
    */
   static async cancelSession(sessionId: string): Promise<void> {
     try {
       await apiClient.delete(`/kiosk/custom-cake/session/${sessionId}`);
     } catch (error) {
       console.error('Error canceling session:', error);
-      throw error;
+      // Fail silently as this uses deprecated endpoint
+      // throw error;
     }
   }
 
   /**
    * Complete customization (called from mobile)
+   * TODO: This still uses the old in-memory API endpoints and may not work.
+   * The new workflow should use /custom-cake/save-draft and /custom-cake/submit endpoints.
    */
   static async completeCustomization(
     sessionId: string,
@@ -129,7 +134,7 @@ export class CustomCakeService {
   static async getSession(sessionId: string): Promise<any> {
     try {
       const response = await apiClient.get<ApiResponse<any>>(
-        `/kiosk/custom-cake/session/${sessionId}`
+        `/custom-cake/session/${sessionId}`
       );
 
       if (!response.data.data) {
