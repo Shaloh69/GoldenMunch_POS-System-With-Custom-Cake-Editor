@@ -76,7 +76,6 @@ interface QRSessionRow {
   status: string;
   expires_at: Date;
   created_at: Date;
-  accessed_at?: Date;
   request_id?: number;
   is_valid?: number; // Computed column: (expires_at > NOW()) as is_valid
 }
@@ -288,12 +287,6 @@ export const validateSession = async (req: AuthRequest, res: Response) => {
     throw new AppError('Session already used', 410);
   }
 
-  // Update accessed_at timestamp
-  await query(
-    `UPDATE qr_code_sessions SET accessed_at = NOW() WHERE session_token = ?`,
-    [token]
-  );
-
   logger.info(`✅ Session valid: ${token.substring(0, 20)}... (${minutesRemaining} min remaining)`);
 
   res.json(
@@ -323,13 +316,12 @@ export const debugSession = async (req: AuthRequest, res: Response) => {
       status,
       created_at,
       expires_at,
-      accessed_at,
-      used_at,
       NOW() as server_time,
       TIMESTAMPDIFF(MINUTE, NOW(), expires_at) as minutes_remaining,
       (expires_at > NOW()) as is_valid,
       kiosk_id,
-      ip_address
+      ip_address,
+      request_id
      FROM qr_code_sessions
      WHERE session_token = ?`,
     [token]
@@ -349,8 +341,7 @@ export const debugSession = async (req: AuthRequest, res: Response) => {
         isValid: !!session.is_valid,
         minutesRemaining: session.minutes_remaining || 0,
         status: session.status,
-        hasBeenAccessed: !!session.accessed_at,
-        hasBeenUsed: !!session.used_at,
+        hasRequest: !!session.request_id,
       },
     })
   );
