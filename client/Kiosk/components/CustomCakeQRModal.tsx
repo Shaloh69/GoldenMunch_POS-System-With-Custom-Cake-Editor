@@ -27,7 +27,7 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
-  const [timeRemaining, setTimeRemaining] = useState<number>(900); // 15 minutes in seconds
+  const [timeRemaining, setTimeRemaining] = useState<number>(7200); // 2 hours in seconds (matches server session expiry)
 
   // Create session when modal opens
   useEffect(() => {
