@@ -1062,3 +1062,109 @@ export const processPayment = async (req: AuthRequest, res: Response) => {
 
   res.json(successResponse('Payment processed successfully', { order_id: orderId }));
 };
+
+// ============================================================================
+// 14. POLL SESSION FOR KIOSK (Check if customization is complete)
+// ============================================================================
+
+/**
+ * Poll QR session to check if user has completed customization
+ * GET /api/kiosk/custom-cake/session/:token/poll
+ *
+ * This endpoint bridges the NEW database-backed API with the Kiosk's polling workflow.
+ * Returns completion status and customization data when available.
+ */
+export const pollSessionForKiosk = async (req: AuthRequest, res: Response) => {
+  const { token } = req.params;
+
+  // Validate session exists and is not expired
+  const sessions = await query<any[]>(
+    `SELECT *, (expires_at > NOW()) as is_valid FROM qr_code_sessions WHERE session_token = ?`,
+    [token]
+  );
+
+  const session = getFirstRow<QRSessionRow>(sessions);
+
+  if (!session) {
+    throw new AppError('Session not found', 404);
+  }
+
+  if (!session.is_valid) {
+    throw new AppError('Session has expired', 410);
+  }
+
+  // Check if there's a custom cake request for this session
+  const requests = await query<any[]>(
+    `SELECT * FROM custom_cake_request WHERE session_token = ? ORDER BY created_at DESC LIMIT 1`,
+    [token]
+  );
+
+  const request = getFirstRow<CustomCakeRequestRow>(requests);
+
+  // If no request yet, status is pending
+  if (!request) {
+    res.json(
+      successResponse('Session status', {
+        status: 'pending',
+        customizationData: null,
+      })
+    );
+    return;
+  }
+
+  // Check request status
+  if (request.status === 'draft') {
+    // Still being customized
+    res.json(
+      successResponse('Session status', {
+        status: 'in_progress',
+        customizationData: null,
+      })
+    );
+  } else if (request.status === 'pending_review') {
+    // User submitted - treat as completed for Kiosk purposes
+    // Extract customization data
+    const customizationData = {
+      customer_name: request.customer_name,
+      customer_email: request.customer_email,
+      customer_phone: request.customer_phone,
+      num_layers: request.num_layers,
+      layer_1_flavor_id: request.layer_1_flavor_id,
+      layer_2_flavor_id: request.layer_2_flavor_id,
+      layer_3_flavor_id: request.layer_3_flavor_id,
+      layer_4_flavor_id: request.layer_4_flavor_id,
+      layer_5_flavor_id: request.layer_5_flavor_id,
+      layer_1_size_id: request.layer_1_size_id,
+      layer_2_size_id: request.layer_2_size_id,
+      layer_3_size_id: request.layer_3_size_id,
+      layer_4_size_id: request.layer_4_size_id,
+      layer_5_size_id: request.layer_5_size_id,
+      theme_id: request.theme_id,
+      frosting_color: request.frosting_color,
+      frosting_type: request.frosting_type,
+      candles_count: request.candles_count,
+      candle_type: request.candle_type,
+      cake_text: request.cake_text,
+      special_instructions: request.special_instructions,
+      dietary_restrictions: request.dietary_restrictions,
+      event_type: request.event_type,
+      event_date: request.event_date,
+      estimated_price: request.estimated_price,
+    };
+
+    res.json(
+      successResponse('Session status', {
+        status: 'completed',
+        customizationData,
+      })
+    );
+  } else {
+    // Other statuses (approved, rejected, completed)
+    res.json(
+      successResponse('Session status', {
+        status: request.status,
+        customizationData: null,
+      })
+    );
+  }
+};

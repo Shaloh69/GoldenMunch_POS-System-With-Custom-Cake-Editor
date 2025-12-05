@@ -379,11 +379,12 @@ router.post('/kiosk/orders', validate(schemas.createOrder), asyncHandler(orderCo
 router.get('/kiosk/orders/:code', asyncHandler(orderController.getOrderByVerificationCode));
 
 // Custom Cake Sessions (for QR code customization flow)
+// DEPRECATED: Old in-memory API - migrating to database-backed NEW API below
 router.post('/kiosk/custom-cake/session', asyncHandler(customCakeSessionController.createCustomCakeSession));
 router.get('/kiosk/custom-cake/session/:sessionId', asyncHandler(customCakeSessionController.getCustomCakeSession));
 router.put('/kiosk/custom-cake/session/:sessionId', asyncHandler(customCakeSessionController.updateCustomCakeSession));
 router.post('/kiosk/custom-cake/session/:sessionId/complete', asyncHandler(customCakeSessionController.completeCustomCakeSession));
-router.get('/kiosk/custom-cake/session/:sessionId/poll', asyncHandler(customCakeSessionController.pollCustomCakeSession));
+// router.get('/kiosk/custom-cake/session/:sessionId/poll', asyncHandler(customCakeSessionController.pollCustomCakeSession)); // DISABLED: Using NEW API polling below
 router.delete('/kiosk/custom-cake/session/:sessionId', asyncHandler(customCakeSessionController.deleteCustomCakeSession));
 
 // Payment QR Codes (Public - for kiosk)
@@ -391,8 +392,9 @@ router.get('/kiosk/payment-qr/:paymentMethod', asyncHandler(paymentQRController.
 
 // ==== CUSTOM CAKE COMPREHENSIVE SYSTEM ====
 
-// Kiosk - Generate QR Code
+// Kiosk - Generate QR Code & Poll for Completion
 router.post('/kiosk/custom-cake/generate-qr', asyncHandler(customCakeController.generateQRSession));
+router.get('/kiosk/custom-cake/session/:token/poll', asyncHandler(customCakeController.pollSessionForKiosk));
 
 // Mobile Editor - Public Routes
 router.get('/custom-cake/session/:token', asyncHandler(customCakeController.validateSession));
