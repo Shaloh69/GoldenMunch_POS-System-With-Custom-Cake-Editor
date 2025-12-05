@@ -78,6 +78,7 @@ interface QRSessionRow {
   created_at: Date;
   accessed_at?: Date;
   request_id?: number;
+  is_valid?: number; // Computed column: (expires_at > NOW()) as is_valid
 }
 
 interface CustomCakeRequestRow {
