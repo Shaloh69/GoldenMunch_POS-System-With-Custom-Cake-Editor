@@ -69,16 +69,22 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
 
   const createSession = async () => {
     try {
+      console.log('🎨 [QR Modal] Creating session...', { kioskSessionId });
       setIsLoading(true);
       setError(null);
 
       const sessionData = await CustomCakeService.generateQRSession(kioskSessionId);
+      console.log('✅ [QR Modal] Session created successfully:', {
+        sessionToken: sessionData.sessionToken.substring(0, 30) + '...',
+        expiresIn: sessionData.expiresIn,
+      });
       setSession(sessionData);
 
       // Start polling for completion
+      console.log('🔄 [QR Modal] Starting polling...');
       startPolling(sessionData.sessionToken);
     } catch (err) {
-      console.error('Failed to create session:', err);
+      console.error('❌ [QR Modal] Failed to create session:', err);
       setError('Failed to create customization session. Please try again.');
     } finally {
       setIsLoading(false);
@@ -92,16 +98,21 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
 
         if (status.status === 'completed' && status.customizationData) {
           // Customization is complete!
+          console.log('🎉 [QR Modal] Customization completed!', {
+            status: status.status,
+            hasData: !!status.customizationData,
+          });
           if (pollingInterval) {
             clearInterval(pollingInterval);
           }
           onComplete(status.customizationData);
           onClose();
         } else if (status.status === 'expired') {
+          console.warn('⏰ [QR Modal] Session expired');
           handleTimeout();
         }
       } catch (err) {
-        console.error('Polling error:', err);
+        console.error('❌ [QR Modal] Polling error:', err);
       }
     }, 2000); // Poll every 2 seconds
 

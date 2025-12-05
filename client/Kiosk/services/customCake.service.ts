@@ -37,6 +37,8 @@ export class CustomCakeService {
    */
   static async generateQRSession(kioskId?: string): Promise<CustomCakeSessionResponse> {
     try {
+      console.log('🔵 [Kiosk] Generating QR session...', { kioskId });
+
       const response = await apiClient.post<ApiResponse<CustomCakeSessionResponse>>(
         '/kiosk/custom-cake/generate-qr',
         {
@@ -44,13 +46,19 @@ export class CustomCakeService {
         }
       );
 
+      console.log('🟢 [Kiosk] QR session generated successfully:', {
+        sessionToken: response.data.data?.sessionToken?.substring(0, 30) + '...',
+        editorUrl: response.data.data?.editorUrl,
+        expiresIn: response.data.data?.expiresIn,
+      });
+
       if (!response.data.data) {
         throw new Error('Failed to generate QR code session');
       }
 
       return response.data.data;
     } catch (error) {
-      console.error('Error generating QR session:', error);
+      console.error('🔴 [Kiosk] Error generating QR session:', error);
       throw error;
     }
   }
@@ -60,9 +68,18 @@ export class CustomCakeService {
    */
   static async pollSessionStatus(sessionId: string): Promise<CustomCakeSessionStatus> {
     try {
+      console.log('🔵 [Kiosk] Polling session status...', {
+        sessionToken: sessionId.substring(0, 30) + '...',
+      });
+
       const response = await apiClient.get<ApiResponse<CustomCakeSessionStatus>>(
         `/kiosk/custom-cake/session/${sessionId}/poll`
       );
+
+      console.log('🟢 [Kiosk] Poll response:', {
+        status: response.data.data?.status,
+        hasCustomizationData: !!response.data.data?.customizationData,
+      });
 
       if (!response.data.data) {
         throw new Error('Failed to poll session status');
@@ -70,7 +87,7 @@ export class CustomCakeService {
 
       return response.data.data;
     } catch (error) {
-      console.error('Error polling session status:', error);
+      console.error('🔴 [Kiosk] Error polling session status:', error);
       throw error;
     }
   }
