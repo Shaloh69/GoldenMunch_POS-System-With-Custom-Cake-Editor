@@ -134,7 +134,7 @@ function CakeEditorContent() {
 
     try {
       // Call real API to validate session
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/custom-cake/session/${sessionToken}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/custom-cake/session/${sessionToken}`);
 
       if (response.ok) {
         const data = await response.json();
@@ -157,7 +157,7 @@ function CakeEditorContent() {
   const fetchDesignOptions = async () => {
     try {
       // Fetch real options from API
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/custom-cake/options`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/custom-cake/options`);
 
       if (response.ok) {
         const data = await response.json();
@@ -220,7 +220,7 @@ function CakeEditorContent() {
       setSaving(true);
 
       // Call real API to save draft
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/custom-cake/save-draft`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/custom-cake/save-draft`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -305,7 +305,7 @@ function CakeEditorContent() {
             view_angle: ['front', 'side', 'top', '3d_perspective'][index] || 'front',
           }));
 
-          await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/custom-cake/upload-images`, {
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/custom-cake/upload-images`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -322,7 +322,7 @@ function CakeEditorContent() {
       }
 
       // Step 4: Submit for review
-      const submitResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'}/custom-cake/submit`, {
+      const submitResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/custom-cake/submit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
