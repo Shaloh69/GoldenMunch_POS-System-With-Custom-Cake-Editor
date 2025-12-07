@@ -25,7 +25,8 @@ curl -s http://localhost:3002 > /dev/null && echo "✓ Next.js is ready" || echo
 
 echo ""
 echo "Starting Electron with npx (bypasses binary issues)..."
-DISPLAY=:0 npx electron .
+echo "Using software rendering (no GPU acceleration for Raspberry Pi compatibility)"
+DISPLAY=:0 npx electron . --disable-gpu --no-sandbox
 
 echo ""
 echo "Stopping Next.js..."

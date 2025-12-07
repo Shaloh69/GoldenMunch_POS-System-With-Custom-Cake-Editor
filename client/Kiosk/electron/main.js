@@ -4,6 +4,10 @@ const fs = require('fs');
 const isDev = process.env.NODE_ENV !== 'production';
 const ThermalPrinterService = require('./printer');
 
+// CRITICAL: Disable hardware acceleration for Raspberry Pi compatibility
+// This fixes GBM (Graphics Buffer Manager) errors on ARM devices
+app.disableHardwareAcceleration();
+
 let mainWindow;
 let splashWindow;
 let printerService = null;
