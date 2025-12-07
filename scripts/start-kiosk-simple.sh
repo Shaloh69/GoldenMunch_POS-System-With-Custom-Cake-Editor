@@ -44,10 +44,21 @@ fi
 echo ""
 echo "Step 4: Starting Electron..."
 echo "DISPLAY=$DISPLAY"
-echo "Command: electron ."
 
-# Start Electron with explicit display
-DISPLAY=:0 electron .
+# Use npx to find electron in node_modules or use the direct path
+if [ -f "./node_modules/.bin/electron" ]; then
+    echo "Using local electron from node_modules"
+    echo "Command: ./node_modules/.bin/electron ."
+    DISPLAY=:0 ./node_modules/.bin/electron .
+elif command -v npx &> /dev/null; then
+    echo "Using npx to run electron"
+    echo "Command: npx electron ."
+    DISPLAY=:0 npx electron .
+else
+    echo "ERROR: Electron not found!"
+    echo "Please run: npm install"
+    exit 1
+fi
 
 echo ""
 echo "Electron exited. Stopping Next.js..."
