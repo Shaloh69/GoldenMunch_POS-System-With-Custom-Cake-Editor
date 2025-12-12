@@ -56,3 +56,32 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #B45309;
 }
+
+/* Safe area support for notched displays (iPhone X+, modern Android) */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-area-inset-bottom {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  .safe-area-inset-top {
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+  }
+
+  .safe-area-inset-left {
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+  }
+
+  .safe-area-inset-right {
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+  }
+}
+
+/* Disable pull-to-refresh on mobile */
+body {
+  overscroll-behavior-y: contain;
+}
+
+/* Smooth scrolling for footer panel */
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+}

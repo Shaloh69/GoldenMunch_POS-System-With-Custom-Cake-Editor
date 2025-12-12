@@ -95,6 +95,7 @@ function CakeEditorContent() {
   const [submitting, setSubmitting] = useState(false);
   const [requestId, setRequestId] = useState<number | null>(null);
   const [isLandscape, setIsLandscape] = useState(false);
+  const [showLandscapeBanner, setShowLandscapeBanner] = useState(true);
   const [showControls, setShowControls] = useState(true);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -438,33 +439,27 @@ function CakeEditorContent() {
   const tutorialSteps = [
     {
       title: "Welcome! 🎂",
-      content: "Let's explore the cake designer together!",
+      content: "Let's explore the new mobile-friendly cake designer!",
       target: "welcome",
-      placement: "bottom" as const
-    },
-    {
-      title: "Toggle Controls",
-      content: "Tap this button to show/hide the customization panel for a full cake view!",
-      target: "toggle",
-      placement: "right" as const
+      placement: "top" as const
     },
     {
       title: "Live Pricing",
-      content: "Your estimated price updates automatically as you customize!",
+      content: "Your estimated price updates automatically as you customize! Tap to see details.",
       target: "price",
-      placement: "left" as const
+      placement: "top" as const
     },
     {
       title: "Control Panel",
-      content: "All customization options - layers, flavors, frosting, decorations, and more!",
+      content: "Swipe or tap the toggle button to show/hide this panel for a full 3D cake view!",
       target: "panel",
-      placement: "left" as const
+      placement: "top" as const
     },
     {
       title: "Important Note! ⚠️",
       content: "This 3D cake is just a preview. The actual cake may differ. Wait for final verification from our team!",
       target: "disclaimer",
-      placement: "bottom" as const
+      placement: "top" as const
     }
   ];
 
@@ -587,148 +582,52 @@ function CakeEditorContent() {
     );
   }
 
-  // Landscape mode prompt - Show before editor
-  if (!isLandscape) {
+  // Landscape mode banner - Optional suggestion (no longer blocking)
+  const LandscapeSuggestionBanner = () => {
+    if (isLandscape || !showLandscapeBanner) return null;
+
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 p-6 overflow-hidden">
-        <AnimatePresence>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="text-center max-w-md w-full"
+      <motion.div
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: -100, opacity: 0 }}
+        className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 text-white shadow-2xl"
+      >
+        <div className="p-3 sm:p-4 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 flex-1">
+            <DevicePhoneMobileIcon className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0 animate-pulse" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm sm:text-base font-bold">💡 Better in Landscape!</p>
+              <p className="text-xs sm:text-sm opacity-90">Rotate for a better view of your cake</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowLandscapeBanner(false)}
+            className="p-2 hover:bg-white/20 rounded-full transition-colors flex-shrink-0"
+            aria-label="Dismiss banner"
           >
-            {/* Animated Phone Icon */}
-            <motion.div
-              className="mb-8 flex justify-center"
-              animate={{
-                rotate: [0, 0, 90, 90, 0],
-                scale: [1, 1.1, 1.1, 1.1, 1],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "easeInOut",
-                times: [0, 0.2, 0.5, 0.8, 1],
-              }}
-            >
-              <div className="relative">
-                {/* Outer glow */}
-                <motion.div
-                  className="absolute inset-0 rounded-3xl bg-white/30 blur-xl"
-                  animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [0.5, 0.8, 0.5],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                />
-
-                {/* Phone container */}
-                <div className="relative bg-white rounded-3xl p-4 shadow-2xl w-32 h-48 flex items-center justify-center">
-                  <DevicePhoneMobileIcon className="w-20 h-20 text-purple-600" />
-                </div>
-
-                {/* Rotation arrows */}
-                <motion.div
-                  className="absolute -right-12 top-1/2 transform -translate-y-1/2"
-                  animate={{
-                    x: [0, 10, 0],
-                    opacity: [0.5, 1, 0.5],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                >
-                  <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
-                  </svg>
-                </motion.div>
-              </div>
-            </motion.div>
-
-            {/* Message */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="bg-white/95 backdrop-blur-xl rounded-3xl p-8 shadow-2xl"
-            >
-              <h1 className="text-4xl font-bold text-black mb-4">
-                Please Rotate Your Device
-              </h1>
-              <p className="text-xl text-black/80 font-semibold mb-6">
-                For the best cake designing experience, please turn your phone to landscape mode
-              </p>
-
-              <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl p-6 border-2 border-purple-200">
-                <p className="text-lg text-black font-bold mb-3">
-                  🎨 Why Landscape Mode?
-                </p>
-                <ul className="text-left text-black/80 space-y-2 text-base">
-                  <li className="flex items-start gap-3">
-                    <span className="text-xl">✨</span>
-                    <span className="font-semibold">Better 3D cake preview</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="text-xl">🎯</span>
-                    <span className="font-semibold">Easier design controls</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <span className="text-xl">📱</span>
-                    <span className="font-semibold">More screen space to create</span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Pulsing hint */}
-              <motion.div
-                className="mt-6"
-                animate={{
-                  opacity: [0.5, 1, 0.5],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              >
-                <p className="text-sm text-black/70 font-medium">
-                  🔄 Rotate your device now to continue
-                </p>
-              </motion.div>
-            </motion.div>
-
-            {/* Decorative elements */}
-            <div className="absolute top-10 left-10 text-6xl opacity-20 animate-bounce">
-              🎂
-            </div>
-            <div className="absolute bottom-10 right-10 text-6xl opacity-20 animate-bounce" style={{ animationDelay: '0.5s' }}>
-              🍰
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
+            <XMarkIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+        </div>
+      </motion.div>
     );
-  }
+  };
 
   const CurrentStepComponent = STEPS[currentStep].component;
   const progress = ((currentStep + 1) / STEPS.length) * 100;
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 overflow-hidden">
+      {/* Landscape Suggestion Banner (Optional, Dismissible) */}
+      <LandscapeSuggestionBanner />
+
       {/* Full Screen 3D Canvas */}
       <div className="absolute inset-0 z-0">
         <CakeCanvas3D ref={canvasRef} design={design} options={options} />
       </div>
 
-      {/* Toggle Controls Button */}
-      <div className="fixed top-2 left-2 sm:top-3 sm:left-3 z-50">
+      {/* Toggle Controls Button - Moved to bottom center when footer is hidden */}
+      <div className={`fixed ${showControls ? 'bottom-2 left-2' : 'bottom-4 left-1/2 -translate-x-1/2'} sm:bottom-4 z-50 transition-all`}>
         <Popover
           isOpen={showTutorial && tutorialStep === 0}
           placement={tutorialSteps[0].placement}
@@ -739,9 +638,18 @@ function CakeEditorContent() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               onClick={() => setShowControls(!showControls)}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-2 sm:p-3 rounded-full shadow-2xl hover:scale-110 transition-all active:scale-95"
+              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 sm:p-4 rounded-full shadow-2xl hover:scale-110 transition-all active:scale-95 min-w-[48px] min-h-[48px] flex items-center justify-center"
+              aria-label={showControls ? "Hide controls" : "Show controls"}
             >
-              {showControls ? <XMarkIcon className="w-4 h-4 sm:w-5 sm:h-5" /> : <Bars3Icon className="w-4 h-4 sm:w-5 sm:h-5" />}
+              {showControls ? (
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+                </svg>
+              )}
             </motion.button>
           </PopoverTrigger>
           <PopoverContent className="bg-gradient-to-br from-purple-500 to-pink-500 text-white border-2 border-white max-w-xs">
@@ -769,51 +677,8 @@ function CakeEditorContent() {
         </Popover>
       </div>
 
-      {/* Price Display */}
-      <div className="fixed top-2 right-2 sm:top-3 sm:right-3 z-50">
-        <Popover
-          isOpen={showTutorial && tutorialStep === 1}
-          placement={tutorialSteps[1].placement}
-          showArrow
-        >
-          <PopoverTrigger>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="bg-white/95 backdrop-blur-xl rounded-lg sm:rounded-xl shadow-2xl p-2 sm:p-3 border-2 border-purple-200"
-            >
-              <p className="text-xs font-bold text-black">Price</p>
-              <p className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                ₱{calculatePrice(design)}
-              </p>
-            </motion.div>
-          </PopoverTrigger>
-          <PopoverContent className="bg-gradient-to-br from-purple-500 to-pink-500 text-white border-2 border-white max-w-xs">
-            <div className="p-3">
-              <div className="text-base font-bold mb-2">{tutorialSteps[1].title}</div>
-              <div className="text-sm mb-3">{tutorialSteps[1].content}</div>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={handleSkipTutorial}
-                  className="flex-1 bg-white/20 text-white font-bold"
-                >
-                  Skip
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleNextTutorialStep}
-                  className="flex-1 bg-white text-purple-600 font-bold"
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-      </div>
 
-      {/* Help Button (restart tutorial) */}
+      {/* Help Button (restart tutorial) - Moved to top right */}
       {!showTutorial && (
         <motion.button
           initial={{ opacity: 0 }}
@@ -822,9 +687,10 @@ function CakeEditorContent() {
             setShowTutorial(true);
             setTutorialStep(0);
           }}
-          className="fixed bottom-2 left-2 sm:bottom-3 sm:left-3 z-50 bg-gradient-to-r from-purple-500 to-pink-500 text-white p-2 rounded-full shadow-2xl hover:scale-110 transition-all"
+          className="fixed top-2 right-2 sm:top-3 sm:right-3 z-50 bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 rounded-full shadow-2xl hover:scale-110 transition-all min-w-[48px] min-h-[48px] flex items-center justify-center"
+          aria-label="Restart tutorial"
         >
-          <QuestionMarkCircleIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+          <QuestionMarkCircleIcon className="w-5 h-5 sm:w-6 sm:h-6" />
         </motion.button>
       )}
 
@@ -846,20 +712,83 @@ function CakeEditorContent() {
         )}
       </AnimatePresence>
 
-      {/* Hideable Controls Panel */}
+      {/* Hideable Controls Footer Panel */}
       <AnimatePresence>
         {showControls && (
           <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-0 bottom-0 w-full xs:w-[85%] sm:w-80 md:w-[360px] bg-white/95 backdrop-blur-xl shadow-2xl z-40 overflow-y-auto"
+            className="fixed left-0 right-0 bottom-0 bg-white/98 backdrop-blur-xl shadow-2xl z-40 rounded-t-3xl border-t-4 border-purple-300 max-h-[75vh] flex flex-col"
           >
+            {/* Drag Handle */}
+            <div className="flex justify-center pt-2 pb-1">
+              <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+            </div>
+
+            {/* Header with Price and Progress */}
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-3 flex-shrink-0">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex-1">
+                  <h1 className="text-base sm:text-lg font-bold">🎂 Customize Your Cake</h1>
+                  <p className="text-xs opacity-90">Step {currentStep + 1} of {STEPS.length}: {STEPS[currentStep].name}</p>
+                </div>
+                <Popover
+                  isOpen={showTutorial && tutorialStep === 1}
+                  placement="top"
+                  showArrow
+                >
+                  <PopoverTrigger>
+                    <div className="bg-white/20 backdrop-blur-md rounded-lg px-3 py-2 ml-3">
+                      <p className="text-xs font-bold">Est. Price</p>
+                      <p className="text-lg sm:text-xl font-bold">₱{calculatePrice(design)}</p>
+                    </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="bg-gradient-to-br from-purple-500 to-pink-500 text-white border-2 border-white max-w-xs">
+                    <div className="p-3">
+                      <div className="text-base font-bold mb-2">{tutorialSteps[1].title}</div>
+                      <div className="text-sm mb-3">{tutorialSteps[1].content}</div>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={handleSkipTutorial}
+                          className="flex-1 bg-white/20 text-white font-bold"
+                        >
+                          Skip
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={handleNextTutorialStep}
+                          className="flex-1 bg-white text-purple-600 font-bold"
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <Progress value={progress} className="mt-1" classNames={{ indicator: 'bg-white' }} size="sm" />
+              {saving && (
+                <div className="flex items-center gap-2 text-xs mt-2">
+                  <Spinner size="sm" color="white" />
+                  <span>Saving...</span>
+                </div>
+              )}
+            </div>
+
             {/* Tutorial Popover for Panel */}
-            {showTutorial && tutorialStep === 2 && (
-              <div className="absolute -left-4 top-1/3 z-50">
-                <div className="bg-gradient-to-br from-purple-500 to-pink-500 text-white border-2 border-white rounded-lg shadow-2xl p-3 max-w-xs">
+            <Popover
+              isOpen={showTutorial && tutorialStep === 2}
+              placement="top"
+              showArrow
+            >
+              <PopoverTrigger>
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-20 h-1 z-10"></div>
+              </PopoverTrigger>
+              <PopoverContent className="bg-gradient-to-br from-purple-500 to-pink-500 text-white border-2 border-white max-w-xs">
+                <div className="p-3">
                   <div className="text-base font-bold mb-2">{tutorialSteps[2].title}</div>
                   <div className="text-sm mb-3">{tutorialSteps[2].content}</div>
                   <div className="flex gap-2">
@@ -879,24 +808,11 @@ function CakeEditorContent() {
                     </Button>
                   </div>
                 </div>
-              </div>
-            )}
+              </PopoverContent>
+            </Popover>
 
-            {/* Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 z-10">
-              <h1 className="text-lg sm:text-xl font-bold">🎂 Customize Your Cake</h1>
-              <p className="text-xs opacity-90">Step {currentStep + 1} of {STEPS.length}: {STEPS[currentStep].name}</p>
-              <Progress value={progress} className="mt-2" classNames={{ indicator: 'bg-white' }} />
-              {saving && (
-                <div className="flex items-center gap-2 text-xs mt-2">
-                  <Spinner size="sm" color="white" />
-                  <span>Saving...</span>
-                </div>
-              )}
-            </div>
-
-            {/* Step Content */}
-            <div className="p-3 sm:p-4">
+            {/* Scrollable Step Content */}
+            <div className="overflow-y-auto flex-1 px-4 py-3">
               <motion.div
                 key={currentStep}
                 initial={{ opacity: 0, y: 20 }}
@@ -910,37 +826,6 @@ function CakeEditorContent() {
                   options={options}
                 />
               </motion.div>
-
-              {/* Navigation */}
-              <div className="flex gap-2 mt-4 sm:mt-6 sticky bottom-0 bg-white pt-3 pb-2 border-t">
-                {currentStep > 0 && (
-                  <Button
-                    onClick={handlePrevious}
-                    startContent={<ArrowLeftIcon className="w-4 h-4" />}
-                    className="flex-1 bg-gray-600 text-white font-bold text-sm py-3 sm:py-4"
-                  >
-                    Previous
-                  </Button>
-                )}
-                {currentStep < STEPS.length - 1 ? (
-                  <Button
-                    onClick={handleNext}
-                    endContent={<ArrowRightIcon className="w-4 h-4" />}
-                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-sm py-3 sm:py-4"
-                  >
-                    Next
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleSubmitClick}
-                    isLoading={submitting}
-                    endContent={<CheckCircleIcon className="w-4 h-4 sm:w-5 sm:h-5" />}
-                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold text-sm sm:text-base py-4 sm:py-5"
-                  >
-                    Submit
-                  </Button>
-                )}
-              </div>
 
               {/* Disclaimer Tutorial Step */}
               {showTutorial && tutorialStep === 3 && (
@@ -956,6 +841,39 @@ function CakeEditorContent() {
                   </Button>
                 </div>
               )}
+            </div>
+
+            {/* Navigation Buttons - Sticky at bottom */}
+            <div className="flex-shrink-0 bg-white border-t-2 border-gray-200 px-4 py-3 safe-area-inset-bottom">
+              <div className="flex gap-2">
+                {currentStep > 0 && (
+                  <Button
+                    onClick={handlePrevious}
+                    startContent={<ArrowLeftIcon className="w-4 h-4" />}
+                    className="flex-1 bg-gray-600 text-white font-bold text-sm py-5 min-h-[48px]"
+                  >
+                    Previous
+                  </Button>
+                )}
+                {currentStep < STEPS.length - 1 ? (
+                  <Button
+                    onClick={handleNext}
+                    endContent={<ArrowRightIcon className="w-4 h-4" />}
+                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-sm py-5 min-h-[48px]"
+                  >
+                    Next
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleSubmitClick}
+                    isLoading={submitting}
+                    endContent={<CheckCircleIcon className="w-5 h-5" />}
+                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold text-base py-5 min-h-[48px]"
+                  >
+                    Submit
+                  </Button>
+                )}
+              </div>
             </div>
           </motion.div>
         )}
