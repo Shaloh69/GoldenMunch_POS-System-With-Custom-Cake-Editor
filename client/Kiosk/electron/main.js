@@ -79,7 +79,12 @@ function createWindow() {
     : `file://${path.join(__dirname, '../out/index.html')}`; // Production build
 
   console.log('Loading URL:', startUrl);
-  mainWindow.loadURL(startUrl);
+  mainWindow.loadURL(startUrl).catch((error) => {
+    console.error('=== FAILED TO LOAD URL ===');
+    console.error('URL:', startUrl);
+    console.error('Error:', error);
+    console.error('Timestamp:', new Date().toISOString());
+  });
 
   // Open DevTools in development
   if (isDev) {
@@ -113,9 +118,31 @@ function createWindow() {
     mainWindow.webContents.on('context-menu', (e) => e.preventDefault());
   }
 
+  // Monitor window events
+  mainWindow.on('close', (event) => {
+    console.log('=== WINDOW CLOSE EVENT ===');
+    console.log('Timestamp:', new Date().toISOString());
+    console.log('Prevented:', event.defaultPrevented);
+  });
+
   mainWindow.on('closed', () => {
     console.log('=== KIOSK WINDOW CLOSED ===');
+    console.log('Timestamp:', new Date().toISOString());
     mainWindow = null;
+  });
+
+  // Log if window crashes
+  mainWindow.webContents.on('crashed', (event, killed) => {
+    console.error('=== RENDERER PROCESS CRASHED ===');
+    console.error('Killed:', killed);
+    console.error('Timestamp:', new Date().toISOString());
+  });
+
+  mainWindow.webContents.on('render-process-gone', (event, details) => {
+    console.error('=== RENDER PROCESS GONE ===');
+    console.error('Reason:', details.reason);
+    console.error('Exit code:', details.exitCode);
+    console.error('Timestamp:', new Date().toISOString());
   });
 
   // Auto-reload in development when Next.js rebuilds
@@ -133,6 +160,20 @@ function createWindow() {
 
 // This method will be called when Electron has finished initialization
 app.whenReady().then(() => {
+  console.log('=== ELECTRON READY ===');
+  console.log('Timestamp:', new Date().toISOString());
+  console.log('Electron version:', process.versions.electron);
+  console.log('Chrome version:', process.versions.chrome);
+  console.log('Node version:', process.versions.node);
+  console.log('Platform:', process.platform);
+  console.log('Architecture:', process.arch);
+  console.log('Environment variables:');
+  console.log('  WAYLAND_DISPLAY:', process.env.WAYLAND_DISPLAY);
+  console.log('  DISPLAY:', process.env.DISPLAY);
+  console.log('  XDG_SESSION_TYPE:', process.env.XDG_SESSION_TYPE);
+  console.log('  XDG_RUNTIME_DIR:', process.env.XDG_RUNTIME_DIR);
+  console.log('  DESKTOP_SESSION:', process.env.DESKTOP_SESSION);
+
   // Show splash screen first
   createSplashScreen();
 
@@ -155,6 +196,11 @@ app.whenReady().then(() => {
       }, 1500);
     }
   });
+}).catch((error) => {
+  console.error('=== ELECTRON FAILED TO START ===');
+  console.error('Error:', error);
+  console.error('Stack:', error.stack);
+  console.error('Timestamp:', new Date().toISOString());
 });
 
 // Quit when all windows are closed (except on macOS)
@@ -173,7 +219,24 @@ app.on('web-contents-created', (event, contents) => {
 
 // Handle app-level errors
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
+  console.error('=== UNCAUGHT EXCEPTION ===');
+  console.error('Error:', error);
+  console.error('Stack:', error.stack);
+  console.error('Timestamp:', new Date().toISOString());
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('=== UNHANDLED REJECTION ===');
+  console.error('Promise:', promise);
+  console.error('Reason:', reason);
+  console.error('Timestamp:', new Date().toISOString());
+});
+
+// Log when app is about to quit
+app.on('will-quit', (event) => {
+  console.log('=== APP WILL QUIT ===');
+  console.log('Timestamp:', new Date().toISOString());
+  console.log('Platform:', process.platform);
 });
 
 // Prevent app from sleeping/screen lock in kiosk mode
