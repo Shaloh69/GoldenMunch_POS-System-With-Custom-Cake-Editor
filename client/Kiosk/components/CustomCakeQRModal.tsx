@@ -149,40 +149,38 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
       size="2xl"
       backdrop="blur"
       classNames={{
-        backdrop: 'bg-gradient-to-t from-chocolate-brown/50 to-deep-amber/50',
-        base: 'border-[#292f46] bg-white',
+        backdrop: 'bg-gradient-to-t from-purple-900/50 to-pink-900/50',
+        base: 'border-2 border-purple-200 bg-white shadow-2xl',
       }}
     >
       <ModalContent>
-        <ModalHeader className="flex flex-col gap-1 text-center">
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent">
+        <ModalHeader className="flex flex-col gap-2 text-center pt-8">
+          <h2 className="text-4xl font-bold text-black">
             🎨 Design Your Custom Cake
           </h2>
-          <p className="text-sm text-chocolate-brown/70 font-normal">
+          <p className="text-lg text-black/70 font-semibold">
             Scan the QR code with your phone to start customizing
           </p>
         </ModalHeader>
-        <ModalBody>
+        <ModalBody className="py-6">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <Spinner size="lg" color="warning" className="mb-4" />
-              <p className="text-xl font-semibold text-chocolate-brown mb-2">✨ Creating Your Session...</p>
-              <div className="text-sm text-chocolate-brown/60 space-y-1 text-center">
+              <Spinner size="lg" className="mb-6" style={{ color: '#9333ea' }} />
+              <p className="text-2xl font-bold text-black mb-4">✨ Creating Your Session...</p>
+              <div className="text-base text-black/70 space-y-2 text-center font-medium">
                 <p>🎨 Preparing canvas</p>
                 <p>🍰 Loading design tools</p>
                 <p>📱 Generating QR code</p>
               </div>
             </div>
           ) : error ? (
-            <Card className="bg-red-50 border-2 border-red-200">
+            <Card className="bg-red-50 border-3 border-red-300 shadow-xl">
               <CardBody>
                 <div className="text-center py-8">
-                  <p className="text-xl text-red-600 mb-2">⚠️ {error}</p>
+                  <p className="text-2xl text-black font-bold mb-4">⚠️ {error}</p>
                   <Button
-                    color="danger"
-                    variant="flat"
+                    className="bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 text-white font-bold text-lg py-6 px-8"
                     onClick={createSession}
-                    className="mt-4"
                   >
                     Try Again
                   </Button>
@@ -192,9 +190,9 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
           ) : session ? (
             <div className="flex flex-col items-center gap-6 py-4">
               {/* QR Code */}
-              <Card className="shadow-2xl border-4 border-golden-orange/30">
-                <CardBody className="p-6">
-                  <div className="relative w-80 h-80 bg-white flex items-center justify-center">
+              <Card className="shadow-2xl border-4 border-purple-300 bg-white">
+                <CardBody className="p-8">
+                  <div className="relative w-80 h-80 bg-white flex items-center justify-center rounded-xl">
                     <Image
                       src={session.qrCodeUrl}
                       alt="Custom Cake QR Code"
@@ -207,31 +205,31 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
               </Card>
 
               {/* Instructions */}
-              <div className="text-center space-y-3">
-                <div className="flex items-center justify-center gap-2 text-lg text-chocolate-brown">
-                  <span className="text-2xl">⏱️</span>
-                  <span className="font-bold text-deep-amber">{formatTime(timeRemaining)}</span>
-                  <span>remaining</span>
+              <div className="text-center space-y-4">
+                <div className="flex items-center justify-center gap-3 text-xl">
+                  <span className="text-3xl">⏱️</span>
+                  <span className="font-bold text-purple-600 text-2xl">{formatTime(timeRemaining)}</span>
+                  <span className="text-black font-semibold">remaining</span>
                 </div>
 
-                <div className="space-y-2 text-sm text-chocolate-brown/80">
-                  <p className="flex items-center justify-center gap-2">
-                    <span className="text-xl">📱</span>
+                <div className="space-y-3 text-base text-black font-semibold">
+                  <p className="flex items-center justify-center gap-3">
+                    <span className="text-2xl">📱</span>
                     <span>Open your phone's camera app</span>
                   </p>
-                  <p className="flex items-center justify-center gap-2">
-                    <span className="text-xl">🎯</span>
+                  <p className="flex items-center justify-center gap-3">
+                    <span className="text-2xl">🎯</span>
                     <span>Point it at the QR code above</span>
                   </p>
-                  <p className="flex items-center justify-center gap-2">
-                    <span className="text-xl">✨</span>
+                  <p className="flex items-center justify-center gap-3">
+                    <span className="text-2xl">✨</span>
                     <span>Design your perfect custom cake!</span>
                   </p>
                 </div>
 
-                <Card className="bg-golden-orange/10 border border-golden-orange/30 mt-4">
-                  <CardBody className="p-4">
-                    <p className="text-xs text-chocolate-brown/70 text-center">
+                <Card className="bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-200 mt-6 shadow-lg">
+                  <CardBody className="p-5">
+                    <p className="text-sm text-black font-semibold text-center">
                       💡 <strong>Tip:</strong> While you customize on your phone, feel free to let
                       others use the kiosk. We'll notify you when it's ready!
                     </p>
@@ -241,13 +239,11 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
             </div>
           ) : null}
         </ModalBody>
-        <ModalFooter className="justify-center">
+        <ModalFooter className="justify-center pb-8">
           <Button
-            color="danger"
-            variant="light"
             onPress={handleCancel}
             size="lg"
-            className="font-semibold"
+            className="bg-gradient-to-r from-gray-600 to-gray-800 text-white font-bold text-lg py-6 px-10 rounded-xl hover:scale-105 transition-all shadow-xl"
           >
             Cancel
           </Button>

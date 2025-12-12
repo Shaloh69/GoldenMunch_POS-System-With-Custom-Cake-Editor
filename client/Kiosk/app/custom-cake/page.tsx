@@ -127,16 +127,16 @@ export default function CustomCakePage() {
                   initial={{ y: -20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-[#7B4B28] to-[#662B35] rounded-full mb-6 shadow-[0_0_30px_rgba(234,215,183,0.4)]"
+                  className="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-pink-400 via-purple-400 to-indigo-400 rounded-full mb-6 shadow-2xl"
                 >
-                  <Cake className="w-12 h-12 text-[#FAF7F2]" />
+                  <Cake className="w-16 h-16 text-white" />
                 </motion.div>
 
                 <motion.h1
                   initial={{ y: -20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="text-4xl md:text-5xl font-bold text-[#FAF7F2] mb-4 drop-shadow-lg"
+                  className="text-5xl md:text-6xl font-bold text-black mb-4"
                 >
                   Design Your Dream Cake
                 </motion.h1>
@@ -145,7 +145,7 @@ export default function CustomCakePage() {
                   initial={{ y: -20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.4 }}
-                  className="text-xl text-[#EAD7B7]"
+                  className="text-2xl text-black/80 font-medium"
                 >
                   Create a custom 3D cake design on your phone!
                 </motion.p>
@@ -184,16 +184,16 @@ export default function CustomCakePage() {
                 whileTap={{ scale: 0.95 }}
                 onClick={generateQR}
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-[#7B4B28] to-[#662B35] text-[#FAF7F2] py-6 rounded-2xl text-2xl font-bold shadow-[0_0_30px_rgba(234,215,183,0.4)] hover:shadow-[0_0_40px_rgba(234,215,183,0.6)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 text-white py-8 rounded-3xl text-3xl font-bold shadow-2xl hover:shadow-purple-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Start Designing
+                ✨ Start Designing ✨
               </motion.button>
 
               {error && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="mt-4 p-4 glass-button border border-[#662B35] rounded-lg text-[#FAF7F2] text-center"
+                  className="mt-4 p-4 bg-red-50 border-2 border-red-300 rounded-xl text-black text-center font-semibold"
                 >
                   {error}
                 </motion.div>
@@ -211,19 +211,19 @@ export default function CustomCakePage() {
             exit={{ opacity: 0 }}
             className="max-w-md w-full text-center"
           >
-            <div className="glass-card rounded-3xl shadow-[0_0_40px_rgba(234,215,183,0.3)] p-12">
+            <div className="glass-card rounded-3xl shadow-2xl p-12 bg-white/95 backdrop-blur-xl border-2 border-purple-200">
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-[#7B4B28] to-[#662B35] rounded-full mb-6 shadow-[0_0_30px_rgba(234,215,183,0.4)]"
+                className="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-purple-400 via-pink-400 to-indigo-400 rounded-full mb-6 shadow-2xl"
               >
-                <Cake className="w-12 h-12 text-[#FAF7F2]" />
+                <Cake className="w-16 h-16 text-white" />
               </motion.div>
 
-              <h2 className="text-3xl font-bold text-[#FAF7F2] mb-4 drop-shadow-lg">
+              <h2 className="text-4xl font-bold text-black mb-4">
                 Preparing Your Canvas
               </h2>
-              <p className="text-[#EAD7B7] text-lg">
+              <p className="text-black/70 text-xl font-medium">
                 Setting up your custom cake designer...
               </p>
             </div>
@@ -239,18 +239,18 @@ export default function CustomCakePage() {
             exit={{ opacity: 0, scale: 0.9 }}
             className="max-w-2xl w-full"
           >
-            <div className="glass-card rounded-3xl shadow-[0_0_40px_rgba(234,215,183,0.3)] p-8 md:p-12">
+            <div className="glass-card rounded-3xl shadow-2xl p-8 md:p-12 bg-white/95 backdrop-blur-xl border-2 border-purple-200">
               {/* Timer */}
               <motion.div
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 className="flex items-center justify-center gap-3 mb-6"
               >
-                <Clock className="w-6 h-6 text-[#EAD7B7]" />
-                <span className="text-2xl font-bold text-[#FAF7F2] drop-shadow-lg">
+                <Clock className="w-8 h-8 text-purple-600" />
+                <span className="text-3xl font-bold text-black">
                   {formatTime(timeRemaining)}
                 </span>
-                <span className="text-[#EAD7B7]">remaining</span>
+                <span className="text-black/70 text-xl">remaining</span>
               </motion.div>
 
               {/* Instructions */}
@@ -261,12 +261,12 @@ export default function CustomCakePage() {
                 className="text-center mb-8"
               >
                 <div className="inline-flex items-center gap-3 mb-4">
-                  <Smartphone className="w-8 h-8 text-[#EAD7B7]" />
-                  <h2 className="text-3xl font-bold text-[#FAF7F2] drop-shadow-lg">
+                  <Smartphone className="w-10 h-10 text-pink-600" />
+                  <h2 className="text-4xl font-bold text-black">
                     Scan with Your Phone
                   </h2>
                 </div>
-                <p className="text-lg text-[#EAD7B7]">
+                <p className="text-xl text-black/80 font-medium">
                   Open your camera app and point it at the QR code below
                 </p>
               </motion.div>
@@ -283,24 +283,24 @@ export default function CustomCakePage() {
                   <motion.div
                     animate={{
                       scale: [1, 1.05, 1],
-                      opacity: [0.5, 1, 0.5],
+                      opacity: [0.3, 0.6, 0.3],
                     }}
                     transition={{
                       duration: 2,
                       repeat: Infinity,
                       ease: "easeInOut"
                     }}
-                    className="absolute inset-0 border-4 border-[#EAD7B7] rounded-3xl blur-sm"
+                    className="absolute inset-0 border-4 border-purple-400 rounded-3xl blur-sm"
                   />
 
-                  <div className="relative bg-[#FAF7F2] p-8 rounded-3xl shadow-xl">
+                  <div className="relative bg-white p-10 rounded-3xl shadow-2xl border-4 border-gradient-to-r from-purple-300 via-pink-300 to-indigo-300">
                     <QRCodeSVG
                       value={qrSession.editorUrl}
-                      size={300}
+                      size={320}
                       level="H"
                       includeMargin
-                      fgColor="#3A1F0F"
-                      bgColor="#FAF7F2"
+                      fgColor="#000000"
+                      bgColor="#FFFFFF"
                     />
                   </div>
                 </div>
@@ -313,9 +313,9 @@ export default function CustomCakePage() {
                 transition={{ delay: 0.3 }}
                 className="mb-6"
               >
-                <div className="h-2 bg-[#3A1F0F]/30 rounded-full overflow-hidden">
+                <div className="h-3 bg-gray-200 rounded-full overflow-hidden shadow-inner">
                   <motion.div
-                    className="h-full bg-gradient-to-r from-[#7B4B28] to-[#662B35]"
+                    className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500"
                     initial={{ width: '100%' }}
                     animate={{ width: `${(timeRemaining / qrSession.expiresIn) * 100}%` }}
                     transition={{ duration: 1 }}
@@ -341,9 +341,9 @@ export default function CustomCakePage() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
                 onClick={() => router.push('/menu')}
-                className="w-full mt-6 py-4 flex items-center justify-center gap-2 bg-gradient-to-r from-[#D9B38C] to-[#C67B57] text-white font-semibold rounded-xl hover:scale-105 transition-all shadow-lg"
+                className="w-full mt-6 py-5 flex items-center justify-center gap-3 bg-gradient-to-r from-gray-600 to-gray-800 text-white font-bold text-lg rounded-2xl hover:scale-105 transition-all shadow-xl"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-6 h-6" />
                 Back to Menu
               </motion.button>
             </div>
@@ -359,34 +359,34 @@ export default function CustomCakePage() {
             exit={{ opacity: 0, scale: 0.9 }}
             className="max-w-md w-full"
           >
-            <div className="glass-card rounded-3xl shadow-[0_0_40px_rgba(234,215,183,0.3)] p-12 text-center">
-              <div className="inline-flex items-center justify-center w-24 h-24 glass-button rounded-full mb-6 border-2 border-[#662B35]">
-                <Clock className="w-12 h-12 text-[#662B35]" />
+            <div className="glass-card rounded-3xl shadow-2xl p-12 text-center bg-white/95 backdrop-blur-xl border-2 border-red-200">
+              <div className="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-red-400 to-orange-500 rounded-full mb-6 shadow-2xl">
+                <Clock className="w-16 h-16 text-white" />
               </div>
 
-              <h2 className="text-3xl font-bold text-[#FAF7F2] mb-4 drop-shadow-lg">
+              <h2 className="text-4xl font-bold text-black mb-4">
                 Session Expired
               </h2>
-              <p className="text-[#EAD7B7] text-lg mb-8">
+              <p className="text-black/70 text-xl font-medium mb-8">
                 Your QR code session has timed out. Please generate a new one to continue.
               </p>
 
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <button
                   onClick={() => {
                     setStep('welcome');
                     setQrSession(null);
                   }}
-                  className="w-full bg-gradient-to-r from-[#7B4B28] to-[#662B35] text-[#FAF7F2] py-4 rounded-2xl text-xl font-bold shadow-[0_0_30px_rgba(234,215,183,0.4)] hover:shadow-[0_0_40px_rgba(234,215,183,0.6)] transition-all"
+                  className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 text-white py-5 rounded-2xl text-xl font-bold shadow-2xl hover:shadow-purple-500/50 transition-all"
                 >
                   Generate New QR Code
                 </button>
 
                 <button
                   onClick={() => router.push('/menu')}
-                  className="w-full py-4 flex items-center justify-center gap-2 bg-gradient-to-r from-[#D9B38C] to-[#C67B57] text-white font-semibold rounded-xl hover:scale-105 transition-all"
+                  className="w-full py-5 flex items-center justify-center gap-3 bg-gradient-to-r from-gray-600 to-gray-800 text-white font-bold rounded-2xl hover:scale-105 transition-all shadow-xl"
                 >
-                  <ArrowLeft className="w-5 h-5" />
+                  <ArrowLeft className="w-6 h-6" />
                   Back to Menu
                 </button>
               </div>
@@ -403,21 +403,21 @@ export default function CustomCakePage() {
             exit={{ opacity: 0, scale: 0.8 }}
             className="max-w-2xl w-full"
           >
-            <div className="glass-card rounded-3xl shadow-[0_0_40px_rgba(234,215,183,0.3)] p-12 text-center">
+            <div className="glass-card rounded-3xl shadow-2xl p-12 text-center bg-white/95 backdrop-blur-xl border-2 border-green-200">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                className="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-green-500 to-green-600 rounded-full mb-6 shadow-2xl"
+                className="inline-flex items-center justify-center w-40 h-40 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full mb-6 shadow-2xl"
               >
-                <CheckCircle className="w-20 h-20 text-white" />
+                <CheckCircle className="w-24 h-24 text-white" />
               </motion.div>
 
               <motion.h2
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="text-5xl font-bold text-[#FAF7F2] mb-4 drop-shadow-lg"
+                className="text-5xl font-bold text-black mb-4"
               >
                 Successfully Scanned!
               </motion.h2>
@@ -426,7 +426,7 @@ export default function CustomCakePage() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="text-2xl text-[#EAD7B7] mb-8"
+                className="text-2xl text-black/80 font-medium mb-8"
               >
                 Your custom cake design is now loading on your phone
               </motion.p>
@@ -435,21 +435,21 @@ export default function CustomCakePage() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="bg-gradient-to-r from-[#D9B38C]/20 to-[#C67B57]/20 rounded-2xl p-8 mb-8"
+                className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl p-8 mb-8 border-2 border-purple-200"
               >
-                <h3 className="text-2xl font-bold text-[#FAF7F2] mb-4">Next Steps:</h3>
-                <div className="space-y-3 text-left">
-                  <p className="text-lg text-[#EAD7B7] flex items-start gap-3">
-                    <span className="text-2xl">🎨</span>
-                    <span>Design your perfect cake on your phone</span>
+                <h3 className="text-2xl font-bold text-black mb-6">Next Steps:</h3>
+                <div className="space-y-4 text-left">
+                  <p className="text-lg text-black flex items-start gap-4">
+                    <span className="text-3xl">🎨</span>
+                    <span className="font-semibold">Design your perfect cake on your phone</span>
                   </p>
-                  <p className="text-lg text-[#EAD7B7] flex items-start gap-3">
-                    <span className="text-2xl">🪑</span>
-                    <span>Please take a seat and relax while you design</span>
+                  <p className="text-lg text-black flex items-start gap-4">
+                    <span className="text-3xl">🪑</span>
+                    <span className="font-semibold">Please take a seat and relax while you design</span>
                   </p>
-                  <p className="text-lg text-[#EAD7B7] flex items-start gap-3">
-                    <span className="text-2xl">✨</span>
-                    <span>We'll notify you when it's ready for approval</span>
+                  <p className="text-lg text-black flex items-start gap-4">
+                    <span className="text-3xl">✨</span>
+                    <span className="font-semibold">We'll notify you when it's ready for approval</span>
                   </p>
                 </div>
               </motion.div>
@@ -458,7 +458,7 @@ export default function CustomCakePage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className="text-[#EAD7B7] text-lg mb-4"
+                className="text-black/70 text-xl font-medium mb-6"
               >
                 Returning to menu in 5 seconds...
               </motion.p>
@@ -468,7 +468,7 @@ export default function CustomCakePage() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6 }}
                 onClick={() => router.push('/menu')}
-                className="bg-gradient-to-r from-[#D9B38C] to-[#C67B57] text-white font-bold text-xl py-4 px-8 rounded-xl hover:scale-105 transition-all shadow-lg"
+                className="bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 text-white font-bold text-xl py-5 px-10 rounded-2xl hover:scale-105 transition-all shadow-2xl hover:shadow-purple-500/50"
               >
                 Return to Menu Now
               </motion.button>
@@ -483,12 +483,12 @@ export default function CustomCakePage() {
 // Helper Components
 function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
   return (
-    <div className="text-center p-4">
-      <div className="inline-flex items-center justify-center w-12 h-12 glass-button rounded-full mb-3 text-[#EAD7B7] border border-[#EAD7B7]/30">
+    <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
+      <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full mb-4 shadow-lg">
         {icon}
       </div>
-      <h3 className="font-bold text-[#FAF7F2] mb-1 drop-shadow-md">{title}</h3>
-      <p className="text-sm text-[#EAD7B7]">{description}</p>
+      <h3 className="font-bold text-black text-lg mb-2">{title}</h3>
+      <p className="text-sm text-black/70">{description}</p>
     </div>
   );
 }
@@ -496,10 +496,10 @@ function FeatureCard({ icon, title, description }: { icon: React.ReactNode; titl
 function StepIndicator({ number, text }: { number: number; text: string }) {
   return (
     <div className="flex flex-col items-center">
-      <div className="w-10 h-10 bg-gradient-to-br from-[#7B4B28] to-[#662B35] text-[#FAF7F2] rounded-full flex items-center justify-center font-bold mb-2 shadow-lg">
+      <div className="w-14 h-14 bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 text-white rounded-full flex items-center justify-center font-bold text-xl mb-3 shadow-lg">
         {number}
       </div>
-      <span className="text-sm text-[#EAD7B7]">{text}</span>
+      <span className="text-base text-black font-semibold">{text}</span>
     </div>
   );
 }
