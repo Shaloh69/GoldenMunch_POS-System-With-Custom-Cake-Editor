@@ -5,7 +5,7 @@ PartOf=graphical-session.target
 
 [Service]
 Type=simple
-Environment="NODE_ENV=production"
+Environment="NODE_ENV=development"
 ExecStartPre=/bin/sleep 5
 ExecStart=%h/GoldenMunch_POS-System-With-Custom-Cake-Editor/scripts/start-kiosk-wayland.sh
 Restart=on-failure
