@@ -12,8 +12,12 @@ Environment="ELECTRON_DISABLE_SECURITY_WARNINGS=true"
 
 # CRITICAL: Force X11 and software rendering to prevent DRM/GBM errors
 Environment="ELECTRON_OZONE_PLATFORM_HINT=x11"
+Environment="ELECTRON_DISABLE_GPU=1"
 Environment="LIBGL_ALWAYS_SOFTWARE=1"
 Environment="GALLIUM_DRIVER=llvmpipe"
+Environment="GBM_BACKEND=dummy"
+Environment="MESA_LOADER_DRIVER_OVERRIDE=swrast"
+Environment="__GLX_VENDOR_LIBRARY_NAME=mesa"
 Environment="DISPLAY=:0"
 
 # Ensure Wayland/X11 display access

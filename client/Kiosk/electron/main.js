@@ -15,6 +15,11 @@ if (process.getuid && process.getuid() === 0) {
 // These switches prevent DRM/GBM errors and force software rendering
 console.log('=== GRAPHICS CONFIGURATION ===');
 
+// CRITICAL: Disable GPU early to prevent ANY initialization attempts
+app.commandLine.appendSwitch('disable-gpu-early-init');
+app.commandLine.appendSwitch('disable-gpu-process-crash-limit');
+console.log('Early GPU init: BLOCKED');
+
 // Disable hardware acceleration completely
 app.disableHardwareAcceleration();
 console.log('Hardware acceleration: DISABLED');
@@ -36,11 +41,13 @@ console.log('OpenGL/WebGL: COMPLETELY DISABLED');
 // Disable ALL features that require GPU/DRM access
 // CRITICAL: Combine all disabled features in ONE call to prevent overwriting
 app.commandLine.appendSwitch('disable-features',
-  'VizDisplayCompositor,UseChromeOSDirectVideoDecoder,UseSkiaRenderer,Vulkan,SharedArrayBuffer,GpuProcessHighPriorityWin,GpuMemoryBuffer');
+  'VizDisplayCompositor,UseChromeOSDirectVideoDecoder,UseSkiaRenderer,Vulkan,SharedArrayBuffer,GpuProcessHighPriorityWin,GpuMemoryBuffer,GpuRasterization,CheckerImaging');
 app.commandLine.appendSwitch('disable-dev-shm-usage'); // Prevent shared memory issues
 app.commandLine.appendSwitch('disable-accelerated-2d-canvas'); // Force software canvas
 app.commandLine.appendSwitch('disable-accelerated-video-decode'); // No hardware video
 app.commandLine.appendSwitch('disable-accelerated-mjpeg-decode'); // No hardware MJPEG
+app.commandLine.appendSwitch('num-raster-threads', '1'); // Minimal raster threads
+app.commandLine.appendSwitch('enable-features', 'CanvasOopRasterization'); // Out-of-process software rasterization
 console.log('Display compositor and hardware features: DISABLED');
 console.log('Shared memory and DMA-BUF: DISABLED');
 
