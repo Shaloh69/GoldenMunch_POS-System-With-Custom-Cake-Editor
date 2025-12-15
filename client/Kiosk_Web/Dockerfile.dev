@@ -1,0 +1,43 @@
+# TEMPORARY WORKAROUND: Dev server in production
+# Use this Dockerfile until HeroUI SSR issues are resolved
+# This skips the build step that's failing with stack overflow
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dumb-init
+RUN apk add --no-cache dumb-init
+
+# Copy package files
+COPY package*.json ./
+
+# Install ALL dependencies (dev included for Next.js dev server)
+# Skip scripts to avoid husky
+RUN npm ci --legacy-peer-deps --ignore-scripts && npm cache clean --force
+
+# Copy source code
+COPY . .
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+RUN chown -R nodejs:nodejs /app
+
+# Switch to non-root user
+USER nodejs
+
+# Expose port
+EXPOSE 3002
+
+# Set NODE_ENV to development
+ENV NODE_ENV=development
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3002', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+
+# Use dumb-init
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start dev server (temporary workaround)
+CMD ["npm", "run", "dev"]
