@@ -95,6 +95,38 @@ This document summarizes ALL the emergency fixes applied to resolve kiosk startu
 
 ---
 
+### ❌ Issue 5: Webpack CSS Compilation Error
+**Problem:** Tailwind CSS v4 syntax (`@import "tailwindcss"`) causing webpack compilation errors.
+
+**Fix:**
+- Changed to traditional v3 syntax (`@tailwind base; @tailwind components; @tailwind utilities;`)
+- Removed `@config` directive
+
+**Files Changed:**
+- `client/Kiosk/styles/globals.css`
+
+**Commit:** `4a61b00 - fix: Change Tailwind CSS syntax from v4 to v3`
+
+---
+
+### ❌ Issue 6: HeroUI RSC Module Errors
+**Problem:** HeroUI RSC (React Server Components) packages causing `module.exports` errors and "export *" in client boundary errors.
+
+**Fixes:**
+- Added HeroUI packages to `transpilePackages` in next.config.mjs
+- Created webpack aliases to redirect RSC imports to non-RSC versions:
+  - `@heroui/system-rsc` → `@heroui/system`
+  - `@heroui/react-rsc-utils` → `@heroui/react-utils`
+
+**Files Changed:**
+- `client/Kiosk/next.config.mjs`
+
+**Commit:** `491943a - fix: Add HeroUI transpile packages and RSC module aliases`
+
+**Reference:** [HeroUI Issue #2749](https://github.com/heroui-inc/heroui/issues/2749)
+
+---
+
 ## Test Instructions
 
 ### Quick Test (Recommended)
