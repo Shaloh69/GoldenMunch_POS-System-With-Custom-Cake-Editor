@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "next dev -p 3002",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 3002",
     "lint": "eslint --fix",
     "clean": "rm -rf node_modules package-lock.json",
     "clean:win": "if exist node_modules rmdir /s /q node_modules && if exist package-lock.json del package-lock.json",
@@ -19,10 +19,11 @@
     "verify": "npm ls --depth=0 && npx electron --version",
     "troubleshoot": "echo 'See NPM_TROUBLESHOOTING.md for detailed help' && npm cache verify",
     "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3002 && electron .\"",
-    "electron:build": "next build && electron-builder",
-    "electron:build:win": "next build && electron-builder --win",
-    "electron:build:mac": "next build && electron-builder --mac",
-    "electron:build:linux": "next build && electron-builder --linux"
+    "electron:dev:remote": "electron .",
+    "electron:build": "electron-builder",
+    "electron:build:win": "electron-builder --win",
+    "electron:build:mac": "electron-builder --mac",
+    "electron:build:linux": "electron-builder --linux"
   },
   "engines": {
     "node": ">=18.17.0",

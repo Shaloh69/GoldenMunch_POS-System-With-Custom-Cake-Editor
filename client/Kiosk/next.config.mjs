@@ -1,9 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Only enable static export for production builds (Electron)
-  // Development mode needs dynamic rendering
-  ...(process.env.NODE_ENV === 'production' && { output: 'export' }),
+  // REMOVED static export - Next.js will run as standalone web app on Render
+  // Electron loads from remote URL instead of bundled files
   reactStrictMode: true,
+
   // CRITICAL: Transpile HeroUI packages to fix RSC module errors
   transpilePackages: [
     'three',
@@ -14,9 +14,12 @@ const nextConfig = {
     '@heroui/system-rsc',
     '@heroui/react-rsc-utils',
   ],
+
+  // Unoptimized images for compatibility
   images: {
-    unoptimized: true, // Required for static export
+    unoptimized: true,
   },
+
   webpack: (config) => {
     config.externals = [...(config.externals || []), { canvas: 'canvas' }];
     // Fix for HeroUI RSC modules
@@ -27,8 +30,9 @@ const nextConfig = {
     };
     return config;
   },
-  // Use .next for dev, out for production
-  distDir: process.env.NODE_ENV === 'production' ? 'out' : '.next',
+
+  // Standard .next directory for all builds
+  distDir: '.next',
 };
 
 export default nextConfig;

@@ -1,8 +1,9 @@
-const { app, BrowserWindow, screen, ipcMain } = require('electron');
+const { app, BrowserWindow, screen, ipcMain, globalShortcut } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const isDev = process.env.NODE_ENV !== 'production';
 const ThermalPrinterService = require('./printer');
+const SettingsManager = require('./settings-manager');
 
 // CRITICAL: Allow running as root (needed for kiosk mode)
 // This is safe in a controlled kiosk environment
@@ -64,7 +65,9 @@ console.log('=== END GRAPHICS CONFIGURATION ===');
 
 let mainWindow;
 let splashWindow;
+let settingsWindow;
 let printerService = null;
+let settingsManager;
 
 function createSplashScreen() {
   console.log('Creating splash screen...');
@@ -97,6 +100,42 @@ function closeSplashScreen() {
   }
 }
 
+function createSettingsWindow() {
+  console.log('Creating settings window...');
+
+  // Don't create multiple settings windows
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.focus();
+    return;
+  }
+
+  settingsWindow = new BrowserWindow({
+    width: 700,
+    height: 600,
+    center: true,
+    resizable: false,
+    frame: true,
+    alwaysOnTop: true,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'settings-preload.js'),
+    },
+  });
+
+  settingsWindow.loadFile(path.join(__dirname, 'settings.html'));
+
+  // Remove menu bar
+  settingsWindow.setMenuBarVisibility(false);
+
+  settingsWindow.on('closed', () => {
+    console.log('Settings window closed');
+    settingsWindow = null;
+  });
+
+  console.log('Settings window created');
+}
+
 function createWindow() {
   console.log('=== KIOSK INITIALIZATION ===');
   console.log('Environment:', isDev ? 'DEVELOPMENT' : 'PRODUCTION');
@@ -127,10 +166,19 @@ function createWindow() {
   console.log('Cache disabled:', true);
   console.log('HTTP caching:', 'DISABLED via webPreferences.cache = false');
 
-  // Load the app
-  const startUrl = isDev
-    ? 'http://localhost:3002' // Next.js dev server
-    : `file://${path.join(__dirname, '../out/index.html')}`; // Production build
+  // Load the app from configured URL
+  const startUrl = settingsManager.getAppUrl(isDev);
+
+  if (!startUrl) {
+    console.error('=== NO URL CONFIGURED ===');
+    console.error('Please configure the app URL using Ctrl+Shift+C');
+    // Show settings window if no URL is configured
+    setTimeout(() => {
+      closeSplashScreen();
+      createSettingsWindow();
+    }, 2000);
+    return;
+  }
 
   console.log('Loading URL:', startUrl);
   mainWindow.loadURL(startUrl).catch((error) => {
@@ -138,6 +186,7 @@ function createWindow() {
     console.error('URL:', startUrl);
     console.error('Error:', error);
     console.error('Timestamp:', new Date().toISOString());
+    console.error('Please check the URL in settings (Ctrl+Shift+C)');
   });
 
   // Open DevTools in development
@@ -227,6 +276,22 @@ app.whenReady().then(() => {
   console.log('  XDG_SESSION_TYPE:', process.env.XDG_SESSION_TYPE);
   console.log('  XDG_RUNTIME_DIR:', process.env.XDG_RUNTIME_DIR);
   console.log('  DESKTOP_SESSION:', process.env.DESKTOP_SESSION);
+
+  // Initialize settings manager
+  settingsManager = new SettingsManager();
+  console.log('Settings manager initialized');
+
+  // Register global keyboard shortcut: Ctrl+Shift+C to open settings
+  const shortcutRegistered = globalShortcut.register('CommandOrControl+Shift+C', () => {
+    console.log('Settings shortcut triggered (Ctrl+Shift+C)');
+    createSettingsWindow();
+  });
+
+  if (shortcutRegistered) {
+    console.log('Settings shortcut registered: Ctrl+Shift+C');
+  } else {
+    console.error('Failed to register settings shortcut');
+  }
 
   // Show splash screen first
   createSplashScreen();
@@ -433,10 +498,62 @@ ipcMain.handle('printer-status', async () => {
   };
 });
 
+// ============================================================================
+// SETTINGS INTEGRATION
+// ============================================================================
 
-// Cleanup printer on quit
+/**
+ * IPC Handler: Get settings
+ */
+ipcMain.handle('get-settings', async () => {
+  console.log('Getting settings');
+  return settingsManager.getSettings();
+});
+
+/**
+ * IPC Handler: Save settings
+ */
+ipcMain.handle('save-settings', async (event, newSettings) => {
+  console.log('Saving settings:', newSettings);
+  try {
+    settingsManager.saveSettings(newSettings);
+    return { success: true, message: 'Settings saved successfully' };
+  } catch (error) {
+    console.error('Error saving settings:', error);
+    throw error;
+  }
+});
+
+/**
+ * IPC Handler: Close settings window
+ */
+ipcMain.on('close-settings', () => {
+  console.log('Closing settings window');
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.close();
+  }
+});
+
+/**
+ * IPC Handler: Reload main app
+ */
+ipcMain.on('reload-app', () => {
+  console.log('Reloading main application');
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    const startUrl = settingsManager.getAppUrl(isDev);
+    if (startUrl) {
+      mainWindow.loadURL(startUrl);
+    }
+  }
+});
+
+// Cleanup on quit
 app.on('before-quit', () => {
+  // Cleanup printer
   if (printerService) {
     printerService.disconnect();
   }
+
+  // Unregister all shortcuts
+  globalShortcut.unregisterAll();
 });
