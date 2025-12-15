@@ -1,43 +1,27 @@
-import { 
-  Inter as FontSans, 
-  Poppins as FontDisplay,
-  JetBrains_Mono as FontMono,
-  Playfair_Display as FontSerif, 
-  Playfair_Display,
-  JetBrains_Mono
-} from "next/font/google";
+// NOTE: Google Fonts disabled for offline/kiosk mode
+// Using system fonts with CSS font-family fallbacks instead
+// This prevents 45+ second delays when internet is unavailable
 
-// Main sans-serif font for body text
-export const fontSans = FontSans({
-  subsets: ["latin"],
+// Define font variables that use system fonts
+export const fontSans = {
   variable: "--font-sans",
-  weight: ["300", "400", "500", "600", "700"],
-  display: "swap",
-});
+  style: { fontFamily: "var(--font-sans)" },
+};
 
-// Display font for headings and titles
-export const fontDisplay = FontDisplay({
-  subsets: ["latin"],
+export const fontDisplay = {
   variable: "--font-display",
-  weight: ["400", "500", "600", "700", "800", "900"],
-  display: "swap",
-});
+  style: { fontFamily: "var(--font-display)" },
+};
 
-// Monospace font for code and technical text
-export const fontMono = JetBrains_Mono({
-  subsets: ["latin"],
+export const fontMono = {
   variable: "--font-mono",
-  weight: ["400", "500", "600", "700"],
-  display: "swap",
-});
+  style: { fontFamily: "var(--font-mono)" },
+};
 
-// Serif font for elegant text (optional)
-export const fontSerif = Playfair_Display({
-  subsets: ["latin"],
+export const fontSerif = {
   variable: "--font-serif",
-  weight: ["400", "500", "600", "700", "800", "900"],
-  display: "swap",
-});
+  style: { fontFamily: "var(--font-serif)" },
+};
 
 // Combine all font variables for easy use in layout
 export const fontVariables = [
