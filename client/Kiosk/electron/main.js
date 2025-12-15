@@ -4,6 +4,13 @@ const fs = require('fs');
 const isDev = process.env.NODE_ENV !== 'production';
 const ThermalPrinterService = require('./printer');
 
+// CRITICAL: Allow running as root (needed for kiosk mode)
+// This is safe in a controlled kiosk environment
+if (process.getuid && process.getuid() === 0) {
+  app.commandLine.appendSwitch('no-sandbox');
+  console.log('Running as root: --no-sandbox flag enabled');
+}
+
 // CRITICAL: Disable hardware acceleration for Raspberry Pi compatibility
 // This fixes GBM (Graphics Buffer Manager) errors on ARM devices
 app.disableHardwareAcceleration();
