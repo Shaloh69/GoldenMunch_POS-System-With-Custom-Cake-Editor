@@ -29,9 +29,6 @@ USER nodejs
 # Expose port
 EXPOSE 3002
 
-# Set NODE_ENV to development
-ENV NODE_ENV=development
-
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3002', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
@@ -39,5 +36,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 # Use dumb-init
 ENTRYPOINT ["dumb-init", "--"]
 
-# Start dev server (temporary workaround)
-CMD ["npm", "run", "dev"]
+# Start dev server with hostname 0.0.0.0 to accept external connections
+CMD ["npm", "run", "dev", "--", "-H", "0.0.0.0"]
