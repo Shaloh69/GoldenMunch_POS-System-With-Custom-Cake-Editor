@@ -1,4 +1,4 @@
-import apiClient from '@/config/api';
+import apiClient from "@/config/api";
 import type {
   MenuItem,
   MenuItemWithCustomization,
@@ -7,8 +7,8 @@ import type {
   ApiResponse,
   MenuQueryParams,
   CapacityCheckParams,
-  CapacityCheckResult
-} from '@/types/api';
+  CapacityCheckResult,
+} from "@/types/api";
 
 /**
  * Menu Service - Handles all menu-related API calls
@@ -20,24 +20,27 @@ export class MenuService {
   static async getMenuItems(params?: MenuQueryParams): Promise<MenuItem[]> {
     try {
       const cacheBustTimestamp = Date.now();
-      console.log('📋 MenuService.getMenuItems() called', {
+      console.log("📋 MenuService.getMenuItems() called", {
         params,
         cacheBustTimestamp,
         timestamp: new Date().toISOString(),
       });
 
-      const response = await apiClient.get<ApiResponse<MenuItem[]>>('/kiosk/menu', {
-        params: {
-          ...params,
-          is_featured: params?.is_featured ? 'true' : undefined,
-          _t: cacheBustTimestamp, // Cache-busting timestamp
+      const response = await apiClient.get<ApiResponse<MenuItem[]>>(
+        "/kiosk/menu",
+        {
+          params: {
+            ...params,
+            is_featured: params?.is_featured ? "true" : undefined,
+            _t: cacheBustTimestamp, // Cache-busting timestamp
+          },
         },
-      });
+      );
 
       const items = response.data.data || [];
-      console.log('✅ MenuService.getMenuItems() received', {
+      console.log("✅ MenuService.getMenuItems() received", {
         itemCount: items.length,
-        items: items.map(item => ({
+        items: items.map((item) => ({
           id: item.menu_item_id,
           name: item.name,
           price: item.current_price,
@@ -47,7 +50,7 @@ export class MenuService {
 
       return items;
     } catch (error) {
-      console.error('❌ MenuService.getMenuItems() error:', error);
+      console.error("❌ MenuService.getMenuItems() error:", error);
       throw error;
     }
   }
@@ -57,16 +60,18 @@ export class MenuService {
    */
   static async getItemDetails(id: number): Promise<MenuItemWithCustomization> {
     try {
-      const response = await apiClient.get<ApiResponse<MenuItemWithCustomization>>(
+      const response = await apiClient.get<
+        ApiResponse<MenuItemWithCustomization>
+      >(
         `/kiosk/menu/${id}`,
-        { params: { _t: Date.now() } } // Cache-busting timestamp
+        { params: { _t: Date.now() } }, // Cache-busting timestamp
       );
       if (!response.data.data) {
-        throw new Error('Item not found');
+        throw new Error("Item not found");
       }
       return response.data.data;
     } catch (error) {
-      console.error('Error fetching item details:', error);
+      console.error("Error fetching item details:", error);
       throw error;
     }
   }
@@ -77,25 +82,31 @@ export class MenuService {
   static async getCategories(): Promise<Category[]> {
     try {
       const cacheBustTimestamp = Date.now();
-      console.log('📂 MenuService.getCategories() called', {
+      console.log("📂 MenuService.getCategories() called", {
         cacheBustTimestamp,
         timestamp: new Date().toISOString(),
       });
 
-      const response = await apiClient.get<ApiResponse<Category[]>>('/kiosk/categories', {
-        params: { _t: cacheBustTimestamp } // Cache-busting timestamp
-      });
+      const response = await apiClient.get<ApiResponse<Category[]>>(
+        "/kiosk/categories",
+        {
+          params: { _t: cacheBustTimestamp }, // Cache-busting timestamp
+        },
+      );
 
       const categories = response.data.data || [];
-      console.log('✅ MenuService.getCategories() received', {
+      console.log("✅ MenuService.getCategories() received", {
         categoryCount: categories.length,
-        categories: categories.map(cat => ({ id: cat.category_id, name: cat.name })),
+        categories: categories.map((cat) => ({
+          id: cat.category_id,
+          name: cat.name,
+        })),
         timestamp: new Date().toISOString(),
       });
 
       return categories;
     } catch (error) {
-      console.error('❌ MenuService.getCategories() error:', error);
+      console.error("❌ MenuService.getCategories() error:", error);
       throw error;
     }
   }
@@ -105,12 +116,15 @@ export class MenuService {
    */
   static async getActivePromotions(): Promise<PromotionRule[]> {
     try {
-      const response = await apiClient.get<ApiResponse<PromotionRule[]>>('/kiosk/promotions', {
-        params: { _t: Date.now() } // Cache-busting timestamp
-      });
+      const response = await apiClient.get<ApiResponse<PromotionRule[]>>(
+        "/kiosk/promotions",
+        {
+          params: { _t: Date.now() }, // Cache-busting timestamp
+        },
+      );
       return response.data.data || [];
     } catch (error) {
-      console.error('Error fetching promotions:', error);
+      console.error("Error fetching promotions:", error);
       throw error;
     }
   }
@@ -118,18 +132,20 @@ export class MenuService {
   /**
    * Check custom cake capacity for a given date and complexity
    */
-  static async checkCapacity(params: CapacityCheckParams): Promise<CapacityCheckResult> {
+  static async checkCapacity(
+    params: CapacityCheckParams,
+  ): Promise<CapacityCheckResult> {
     try {
       const response = await apiClient.get<ApiResponse<CapacityCheckResult>>(
-        '/kiosk/capacity/check',
-        { params }
+        "/kiosk/capacity/check",
+        { params },
       );
       if (!response.data.data) {
-        throw new Error('Unable to check capacity');
+        throw new Error("Unable to check capacity");
       }
       return response.data.data;
     } catch (error) {
-      console.error('Error checking capacity:', error);
+      console.error("Error checking capacity:", error);
       throw error;
     }
   }

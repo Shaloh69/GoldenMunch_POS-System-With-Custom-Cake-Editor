@@ -34,7 +34,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isIdlePage = pathname === '/idle';
+  const isIdlePage = pathname === "/idle";
 
   if (isIdlePage) {
     // Return full-screen layout without sidebar for idle page
@@ -53,9 +53,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       <BackToMenuButton />
       <div className="relative min-h-screen">
         {/* Main Content Area */}
-        <main className="w-full overflow-y-auto">
-          {children}
-        </main>
+        <main className="w-full overflow-y-auto">{children}</main>
       </div>
     </>
   );

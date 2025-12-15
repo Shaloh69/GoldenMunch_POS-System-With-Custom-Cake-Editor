@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Card, CardBody } from '@heroui/card';
-import { Chip } from '@heroui/chip';
-import Image from 'next/image';
-import type { MenuItem } from '@/types/api';
-import { getImageUrl } from '@/utils/imageUtils';
+import React from "react";
+import { Card, CardBody } from "@heroui/card";
+import { Chip } from "@heroui/chip";
+import Image from "next/image";
+import type { MenuItem } from "@/types/api";
+import { getImageUrl } from "@/utils/imageUtils";
 
 interface MenuCardProps {
   item: MenuItem;
@@ -13,8 +13,13 @@ interface MenuCardProps {
   cartQuantity?: number;
 }
 
-export const MenuCard: React.FC<MenuCardProps> = ({ item, onClick, cartQuantity = 0 }) => {
-  const isAvailable = item.status === 'available' &&
+export const MenuCard: React.FC<MenuCardProps> = ({
+  item,
+  onClick,
+  cartQuantity = 0,
+}) => {
+  const isAvailable =
+    item.status === "available" &&
     (item.is_infinite_stock || item.stock_quantity > 0);
 
   return (
@@ -28,9 +33,10 @@ export const MenuCard: React.FC<MenuCardProps> = ({ item, onClick, cartQuantity 
         backdrop-blur-sm shadow-lg
         transition-all duration-300
         touch-manipulation
-        ${isAvailable
-          ? 'hover:border-sunny-yellow hover:shadow-[0_0_30px_rgba(251,205,47,0.5)] hover:scale-[1.01]'
-          : 'opacity-60 cursor-not-allowed grayscale'
+        ${
+          isAvailable
+            ? "hover:border-sunny-yellow hover:shadow-[0_0_30px_rgba(251,205,47,0.5)] hover:scale-[1.01]"
+            : "opacity-60 cursor-not-allowed grayscale"
         }
       `}
     >
@@ -39,10 +45,10 @@ export const MenuCard: React.FC<MenuCardProps> = ({ item, onClick, cartQuantity 
         <div className="relative h-[180px] w-full overflow-hidden bg-gradient-to-br from-sunny-yellow/20 via-deep-orange-yellow/15 to-sunny-yellow/30">
           {getImageUrl(item.image_url) ? (
             <Image
-              src={getImageUrl(item.image_url) || ''}
+              src={getImageUrl(item.image_url) || ""}
               alt={item.name}
               fill
-              className={`object-cover transition-transform duration-500 ${isAvailable ? 'group-hover:scale-110' : ''}`}
+              className={`object-cover transition-transform duration-500 ${isAvailable ? "group-hover:scale-110" : ""}`}
               sizes="50vw"
             />
           ) : (
@@ -106,9 +112,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({ item, onClick, cartQuantity 
           {isAvailable && (
             <div className="mt-1">
               <div className="inline-block bg-gradient-to-r from-sunny-yellow to-deep-orange-yellow px-3 py-1 rounded-full shadow-md">
-                <span className="text-black font-bold text-xs">
-                  👆 Tap
-                </span>
+                <span className="text-black font-bold text-xs">👆 Tap</span>
               </div>
             </div>
           )}

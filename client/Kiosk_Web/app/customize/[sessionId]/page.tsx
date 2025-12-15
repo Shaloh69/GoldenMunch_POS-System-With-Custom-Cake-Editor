@@ -1,17 +1,18 @@
-'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Button } from '@heroui/button';
-import { Card, CardBody, CardHeader } from '@heroui/card';
-import { Spinner } from '@heroui/spinner';
-import { Select, SelectItem } from '@heroui/select';
-import { Textarea } from '@heroui/input';
-import { Input } from '@heroui/input';
-import { Chip } from '@heroui/chip';
-import { MenuService } from '@/services/menu.service';
-import { CustomCakeService } from '@/services/customCake.service';
-import type { CakeFlavor, CakeSize, CustomCakeTheme } from '@/types/api';
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Button } from "@heroui/button";
+import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Spinner } from "@heroui/spinner";
+import { Select, SelectItem } from "@heroui/select";
+import { Textarea } from "@heroui/input";
+import { Input } from "@heroui/input";
+import { Chip } from "@heroui/chip";
+import { MenuService } from "@/services/menu.service";
+import { CustomCakeService } from "@/services/customCake.service";
+import type { CakeFlavor, CakeSize, CustomCakeTheme } from "@/types/api";
 
 export default function CustomizeCakePage() {
   const params = useParams();
@@ -29,15 +30,15 @@ export default function CustomizeCakePage() {
   const [themes, setThemes] = useState<CustomCakeTheme[]>([]);
 
   // Selected values
-  const [selectedFlavor, setSelectedFlavor] = useState<string>('');
-  const [selectedSize, setSelectedSize] = useState<string>('');
-  const [selectedTheme, setSelectedTheme] = useState<string>('');
-  const [frostingColor, setFrostingColor] = useState('');
-  const [frostingType, setFrostingType] = useState('');
-  const [decorationDetails, setDecorationDetails] = useState('');
-  const [cakeText, setCakeText] = useState('');
-  const [specialInstructions, setSpecialInstructions] = useState('');
-  const [designComplexity, setDesignComplexity] = useState('simple');
+  const [selectedFlavor, setSelectedFlavor] = useState<string>("");
+  const [selectedSize, setSelectedSize] = useState<string>("");
+  const [selectedTheme, setSelectedTheme] = useState<string>("");
+  const [frostingColor, setFrostingColor] = useState("");
+  const [frostingType, setFrostingType] = useState("");
+  const [decorationDetails, setDecorationDetails] = useState("");
+  const [cakeText, setCakeText] = useState("");
+  const [specialInstructions, setSpecialInstructions] = useState("");
+  const [designComplexity, setDesignComplexity] = useState("simple");
 
   useEffect(() => {
     loadSession();
@@ -48,13 +49,13 @@ export default function CustomizeCakePage() {
       setLoading(true);
       setError(null);
 
-      console.log('📱 [Customize] Loading session:', sessionId);
+      console.log("📱 [Customize] Loading session:", sessionId);
 
       // Step 1: Validate the session token
       const sessionData = await CustomCakeService.validateSession(sessionId);
       setSession(sessionData);
 
-      console.log('✅ [Customize] Session validated:', {
+      console.log("✅ [Customize] Session validated:", {
         status: sessionData.status,
         minutesRemaining: sessionData.minutesRemaining,
       });
@@ -62,7 +63,7 @@ export default function CustomizeCakePage() {
       // Step 2: Load customization options (flavors, sizes, themes)
       const options = await CustomCakeService.getDesignOptions();
 
-      console.log('✅ [Customize] Design options loaded:', {
+      console.log("✅ [Customize] Design options loaded:", {
         flavors: options.flavors?.length || 0,
         sizes: options.sizes?.length || 0,
         themes: options.themes?.length || 0,
@@ -72,15 +73,17 @@ export default function CustomizeCakePage() {
       if (options.sizes) setSizes(options.sizes);
       if (options.themes) setThemes(options.themes);
     } catch (err: any) {
-      console.error('❌ [Customize] Error loading session:', err);
+      console.error("❌ [Customize] Error loading session:", err);
 
       // Provide user-friendly error messages
-      let errorMessage = 'Failed to load session. It may have expired.';
+      let errorMessage = "Failed to load session. It may have expired.";
 
       if (err.response?.status === 404) {
-        errorMessage = 'Session not found. Please generate a new QR code from the kiosk.';
+        errorMessage =
+          "Session not found. Please generate a new QR code from the kiosk.";
       } else if (err.response?.status === 410) {
-        errorMessage = 'Session has expired. Sessions are valid for 2 hours. Please generate a new QR code.';
+        errorMessage =
+          "Session has expired. Sessions are valid for 2 hours. Please generate a new QR code.";
       } else if (err.message) {
         errorMessage = err.message;
       }
@@ -93,14 +96,14 @@ export default function CustomizeCakePage() {
 
   const handleSubmit = async () => {
     if (!selectedFlavor || !selectedSize) {
-      alert('Please select at least a flavor and size for your cake.');
+      alert("Please select at least a flavor and size for your cake.");
       return;
     }
 
     try {
       setSaving(true);
 
-      console.log('📤 [Customize] Submitting customization...');
+      console.log("📤 [Customize] Submitting customization...");
 
       // Prepare draft data with session token
       const draftData = {
@@ -110,7 +113,7 @@ export default function CustomizeCakePage() {
         layer_1_size_id: parseInt(selectedSize),
         theme_id: selectedTheme ? parseInt(selectedTheme) : undefined,
         frosting_color: frostingColor || undefined,
-        frosting_type: frostingType || 'buttercream',
+        frosting_type: frostingType || "buttercream",
         decoration_details: decorationDetails || undefined,
         cake_text: cakeText || undefined,
         special_instructions: specialInstructions || undefined,
@@ -122,27 +125,32 @@ export default function CustomizeCakePage() {
 
       // Step 1: Save draft to get request_id
       const savedDraft = await CustomCakeService.saveDraft(draftData);
-      console.log('✅ [Customize] Draft saved:', savedDraft);
+      console.log("✅ [Customize] Draft saved:", savedDraft);
 
       // Step 2: Submit for review
       await CustomCakeService.submitForReview(savedDraft.request_id);
-      console.log('✅ [Customize] Submitted for review');
+      console.log("✅ [Customize] Submitted for review");
 
       // Show success message
-      alert('🎉 Your custom cake design has been submitted! Please return to the kiosk.');
+      alert(
+        "🎉 Your custom cake design has been submitted! Please return to the kiosk.",
+      );
 
       // Redirect to a success page
-      router.push('/customize/success');
+      router.push("/customize/success");
     } catch (err: any) {
-      console.error('❌ [Customize] Error submitting customization:', err);
+      console.error("❌ [Customize] Error submitting customization:", err);
 
       // Provide user-friendly error message
-      let errorMessage = 'Failed to submit your design. Please try again.';
+      let errorMessage = "Failed to submit your design. Please try again.";
 
       if (err.response?.status === 400) {
-        errorMessage = err.response?.data?.message || 'Invalid customization data. Please check all required fields.';
+        errorMessage =
+          err.response?.data?.message ||
+          "Invalid customization data. Please check all required fields.";
       } else if (err.response?.status === 404) {
-        errorMessage = 'Session not found. Please generate a new QR code from the kiosk.';
+        errorMessage =
+          "Session not found. Please generate a new QR code from the kiosk.";
       } else if (err.message) {
         errorMessage = err.message;
       }
@@ -159,7 +167,9 @@ export default function CustomizeCakePage() {
         <Card className="card-transparent shadow-2xl-golden">
           <CardBody className="text-center p-12">
             <Spinner size="lg" color="warning" className="mb-4" />
-            <p className="text-2xl text-chocolate-brown font-bold mb-3">🎨 Loading Your Canvas...</p>
+            <p className="text-2xl text-chocolate-brown font-bold mb-3">
+              🎨 Loading Your Canvas...
+            </p>
             <div className="text-sm text-chocolate-brown/60 space-y-1">
               <p>✨ Fetching design options</p>
               <p>🍰 Loading flavors & sizes</p>
@@ -177,7 +187,9 @@ export default function CustomizeCakePage() {
         <Card className="max-w-md card-transparent shadow-2xl-golden">
           <CardBody className="text-center p-8">
             <div className="text-6xl mb-4 animate-bounce-slow">⚠️</div>
-            <h2 className="text-2xl font-bold text-chocolate-brown mb-3">Session Error</h2>
+            <h2 className="text-2xl font-bold text-chocolate-brown mb-3">
+              Session Error
+            </h2>
             <p className="text-chocolate-brown/70 mb-2">{error}</p>
             <p className="text-sm text-chocolate-brown/60 mb-6">
               ⏱️ Sessions expire after 15 minutes for your security
@@ -185,7 +197,7 @@ export default function CustomizeCakePage() {
             <Button
               size="lg"
               className="bg-gradient-to-r from-golden-orange to-deep-amber text-white font-bold"
-              onClick={() => router.push('/')}
+              onClick={() => router.push("/")}
             >
               🏠 Return to Kiosk
             </Button>
@@ -203,7 +215,9 @@ export default function CustomizeCakePage() {
           <CardHeader className="flex flex-col items-center text-center p-6">
             <div className="text-6xl mb-2">🎨</div>
             <h1 className="text-3xl font-bold">Design Your Dream Cake</h1>
-            <p className="text-white/90 mt-2">Create something special just for you</p>
+            <p className="text-white/90 mt-2">
+              Create something special just for you
+            </p>
           </CardHeader>
         </Card>
 
@@ -225,8 +239,10 @@ export default function CustomizeCakePage() {
                 isRequired
               >
                 {flavors.map((flavor) => (
-                  <SelectItem key={flavor.flavor_id.toString()} value={flavor.flavor_id.toString()}>
-                    {flavor.flavor_name} {flavor.additional_cost > 0 && `(+$${Number(flavor.additional_cost).toFixed(2)})`}
+                  <SelectItem key={flavor.flavor_id.toString()}>
+                    {flavor.flavor_name}{" "}
+                    {flavor.additional_cost > 0 &&
+                      `(+$${Number(flavor.additional_cost).toFixed(2)})`}
                   </SelectItem>
                 ))}
               </Select>
@@ -252,8 +268,9 @@ export default function CustomizeCakePage() {
                 isRequired
               >
                 {sizes.map((size) => (
-                  <SelectItem key={size.size_id.toString()} value={size.size_id.toString()}>
-                    {size.size_name} {size.serves_people && `(Serves ${size.serves_people})`}
+                  <SelectItem key={size.size_id.toString()}>
+                    {size.size_name}{" "}
+                    {size.serves_people && `(Serves ${size.serves_people})`}
                   </SelectItem>
                 ))}
               </Select>
@@ -278,8 +295,10 @@ export default function CustomizeCakePage() {
                 size="lg"
               >
                 {themes.map((theme) => (
-                  <SelectItem key={theme.theme_id.toString()} value={theme.theme_id.toString()}>
-                    {theme.theme_name} {theme.base_additional_cost > 0 && `(+$${Number(theme.base_additional_cost).toFixed(2)})`}
+                  <SelectItem key={theme.theme_id.toString()}>
+                    {theme.theme_name}{" "}
+                    {theme.base_additional_cost > 0 &&
+                      `(+$${Number(theme.base_additional_cost).toFixed(2)})`}
                   </SelectItem>
                 ))}
               </Select>
@@ -374,7 +393,9 @@ export default function CustomizeCakePage() {
               isLoading={saving}
               disabled={!selectedFlavor || !selectedSize}
             >
-              {saving ? 'Submitting...' : '✨ Complete Design & Return to Kiosk'}
+              {saving
+                ? "Submitting..."
+                : "✨ Complete Design & Return to Kiosk"}
             </Button>
             {(!selectedFlavor || !selectedSize) && (
               <p className="text-white text-center mt-4 text-sm">

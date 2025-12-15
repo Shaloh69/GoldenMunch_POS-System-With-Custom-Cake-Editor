@@ -1,9 +1,13 @@
-import { API_BASE_URL } from '@/config/api';
+import { API_BASE_URL } from "@/config/api";
 
 export class SettingsService {
-  static async getPaymentQR(paymentMethod: 'gcash' | 'paymaya'): Promise<string | null> {
+  static async getPaymentQR(
+    paymentMethod: "gcash" | "paymaya",
+  ): Promise<string | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/kiosk/payment-qr/${paymentMethod}`);
+      const response = await fetch(
+        `${API_BASE_URL}/kiosk/payment-qr/${paymentMethod}`,
+      );
 
       if (!response.ok) {
         console.error(`Failed to fetch ${paymentMethod} QR code`);

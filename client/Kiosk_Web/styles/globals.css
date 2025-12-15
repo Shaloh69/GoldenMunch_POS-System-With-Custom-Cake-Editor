@@ -6,24 +6,28 @@
 
 /* Color Palette Variables */
 :root {
-  --light-caramel: #D9B38C;
-  --cream-white: #FFF9F2;
-  --soft-sand: #E8DCC8;
-  --warm-beige: #C9B8A5;
-  --muted-clay: #C67B57;
+  --light-caramel: #d9b38c;
+  --cream-white: #fff9f2;
+  --soft-sand: #e8dcc8;
+  --warm-beige: #c9b8a5;
+  --muted-clay: #c67b57;
 
   /* Legacy variables for backward compatibility */
-  --dark-cocoa: #C67B57;
-  --milk-chocolate: #D9B38C;
-  --champagne-gold: #C9B8A5;
-  --soft-white: #FFF9F2;
-  --deep-burgundy: #C67B57;
+  --dark-cocoa: #c67b57;
+  --milk-chocolate: #d9b38c;
+  --champagne-gold: #c9b8a5;
+  --soft-white: #fff9f2;
+  --deep-burgundy: #c67b57;
 
   /* System font fallbacks (no internet required) */
-  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  --font-display: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
-  --font-mono: 'Courier New', Courier, monospace;
-  --font-serif: Georgia, 'Times New Roman', Times, serif;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  --font-display:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  --font-mono: "Courier New", Courier, monospace;
+  --font-serif: Georgia, "Times New Roman", Times, serif;
 }
 
 /* Smooth scrolling for the kiosk */
@@ -53,7 +57,8 @@ body {
 
 /* Custom animations */
 @keyframes float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px) rotate(0deg);
   }
   33% {
@@ -65,7 +70,8 @@ body {
 }
 
 @keyframes bounce-slow {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
     animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
   }
@@ -76,7 +82,8 @@ body {
 }
 
 @keyframes pulse-slow {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -149,16 +156,20 @@ body {
 }
 
 @keyframes glow {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 20px rgba(249, 160, 63, 0.3);
   }
   50% {
-    box-shadow: 0 0 30px rgba(249, 160, 63, 0.6), 0 0 60px rgba(249, 160, 63, 0.3);
+    box-shadow:
+      0 0 30px rgba(249, 160, 63, 0.6),
+      0 0 60px rgba(249, 160, 63, 0.3);
   }
 }
 
 @keyframes blob {
-  0%, 100% {
+  0%,
+  100% {
     transform: translate(0, 0) scale(1);
   }
   33% {
@@ -170,7 +181,8 @@ body {
 }
 
 @keyframes float-random {
-  0%, 100% {
+  0%,
+  100% {
     transform: translate(0, 0) scale(1);
     opacity: 0.3;
   }
@@ -212,7 +224,8 @@ body {
 }
 
 @keyframes float-gentle {
-  0%, 100% {
+  0%,
+  100% {
     transform: translate(0, 0) rotate(0deg);
     opacity: 0.4;
   }
@@ -231,7 +244,8 @@ body {
 }
 
 @keyframes twinkle {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0.2;
     transform: scale(1);
   }
@@ -242,7 +256,8 @@ body {
 }
 
 @keyframes wave {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
     opacity: 0.3;
   }
@@ -253,7 +268,8 @@ body {
 }
 
 @keyframes wave-reverse {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
     opacity: 0.2;
   }
@@ -291,12 +307,7 @@ body {
 
 .animate-shimmer {
   animation: shimmer 2s infinite;
-  background: linear-gradient(
-    to right,
-    #f5f0e8 4%,
-    #fef6e7 25%,
-    #f5f0e8 36%
-  );
+  background: linear-gradient(to right, #f5f0e8 4%, #fef6e7 25%, #f5f0e8 36%);
   background-size: 1000px 100%;
 }
 
@@ -378,20 +389,24 @@ body {
 
 /* Custom gradient backgrounds */
 .bg-golden-gradient {
-  background: linear-gradient(135deg, #F9A03F 0%, #D97706 100%);
+  background: linear-gradient(135deg, #f9a03f 0%, #d97706 100%);
 }
 
 .bg-munch-gradient {
-  background: linear-gradient(135deg, #FFF8F0 0%, #E6C89C 50%, #F9A03F 100%);
+  background: linear-gradient(135deg, #fff8f0 0%, #e6c89c 50%, #f9a03f 100%);
 }
 
 .bg-mesh-gradient {
   background:
     radial-gradient(at 0% 0%, rgba(249, 160, 63, 0.15) 0px, transparent 50%),
     radial-gradient(at 100% 0%, rgba(217, 119, 6, 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(249, 160, 63, 0.15) 0px, transparent 50%),
+    radial-gradient(
+      at 100% 100%,
+      rgba(249, 160, 63, 0.15) 0px,
+      transparent 50%
+    ),
     radial-gradient(at 0% 100%, rgba(217, 119, 6, 0.15) 0px, transparent 50%),
-    linear-gradient(135deg, #FFF8F0 0%, #FEF6E7 100%);
+    linear-gradient(135deg, #fff8f0 0%, #fef6e7 100%);
 }
 
 .bg-glass {
@@ -403,19 +418,27 @@ body {
 
 /* Custom shadows for kiosk elements */
 .shadow-golden {
-  box-shadow: 0 10px 25px -5px rgba(249, 160, 63, 0.3), 0 10px 10px -5px rgba(249, 160, 63, 0.1);
+  box-shadow:
+    0 10px 25px -5px rgba(249, 160, 63, 0.3),
+    0 10px 10px -5px rgba(249, 160, 63, 0.1);
 }
 
 .shadow-deep {
-  box-shadow: 0 20px 25px -5px rgba(75, 46, 46, 0.3), 0 10px 10px -5px rgba(75, 46, 46, 0.1);
+  box-shadow:
+    0 20px 25px -5px rgba(75, 46, 46, 0.3),
+    0 10px 10px -5px rgba(75, 46, 46, 0.1);
 }
 
 .shadow-xl-golden {
-  box-shadow: 0 20px 50px -12px rgba(249, 160, 63, 0.4), 0 10px 25px -5px rgba(249, 160, 63, 0.2);
+  box-shadow:
+    0 20px 50px -12px rgba(249, 160, 63, 0.4),
+    0 10px 25px -5px rgba(249, 160, 63, 0.2);
 }
 
 .shadow-inner-glow {
-  box-shadow: inset 0 2px 15px rgba(249, 160, 63, 0.1), 0 4px 20px rgba(249, 160, 63, 0.15);
+  box-shadow:
+    inset 0 2px 15px rgba(249, 160, 63, 0.1),
+    0 4px 20px rgba(249, 160, 63, 0.15);
 }
 
 /* Touch-friendly button styles */
@@ -441,15 +464,17 @@ body {
 
 /* Custom card styles */
 .card-golden {
-  background: linear-gradient(145deg, #FFF8F0, #F5F0E8);
+  background: linear-gradient(145deg, #fff8f0, #f5f0e8);
   border: 2px solid rgba(249, 160, 63, 0.2);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .card-golden:hover {
-  border-color: #F9A03F;
+  border-color: #f9a03f;
   transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 20px 40px -10px rgba(249, 160, 63, 0.4), 0 10px 20px -5px rgba(249, 160, 63, 0.2);
+  box-shadow:
+    0 20px 40px -10px rgba(249, 160, 63, 0.4),
+    0 10px 20px -5px rgba(249, 160, 63, 0.2);
 }
 
 .card-modern {
@@ -462,13 +487,13 @@ body {
 }
 
 .card-modern::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #F9A03F, #D97706, #F9A03F);
+  background: linear-gradient(90deg, #f9a03f, #d97706, #f9a03f);
   background-size: 200% 100%;
   animation: shimmer 3s infinite;
   opacity: 0;
@@ -481,7 +506,9 @@ body {
 
 .card-modern:hover {
   transform: translateY(-8px);
-  box-shadow: 0 12px 40px rgba(249, 160, 63, 0.2), 0 8px 20px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 12px 40px rgba(249, 160, 63, 0.2),
+    0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
 .card-glass {
@@ -522,7 +549,7 @@ body {
 
 /* Loading spinner customization */
 .spinner-golden::before {
-  border-color: #F9A03F transparent #F9A03F transparent;
+  border-color: #f9a03f transparent #f9a03f transparent;
 }
 
 /* Custom scrollbar for kiosk */
@@ -531,23 +558,24 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #FFF8F0;
+  background: #fff8f0;
   border-radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #F9A03F, #D97706);
+  background: linear-gradient(180deg, #f9a03f, #d97706);
   border-radius: 6px;
-  border: 2px solid #FFF8F0;
+  border: 2px solid #fff8f0;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #D97706, #B45309);
+  background: linear-gradient(180deg, #d97706, #b45309);
 }
 
 /* Emoji styling for better visibility */
 .emoji-large {
-  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+  font-family:
+    "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
   font-size: 1.2em;
   line-height: 1;
 }
@@ -569,7 +597,7 @@ img {
 
 /* Focus styles for accessibility */
 .focus-visible {
-  outline: 3px solid #F9A03F;
+  outline: 3px solid #f9a03f;
   outline-offset: 2px;
 }
 
@@ -578,7 +606,7 @@ img {
   .card-golden {
     border-width: 3px;
   }
-  
+
   .btn-touch {
     border-width: 2px;
     border-style: solid;
@@ -592,7 +620,7 @@ img {
   .animate-pulse-slow {
     animation: none;
   }
-  
+
   .card-golden,
   .btn-touch {
     transition: none;
@@ -607,34 +635,42 @@ img {
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 2px solid rgba(201, 184, 165, 0.4);
-    box-shadow: 0 8px 32px 0 rgba(198, 123, 87, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+    box-shadow:
+      0 8px 32px 0 rgba(198, 123, 87, 0.25),
+      0 0 0 1px rgba(255, 255, 255, 0.5) inset;
     border-radius: 20px;
   }
 
   .glass-card:hover {
-    background: rgba(255, 249, 242, 0.80);
+    background: rgba(255, 249, 242, 0.8);
     border-color: rgba(198, 123, 87, 0.6);
-    box-shadow: 0 12px 40px 0 rgba(198, 123, 87, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+    box-shadow:
+      0 12px 40px 0 rgba(198, 123, 87, 0.35),
+      0 0 0 1px rgba(255, 255, 255, 0.6) inset;
     transform: translateY(-4px);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Glass Header - Elegant header with cream tint - MORE VISIBLE */
   .glass-header {
-    background: rgba(255, 249, 242, 0.50);
+    background: rgba(255, 249, 242, 0.5);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-bottom: 2px solid rgba(217, 179, 140, 0.4);
-    box-shadow: 0 4px 20px rgba(198, 123, 87, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.4) inset;
+    box-shadow:
+      0 4px 20px rgba(198, 123, 87, 0.2),
+      0 0 0 1px rgba(255, 255, 255, 0.4) inset;
   }
 
   /* Glass Footer - Warm beige tinted footer - MORE VISIBLE */
   .glass-footer {
-    background: rgba(255, 249, 242, 0.60);
+    background: rgba(255, 249, 242, 0.6);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
     border-top: 2px solid rgba(217, 179, 140, 0.4);
-    box-shadow: 0 -4px 20px rgba(198, 123, 87, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.4) inset;
+    box-shadow:
+      0 -4px 20px rgba(198, 123, 87, 0.25),
+      0 0 0 1px rgba(255, 255, 255, 0.4) inset;
   }
 
   /* Glass Button - Interactive caramel tinted buttons - MORE VISIBLE */
@@ -701,7 +737,8 @@ img {
 
   /* Gentle Float Animation - For background elements */
   @keyframes float-gentle {
-    0%, 100% {
+    0%,
+    100% {
       transform: translateY(0) rotate(0deg);
     }
     25% {
@@ -724,10 +761,23 @@ img {
     background:
       linear-gradient(white 30%, rgba(255, 255, 255, 0)),
       linear-gradient(rgba(255, 255, 255, 0), white 70%) 0 100%,
-      radial-gradient(farthest-side at 50% 0, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0)),
-      radial-gradient(farthest-side at 50% 100%, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0)) 0 100%;
+      radial-gradient(
+        farthest-side at 50% 0,
+        rgba(0, 0, 0, 0.1),
+        rgba(0, 0, 0, 0)
+      ),
+      radial-gradient(
+          farthest-side at 50% 100%,
+          rgba(0, 0, 0, 0.1),
+          rgba(0, 0, 0, 0)
+        )
+        0 100%;
     background-repeat: no-repeat;
-    background-size: 100% 40px, 100% 40px, 100% 14px, 100% 14px;
+    background-size:
+      100% 40px,
+      100% 40px,
+      100% 14px,
+      100% 14px;
     background-attachment: local, local, scroll, scroll;
   }
 

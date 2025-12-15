@@ -1,7 +1,9 @@
-import { Card, CardBody, CardHeader } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { Chip } from '@heroui/chip';
-import NextLink from 'next/link';
+import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { Chip } from "@heroui/chip";
+import NextLink from "next/link";
+
+export const dynamic = "force-dynamic";
 
 export default function AboutPage() {
   return (
@@ -11,7 +13,9 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-6xl font-bold mb-4">🍰 Golden Munch 🍰</h1>
           <p className="text-2xl opacity-90 mb-2">Where Every Bite is Golden</p>
-          <p className="text-lg opacity-80">Serving the community with love since 2020</p>
+          <p className="text-lg opacity-80">
+            Serving the community with love since 2020
+          </p>
         </div>
       </div>
 
@@ -20,30 +24,37 @@ export default function AboutPage() {
         <div className="mb-12">
           <Card className="bg-cream-white border-2 border-golden-orange/20 shadow-xl">
             <CardHeader className="text-center p-8">
-              <h2 className="text-4xl font-bold text-chocolate-brown">Our Story 📖</h2>
+              <h2 className="text-4xl font-bold text-chocolate-brown">
+                Our Story 📖
+              </h2>
             </CardHeader>
             <CardBody className="px-8 pb-8">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
                 <div>
                   <p className="text-lg text-chocolate-brown/80 mb-6">
-                    Golden Munch began as a small family bakery with a simple dream: to bring 
-                    joy to our community through freshly baked goods and warm hospitality. 
-                    What started in our home kitchen has grown into a beloved local destination.
+                    Golden Munch began as a small family bakery with a simple
+                    dream: to bring joy to our community through freshly baked
+                    goods and warm hospitality. What started in our home kitchen
+                    has grown into a beloved local destination.
                   </p>
                   <p className="text-lg text-chocolate-brown/80 mb-6">
-                    Every morning, our passionate bakers arrive before dawn to craft our signature 
-                    items using traditional recipes passed down through generations, combined with 
-                    innovative flavors that surprise and delight.
+                    Every morning, our passionate bakers arrive before dawn to
+                    craft our signature items using traditional recipes passed
+                    down through generations, combined with innovative flavors
+                    that surprise and delight.
                   </p>
                   <p className="text-lg text-chocolate-brown/80">
-                    Our commitment to quality ingredients, sustainable practices, and exceptional 
-                    service has made Golden Munch more than just a bakery – we're a cornerstone 
-                    of the community.
+                    Our commitment to quality ingredients, sustainable
+                    practices, and exceptional service has made Golden Munch
+                    more than just a bakery – we're a cornerstone of the
+                    community.
                   </p>
                 </div>
                 <div className="text-center">
                   <div className="text-8xl mb-4 animate-float">👨‍🍳</div>
-                  <h3 className="text-2xl font-bold text-chocolate-brown mb-2">Master Bakers</h3>
+                  <h3 className="text-2xl font-bold text-chocolate-brown mb-2">
+                    Master Bakers
+                  </h3>
                   <p className="text-chocolate-brown/70">
                     Over 50 years of combined experience
                   </p>
@@ -62,9 +73,12 @@ export default function AboutPage() {
             <Card className="text-center p-6 bg-cream-white border border-golden-orange/20 hover:border-golden-orange transition-all duration-300 hover:scale-105">
               <CardBody>
                 <div className="text-6xl mb-4">🌱</div>
-                <h3 className="text-xl font-bold text-chocolate-brown mb-2">Fresh Daily</h3>
+                <h3 className="text-xl font-bold text-chocolate-brown mb-2">
+                  Fresh Daily
+                </h3>
                 <p className="text-chocolate-brown/70">
-                  Everything baked fresh every morning using premium, locally-sourced ingredients
+                  Everything baked fresh every morning using premium,
+                  locally-sourced ingredients
                 </p>
               </CardBody>
             </Card>
@@ -72,9 +86,12 @@ export default function AboutPage() {
             <Card className="text-center p-6 bg-cream-white border border-golden-orange/20 hover:border-golden-orange transition-all duration-300 hover:scale-105">
               <CardBody>
                 <div className="text-6xl mb-4">🏆</div>
-                <h3 className="text-xl font-bold text-chocolate-brown mb-2">Award Winning</h3>
+                <h3 className="text-xl font-bold text-chocolate-brown mb-2">
+                  Award Winning
+                </h3>
                 <p className="text-chocolate-brown/70">
-                  Recognized as "Best Local Bakery" three years running by the community
+                  Recognized as "Best Local Bakery" three years running by the
+                  community
                 </p>
               </CardBody>
             </Card>
@@ -82,9 +99,12 @@ export default function AboutPage() {
             <Card className="text-center p-6 bg-cream-white border border-golden-orange/20 hover:border-golden-orange transition-all duration-300 hover:scale-105">
               <CardBody>
                 <div className="text-6xl mb-4">❤️</div>
-                <h3 className="text-xl font-bold text-chocolate-brown mb-2">Made with Love</h3>
+                <h3 className="text-xl font-bold text-chocolate-brown mb-2">
+                  Made with Love
+                </h3>
                 <p className="text-chocolate-brown/70">
-                  Every item is handcrafted with care and attention to detail by our skilled team
+                  Every item is handcrafted with care and attention to detail by
+                  our skilled team
                 </p>
               </CardBody>
             </Card>
@@ -92,9 +112,12 @@ export default function AboutPage() {
             <Card className="text-center p-6 bg-cream-white border border-golden-orange/20 hover:border-golden-orange transition-all duration-300 hover:scale-105">
               <CardBody>
                 <div className="text-6xl mb-4">🌍</div>
-                <h3 className="text-xl font-bold text-chocolate-brown mb-2">Community First</h3>
+                <h3 className="text-xl font-bold text-chocolate-brown mb-2">
+                  Community First
+                </h3>
                 <p className="text-chocolate-brown/70">
-                  Supporting local farmers and giving back to our neighborhood through various initiatives
+                  Supporting local farmers and giving back to our neighborhood
+                  through various initiatives
                 </p>
               </CardBody>
             </Card>
@@ -110,10 +133,13 @@ export default function AboutPage() {
             <Card className="bg-gradient-to-br from-golden-orange/10 to-golden-orange/5 border-2 border-golden-orange/30">
               <CardBody className="p-8 text-center">
                 <div className="text-5xl mb-4">🥇</div>
-                <h3 className="text-2xl font-bold text-chocolate-brown mb-4">Quality First</h3>
+                <h3 className="text-2xl font-bold text-chocolate-brown mb-4">
+                  Quality First
+                </h3>
                 <p className="text-chocolate-brown/80">
-                  We never compromise on quality. From sourcing the finest ingredients to 
-                  perfecting our recipes, excellence is our standard.
+                  We never compromise on quality. From sourcing the finest
+                  ingredients to perfecting our recipes, excellence is our
+                  standard.
                 </p>
               </CardBody>
             </Card>
@@ -121,10 +147,12 @@ export default function AboutPage() {
             <Card className="bg-gradient-to-br from-mint-green/10 to-mint-green/5 border-2 border-mint-green/30">
               <CardBody className="p-8 text-center">
                 <div className="text-5xl mb-4">🤝</div>
-                <h3 className="text-2xl font-bold text-chocolate-brown mb-4">Community</h3>
+                <h3 className="text-2xl font-bold text-chocolate-brown mb-4">
+                  Community
+                </h3>
                 <p className="text-chocolate-brown/80">
-                  We believe in building lasting relationships with our customers and 
-                  supporting the local community that supports us.
+                  We believe in building lasting relationships with our
+                  customers and supporting the local community that supports us.
                 </p>
               </CardBody>
             </Card>
@@ -132,10 +160,12 @@ export default function AboutPage() {
             <Card className="bg-gradient-to-br from-caramel-beige/30 to-caramel-beige/10 border-2 border-caramel-beige">
               <CardBody className="p-8 text-center">
                 <div className="text-5xl mb-4">🌿</div>
-                <h3 className="text-2xl font-bold text-chocolate-brown mb-4">Sustainability</h3>
+                <h3 className="text-2xl font-bold text-chocolate-brown mb-4">
+                  Sustainability
+                </h3>
                 <p className="text-chocolate-brown/80">
-                  Environmental responsibility guides our choices, from packaging to 
-                  energy usage and waste reduction.
+                  Environmental responsibility guides our choices, from
+                  packaging to energy usage and waste reduction.
                 </p>
               </CardBody>
             </Card>
@@ -151,8 +181,12 @@ export default function AboutPage() {
             <Card className="text-center bg-cream-white border border-golden-orange/20">
               <CardBody className="p-6">
                 <div className="text-7xl mb-4">👨‍🍳</div>
-                <h3 className="text-xl font-bold text-chocolate-brown mb-1">Chef Marcus</h3>
-                <Chip color="warning" size="sm" variant="flat" className="mb-3">Head Baker</Chip>
+                <h3 className="text-xl font-bold text-chocolate-brown mb-1">
+                  Chef Marcus
+                </h3>
+                <Chip color="warning" size="sm" variant="flat" className="mb-3">
+                  Head Baker
+                </Chip>
                 <p className="text-chocolate-brown/70 text-sm">
                   20+ years of experience crafting artisanal breads and pastries
                 </p>
@@ -162,10 +196,15 @@ export default function AboutPage() {
             <Card className="text-center bg-cream-white border border-golden-orange/20">
               <CardBody className="p-6">
                 <div className="text-7xl mb-4">👩‍🍳</div>
-                <h3 className="text-xl font-bold text-chocolate-brown mb-1">Chef Isabella</h3>
-                <Chip color="success" size="sm" variant="flat" className="mb-3">Cake Specialist</Chip>
+                <h3 className="text-xl font-bold text-chocolate-brown mb-1">
+                  Chef Isabella
+                </h3>
+                <Chip color="success" size="sm" variant="flat" className="mb-3">
+                  Cake Specialist
+                </Chip>
                 <p className="text-chocolate-brown/70 text-sm">
-                  Award-winning cake designer with a passion for creative decorating
+                  Award-winning cake designer with a passion for creative
+                  decorating
                 </p>
               </CardBody>
             </Card>
@@ -173,8 +212,12 @@ export default function AboutPage() {
             <Card className="text-center bg-cream-white border border-golden-orange/20">
               <CardBody className="p-6">
                 <div className="text-7xl mb-4">👨‍💼</div>
-                <h3 className="text-xl font-bold text-chocolate-brown mb-1">David</h3>
-                <Chip color="primary" size="sm" variant="flat" className="mb-3">Manager</Chip>
+                <h3 className="text-xl font-bold text-chocolate-brown mb-1">
+                  David
+                </h3>
+                <Chip color="primary" size="sm" variant="flat" className="mb-3">
+                  Manager
+                </Chip>
                 <p className="text-chocolate-brown/70 text-sm">
                   Ensuring every customer has a delightful experience
                 </p>
@@ -248,7 +291,8 @@ export default function AboutPage() {
                 Ready to Experience Golden Munch? 🎉
               </h2>
               <p className="text-xl text-chocolate-brown/80 mb-6">
-                Join thousands of satisfied customers who start their day the golden way!
+                Join thousands of satisfied customers who start their day the
+                golden way!
               </p>
               <div className="flex flex-wrap justify-center gap-4">
                 <Button

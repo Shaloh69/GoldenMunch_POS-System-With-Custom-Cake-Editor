@@ -1,11 +1,22 @@
-'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { QRCodeSVG } from 'qrcode.react';
-import { Cake, Smartphone, Clock, Sparkles, CheckCircle, ArrowLeft } from 'lucide-react';
-import { CustomCakeService, CustomCakeSessionResponse } from '@/services/customCake.service';
+"use client";
+
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { QRCodeSVG } from "qrcode.react";
+import {
+  Cake,
+  Smartphone,
+  Clock,
+  Sparkles,
+  CheckCircle,
+  ArrowLeft,
+} from "lucide-react";
+import {
+  CustomCakeService,
+  CustomCakeSessionResponse,
+} from "@/services/customCake.service";
 
 type QRSession = CustomCakeSessionResponse;
 
@@ -15,25 +26,31 @@ export default function CustomCakePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
-  const [step, setStep] = useState<'welcome' | 'generating' | 'qr' | 'expired' | 'success'>('welcome');
+  const [step, setStep] = useState<
+    "welcome" | "generating" | "qr" | "expired" | "success"
+  >("welcome");
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Generate QR Code
   const generateQR = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setStep('generating');
+    setStep("generating");
 
     try {
       // Call real API to generate QR session
-      const session = await CustomCakeService.generateQRSession('KIOSK-001');
+      const session = await CustomCakeService.generateQRSession("KIOSK-001");
 
       setQrSession(session);
       setTimeRemaining(session.expiresIn);
-      setStep('qr');
+      setStep("qr");
     } catch (err: any) {
-      setError(err?.response?.data?.message || err.message || 'Failed to generate QR code');
-      setStep('welcome');
+      setError(
+        err?.response?.data?.message ||
+          err.message ||
+          "Failed to generate QR code",
+      );
+      setStep("welcome");
     } finally {
       setLoading(false);
     }
@@ -42,7 +59,7 @@ export default function CustomCakePage() {
   // Poll for QR scan success using useEffect
   useEffect(() => {
     // Only poll when we have a session and are on the QR step
-    if (!qrSession?.sessionToken || step !== 'qr') {
+    if (!qrSession?.sessionToken || step !== "qr") {
       // Clear any existing polling interval
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
@@ -54,24 +71,26 @@ export default function CustomCakePage() {
     // Start polling
     pollIntervalRef.current = setInterval(async () => {
       try {
-        const status = await CustomCakeService.pollSessionStatus(qrSession.sessionToken);
+        const status = await CustomCakeService.pollSessionStatus(
+          qrSession.sessionToken,
+        );
 
-        if (status.status === 'completed') {
+        if (status.status === "completed") {
           // Clear the polling interval
           if (pollIntervalRef.current) {
             clearInterval(pollIntervalRef.current);
             pollIntervalRef.current = null;
           }
 
-          setStep('success');
+          setStep("success");
 
           // Redirect to menu after 5 seconds
           setTimeout(() => {
-            router.push('/menu');
+            router.push("/menu");
           }, 5000);
         }
       } catch (err) {
-        console.error('Polling error:', err);
+        console.error("Polling error:", err);
       }
     }, 2000); // Poll every 2 seconds
 
@@ -86,12 +105,12 @@ export default function CustomCakePage() {
 
   // Countdown timer
   useEffect(() => {
-    if (!qrSession || step !== 'qr') return;
+    if (!qrSession || step !== "qr") return;
 
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
-          setStep('expired');
+          setStep("expired");
           return 0;
         }
         return prev - 1;
@@ -105,14 +124,14 @@ export default function CustomCakePage() {
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <AnimatePresence mode="wait">
         {/* Welcome Screen */}
-        {step === 'welcome' && (
+        {step === "welcome" && (
           <motion.div
             key="welcome"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -203,7 +222,7 @@ export default function CustomCakePage() {
         )}
 
         {/* Generating Screen */}
-        {step === 'generating' && (
+        {step === "generating" && (
           <motion.div
             key="generating"
             initial={{ opacity: 0 }}
@@ -231,7 +250,7 @@ export default function CustomCakePage() {
         )}
 
         {/* QR Code Screen */}
-        {step === 'qr' && qrSession && (
+        {step === "qr" && qrSession && (
           <motion.div
             key="qr"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -288,7 +307,7 @@ export default function CustomCakePage() {
                     transition={{
                       duration: 2,
                       repeat: Infinity,
-                      ease: "easeInOut"
+                      ease: "easeInOut",
                     }}
                     className="absolute inset-0 border-4 border-purple-400 rounded-3xl blur-sm"
                   />
@@ -316,8 +335,10 @@ export default function CustomCakePage() {
                 <div className="h-3 bg-gray-200 rounded-full overflow-hidden shadow-inner">
                   <motion.div
                     className="h-full bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500"
-                    initial={{ width: '100%' }}
-                    animate={{ width: `${(timeRemaining / qrSession.expiresIn) * 100}%` }}
+                    initial={{ width: "100%" }}
+                    animate={{
+                      width: `${(timeRemaining / qrSession.expiresIn) * 100}%`,
+                    }}
                     transition={{ duration: 1 }}
                   />
                 </div>
@@ -340,7 +361,7 @@ export default function CustomCakePage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                onClick={() => router.push('/menu')}
+                onClick={() => router.push("/menu")}
                 className="w-full mt-6 py-5 flex items-center justify-center gap-3 bg-gradient-to-r from-gray-600 to-gray-800 text-white font-bold text-lg rounded-2xl hover:scale-105 transition-all shadow-xl"
               >
                 <ArrowLeft className="w-6 h-6" />
@@ -351,7 +372,7 @@ export default function CustomCakePage() {
         )}
 
         {/* Expired Screen */}
-        {step === 'expired' && (
+        {step === "expired" && (
           <motion.div
             key="expired"
             initial={{ opacity: 0, scale: 0.9 }}
@@ -368,13 +389,14 @@ export default function CustomCakePage() {
                 Session Expired
               </h2>
               <p className="text-black/70 text-xl font-medium mb-8">
-                Your QR code session has timed out. Please generate a new one to continue.
+                Your QR code session has timed out. Please generate a new one to
+                continue.
               </p>
 
               <div className="space-y-4">
                 <button
                   onClick={() => {
-                    setStep('welcome');
+                    setStep("welcome");
                     setQrSession(null);
                   }}
                   className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 text-white py-5 rounded-2xl text-xl font-bold shadow-2xl hover:shadow-purple-500/50 transition-all"
@@ -383,7 +405,7 @@ export default function CustomCakePage() {
                 </button>
 
                 <button
-                  onClick={() => router.push('/menu')}
+                  onClick={() => router.push("/menu")}
                   className="w-full py-5 flex items-center justify-center gap-3 bg-gradient-to-r from-gray-600 to-gray-800 text-white font-bold rounded-2xl hover:scale-105 transition-all shadow-xl"
                 >
                   <ArrowLeft className="w-6 h-6" />
@@ -395,7 +417,7 @@ export default function CustomCakePage() {
         )}
 
         {/* Success Screen */}
-        {step === 'success' && (
+        {step === "success" && (
           <motion.div
             key="success"
             initial={{ opacity: 0, scale: 0.8 }}
@@ -437,19 +459,27 @@ export default function CustomCakePage() {
                 transition={{ delay: 0.4 }}
                 className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl p-8 mb-8 border-2 border-purple-200"
               >
-                <h3 className="text-2xl font-bold text-black mb-6">Next Steps:</h3>
+                <h3 className="text-2xl font-bold text-black mb-6">
+                  Next Steps:
+                </h3>
                 <div className="space-y-4 text-left">
                   <p className="text-lg text-black flex items-start gap-4">
                     <span className="text-3xl">🎨</span>
-                    <span className="font-semibold">Design your perfect cake on your phone</span>
+                    <span className="font-semibold">
+                      Design your perfect cake on your phone
+                    </span>
                   </p>
                   <p className="text-lg text-black flex items-start gap-4">
                     <span className="text-3xl">🪑</span>
-                    <span className="font-semibold">Please take a seat and relax while you design</span>
+                    <span className="font-semibold">
+                      Please take a seat and relax while you design
+                    </span>
                   </p>
                   <p className="text-lg text-black flex items-start gap-4">
                     <span className="text-3xl">✨</span>
-                    <span className="font-semibold">We'll notify you when it's ready for approval</span>
+                    <span className="font-semibold">
+                      We'll notify you when it's ready for approval
+                    </span>
                   </p>
                 </div>
               </motion.div>
@@ -467,7 +497,7 @@ export default function CustomCakePage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6 }}
-                onClick={() => router.push('/menu')}
+                onClick={() => router.push("/menu")}
                 className="bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 text-white font-bold text-xl py-5 px-10 rounded-2xl hover:scale-105 transition-all shadow-2xl hover:shadow-purple-500/50"
               >
                 Return to Menu Now
@@ -481,7 +511,15 @@ export default function CustomCakePage() {
 }
 
 // Helper Components
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
+function FeatureCard({
+  icon,
+  title,
+  description,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
   return (
     <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
       <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full mb-4 shadow-lg">

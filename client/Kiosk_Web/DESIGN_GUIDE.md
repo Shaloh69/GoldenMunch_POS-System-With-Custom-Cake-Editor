@@ -7,6 +7,7 @@ The Golden Munch Kiosk app features a modern, beautiful design inspired by conte
 ## Design Philosophy
 
 ### Core Principles
+
 1. **Visual Hierarchy** - Clear distinction between primary and secondary actions
 2. **Smooth Animations** - Polished transitions and entrance effects
 3. **Modern Aesthetics** - Gradients, glassmorphism, and depth
@@ -16,6 +17,7 @@ The Golden Munch Kiosk app features a modern, beautiful design inspired by conte
 ## Color Palette
 
 ### Primary Colors
+
 - **Golden Orange**: `#F9A03F` - Primary brand color
 - **Deep Amber**: `#D97706` - Secondary brand color
 - **Chocolate Brown**: `#4B2E2E` - Text and accents
@@ -23,6 +25,7 @@ The Golden Munch Kiosk app features a modern, beautiful design inspired by conte
 - **Caramel Beige**: `#E6C89C` - Secondary background
 
 ### Gradients
+
 - **Primary Gradient**: `from-golden-orange to-deep-amber`
 - **Mesh Background**: Multi-layered radial gradients
 - **Card Gradients**: `from-white to-golden-orange/5`
@@ -30,12 +33,14 @@ The Golden Munch Kiosk app features a modern, beautiful design inspired by conte
 ## Typography
 
 ### Font Weights
+
 - **Black (900)**: Hero headings
 - **Bold (700)**: Headings, important text
 - **Semibold (600)**: Subheadings, labels
 - **Regular (400)**: Body text
 
 ### Sizes
+
 - **Hero**: 6xl (3.75rem)
 - **Page Title**: 5xl (3rem)
 - **Section Title**: 3xl (1.875rem)
@@ -47,6 +52,7 @@ The Golden Munch Kiosk app features a modern, beautiful design inspired by conte
 ### Cards
 
 #### Modern Card (.card-modern)
+
 ```css
 - White background
 - 20px border radius
@@ -57,6 +63,7 @@ The Golden Munch Kiosk app features a modern, beautiful design inspired by conte
 ```
 
 #### Glass Card (.card-glass)
+
 ```css
 - Semi-transparent white background
 - 20px backdrop blur
@@ -65,6 +72,7 @@ The Golden Munch Kiosk app features a modern, beautiful design inspired by conte
 ```
 
 #### Golden Card (.card-golden)
+
 ```css
 - Gradient background
 - Golden border
@@ -75,6 +83,7 @@ The Golden Munch Kiosk app features a modern, beautiful design inspired by conte
 ### Buttons
 
 #### Primary Button
+
 ```jsx
 className="bg-gradient-to-r from-golden-orange to-deep-amber
            text-white font-bold shadow-xl-golden
@@ -82,6 +91,7 @@ className="bg-gradient-to-r from-golden-orange to-deep-amber
 ```
 
 #### Secondary Button
+
 ```jsx
 className="border-2 border-golden-orange text-chocolate-brown
            hover:bg-golden-orange/10 font-bold"
@@ -90,6 +100,7 @@ className="border-2 border-golden-orange text-chocolate-brown
 ### Animations
 
 #### Available Animations
+
 - `animate-float` - Gentle floating motion
 - `animate-bounce-slow` - Slow bounce effect
 - `animate-pulse-slow` - Slow pulsing
@@ -100,7 +111,9 @@ className="border-2 border-golden-orange text-chocolate-brown
 - `animate-glow` - Glowing effect
 
 #### Staggered Animations
+
 Use inline styles with `animationDelay`:
+
 ```jsx
 style={{ animationDelay: `${index * 0.1}s` }}
 ```
@@ -108,6 +121,7 @@ style={{ animationDelay: `${index * 0.1}s` }}
 ## Layout Patterns
 
 ### Page Structure
+
 ```
 1. Hero Header (gradient background, large heading)
 2. Content Container (max-w-7xl, padding)
@@ -117,6 +131,7 @@ style={{ animationDelay: `${index * 0.1}s` }}
 ```
 
 ### Grid Systems
+
 - **Categories**: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`
 - **Menu Items**: `grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4`
 - **Stats Cards**: `grid-cols-1 md:grid-cols-3`
@@ -124,6 +139,7 @@ style={{ animationDelay: `${index * 0.1}s` }}
 ## Page-Specific Designs
 
 ### Menu/Home Page
+
 - Sticky glassmorphism header
 - Search bar with icon
 - Category pills with gradients
@@ -131,6 +147,7 @@ style={{ animationDelay: `${index * 0.1}s` }}
 - Floating mobile cart button
 
 ### Cart/Checkout Page
+
 - Gradient header with emojis
 - 2-column layout (cart items + checkout)
 - Sticky order summary
@@ -138,12 +155,14 @@ style={{ animationDelay: `${index * 0.1}s` }}
 - Prominent verification code display
 
 ### Categories Page
+
 - Hero header with pattern overlay
 - Quick stats cards
 - Category cards with shine effect
 - Navigation card wrapper
 
 ### Specials Page
+
 - Animated star header
 - Flash sale banner
 - Discount badges
@@ -153,7 +172,9 @@ style={{ animationDelay: `${index * 0.1}s` }}
 ## Glassmorphism
 
 ### Usage
+
 Apply to headers, overlays, and floating elements:
+
 ```css
 background: rgba(255, 248, 240, 0.8);
 backdrop-filter: blur(10px);
@@ -162,6 +183,7 @@ border: 1px solid rgba(249, 160, 63, 0.2);
 ```
 
 ### Best Practices
+
 - Use on top of colored/gradient backgrounds
 - Maintain readability with sufficient opacity
 - Add subtle borders for definition
@@ -169,6 +191,7 @@ border: 1px solid rgba(249, 160, 63, 0.2);
 ## Shadows
 
 ### Shadow Hierarchy
+
 - **Elevated**: `shadow-xl-golden` - Important floating elements
 - **Medium**: `shadow-lg` - Cards, buttons
 - **Subtle**: `shadow` - Default cards
@@ -177,12 +200,14 @@ border: 1px solid rgba(249, 160, 63, 0.2);
 ## Responsive Design
 
 ### Breakpoints
+
 - **sm**: 640px
 - **md**: 768px
 - **lg**: 1024px
 - **xl**: 1280px
 
 ### Mobile Optimizations
+
 - Floating action buttons
 - Single column layouts
 - Larger touch targets
@@ -191,6 +216,7 @@ border: 1px solid rgba(249, 160, 63, 0.2);
 ## Accessibility
 
 ### Features
+
 - Sufficient color contrast
 - Focus visible states
 - Reduced motion support
@@ -198,24 +224,31 @@ border: 1px solid rgba(249, 160, 63, 0.2);
 - Touch-friendly sizes (min 60px)
 
 ### Implementation
+
 ```css
 @media (prefers-reduced-motion: reduce) {
-  .animate-* { animation: none; }
+  .animate-* {
+    animation: none;
+  }
 }
 
 @media (prefers-contrast: high) {
-  .card-modern { border-width: 3px; }
+  .card-modern {
+    border-width: 3px;
+  }
 }
 ```
 
 ## Loading States
 
 ### Spinner
+
 ```jsx
 <Spinner size="lg" color="warning" />
 ```
 
 ### Loading Page
+
 - Centered layout
 - Spinner with pulsing ring
 - Descriptive text
@@ -224,6 +257,7 @@ border: 1px solid rgba(249, 160, 63, 0.2);
 ## Error States
 
 ### Error Page
+
 ```jsx
 - Large emoji (⚠️)
 - Clear error message
@@ -234,6 +268,7 @@ border: 1px solid rgba(249, 160, 63, 0.2);
 ## Badges and Chips
 
 ### Popular Badge
+
 ```jsx
 <Chip color="warning" variant="shadow" className="font-bold animate-pulse-slow">
   🔥 Popular
@@ -241,8 +276,13 @@ border: 1px solid rgba(249, 160, 63, 0.2);
 ```
 
 ### In Cart Badge
+
 ```jsx
-<Chip color="success" variant="shadow" className="font-bold animate-bounce-slow">
+<Chip
+  color="success"
+  variant="shadow"
+  className="font-bold animate-bounce-slow"
+>
   {quantity} in cart
 </Chip>
 ```
@@ -250,6 +290,7 @@ border: 1px solid rgba(249, 160, 63, 0.2);
 ## Best Practices
 
 ### Do's ✅
+
 - Use gradients for CTAs and important elements
 - Apply staggered animations to lists
 - Maintain consistent spacing (Tailwind scale)
@@ -258,6 +299,7 @@ border: 1px solid rgba(249, 160, 63, 0.2);
 - Implement smooth transitions
 
 ### Don'ts ❌
+
 - Don't overuse animations
 - Don't sacrifice readability for aesthetics
 - Don't use too many different fonts
@@ -267,12 +309,14 @@ border: 1px solid rgba(249, 160, 63, 0.2);
 ## Performance
 
 ### Optimizations
+
 - CSS animations (GPU accelerated)
 - Minimal JavaScript animations
 - Optimized image loading
 - Reduced motion preferences respected
 
 ### Animation Guidelines
+
 - Duration: 200-400ms for micro-interactions
 - Duration: 2-6s for ambient animations
 - Use `cubic-bezier(0.4, 0, 0.2, 1)` for smooth easing
@@ -280,6 +324,7 @@ border: 1px solid rgba(249, 160, 63, 0.2);
 ## Future Enhancements
 
 ### Potential Additions
+
 1. Dark mode support
 2. Custom theme picker
 3. More animation variations
@@ -292,12 +337,14 @@ border: 1px solid rgba(249, 160, 63, 0.2);
 ## Design Tools Used
 
 ### Inspiration Sources
+
 - Modern food delivery apps (Uber Eats, DoorDash)
 - Contemporary e-commerce sites
 - Material Design 3 guidelines
 - Apple's HIG for iOS
 
 ### Design Patterns
+
 - Neumorphism influences
 - Glassmorphism
 - Gradient mesh backgrounds
@@ -307,6 +354,7 @@ border: 1px solid rgba(249, 160, 63, 0.2);
 ## Maintenance
 
 ### Adding New Pages
+
 1. Start with mesh gradient background
 2. Add hero header with gradient
 3. Use consistent card styles
@@ -315,6 +363,7 @@ border: 1px solid rgba(249, 160, 63, 0.2);
 6. Include spacer at bottom
 
 ### Updating Components
+
 - Maintain existing animation delays
 - Keep gradient consistency
 - Use established shadow system

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Modal, ModalContent, ModalBody } from '@heroui/modal';
-import { Button } from '@heroui/button';
-import Image from 'next/image';
+import { useState } from "react";
+import { Modal, ModalContent, ModalBody } from "@heroui/modal";
+import { Button } from "@heroui/button";
+import Image from "next/image";
 
 interface ImageLightboxProps {
   src?: string;
@@ -12,7 +12,12 @@ interface ImageLightboxProps {
   className?: string;
 }
 
-export default function ImageLightbox({ src, alt, children, className = '' }: ImageLightboxProps) {
+export default function ImageLightbox({
+  src,
+  alt,
+  children,
+  className = "",
+}: ImageLightboxProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   // Don't render lightbox if no src provided
@@ -28,7 +33,7 @@ export default function ImageLightbox({ src, alt, children, className = '' }: Im
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === "Enter" || e.key === " ") {
             setIsOpen(true);
           }
         }}
@@ -41,8 +46,8 @@ export default function ImageLightbox({ src, alt, children, className = '' }: Im
         onClose={() => setIsOpen(false)}
         size="full"
         classNames={{
-          base: 'bg-black/95',
-          backdrop: 'bg-black/80',
+          base: "bg-black/95",
+          backdrop: "bg-black/80",
         }}
       >
         <ModalContent>

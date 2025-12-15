@@ -1,14 +1,20 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from "react";
 import type {
   MenuItem,
   OrderItemRequest,
   CustomCakeDesignRequest,
   OrderType,
   OrderSource,
-  PaymentMethod
-} from '@/types/api';
+  PaymentMethod,
+} from "@/types/api";
 
 export interface CartItem {
   menuItem: MenuItem;
@@ -37,7 +43,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const TAX_RATE = 0; // No tax
-const CART_STORAGE_KEY = 'goldenmunch_cart';
+const CART_STORAGE_KEY = "goldenmunch_cart";
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
@@ -45,14 +51,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Load cart from localStorage on mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       try {
         const savedCart = localStorage.getItem(CART_STORAGE_KEY);
         if (savedCart) {
           setItems(JSON.parse(savedCart));
         }
       } catch (error) {
-        console.error('Error loading cart from localStorage:', error);
+        console.error("Error loading cart from localStorage:", error);
       }
       setIsInitialized(true);
     }
@@ -60,11 +66,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
-    if (isInitialized && typeof window !== 'undefined') {
+    if (isInitialized && typeof window !== "undefined") {
       try {
         localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
       } catch (error) {
-        console.error('Error saving cart to localStorage:', error);
+        console.error("Error saving cart to localStorage:", error);
       }
     }
   }, [items, isInitialized]);
@@ -80,7 +86,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
               item.menuItem.menu_item_id === newItem.menuItem.menu_item_id &&
               item.flavor_id === newItem.flavor_id &&
               item.size_id === newItem.size_id &&
-              !item.custom_cake_design // Also ensure existing item isn't a custom cake
+              !item.custom_cake_design, // Also ensure existing item isn't a custom cake
           );
 
       if (existingIndex >= 0) {
@@ -100,24 +106,27 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const removeItem = useCallback((menuItemId: number) => {
     setItems((currentItems) =>
-      currentItems.filter((item) => item.menuItem.menu_item_id !== menuItemId)
+      currentItems.filter((item) => item.menuItem.menu_item_id !== menuItemId),
     );
   }, []);
 
-  const updateQuantity = useCallback((menuItemId: number, quantity: number) => {
-    if (quantity <= 0) {
-      removeItem(menuItemId);
-      return;
-    }
+  const updateQuantity = useCallback(
+    (menuItemId: number, quantity: number) => {
+      if (quantity <= 0) {
+        removeItem(menuItemId);
+        return;
+      }
 
-    setItems((currentItems) =>
-      currentItems.map((item) =>
-        item.menuItem.menu_item_id === menuItemId
-          ? { ...item, quantity }
-          : item
-      )
-    );
-  }, [removeItem]);
+      setItems((currentItems) =>
+        currentItems.map((item) =>
+          item.menuItem.menu_item_id === menuItemId
+            ? { ...item, quantity }
+            : item,
+        ),
+      );
+    },
+    [removeItem],
+  );
 
   const clearCart = useCallback(() => {
     setItems([]);
@@ -141,13 +150,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           simple: 0,
           moderate: 50,
           complex: 100,
-          intricate: 200
+          intricate: 200,
         };
-        designCost = complexityCosts[item.custom_cake_design.design_complexity] || 0;
+        designCost =
+          complexityCosts[item.custom_cake_design.design_complexity] || 0;
       }
 
       // Match backend calculation: (basePrice + flavorCost + designCost) * sizeMultiplier * quantity
-      const itemTotal = (basePrice + flavorCost + designCost) * sizeMultiplier * item.quantity;
+      const itemTotal =
+        (basePrice + flavorCost + designCost) * sizeMultiplier * item.quantity;
       return total + itemTotal;
     }, 0);
   }, [items]);
@@ -190,7 +201,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 export function useCart() {
   const context = useContext(CartContext);
   if (context === undefined) {
-    throw new Error('useCart must be used within a CartProvider');
+    throw new Error("useCart must be used within a CartProvider");
   }
   return context;
 }

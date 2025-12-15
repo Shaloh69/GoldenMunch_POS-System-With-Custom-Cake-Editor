@@ -20,6 +20,7 @@ cd C:\Users\Shaloh\OneDrive\Desktop\Projects\Thesis\GoldenMunchPOS\client\Kiosk
 ```
 
 The script will:
+
 - ✓ Pause OneDrive automatically
 - ✓ Close file-locking applications
 - ✓ Clean node_modules properly
@@ -28,11 +29,13 @@ The script will:
 - ✓ Restart OneDrive when done
 
 **If Electron still fails**, run with skip flag:
+
 ```powershell
 .\emergency-fix.ps1 -SkipElectron
 ```
 
 Then install Electron separately:
+
 ```powershell
 npm run install:electron
 ```
@@ -40,18 +43,21 @@ npm run install:electron
 ## ⚡ Option 2: Manual Steps (If script doesn't work)
 
 ### Step 1: Close Everything & Pause OneDrive
+
 ```powershell
 # Close VS Code, File Explorer, and any editors
 # Right-click OneDrive icon in system tray → Pause syncing → 2 hours
 ```
 
 ### Step 2: Open PowerShell as Admin
+
 ```powershell
 # Right-click PowerShell → Run as Administrator
 cd C:\Users\Shaloh\OneDrive\Desktop\Projects\Thesis\GoldenMunchPOS\client\Kiosk
 ```
 
 ### Step 3: Force Clean (robocopy method - fastest!)
+
 ```powershell
 # Create empty directory
 mkdir empty_temp
@@ -69,11 +75,13 @@ npm cache clean --force
 ```
 
 ### Step 4: Set Electron Mirror
+
 ```powershell
 $env:ELECTRON_MIRROR="https://npmmirror.com/mirrors/electron/"
 ```
 
 ### Step 5: Install
+
 ```powershell
 npm install --fetch-timeout=600000 --fetch-retries=10
 ```
@@ -100,6 +108,7 @@ npm install
 ## 🆘 If All Else Fails
 
 ### Last Resort: Skip Electron Entirely
+
 ```powershell
 # Install everything except Electron
 $env:ELECTRON_SKIP_BINARY_DOWNLOAD="1"
@@ -109,6 +118,7 @@ npm install --ignore-scripts
 ```
 
 ### Network Issues?
+
 ```powershell
 # Try mobile hotspot
 # Connect your laptop to phone's internet and retry
@@ -120,11 +130,13 @@ npm install --ignore-scripts
 ## ✅ Verify Installation
 
 After successful install:
+
 ```powershell
 npm run verify
 ```
 
 Should show:
+
 ```
 ✓ List of all packages
 ✓ Electron v34.x.x
@@ -133,6 +145,7 @@ Should show:
 ## 📊 What's New in This Update?
 
 The latest updates include:
+
 - ✅ Fixed deprecation warnings (glob, rimraf, uuid, etc.)
 - ✅ Added emergency fix script
 - ✅ Increased timeouts to 600 seconds
@@ -142,12 +155,12 @@ The latest updates include:
 
 ## 🔍 Common Error Solutions
 
-| Error | Quick Fix |
-|-------|-----------|
-| `EPERM: operation not permitted` | Run as Admin + pause OneDrive |
-| `ETIMEDOUT` | Use `.\emergency-fix.ps1` or mobile hotspot |
-| `Cannot find module 'electron'` | `npm run install:electron` |
-| `npm cache verify failed` | `npm cache clean --force` |
+| Error                            | Quick Fix                                   |
+| -------------------------------- | ------------------------------------------- |
+| `EPERM: operation not permitted` | Run as Admin + pause OneDrive               |
+| `ETIMEDOUT`                      | Use `.\emergency-fix.ps1` or mobile hotspot |
+| `Cannot find module 'electron'`  | `npm run install:electron`                  |
+| `npm cache verify failed`        | `npm cache clean --force`                   |
 
 ## 📞 Need More Help?
 

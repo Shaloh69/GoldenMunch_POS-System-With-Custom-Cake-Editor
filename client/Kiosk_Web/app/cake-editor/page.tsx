@@ -1,33 +1,43 @@
-'use client';
 
-import { useEffect, useState, Suspense, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
-import dynamic from 'next/dynamic';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardBody } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { Progress } from '@heroui/progress';
-import { Spinner } from '@heroui/spinner';
-import { ArrowLeftIcon, ArrowRightIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
-import StepCustomerInfo from '@/components/cake-editor/steps/StepCustomerInfo';
-import StepLayers from '@/components/cake-editor/steps/StepLayers';
-import StepFlavor from '@/components/cake-editor/steps/StepFlavor';
-import StepSize from '@/components/cake-editor/steps/StepSize';
-import StepFrosting from '@/components/cake-editor/steps/StepFrosting';
-import StepDecorations from '@/components/cake-editor/steps/StepDecorations';
-import StepText from '@/components/cake-editor/steps/StepText';
-import StepReview from '@/components/cake-editor/steps/StepReview';
-import { CustomCakeService } from '@/services/customCake.service';
+"use client";
+
+import { useEffect, useState, Suspense, useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
+import { motion, AnimatePresence } from "framer-motion";
+import { Card, CardBody } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { Progress } from "@heroui/progress";
+import { Spinner } from "@heroui/spinner";
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  CheckCircleIcon,
+} from "@heroicons/react/24/outline";
+import StepCustomerInfo from "@/components/cake-editor/steps/StepCustomerInfo";
+import StepLayers from "@/components/cake-editor/steps/StepLayers";
+import StepFlavor from "@/components/cake-editor/steps/StepFlavor";
+import StepSize from "@/components/cake-editor/steps/StepSize";
+import StepFrosting from "@/components/cake-editor/steps/StepFrosting";
+import StepDecorations from "@/components/cake-editor/steps/StepDecorations";
+import StepText from "@/components/cake-editor/steps/StepText";
+import StepReview from "@/components/cake-editor/steps/StepReview";
+import { CustomCakeService } from "@/services/customCake.service";
 
 // Dynamic import for 3D Canvas to prevent SSR issues
-const CakeCanvas3D = dynamic(() => import('@/components/cake-editor/CakeCanvas3D'), {
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center h-96">
-      <Spinner size="lg" />
-    </div>
-  ),
-});
+// @ts-expect-error - Dynamic import with forwardRef has type inference issues
+const CakeCanvas3D = dynamic(
+  () =>
+    import("@/components/cake-editor/CakeCanvas3D").then((mod) => mod.default),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-96">
+        <Spinner size="lg" />
+      </div>
+    ),
+  },
+) as any;
 
 // Design Data Interface
 export interface CakeDesign {
@@ -75,19 +85,19 @@ export interface CakeDesign {
 
 // Editor Steps
 const STEPS = [
-  { id: 1, name: 'Customer Info', component: StepCustomerInfo },
-  { id: 2, name: 'Layers', component: StepLayers },
-  { id: 3, name: 'Flavors', component: StepFlavor },
-  { id: 4, name: 'Sizes', component: StepSize },
-  { id: 5, name: 'Frosting', component: StepFrosting },
-  { id: 6, name: 'Decorations', component: StepDecorations },
-  { id: 7, name: 'Text', component: StepText },
-  { id: 8, name: 'Review', component: StepReview },
+  { id: 1, name: "Customer Info", component: StepCustomerInfo },
+  { id: 2, name: "Layers", component: StepLayers },
+  { id: 3, name: "Flavors", component: StepFlavor },
+  { id: 4, name: "Sizes", component: StepSize },
+  { id: 5, name: "Frosting", component: StepFrosting },
+  { id: 6, name: "Decorations", component: StepDecorations },
+  { id: 7, name: "Text", component: StepText },
+  { id: 8, name: "Review", component: StepReview },
 ];
 
 function CakeEditorContent() {
   const searchParams = useSearchParams();
-  const sessionToken = searchParams?.get('session');
+  const sessionToken = searchParams?.get("session");
   const canvasRef = useRef<any>(null);
 
   const [currentStep, setCurrentStep] = useState(0);
@@ -102,14 +112,14 @@ function CakeEditorContent() {
 
   // Cake Design State
   const [design, setDesign] = useState<CakeDesign>({
-    customer_name: '',
-    customer_email: '',
-    customer_phone: '',
+    customer_name: "",
+    customer_email: "",
+    customer_phone: "",
     num_layers: 1,
-    frosting_type: 'buttercream',
-    frosting_color: '#FFFFFF',
+    frosting_type: "buttercream",
+    frosting_color: "#FFFFFF",
     candles_count: 0,
-    candle_type: 'regular',
+    candle_type: "regular",
     decorations_3d: [],
   });
 
@@ -134,7 +144,9 @@ function CakeEditorContent() {
 
     try {
       // Call real API to validate session
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/custom-cake/session/${sessionToken}`);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/custom-cake/session/${sessionToken}`,
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -147,7 +159,7 @@ function CakeEditorContent() {
         setSessionValid(false);
       }
     } catch (error) {
-      console.error('Session validation failed:', error);
+      console.error("Session validation failed:", error);
       setSessionValid(false);
     } finally {
       setLoading(false);
@@ -157,7 +169,9 @@ function CakeEditorContent() {
   const fetchDesignOptions = async () => {
     try {
       // Fetch real options from API
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/custom-cake/options`);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/custom-cake/options`,
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -171,7 +185,7 @@ function CakeEditorContent() {
         useMockData();
       }
     } catch (error) {
-      console.error('Failed to fetch design options:', error);
+      console.error("Failed to fetch design options:", error);
       useMockData();
     }
   };
@@ -179,26 +193,76 @@ function CakeEditorContent() {
   const useMockData = () => {
     setOptions({
       flavors: [
-        { flavor_id: 1, flavor_name: 'Chocolate', description: 'Rich chocolate', base_price_per_tier: 100 },
-        { flavor_id: 2, flavor_name: 'Vanilla', description: 'Classic vanilla', base_price_per_tier: 80 },
-        { flavor_id: 3, flavor_name: 'Strawberry', description: 'Fresh strawberry', base_price_per_tier: 90 },
-        { flavor_id: 4, flavor_name: 'Red Velvet', description: 'Velvety smooth', base_price_per_tier: 120 },
+        {
+          flavor_id: 1,
+          flavor_name: "Chocolate",
+          description: "Rich chocolate",
+          base_price_per_tier: 100,
+        },
+        {
+          flavor_id: 2,
+          flavor_name: "Vanilla",
+          description: "Classic vanilla",
+          base_price_per_tier: 80,
+        },
+        {
+          flavor_id: 3,
+          flavor_name: "Strawberry",
+          description: "Fresh strawberry",
+          base_price_per_tier: 90,
+        },
+        {
+          flavor_id: 4,
+          flavor_name: "Red Velvet",
+          description: "Velvety smooth",
+          base_price_per_tier: 120,
+        },
       ],
       sizes: [
-        { size_id: 1, size_name: 'Small (6")', diameter_cm: 15, servings: 8, base_price_multiplier: 1.0 },
-        { size_id: 2, size_name: 'Medium (8")', diameter_cm: 20, servings: 16, base_price_multiplier: 1.5 },
-        { size_id: 3, size_name: 'Large (10")', diameter_cm: 25, servings: 24, base_price_multiplier: 2.0 },
-        { size_id: 4, size_name: 'XL (12")', diameter_cm: 30, servings: 36, base_price_multiplier: 2.5 },
+        {
+          size_id: 1,
+          size_name: 'Small (6")',
+          diameter_cm: 15,
+          servings: 8,
+          base_price_multiplier: 1.0,
+        },
+        {
+          size_id: 2,
+          size_name: 'Medium (8")',
+          diameter_cm: 20,
+          servings: 16,
+          base_price_multiplier: 1.5,
+        },
+        {
+          size_id: 3,
+          size_name: 'Large (10")',
+          diameter_cm: 25,
+          servings: 24,
+          base_price_multiplier: 2.0,
+        },
+        {
+          size_id: 4,
+          size_name: 'XL (12")',
+          diameter_cm: 30,
+          servings: 36,
+          base_price_multiplier: 2.5,
+        },
       ],
       themes: [
-        { theme_id: 1, theme_name: 'Birthday', base_additional_cost: 200 },
-        { theme_id: 2, theme_name: 'Wedding', base_additional_cost: 500 },
-        { theme_id: 3, theme_name: 'Anniversary', base_additional_cost: 300 },
+        { theme_id: 1, theme_name: "Birthday", base_additional_cost: 200 },
+        { theme_id: 2, theme_name: "Wedding", base_additional_cost: 500 },
+        { theme_id: 3, theme_name: "Anniversary", base_additional_cost: 300 },
       ],
-      frostingTypes: ['buttercream', 'fondant', 'whipped_cream', 'ganache', 'cream_cheese'],
-      candleTypes: ['number', 'regular', 'sparkler', 'none'],
-      textFonts: ['script', 'bold', 'elegant', 'playful', 'modern'],
-      textPositions: ['top', 'center', 'bottom'],
+      frostingTypes: [
+        "buttercream",
+        "fondant",
+        "whipped_cream",
+        "ganache",
+        "cream_cheese",
+      ],
+      candleTypes: ["number", "regular", "sparkler", "none"],
+      textFonts: ["script", "bold", "elegant", "playful", "modern"],
+      textPositions: ["top", "center", "bottom"],
     });
   };
 
@@ -220,30 +284,33 @@ function CakeEditorContent() {
       setSaving(true);
 
       // Call real API to save draft
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/custom-cake/save-draft`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/custom-cake/save-draft`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            session_token: sessionToken,
+            ...design,
+          }),
         },
-        body: JSON.stringify({
-          session_token: sessionToken,
-          ...design,
-        }),
-      });
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to save draft');
+        throw new Error("Failed to save draft");
       }
 
       const data = await response.json();
-      console.log('Draft saved successfully:', data);
+      console.log("Draft saved successfully:", data);
 
       // Store request_id if returned
       if (data.data && data.data.request_id && !requestId) {
         setRequestId(data.data.request_id);
       }
     } catch (error) {
-      console.error('Failed to save draft:', error);
+      console.error("Failed to save draft:", error);
       // Don't show error to user for auto-save
     } finally {
       setSaving(false);
@@ -268,7 +335,7 @@ function CakeEditorContent() {
     if (canvasRef.current && canvasRef.current.captureScreenshot) {
       try {
         // Capture from different angles
-        const angles = ['front', 'side', 'top', '3d_perspective'];
+        const angles = ["front", "side", "top", "3d_perspective"];
 
         for (const angle of angles) {
           const screenshot = await canvasRef.current.captureScreenshot(angle);
@@ -277,7 +344,7 @@ function CakeEditorContent() {
           }
         }
       } catch (error) {
-        console.error('Failed to capture screenshots:', error);
+        console.error("Failed to capture screenshots:", error);
       }
     }
 
@@ -301,52 +368,62 @@ function CakeEditorContent() {
         try {
           const imageUploads = screenshots.map((dataUrl, index) => ({
             url: dataUrl,
-            type: '3d_render',
-            view_angle: ['front', 'side', 'top', '3d_perspective'][index] || 'front',
+            type: "3d_render",
+            view_angle:
+              ["front", "side", "top", "3d_perspective"][index] || "front",
           }));
 
-          await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/custom-cake/upload-images`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
+          await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/custom-cake/upload-images`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                request_id: requestId,
+                images: imageUploads,
+              }),
             },
-            body: JSON.stringify({
-              request_id: requestId,
-              images: imageUploads,
-            }),
-          });
+          );
         } catch (error) {
-          console.error('Failed to upload images:', error);
+          console.error("Failed to upload images:", error);
           // Continue even if image upload fails
         }
       }
 
       // Step 4: Submit for review
-      const submitResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/custom-cake/submit`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const submitResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}/custom-cake/submit`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            request_id: requestId,
+          }),
         },
-        body: JSON.stringify({
-          request_id: requestId,
-        }),
-      });
+      );
 
       if (!submitResponse.ok) {
-        throw new Error('Failed to submit request');
+        throw new Error("Failed to submit request");
       }
 
       const result = await submitResponse.json();
 
       // Success! Show confirmation
-      alert(`✅ Success! Your custom cake request has been submitted!\n\nRequest ID: ${requestId}\n\nWe'll review your design and contact you at ${design.customer_email} within 24 hours with pricing and availability.`);
+      alert(
+        `✅ Success! Your custom cake request has been submitted!\n\nRequest ID: ${requestId}\n\nWe'll review your design and contact you at ${design.customer_email} within 24 hours with pricing and availability.`,
+      );
 
       // Optionally redirect to a success page
       // window.location.href = '/custom-cake/success';
-
     } catch (error: any) {
-      console.error('Failed to submit:', error);
-      alert(`❌ Failed to submit request: ${error.message || 'Unknown error'}\n\nPlease try again or contact staff for assistance.`);
+      console.error("Failed to submit:", error);
+      alert(
+        `❌ Failed to submit request: ${error.message || "Unknown error"}\n\nPlease try again or contact staff for assistance.`,
+      );
     } finally {
       setSubmitting(false);
     }
@@ -377,11 +454,17 @@ function CakeEditorContent() {
             <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
               <span className="text-3xl">❌</span>
             </div>
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">Session Expired</h1>
+            <h1 className="text-2xl font-bold text-gray-800 mb-2">
+              Session Expired
+            </h1>
             <p className="text-gray-600 mb-6">
-              Your design session has expired or is invalid. Please generate a new QR code from the kiosk.
+              Your design session has expired or is invalid. Please generate a
+              new QR code from the kiosk.
             </p>
-            <Button color="primary" onClick={() => window.location.href = '/'}>
+            <Button
+              color="primary"
+              onClick={() => (window.location.href = "/")}
+            >
               Return to Kiosk
             </Button>
           </CardBody>
@@ -400,8 +483,13 @@ function CakeEditorContent() {
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">🎂 Custom Cake Designer</h1>
-              <p className="text-sm text-gray-600">Step {currentStep + 1} of {STEPS.length}: {STEPS[currentStep].name}</p>
+              <h1 className="text-2xl font-bold text-gray-800">
+                🎂 Custom Cake Designer
+              </h1>
+              <p className="text-sm text-gray-600">
+                Step {currentStep + 1} of {STEPS.length}:{" "}
+                {STEPS[currentStep].name}
+              </p>
             </div>
             {saving && (
               <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -430,8 +518,12 @@ function CakeEditorContent() {
                   <CakeCanvas3D ref={canvasRef} design={design} />
                 </div>
                 <div className="mt-4 p-3 bg-amber-50 rounded-lg">
-                  <p className="text-sm font-medium text-amber-900">Estimated Price</p>
-                  <p className="text-2xl font-bold text-amber-600">₱{calculatePrice(design)}</p>
+                  <p className="text-sm font-medium text-amber-900">
+                    Estimated Price
+                  </p>
+                  <p className="text-2xl font-bold text-amber-600">
+                    ₱{calculatePrice(design)}
+                  </p>
                 </div>
               </CardBody>
             </Card>
@@ -514,11 +606,13 @@ function calculatePrice(design: CakeDesign): number {
 // Main export with Suspense
 export default function CakeEditorPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Spinner size="lg" />
+        </div>
+      }
+    >
       <CakeEditorContent />
     </Suspense>
   );

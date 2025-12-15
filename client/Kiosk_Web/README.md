@@ -19,6 +19,7 @@ This project contains the **complete Next.js web application**:
 - **🔄 QR Code Integration**: Mobile custom cake editor sync
 
 **This project does NOT contain:**
+
 - ❌ Electron code (see `../Kiosk_Electron/`)
 - ❌ Printer integration (see `../Kiosk_Electron/`)
 - ❌ Kiosk mode features (see `../Kiosk_Electron/`)
@@ -45,6 +46,7 @@ This project contains the **complete Next.js web application**:
 ```
 
 **Loaded by:**
+
 - Electron client (`Kiosk_Electron`)
 - Or regular web browser (testing)
 
@@ -140,6 +142,7 @@ npm run dev
 **Visit**: http://localhost:3002
 
 **Test in browser:**
+
 - Chrome DevTools
 - Responsive mode: 1080x1920 (portrait orientation)
 - Touch simulation
@@ -225,11 +228,13 @@ npm run dev
 ### 1. Custom Cake Editor (3D)
 
 **3D cake designer built with:**
+
 - Three.js (3D rendering)
 - React Three Fiber (React integration)
 - React Three Drei (helpers)
 
 **Features:**
+
 - Real-time 3D preview
 - Multiple cake layers
 - Flavors, sizes, shapes
@@ -238,12 +243,14 @@ npm run dev
 - Price calculation
 
 **Files:**
+
 - `app/cake-editor/` - 3D editor page
 - `components/cake-editor/` - 3D components
 
 ### 2. Shopping Cart
 
 **Cart management with:**
+
 - Add/remove items
 - Quantity updates
 - Price calculation
@@ -252,6 +259,7 @@ npm run dev
 - Cross-tab synchronization
 
 **Files:**
+
 - `contexts/CartContext.tsx` - Cart state
 - `components/CartFooter.tsx` - Cart display
 - `app/cart/` - Checkout page
@@ -259,6 +267,7 @@ npm run dev
 ### 3. Menu System
 
 **Dynamic menu with:**
+
 - Categories filtering
 - Search functionality
 - Item details sidebar
@@ -267,6 +276,7 @@ npm run dev
 - Image optimization
 
 **Files:**
+
 - `app/page.tsx` - Home/Menu page
 - `components/MenuCard.tsx` - Item cards
 - `services/menu.service.ts` - API calls
@@ -274,6 +284,7 @@ npm run dev
 ### 4. Theme System
 
 **Dark/Light mode with:**
+
 - HeroUI theme provider
 - Next-themes integration
 - Sunny Yellow primary color
@@ -281,6 +292,7 @@ npm run dev
 - Smooth transitions
 
 **Files:**
+
 - `app/providers.tsx` - Theme setup
 - `components/theme-switch.tsx` - Toggle
 - `tailwind.config.js` - Theme colors
@@ -288,6 +300,7 @@ npm run dev
 ### 5. Order Processing
 
 **Complete checkout flow:**
+
 - Order summary
 - Customer details (optional)
 - Payment integration (future)
@@ -295,6 +308,7 @@ npm run dev
 - Receipt printing (via Electron)
 
 **Files:**
+
 - `app/cart/page.tsx` - Checkout
 - `services/order.service.ts` - API
 
@@ -309,6 +323,7 @@ npm run dev
 ```
 
 **Features:**
+
 - Hot module reload
 - Fast refresh
 - Error overlay
@@ -321,6 +336,7 @@ npm run lint
 ```
 
 **Linters:**
+
 - ESLint (Next.js config)
 - TypeScript compiler
 - Prettier (code formatting)
@@ -332,6 +348,7 @@ npm run build
 ```
 
 **Output:**
+
 - `.next/` directory
 - Standalone Next.js build
 - Optimized bundles
@@ -358,6 +375,7 @@ npm run dev
 ```
 
 **Recommended:**
+
 - Use DevTools responsive mode
 - Set viewport: 1080x1920 (portrait)
 - Enable touch simulation
@@ -403,8 +421,8 @@ const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
   timeout: Number(process.env.NEXT_PUBLIC_API_TIMEOUT),
   headers: {
-    'Cache-Control': 'no-cache',
-    'Pragma': 'no-cache',
+    "Cache-Control": "no-cache",
+    Pragma: "no-cache",
   },
 });
 ```
@@ -412,36 +430,41 @@ const apiClient = axios.create({
 ### Available Services
 
 **Menu Service** (`services/menu.service.ts`):
+
 ```typescript
-getMenuItems(filters)
-getCategories()
-getActivePromotions()
-checkCapacity()
+getMenuItems(filters);
+getCategories();
+getActivePromotions();
+checkCapacity();
 ```
 
 **Order Service** (`services/order.service.ts`):
+
 ```typescript
-createOrder(orderData)
-getOrderByCode(code)
+createOrder(orderData);
+getOrderByCode(code);
 ```
 
 **Custom Cake Service** (`services/customCake.service.ts`):
+
 ```typescript
-generateQRSession()
-pollSessionStatus()
-getDesignOptions()
-submitForReview()
+generateQRSession();
+pollSessionStatus();
+getDesignOptions();
+submitForReview();
 ```
 
 ### Environment Variables
 
 Development (`.env.local`):
+
 ```bash
 NEXT_PUBLIC_API_URL=https://goldenmunch-pos-system-server.onrender.com/api
 NEXT_PUBLIC_API_TIMEOUT=30000
 ```
 
 Production (`.env.production` + Render):
+
 ```bash
 NODE_ENV=production
 NEXT_PUBLIC_API_URL=https://goldenmunch-pos-system-server.onrender.com/api
@@ -455,6 +478,7 @@ NEXT_PUBLIC_API_TIMEOUT=60000
 ### Tailwind CSS
 
 **Custom theme** (`tailwind.config.js`):
+
 - Primary: Sunny Yellow (#FFD700)
 - Text: Charcoal Gray (#333333)
 - Font: Inter (system font stack)
@@ -462,30 +486,34 @@ NEXT_PUBLIC_API_TIMEOUT=60000
 ### HeroUI Components
 
 **40+ UI components:**
+
 - Button, Card, Input, Modal
 - Drawer, Dropdown, Table
 - Tabs, Toast, Tooltip
 - And more...
 
 **Usage:**
-```tsx
-import { Button, Card } from '@heroui/react';
 
-<Button color="primary">Add to Cart</Button>
+```tsx
+import { Button, Card } from "@heroui/react";
+
+<Button color="primary">Add to Cart</Button>;
 ```
 
 ### Dark Mode
 
 **Toggle theme:**
-```tsx
-import { ThemeSwitch } from '@/components/theme-switch';
 
-<ThemeSwitch />
+```tsx
+import { ThemeSwitch } from "@/components/theme-switch";
+
+<ThemeSwitch />;
 ```
 
 **Detect theme:**
+
 ```tsx
-import { useTheme } from 'next-themes';
+import { useTheme } from "next-themes";
 
 const { theme, setTheme } = useTheme();
 ```
@@ -495,12 +523,14 @@ const { theme, setTheme } = useTheme();
 ## 📱 Responsive Design
 
 **Optimized for:**
+
 - Portrait 21-inch touch display (1080x1920)
 - Tablet landscape
 - Mobile portrait
 - Desktop browser (testing)
 
 **Breakpoints** (Tailwind):
+
 ```css
 sm: 640px   // Small devices
 md: 768px   // Medium devices
@@ -510,6 +540,7 @@ xl: 1280px  // Extra large
 ```
 
 **Portrait-specific optimizations:**
+
 ```tsx
 <div className="h-screen portrait:grid-cols-1 landscape:grid-cols-2">
   {/* Layout adapts to orientation */}
@@ -554,12 +585,14 @@ netstat -ano | findstr :3002   # Windows
 ### Issue: API Calls Failing
 
 **Check:**
+
 1. API URL in `.env.local` is correct
 2. Backend is running
 3. CORS is configured on backend
 4. Network connection
 
 **Debug:**
+
 ```bash
 # Check API endpoint
 curl https://goldenmunch-pos-system-server.onrender.com/api/menu
@@ -568,6 +601,7 @@ curl https://goldenmunch-pos-system-server.onrender.com/api/menu
 ### Issue: 3D Cake Editor Not Loading
 
 **Check:**
+
 1. Browser supports WebGL
 2. Three.js is installed
 3. Check browser console for errors
@@ -578,11 +612,13 @@ Visit https://get.webgl.org/
 ### Issue: Build Fails
 
 **Common causes:**
+
 1. TypeScript errors: `npm run lint`
 2. Missing dependencies: `npm install`
 3. Node version: Check `engines` in package.json
 
 **Clean build:**
+
 ```bash
 npm run clean
 npm install
@@ -596,26 +632,31 @@ npm run build
 ### Runtime Dependencies
 
 **Next.js & React:**
+
 - `next@15.3.1` - Next.js framework
 - `react@18.3.1` - React library
 - `react-dom@18.3.1` - React DOM
 
 **UI Components:**
+
 - `@heroui/*` - 40+ UI components
 - `lucide-react` - Icons
 - `framer-motion` - Animations
 
 **3D Rendering:**
+
 - `three@0.169.0` - Three.js
 - `@react-three/fiber` - React integration
 - `@react-three/drei` - Helpers
 
 **Utilities:**
+
 - `axios` - HTTP client
 - `next-themes` - Theme management
 - `qrcode.react` - QR code generation
 
 **Styling:**
+
 - `tailwindcss@4.1.11` - Utility-first CSS
 - `postcss` - CSS processing
 
@@ -649,6 +690,7 @@ npm run build
 ## 🆘 Support
 
 For issues:
+
 1. Check browser console for errors
 2. Check Network tab for failed API calls
 3. Verify environment variables are set

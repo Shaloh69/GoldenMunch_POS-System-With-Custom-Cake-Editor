@@ -2,7 +2,8 @@ export type SiteConfig = typeof siteConfig;
 
 export const siteConfig = {
   name: "Golden Munch Kiosk",
-  description: "Delicious treats at your fingertips - Order with ease from our interactive kiosk system.",
+  description:
+    "Delicious treats at your fingertips - Order with ease from our interactive kiosk system.",
   navItems: [
     {
       label: "Menu",

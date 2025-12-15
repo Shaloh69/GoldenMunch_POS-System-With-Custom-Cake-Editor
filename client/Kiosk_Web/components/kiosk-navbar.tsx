@@ -13,26 +13,29 @@ import NextLink from "next/link";
 
 export const KioskNavbar = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
-  
+
   // Memoize formatted time to prevent unnecessary recalculations
-  const formattedTime = useMemo(() => ({
-    time: currentTime.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
+  const formattedTime = useMemo(
+    () => ({
+      time: currentTime.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }),
+      date: currentTime.toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      }),
     }),
-    date: currentTime.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric'
-    })
-  }), [currentTime]);
+    [currentTime],
+  );
 
   // Update time only every minute instead of every second
   useEffect(() => {
     // Set initial time
     setCurrentTime(new Date());
-    
+
     // Update every minute (60 seconds)
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -47,11 +50,11 @@ export const KioskNavbar = () => {
     if (window.kioskIdleTimer) {
       clearTimeout(window.kioskIdleTimer);
     }
-    
+
     window.kioskIdleTimer = setTimeout(() => {
       // Only navigate if we're not already on the idle page
-      if (window.location.pathname !== '/idle') {
-        window.location.href = '/idle';
+      if (window.location.pathname !== "/idle") {
+        window.location.href = "/idle";
       }
     }, 30000); // 30 seconds
   }, []);
@@ -63,24 +66,24 @@ export const KioskNavbar = () => {
 
     // Events that reset the idle timer - use passive listeners for better performance
     const events = [
-      'mousedown', 
-      'mousemove', 
-      'keypress', 
-      'scroll', 
-      'touchstart', 
-      'click'
+      "mousedown",
+      "mousemove",
+      "keypress",
+      "scroll",
+      "touchstart",
+      "click",
     ];
-    
+
     // Use passive event listeners where possible for better performance
-    events.forEach(event => {
-      document.addEventListener(event, handleUserActivity, { 
+    events.forEach((event) => {
+      document.addEventListener(event, handleUserActivity, {
         passive: true,
-        capture: false 
+        capture: false,
       });
     });
 
     return () => {
-      events.forEach(event => {
+      events.forEach((event) => {
         document.removeEventListener(event, handleUserActivity);
       });
       if (window.kioskIdleTimer) {
@@ -90,15 +93,22 @@ export const KioskNavbar = () => {
   }, [handleUserActivity]);
 
   // Memoize navigation items to prevent unnecessary re-renders
-  const navigationItems = useMemo(() => [
-    { href: "/", label: "🏠 Home", variant: "light" as const },
-    { href: "/categories", label: "📋 Categories", variant: "light" as const },
-    { href: "/specials", label: "⭐ Specials", variant: "light" as const }
-  ], []);
+  const navigationItems = useMemo(
+    () => [
+      { href: "/", label: "🏠 Home", variant: "light" as const },
+      {
+        href: "/categories",
+        label: "📋 Categories",
+        variant: "light" as const,
+      },
+      { href: "/specials", label: "⭐ Specials", variant: "light" as const },
+    ],
+    [],
+  );
 
   return (
-    <HeroUINavbar 
-      maxWidth="full" 
+    <HeroUINavbar
+      maxWidth="full"
       position="sticky"
       className="bg-golden-orange border-b-4 border-deep-amber shadow-lg"
     >
@@ -108,8 +118,12 @@ export const KioskNavbar = () => {
           <NextLink className="flex justify-start items-center gap-2" href="/">
             <span className="text-4xl">🍰</span>
             <div>
-              <p className="font-bold text-2xl text-chocolate-brown">Golden Munch</p>
-              <p className="text-sm text-chocolate-brown/70">Touch Screen Ordering</p>
+              <p className="font-bold text-2xl text-chocolate-brown">
+                Golden Munch
+              </p>
+              <p className="text-sm text-chocolate-brown/70">
+                Touch Screen Ordering
+              </p>
             </div>
           </NextLink>
         </NavbarBrand>
@@ -148,7 +162,7 @@ export const KioskNavbar = () => {
             className="bg-deep-amber hover:bg-chocolate-brown text-cream-white font-bold px-6"
             onClick={() => {
               // Handle help action - could open modal, navigate to help page, etc.
-              console.log('Help requested');
+              console.log("Help requested");
             }}
           >
             🆘 Help

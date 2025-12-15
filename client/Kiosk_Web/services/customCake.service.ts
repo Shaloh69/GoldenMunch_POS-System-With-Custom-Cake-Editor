@@ -1,5 +1,5 @@
-import apiClient from '@/config/api';
-import type { ApiResponse } from '@/types/api';
+import apiClient from "@/config/api";
+import type { ApiResponse } from "@/types/api";
 
 /**
  * Custom Cake Session Interface (New Comprehensive API)
@@ -13,7 +13,7 @@ export interface CustomCakeSessionResponse {
 }
 
 export interface CustomCakeSessionStatus {
-  status: 'pending' | 'in_progress' | 'completed' | 'expired';
+  status: "pending" | "in_progress" | "completed" | "expired";
   customizationData?: {
     flavor_id?: number;
     size_id?: number;
@@ -35,30 +35,32 @@ export class CustomCakeService {
    * Generate a new QR code session for custom cake design
    * Uses the new comprehensive API endpoint
    */
-  static async generateQRSession(kioskId?: string): Promise<CustomCakeSessionResponse> {
+  static async generateQRSession(
+    kioskId?: string,
+  ): Promise<CustomCakeSessionResponse> {
     try {
-      console.log('🔵 [Kiosk] Generating QR session...', { kioskId });
+      console.log("🔵 [Kiosk] Generating QR session...", { kioskId });
 
-      const response = await apiClient.post<ApiResponse<CustomCakeSessionResponse>>(
-        '/kiosk/custom-cake/generate-qr',
-        {
-          kiosk_id: kioskId || 'KIOSK-DEFAULT',
-        }
-      );
+      const response = await apiClient.post<
+        ApiResponse<CustomCakeSessionResponse>
+      >("/kiosk/custom-cake/generate-qr", {
+        kiosk_id: kioskId || "KIOSK-DEFAULT",
+      });
 
-      console.log('🟢 [Kiosk] QR session generated successfully:', {
-        sessionToken: response.data.data?.sessionToken?.substring(0, 30) + '...',
+      console.log("🟢 [Kiosk] QR session generated successfully:", {
+        sessionToken:
+          response.data.data?.sessionToken?.substring(0, 30) + "...",
         editorUrl: response.data.data?.editorUrl,
         expiresIn: response.data.data?.expiresIn,
       });
 
       if (!response.data.data) {
-        throw new Error('Failed to generate QR code session');
+        throw new Error("Failed to generate QR code session");
       }
 
       return response.data.data;
     } catch (error) {
-      console.error('🔴 [Kiosk] Error generating QR session:', error);
+      console.error("🔴 [Kiosk] Error generating QR session:", error);
       throw error;
     }
   }
@@ -66,28 +68,30 @@ export class CustomCakeService {
   /**
    * Poll session status to check if customization is complete
    */
-  static async pollSessionStatus(sessionId: string): Promise<CustomCakeSessionStatus> {
+  static async pollSessionStatus(
+    sessionId: string,
+  ): Promise<CustomCakeSessionStatus> {
     try {
-      console.log('🔵 [Kiosk] Polling session status...', {
-        sessionToken: sessionId.substring(0, 30) + '...',
+      console.log("🔵 [Kiosk] Polling session status...", {
+        sessionToken: sessionId.substring(0, 30) + "...",
       });
 
-      const response = await apiClient.get<ApiResponse<CustomCakeSessionStatus>>(
-        `/kiosk/custom-cake/session/${sessionId}/poll`
-      );
+      const response = await apiClient.get<
+        ApiResponse<CustomCakeSessionStatus>
+      >(`/kiosk/custom-cake/session/${sessionId}/poll`);
 
-      console.log('🟢 [Kiosk] Poll response:', {
+      console.log("🟢 [Kiosk] Poll response:", {
         status: response.data.data?.status,
         hasCustomizationData: !!response.data.data?.customizationData,
       });
 
       if (!response.data.data) {
-        throw new Error('Failed to poll session status');
+        throw new Error("Failed to poll session status");
       }
 
       return response.data.data;
     } catch (error) {
-      console.error('🔴 [Kiosk] Error polling session status:', error);
+      console.error("🔴 [Kiosk] Error polling session status:", error);
       throw error;
     }
   }
@@ -101,7 +105,7 @@ export class CustomCakeService {
     try {
       await apiClient.delete(`/kiosk/custom-cake/session/${sessionId}`);
     } catch (error) {
-      console.error('Error canceling session:', error);
+      console.error("Error canceling session:", error);
       // Fail silently as this uses deprecated endpoint
       // throw error;
     }
@@ -114,16 +118,19 @@ export class CustomCakeService {
    */
   static async completeCustomization(
     sessionId: string,
-    customizationData: CustomCakeSessionStatus['customizationData']
+    customizationData: CustomCakeSessionStatus["customizationData"],
   ): Promise<void> {
     try {
       // First update the session
-      await apiClient.put(`/kiosk/custom-cake/session/${sessionId}`, customizationData);
+      await apiClient.put(
+        `/kiosk/custom-cake/session/${sessionId}`,
+        customizationData,
+      );
 
       // Then mark it as complete
       await apiClient.post(`/kiosk/custom-cake/session/${sessionId}/complete`);
     } catch (error) {
-      console.error('Error completing customization:', error);
+      console.error("Error completing customization:", error);
       throw error;
     }
   }
@@ -134,26 +141,26 @@ export class CustomCakeService {
    */
   static async validateSession(sessionToken: string): Promise<any> {
     try {
-      console.log('🔵 [Mobile] Validating session...', {
-        sessionToken: sessionToken.substring(0, 30) + '...',
+      console.log("🔵 [Mobile] Validating session...", {
+        sessionToken: sessionToken.substring(0, 30) + "...",
       });
 
       const response = await apiClient.get<ApiResponse<any>>(
-        `/custom-cake/session/${sessionToken}`
+        `/custom-cake/session/${sessionToken}`,
       );
 
-      console.log('🟢 [Mobile] Session validated:', {
+      console.log("🟢 [Mobile] Session validated:", {
         status: response.data.data?.status,
         minutesRemaining: response.data.data?.minutesRemaining,
       });
 
       if (!response.data.data) {
-        throw new Error('Session not found or expired');
+        throw new Error("Session not found or expired");
       }
 
       return response.data.data;
     } catch (error) {
-      console.error('🔴 [Mobile] Error validating session:', error);
+      console.error("🔴 [Mobile] Error validating session:", error);
       throw error;
     }
   }
@@ -164,25 +171,25 @@ export class CustomCakeService {
    */
   static async getDesignOptions(): Promise<any> {
     try {
-      console.log('🔵 [Mobile] Fetching design options...');
+      console.log("🔵 [Mobile] Fetching design options...");
 
       const response = await apiClient.get<ApiResponse<any>>(
-        '/custom-cake/options'
+        "/custom-cake/options",
       );
 
-      console.log('🟢 [Mobile] Design options loaded:', {
+      console.log("🟢 [Mobile] Design options loaded:", {
         flavorsCount: response.data.data?.flavors?.length || 0,
         sizesCount: response.data.data?.sizes?.length || 0,
         themesCount: response.data.data?.themes?.length || 0,
       });
 
       if (!response.data.data) {
-        throw new Error('Failed to load design options');
+        throw new Error("Failed to load design options");
       }
 
       return response.data.data;
     } catch (error) {
-      console.error('🔴 [Mobile] Error fetching design options:', error);
+      console.error("🔴 [Mobile] Error fetching design options:", error);
       throw error;
     }
   }
@@ -192,20 +199,20 @@ export class CustomCakeService {
    */
   static async saveDraft(draftData: any): Promise<any> {
     try {
-      console.log('🔵 [Mobile] Saving draft...');
+      console.log("🔵 [Mobile] Saving draft...");
 
       const response = await apiClient.post<ApiResponse<any>>(
-        '/custom-cake/save-draft',
-        draftData
+        "/custom-cake/save-draft",
+        draftData,
       );
 
-      console.log('🟢 [Mobile] Draft saved:', {
+      console.log("🟢 [Mobile] Draft saved:", {
         requestId: response.data.data?.request_id,
       });
 
       return response.data.data;
     } catch (error) {
-      console.error('🔴 [Mobile] Error saving draft:', error);
+      console.error("🔴 [Mobile] Error saving draft:", error);
       throw error;
     }
   }
@@ -215,18 +222,18 @@ export class CustomCakeService {
    */
   static async submitForReview(requestId: number): Promise<any> {
     try {
-      console.log('🔵 [Mobile] Submitting for review...', { requestId });
+      console.log("🔵 [Mobile] Submitting for review...", { requestId });
 
       const response = await apiClient.post<ApiResponse<any>>(
-        '/custom-cake/submit',
-        { request_id: requestId }
+        "/custom-cake/submit",
+        { request_id: requestId },
       );
 
-      console.log('🟢 [Mobile] Submitted successfully');
+      console.log("🟢 [Mobile] Submitted successfully");
 
       return response.data.data;
     } catch (error) {
-      console.error('🔴 [Mobile] Error submitting for review:', error);
+      console.error("🔴 [Mobile] Error submitting for review:", error);
       throw error;
     }
   }
@@ -236,7 +243,7 @@ export class CustomCakeService {
    * @deprecated Use validateSession for session validation
    */
   static async getSession(sessionId: string): Promise<any> {
-    console.warn('⚠️  getSession is deprecated, use validateSession instead');
+    console.warn("⚠️  getSession is deprecated, use validateSession instead");
     return this.validateSession(sessionId);
   }
 }

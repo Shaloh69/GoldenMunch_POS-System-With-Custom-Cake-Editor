@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { Card, CardBody } from '@heroui/card';
+import React, { useEffect, useState } from "react";
+import { Card, CardBody } from "@heroui/card";
 
-export type ToastType = 'success' | 'error' | 'info' | 'warning';
+export type ToastType = "success" | "error" | "info" | "warning";
 
 export interface ToastMessage {
   id: string;
@@ -27,10 +27,10 @@ export const Toast: React.FC<ToastProps> = ({ toasts, onRemove }) => {
   );
 };
 
-const ToastItem: React.FC<{ toast: ToastMessage; onRemove: (id: string) => void }> = ({
-  toast,
-  onRemove,
-}) => {
+const ToastItem: React.FC<{
+  toast: ToastMessage;
+  onRemove: (id: string) => void;
+}> = ({ toast, onRemove }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
 
@@ -55,30 +55,30 @@ const ToastItem: React.FC<{ toast: ToastMessage; onRemove: (id: string) => void 
 
   const getToastStyles = () => {
     switch (toast.type) {
-      case 'success':
+      case "success":
         return {
-          bg: 'bg-green-500/95',
-          icon: '✅',
-          border: 'border-green-400',
+          bg: "bg-green-500/95",
+          icon: "✅",
+          border: "border-green-400",
         };
-      case 'error':
+      case "error":
         return {
-          bg: 'bg-red-500/95',
-          icon: '❌',
-          border: 'border-red-400',
+          bg: "bg-red-500/95",
+          icon: "❌",
+          border: "border-red-400",
         };
-      case 'warning':
+      case "warning":
         return {
-          bg: 'bg-golden-orange/95',
-          icon: '⚠️',
-          border: 'border-deep-amber',
+          bg: "bg-golden-orange/95",
+          icon: "⚠️",
+          border: "border-deep-amber",
         };
-      case 'info':
+      case "info":
       default:
         return {
-          bg: 'bg-blue-500/95',
-          icon: 'ℹ️',
-          border: 'border-blue-400',
+          bg: "bg-blue-500/95",
+          icon: "ℹ️",
+          border: "border-blue-400",
         };
     }
   };
@@ -89,7 +89,7 @@ const ToastItem: React.FC<{ toast: ToastMessage; onRemove: (id: string) => void 
     <div
       className={`
         transform transition-all duration-300 ease-out pointer-events-auto
-        ${isVisible && !isExiting ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}
+        ${isVisible && !isExiting ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"}
       `}
       onClick={handleExit}
     >
@@ -114,7 +114,11 @@ const ToastItem: React.FC<{ toast: ToastMessage; onRemove: (id: string) => void 
 export const useToast = () => {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
-  const showToast = (message: string, type: ToastType = 'info', duration?: number) => {
+  const showToast = (
+    message: string,
+    type: ToastType = "info",
+    duration?: number,
+  ) => {
     const id = `toast-${Date.now()}-${Math.random()}`;
     setToasts((prev) => [...prev, { id, message, type, duration }]);
   };
@@ -127,10 +131,14 @@ export const useToast = () => {
     toasts,
     showToast,
     removeToast,
-    success: (message: string, duration?: number) => showToast(message, 'success', duration),
-    error: (message: string, duration?: number) => showToast(message, 'error', duration),
-    warning: (message: string, duration?: number) => showToast(message, 'warning', duration),
-    info: (message: string, duration?: number) => showToast(message, 'info', duration),
+    success: (message: string, duration?: number) =>
+      showToast(message, "success", duration),
+    error: (message: string, duration?: number) =>
+      showToast(message, "error", duration),
+    warning: (message: string, duration?: number) =>
+      showToast(message, "warning", duration),
+    info: (message: string, duration?: number) =>
+      showToast(message, "info", duration),
   };
 };
 

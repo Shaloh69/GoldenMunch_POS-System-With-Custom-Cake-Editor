@@ -1,28 +1,36 @@
+
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardBody, CardHeader } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { Chip } from '@heroui/chip';
-import { Divider } from '@heroui/divider';
-import { Input } from '@heroui/input';
-import { Select, SelectItem } from '@heroui/select';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from '@heroui/modal';
-import NextLink from 'next/link';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { useCart } from '@/contexts/CartContext';
-import { OrderService } from '@/services/order.service';
-import { printerService } from '@/services/printer.service';
-import { SettingsService } from '@/services/settings.service';
-import { getImageUrl } from '@/utils/imageUtils';
+import { useState, useEffect } from "react";
+import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { Chip } from "@heroui/chip";
+import { Divider } from "@heroui/divider";
+import { Input } from "@heroui/input";
+import { Select, SelectItem } from "@heroui/select";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+} from "@heroui/modal";
+import NextLink from "next/link";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { useCart } from "@/contexts/CartContext";
+import { OrderService } from "@/services/order.service";
+import { printerService } from "@/services/printer.service";
+import { SettingsService } from "@/services/settings.service";
+import { getImageUrl } from "@/utils/imageUtils";
 import {
   OrderType,
   OrderSource,
   PaymentMethod,
   CreateOrderRequest,
-  CustomerOrder
-} from '@/types/api';
+  CustomerOrder,
+} from "@/types/api";
 
 export default function CartPage() {
   const router = useRouter();
@@ -35,21 +43,29 @@ export default function CartPage() {
     getSubtotal,
     getTax,
     getTotal,
-    getOrderItems
+    getOrderItems,
   } = useCart();
 
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [specialInstructions, setSpecialInstructions] = useState("");
   const [orderType, setOrderType] = useState<OrderType>(OrderType.TAKEOUT);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PaymentMethod.CASH);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(
+    PaymentMethod.CASH,
+  );
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [completedOrder, setCompletedOrder] = useState<CustomerOrder | null>(null);
+  const [completedOrder, setCompletedOrder] = useState<CustomerOrder | null>(
+    null,
+  );
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   // QR Code state
-  const { isOpen: isQROpen, onOpen: onQROpen, onClose: onQRClose } = useDisclosure();
+  const {
+    isOpen: isQROpen,
+    onOpen: onQROpen,
+    onClose: onQRClose,
+  } = useDisclosure();
   const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
   const [loadingQR, setLoadingQR] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState("");
@@ -57,13 +73,15 @@ export default function CartPage() {
   // Track failed image URLs to show emoji fallback
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
-  const handleImageError = (imageUrl: string) => {
-    setFailedImages(prev => new Set(prev).add(imageUrl));
+  const handleImageError = (imageUrl: string | null) => {
+    if (imageUrl) {
+      setFailedImages((prev) => new Set(prev).add(imageUrl));
+    }
   };
 
   // Fetch QR code when payment method changes to GCash or PayMaya
   useEffect(() => {
-    if (paymentMethod === 'gcash' || paymentMethod === 'paymaya') {
+    if (paymentMethod === "gcash" || paymentMethod === "paymaya") {
       fetchQRCode();
     } else {
       setQrCodeUrl(null);
@@ -75,7 +93,9 @@ export default function CartPage() {
     setLoadingQR(true);
     try {
       // Fetch QR code for the selected payment method
-      const url = await SettingsService.getPaymentQR(paymentMethod as 'gcash' | 'paymaya');
+      const url = await SettingsService.getPaymentQR(
+        paymentMethod as "gcash" | "paymaya",
+      );
       setQrCodeUrl(url);
     } catch (error) {
       console.error(`Failed to fetch ${paymentMethod} payment QR code:`, error);
@@ -89,23 +109,25 @@ export default function CartPage() {
     if (qrCodeUrl) {
       onQROpen();
     } else {
-      setError(`No ${paymentMethod.toUpperCase()} QR code configured. Please contact staff.`);
+      setError(
+        `No ${paymentMethod.toUpperCase()} QR code configured. Please contact staff.`,
+      );
     }
   };
 
   const getItemEmoji = (itemType: string): string => {
     const emojiMap: Record<string, string> = {
-      cake: '🍰',
-      pastry: '🥐',
-      beverage: '☕',
-      snack: '🍪',
-      main_dish: '🍽️',
-      appetizer: '🥗',
-      dessert: '🍨',
-      bread: '🍞',
-      other: '🍴'
+      cake: "🍰",
+      pastry: "🥐",
+      beverage: "☕",
+      snack: "🍪",
+      main_dish: "🍽️",
+      appetizer: "🥗",
+      dessert: "🍨",
+      bread: "🍞",
+      other: "🍴",
     };
-    return emojiMap[itemType] || '🍴';
+    return emojiMap[itemType] || "🍴";
   };
 
   const handleCheckout = async () => {
@@ -114,8 +136,13 @@ export default function CartPage() {
 
     try {
       // Validate reference number for GCash and PayMaya
-      if ((paymentMethod === 'gcash' || paymentMethod === 'paymaya') && !referenceNumber.trim()) {
-        setError(`Please enter your ${paymentMethod.toUpperCase()} reference number`);
+      if (
+        (paymentMethod === "gcash" || paymentMethod === "paymaya") &&
+        !referenceNumber.trim()
+      ) {
+        setError(
+          `Please enter your ${paymentMethod.toUpperCase()} reference number`,
+        );
         setIsProcessing(false);
         return;
       }
@@ -129,9 +156,9 @@ export default function CartPage() {
       };
 
       // Add reference number based on payment method
-      if (paymentMethod === 'gcash' && referenceNumber.trim()) {
+      if (paymentMethod === "gcash" && referenceNumber.trim()) {
         orderData.gcash_reference_number = referenceNumber.trim();
-      } else if (paymentMethod === 'paymaya' && referenceNumber.trim()) {
+      } else if (paymentMethod === "paymaya" && referenceNumber.trim()) {
         orderData.paymaya_reference_number = referenceNumber.trim();
       }
 
@@ -142,35 +169,35 @@ export default function CartPage() {
 
       // ✅ FIX: Print receipt after successful order creation
       try {
-        console.log('🖨️ Attempting to print receipt...');
+        console.log("🖨️ Attempting to print receipt...");
         const receiptData = printerService.formatOrderForPrint({
           ...order,
-          items: cartItems.map(item => ({
+          items: cartItems.map((item) => ({
             name: item.menuItem.name,
             quantity: item.quantity,
             unit_price: item.menuItem.current_price,
-            special_instructions: item.special_instructions
+            special_instructions: item.special_instructions,
           })),
           total_amount: getSubtotal(),
           tax_amount: getTax(),
           final_amount: getTotal(),
-          discount_amount: 0
+          discount_amount: 0,
         });
 
         const printResult = await printerService.printReceipt(receiptData);
         if (printResult.success) {
-          console.log('✅ Receipt printed successfully');
+          console.log("✅ Receipt printed successfully");
         } else {
-          console.warn('⚠️ Receipt printing failed:', printResult.error);
+          console.warn("⚠️ Receipt printing failed:", printResult.error);
           // Don't block order completion if printing fails
         }
       } catch (printErr) {
-        console.error('❌ Receipt printing error:', printErr);
+        console.error("❌ Receipt printing error:", printErr);
         // Don't block order completion if printing fails
       }
     } catch (err: any) {
-      console.error('Error creating order:', err);
-      setError(err.message || 'Failed to create order. Please try again.');
+      console.error("Error creating order:", err);
+      setError(err.message || "Failed to create order. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -185,7 +212,7 @@ export default function CartPage() {
     setReferenceNumber("");
     setCompletedOrder(null);
     onOpenChange();
-    router.push('/');
+    router.push("/");
   };
 
   if (cartItems.length === 0) {
@@ -233,9 +260,12 @@ export default function CartPage() {
           <div className="flex items-center gap-4 animate-slide-right">
             <div className="text-7xl animate-bounce-slow">🛒</div>
             <div>
-              <h1 className="text-5xl font-bold text-black mb-2 drop-shadow-lg">Your Cart</h1>
+              <h1 className="text-5xl font-bold text-black mb-2 drop-shadow-lg">
+                Your Cart
+              </h1>
               <p className="text-xl text-black font-semibold">
-                {getItemCount()} {getItemCount() === 1 ? 'item' : 'items'} • Ready to checkout?
+                {getItemCount()} {getItemCount() === 1 ? "item" : "items"} •
+                Ready to checkout?
               </p>
             </div>
           </div>
@@ -263,15 +293,19 @@ export default function CartPage() {
                     <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-pure-white/95 to-sunny-yellow/10 rounded-2xl hover:scale-[1.02] transition-all border-2 border-sunny-yellow/40 hover:border-sunny-yellow shadow-md">
                       {/* Item Image - Fixed to show actual images */}
                       <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-sunny-yellow/30 to-deep-orange-yellow/30 flex items-center justify-center flex-shrink-0 shadow-inner overflow-hidden">
-                        {getImageUrl(item.menuItem.image_url) && !failedImages.has(item.menuItem.image_url) ? (
+                        {getImageUrl(item.menuItem.image_url) &&
+                        item.menuItem.image_url &&
+                        !failedImages.has(item.menuItem.image_url) ? (
                           <Image
-                            src={getImageUrl(item.menuItem.image_url) ?? ''}
+                            src={getImageUrl(item.menuItem.image_url) ?? ""}
                             alt={item.menuItem.name}
                             width={96}
                             height={96}
                             className="object-cover w-full h-full"
                             unoptimized
-                            onError={() => handleImageError(item.menuItem.image_url)}
+                            onError={() =>
+                              handleImageError(item.menuItem.image_url)
+                            }
                           />
                         ) : (
                           <div className="text-5xl">
@@ -286,11 +320,19 @@ export default function CartPage() {
                           {item.menuItem.name}
                         </h3>
                         <div className="flex items-center gap-2 mt-1">
-                          <Chip size="sm" variant="flat" className="bg-sunny-yellow text-black font-semibold border border-sunny-yellow/60 shadow-sm">
+                          <Chip
+                            size="sm"
+                            variant="flat"
+                            className="bg-sunny-yellow text-black font-semibold border border-sunny-yellow/60 shadow-sm"
+                          >
                             {item.menuItem.item_type}
                           </Chip>
                           <span className="text-lg font-semibold text-black">
-                            ₱{(Number(item.menuItem.current_price) || 0).toFixed(2)} each
+                            ₱
+                            {(Number(item.menuItem.current_price) || 0).toFixed(
+                              2,
+                            )}{" "}
+                            each
                           </span>
                         </div>
                         {item.special_instructions && (
@@ -308,7 +350,12 @@ export default function CartPage() {
                             size="sm"
                             variant="flat"
                             className="rounded-full bg-deep-orange-yellow/40 hover:bg-deep-orange-yellow text-black font-bold transition-all"
-                            onClick={() => updateQuantity(item.menuItem.menu_item_id, item.quantity - 1)}
+                            onClick={() =>
+                              updateQuantity(
+                                item.menuItem.menu_item_id,
+                                item.quantity - 1,
+                              )
+                            }
                           >
                             −
                           </Button>
@@ -319,7 +366,12 @@ export default function CartPage() {
                             isIconOnly
                             size="sm"
                             className="rounded-full bg-gradient-to-r from-sunny-yellow to-deep-orange-yellow text-black font-bold shadow-lg transition-all hover:scale-110"
-                            onClick={() => updateQuantity(item.menuItem.menu_item_id, item.quantity + 1)}
+                            onClick={() =>
+                              updateQuantity(
+                                item.menuItem.menu_item_id,
+                                item.quantity + 1,
+                              )
+                            }
                           >
                             +
                           </Button>
@@ -328,13 +380,19 @@ export default function CartPage() {
                         {/* Item Total */}
                         <div className="text-center">
                           <p className="text-2xl font-bold text-black drop-shadow-sm">
-                            ₱{((Number(item.menuItem.current_price) || 0) * item.quantity).toFixed(2)}
+                            ₱
+                            {(
+                              (Number(item.menuItem.current_price) || 0) *
+                              item.quantity
+                            ).toFixed(2)}
                           </p>
                           <Button
                             size="sm"
                             variant="light"
                             className="text-xs text-black hover:text-black font-semibold underline"
-                            onClick={() => removeItem(item.menuItem.menu_item_id)}
+                            onClick={() =>
+                              removeItem(item.menuItem.menu_item_id)
+                            }
                           >
                             Remove
                           </Button>
@@ -362,7 +420,10 @@ export default function CartPage() {
           {/* Checkout Section */}
           <div className="space-y-6">
             {/* Order Information */}
-            <Card className="bg-gradient-to-br from-pure-white/90 via-sunny-yellow/10 to-deep-orange-yellow/15 backdrop-blur-lg border-2 border-sunny-yellow/60 shadow-xl animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            <Card
+              className="bg-gradient-to-br from-pure-white/90 via-sunny-yellow/10 to-deep-orange-yellow/15 backdrop-blur-lg border-2 border-sunny-yellow/60 shadow-xl animate-slide-up"
+              style={{ animationDelay: "0.2s" }}
+            >
               <CardHeader className="p-6 bg-gradient-to-r from-sunny-yellow/30 to-deep-orange-yellow/30 border-b-2 border-sunny-yellow/50">
                 <h2 className="text-2xl font-bold text-black flex items-center gap-2 drop-shadow-lg">
                   <span className="text-3xl">📋</span>
@@ -380,7 +441,8 @@ export default function CartPage() {
                   classNames={{
                     input: "text-black",
                     label: "text-black font-semibold",
-                    inputWrapper: "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm"
+                    inputWrapper:
+                      "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm",
                   }}
                 />
                 <Input
@@ -393,7 +455,8 @@ export default function CartPage() {
                   classNames={{
                     input: "text-black",
                     label: "text-black font-semibold",
-                    inputWrapper: "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm"
+                    inputWrapper:
+                      "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm",
                   }}
                 />
                 <Select
@@ -407,17 +470,18 @@ export default function CartPage() {
                     label: "!text-black font-semibold",
                     value: "!text-black !font-semibold",
                     innerWrapper: "!text-black",
-                    trigger: "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm !text-black",
+                    trigger:
+                      "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm !text-black",
                     selectorIcon: "text-black",
                     listboxWrapper: "bg-white",
                     listbox: "bg-white",
-                    popoverContent: "bg-white"
+                    popoverContent: "bg-white",
                   }}
                   listboxProps={{
                     itemClasses: {
                       base: "text-black data-[hover=true]:bg-sunny-yellow/20 data-[hover=true]:text-black data-[selected=true]:text-black",
-                      title: "text-black font-semibold"
-                    }
+                      title: "text-black font-semibold",
+                    },
                   }}
                 >
                   <SelectItem key="dine_in" textValue="Dine In">
@@ -427,53 +491,66 @@ export default function CartPage() {
                     <span className="text-black font-semibold">🚗 Takeout</span>
                   </SelectItem>
                   <SelectItem key="delivery" textValue="Delivery">
-                    <span className="text-black font-semibold">🚚 Delivery</span>
+                    <span className="text-black font-semibold">
+                      🚚 Delivery
+                    </span>
                   </SelectItem>
                 </Select>
                 <Select
                   label="Payment Method"
                   placeholder="Select payment method"
                   selectedKeys={[paymentMethod]}
-                  onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
+                  onChange={(e) =>
+                    setPaymentMethod(e.target.value as PaymentMethod)
+                  }
                   size="lg"
                   variant="bordered"
                   classNames={{
                     label: "!text-black font-semibold",
                     value: "!text-black !font-semibold",
                     innerWrapper: "!text-black",
-                    trigger: "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm !text-black",
+                    trigger:
+                      "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm !text-black",
                     selectorIcon: "text-black",
                     listboxWrapper: "bg-white",
                     listbox: "bg-white",
-                    popoverContent: "bg-white"
+                    popoverContent: "bg-white",
                   }}
                   listboxProps={{
                     itemClasses: {
                       base: "text-black data-[hover=true]:bg-sunny-yellow/20 data-[hover=true]:text-black data-[selected=true]:text-black",
-                      title: "text-black font-semibold"
-                    }
+                      title: "text-black font-semibold",
+                    },
                   }}
                 >
                   <SelectItem key="cash" textValue="Cash Payment">
-                    <span className="text-black font-semibold">💵 Cash Payment</span>
+                    <span className="text-black font-semibold">
+                      💵 Cash Payment
+                    </span>
                   </SelectItem>
                   <SelectItem key="gcash" textValue="GCash Payment">
-                    <span className="text-black font-semibold">📱 GCash Payment</span>
+                    <span className="text-black font-semibold">
+                      📱 GCash Payment
+                    </span>
                   </SelectItem>
                   <SelectItem key="paymaya" textValue="PayMaya Payment">
-                    <span className="text-black font-semibold">💳 PayMaya Payment</span>
+                    <span className="text-black font-semibold">
+                      💳 PayMaya Payment
+                    </span>
                   </SelectItem>
                 </Select>
 
                 {/* Show QR code for GCash and PayMaya payments */}
-                {(paymentMethod === 'gcash' || paymentMethod === 'paymaya') && (
+                {(paymentMethod === "gcash" || paymentMethod === "paymaya") && (
                   <Button
                     size="lg"
                     className="w-full bg-gradient-to-r from-sunny-yellow to-deep-orange-yellow text-black font-bold shadow-lg hover:scale-105 transition-all"
                     onPress={handleShowQRCode}
                     isLoading={loadingQR}
                   >
-                    {loadingQR ? 'Loading QR Code...' : '📱 Show Payment QR Code'}
+                    {loadingQR
+                      ? "Loading QR Code..."
+                      : "📱 Show Payment QR Code"}
                   </Button>
                 )}
 
@@ -487,14 +564,18 @@ export default function CartPage() {
                   classNames={{
                     input: "text-black",
                     label: "text-black font-semibold",
-                    inputWrapper: "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm"
+                    inputWrapper:
+                      "border-2 border-sunny-yellow/60 hover:border-sunny-yellow bg-pure-white/50 shadow-sm",
                   }}
                 />
               </CardBody>
             </Card>
 
             {/* Order Summary */}
-            <Card className="bg-gradient-to-br from-pure-white/90 via-sunny-yellow/10 to-deep-orange-yellow/15 backdrop-blur-lg border-2 border-sunny-yellow/60 shadow-xl animate-slide-up sticky top-24" style={{ animationDelay: '0.3s' }}>
+            <Card
+              className="bg-gradient-to-br from-pure-white/90 via-sunny-yellow/10 to-deep-orange-yellow/15 backdrop-blur-lg border-2 border-sunny-yellow/60 shadow-xl animate-slide-up sticky top-24"
+              style={{ animationDelay: "0.3s" }}
+            >
               <CardHeader className="p-6 bg-gradient-to-r from-sunny-yellow to-deep-orange-yellow">
                 <h2 className="text-2xl font-bold text-black flex items-center gap-2 drop-shadow-lg">
                   <span className="text-3xl">💰</span>
@@ -504,10 +585,10 @@ export default function CartPage() {
               <CardBody className="p-6">
                 <div className="space-y-4">
                   <div className="flex justify-between text-2xl font-bold">
-                    <span className="text-black">Total ({getItemCount()} items)</span>
                     <span className="text-black">
-                      ₱{getTotal().toFixed(2)}
+                      Total ({getItemCount()} items)
                     </span>
+                    <span className="text-black">₱{getTotal().toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -523,11 +604,14 @@ export default function CartPage() {
                   onClick={handleCheckout}
                   isLoading={isProcessing}
                 >
-                  {isProcessing ? "Processing..." : `💳 Place Order - ₱${getTotal().toFixed(2)}`}
+                  {isProcessing
+                    ? "Processing..."
+                    : `💳 Place Order - ₱${getTotal().toFixed(2)}`}
                 </Button>
 
                 <p className="text-xs text-black text-center mt-3 font-semibold">
-                  🔒 Secure checkout • By placing this order, you agree to our terms
+                  🔒 Secure checkout • By placing this order, you agree to our
+                  terms
                 </p>
               </CardBody>
             </Card>
@@ -545,7 +629,7 @@ export default function CartPage() {
           base: "bg-gradient-to-br from-pure-white/95 via-sunny-yellow/20 to-deep-orange-yellow/25 backdrop-blur-xl border-4 border-sunny-yellow shadow-2xl",
           header: "border-b-0",
           body: "py-8",
-          footer: "border-t-0"
+          footer: "border-t-0",
         }}
       >
         <ModalContent>
@@ -569,7 +653,9 @@ export default function CartPage() {
                           Order Number
                         </p>
                         <p className="text-2xl font-bold text-black mb-6 drop-shadow-sm">
-                          #{completedOrder.order_number || completedOrder.order_id}
+                          #
+                          {completedOrder.order_number ||
+                            completedOrder.order_id}
                         </p>
 
                         <div className="bg-gradient-to-r from-sunny-yellow to-deep-orange-yellow p-6 rounded-2xl mb-4 shadow-xl">
@@ -577,7 +663,10 @@ export default function CartPage() {
                             Your Verification Code
                           </p>
                           <p className="text-5xl font-black text-black tracking-wider selectable drop-shadow-lg">
-                            {completedOrder.verification_code || completedOrder.order_id.toString().padStart(6, '0')}
+                            {completedOrder.verification_code ||
+                              completedOrder.order_id
+                                .toString()
+                                .padStart(6, "0")}
                           </p>
                           <p className="text-black text-xs mt-3 font-semibold">
                             📋 Please save this code
@@ -585,7 +674,9 @@ export default function CartPage() {
                         </div>
 
                         <div className="flex items-center justify-between p-4 bg-sunny-yellow/20 rounded-xl border-2 border-sunny-yellow/60 shadow-md">
-                          <span className="text-black font-semibold">Total Amount</span>
+                          <span className="text-black font-semibold">
+                            Total Amount
+                          </span>
                           <span className="text-2xl font-bold text-black">
                             ₱{completedOrder.final_amount.toFixed(2)}
                           </span>
@@ -626,14 +717,17 @@ export default function CartPage() {
         backdrop="blur"
         classNames={{
           backdrop: "bg-charcoal-gray/90",
-          base: "bg-gradient-to-br from-pure-white/95 via-sunny-yellow/20 to-deep-orange-yellow/25 backdrop-blur-xl border-4 border-sunny-yellow shadow-2xl"
+          base: "bg-gradient-to-br from-pure-white/95 via-sunny-yellow/20 to-deep-orange-yellow/25 backdrop-blur-xl border-4 border-sunny-yellow shadow-2xl",
         }}
       >
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">
-            <h2 className="text-2xl font-bold capitalize text-black">{paymentMethod} Payment</h2>
+            <h2 className="text-2xl font-bold capitalize text-black">
+              {paymentMethod} Payment
+            </h2>
             <p className="text-sm text-black font-normal">
-              Scan this QR code with your {paymentMethod === 'gcash' ? 'GCash' : 'PayMaya'} app
+              Scan this QR code with your{" "}
+              {paymentMethod === "gcash" ? "GCash" : "PayMaya"} app
             </p>
           </ModalHeader>
           <ModalBody className="py-6">
@@ -643,7 +737,7 @@ export default function CartPage() {
                 <div className="flex justify-center">
                   <div className="relative w-full max-w-md aspect-square bg-pure-white rounded-xl p-6 shadow-lg border-4 border-sunny-yellow">
                     <Image
-                      src={getImageUrl(qrCodeUrl) || ''}
+                      src={getImageUrl(qrCodeUrl) || ""}
                       alt={`${paymentMethod.toUpperCase()} QR Code`}
                       fill
                       className="object-contain p-4"
@@ -655,7 +749,9 @@ export default function CartPage() {
 
                 {/* Amount Display */}
                 <div className="bg-sunny-yellow/20 p-6 rounded-xl border-2 border-sunny-yellow/60 text-center shadow-md">
-                  <p className="text-sm text-black mb-2 font-semibold">Amount to Pay:</p>
+                  <p className="text-sm text-black mb-2 font-semibold">
+                    Amount to Pay:
+                  </p>
                   <p className="text-4xl font-bold text-black drop-shadow-sm">
                     ₱{getTotal().toFixed(2)}
                   </p>
@@ -663,14 +759,23 @@ export default function CartPage() {
 
                 {/* Instructions */}
                 <div className="bg-gradient-to-br from-pure-white/90 to-sunny-yellow/10 p-4 rounded-lg border-2 border-sunny-yellow/60 shadow-md">
-                  <h3 className="font-semibold text-black mb-3">Payment Instructions:</h3>
+                  <h3 className="font-semibold text-black mb-3">
+                    Payment Instructions:
+                  </h3>
                   <ol className="text-sm text-black space-y-2 list-decimal list-inside">
-                    <li>Open your {paymentMethod === 'gcash' ? 'GCash' : 'PayMaya'} app</li>
+                    <li>
+                      Open your{" "}
+                      {paymentMethod === "gcash" ? "GCash" : "PayMaya"} app
+                    </li>
                     <li>Tap "Scan QR" in your app</li>
                     <li>Scan the QR code shown above</li>
                     <li>Verify the amount: ₱{getTotal().toFixed(2)}</li>
                     <li>Complete the payment in your app</li>
-                    <li><strong>Copy the reference number from your payment confirmation</strong></li>
+                    <li>
+                      <strong>
+                        Copy the reference number from your payment confirmation
+                      </strong>
+                    </li>
                     <li>Enter the reference number below</li>
                   </ol>
                 </div>
@@ -678,7 +783,7 @@ export default function CartPage() {
                 {/* Reference Number Input */}
                 <div className="bg-gradient-to-br from-pure-white/95 to-sunny-yellow/20 p-6 rounded-xl border-2 border-sunny-yellow/60 shadow-lg">
                   <Input
-                    label={`${paymentMethod === 'gcash' ? 'GCash' : 'PayMaya'} Reference Number`}
+                    label={`${paymentMethod === "gcash" ? "GCash" : "PayMaya"} Reference Number`}
                     placeholder="Enter your reference number"
                     value={referenceNumber}
                     onChange={(e) => setReferenceNumber(e.target.value)}
@@ -688,7 +793,8 @@ export default function CartPage() {
                     classNames={{
                       input: "text-black font-semibold text-lg",
                       label: "text-black font-bold text-base",
-                      inputWrapper: "border-3 border-sunny-yellow/80 hover:border-sunny-yellow bg-pure-white shadow-md h-14"
+                      inputWrapper:
+                        "border-3 border-sunny-yellow/80 hover:border-sunny-yellow bg-pure-white shadow-md h-14",
                     }}
                     startContent={
                       <div className="pointer-events-none flex items-center">
@@ -703,15 +809,20 @@ export default function CartPage() {
 
                 <div className="bg-yellow-500/20 p-3 rounded-lg border-2 border-yellow-500/60 shadow-md">
                   <p className="text-sm text-black text-center">
-                    ℹ️ <strong>Note:</strong> Please complete your payment and enter the reference number above. The cashier will verify this reference number when you pick up your order.
+                    ℹ️ <strong>Note:</strong> Please complete your payment and
+                    enter the reference number above. The cashier will verify
+                    this reference number when you pick up your order.
                   </p>
                 </div>
               </div>
             ) : (
               <div className="text-center py-12">
-                <p className="text-lg text-black font-semibold">QR Code not available</p>
+                <p className="text-lg text-black font-semibold">
+                  QR Code not available
+                </p>
                 <p className="text-sm text-black mt-2">
-                  Please contact staff for assistance with {paymentMethod} payments
+                  Please contact staff for assistance with {paymentMethod}{" "}
+                  payments
                 </p>
               </div>
             )}

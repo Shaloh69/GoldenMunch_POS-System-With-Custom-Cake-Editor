@@ -1,9 +1,11 @@
-import { Card, CardBody, CardHeader } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { Chip } from '@heroui/chip';
-import { Badge } from '@heroui/badge';
-import { Progress } from '@heroui/progress';
-import NextLink from 'next/link';
+import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { Chip } from "@heroui/chip";
+import { Badge } from "@heroui/badge";
+import { Progress } from "@heroui/progress";
+import NextLink from "next/link";
+
+export const dynamic = "force-dynamic";
 
 interface Special {
   id: string;
@@ -24,7 +26,8 @@ const todaysSpecials: Special[] = [
   {
     id: "special-1",
     name: "Triple Chocolate Delight",
-    description: "Indulgent triple-layer chocolate cake with ganache frosting and chocolate shavings",
+    description:
+      "Indulgent triple-layer chocolate cake with ganache frosting and chocolate shavings",
     originalPrice: 32.99,
     specialPrice: 19.99,
     emoji: "🍫",
@@ -33,34 +36,37 @@ const todaysSpecials: Special[] = [
     limitedQuantity: 6,
     soldCount: 2,
     isNew: true,
-    discount: 39
+    discount: 39,
   },
   {
     id: "special-2",
     name: "Fresh Berry Croissant Bundle",
-    description: "Pack of 4 buttery croissants filled with fresh strawberries and cream",
+    description:
+      "Pack of 4 buttery croissants filled with fresh strawberries and cream",
     originalPrice: 18.99,
     specialPrice: 12.99,
     emoji: "🥐",
     category: "pastries",
     timeLeft: "All day",
-    discount: 32
+    discount: 32,
   },
   {
     id: "special-3",
     name: "Artisan Coffee + Cookie Combo",
-    description: "Premium roasted coffee with your choice of any two freshly baked cookies",
+    description:
+      "Premium roasted coffee with your choice of any two freshly baked cookies",
     originalPrice: 12.99,
     specialPrice: 8.99,
     emoji: "☕",
     category: "beverages",
     timeLeft: "Until 3 PM",
-    discount: 31
+    discount: 31,
   },
   {
     id: "special-4",
     name: "Gourmet Sandwich Meal",
-    description: "Any signature sandwich with chips and a drink - perfect lunch combo",
+    description:
+      "Any signature sandwich with chips and a drink - perfect lunch combo",
     originalPrice: 16.99,
     specialPrice: 13.99,
     emoji: "🥪",
@@ -68,7 +74,7 @@ const todaysSpecials: Special[] = [
     timeLeft: "Lunch only",
     limitedQuantity: 15,
     soldCount: 8,
-    discount: 18
+    discount: 18,
   },
   {
     id: "special-5",
@@ -82,17 +88,17 @@ const todaysSpecials: Special[] = [
     limitedQuantity: 4,
     soldCount: 1,
     isNew: true,
-    discount: 32
-  }
+    discount: 32,
+  },
 ];
 
 export default function SpecialsPage() {
   const getCurrentDate = () => {
-    return new Date().toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return new Date().toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -101,9 +107,13 @@ export default function SpecialsPage() {
       {/* Header */}
       <div className="bg-gradient-to-r from-golden-orange via-deep-amber to-golden-orange text-chocolate-brown p-8 shadow-lg">
         <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-5xl font-bold mb-2 animate-pulse-slow">⭐ Today's Specials ⭐</h1>
+          <h1 className="text-5xl font-bold mb-2 animate-pulse-slow">
+            ⭐ Today's Specials ⭐
+          </h1>
           <p className="text-xl opacity-90 mb-2">{getCurrentDate()}</p>
-          <p className="text-lg opacity-80">Limited time offers - Don't miss out!</p>
+          <p className="text-lg opacity-80">
+            Limited time offers - Don't miss out!
+          </p>
         </div>
       </div>
 
@@ -111,23 +121,27 @@ export default function SpecialsPage() {
         {/* Flash Sale Banner */}
         <div className="mb-8 bg-gradient-to-r from-deep-amber to-chocolate-brown text-cream-white p-6 rounded-2xl shadow-xl">
           <div className="text-center">
-            <h2 className="text-3xl font-bold mb-2">🔥 Flash Sale Active! 🔥</h2>
-            <p className="text-lg opacity-90">Extra savings on selected items - while supplies last!</p>
+            <h2 className="text-3xl font-bold mb-2">
+              🔥 Flash Sale Active! 🔥
+            </h2>
+            <p className="text-lg opacity-90">
+              Extra savings on selected items - while supplies last!
+            </p>
           </div>
         </div>
 
         {/* Today's Specials Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {todaysSpecials.map((special) => (
-            <Card 
+            <Card
               key={special.id}
               className="hover:scale-105 transition-all duration-300 shadow-xl border-2 border-golden-orange/30 hover:border-golden-orange bg-cream-white relative overflow-hidden"
             >
               {/* Discount Badge */}
               <div className="absolute top-4 right-4 z-10">
-                <Chip 
-                  color="danger" 
-                  size="lg" 
+                <Chip
+                  color="danger"
+                  size="lg"
                   variant="solid"
                   className="font-bold text-lg px-3 py-1"
                 >
@@ -138,9 +152,9 @@ export default function SpecialsPage() {
               {/* New Badge */}
               {special.isNew && (
                 <div className="absolute top-4 left-4 z-10">
-                  <Chip 
-                    color="success" 
-                    size="sm" 
+                  <Chip
+                    color="success"
+                    size="sm"
                     variant="flat"
                     className="font-bold animate-pulse-slow"
                   >
@@ -150,14 +164,16 @@ export default function SpecialsPage() {
               )}
 
               <CardHeader className="flex flex-col items-center px-6 pt-8 pb-4">
-                <div className="text-8xl mb-4 animate-float">{special.emoji}</div>
+                <div className="text-8xl mb-4 animate-float">
+                  {special.emoji}
+                </div>
                 <h3 className="text-2xl font-bold text-chocolate-brown text-center mb-2">
                   {special.name}
                 </h3>
                 <p className="text-chocolate-brown/70 text-center mb-4">
                   {special.description}
                 </p>
-                
+
                 {/* Price Display */}
                 <div className="text-center mb-4">
                   <div className="flex items-center justify-center gap-3">
@@ -169,21 +185,17 @@ export default function SpecialsPage() {
                     </span>
                   </div>
                   <p className="text-sm text-chocolate-brown/70 mt-1">
-                    You save ${(special.originalPrice - special.specialPrice).toFixed(2)}!
+                    You save $
+                    {(special.originalPrice - special.specialPrice).toFixed(2)}!
                   </p>
                 </div>
 
                 {/* Time Remaining */}
-                <Chip 
-                  color="warning" 
-                  size="sm" 
-                  variant="flat"
-                  className="mb-4"
-                >
+                <Chip color="warning" size="sm" variant="flat" className="mb-4">
                   ⏰ {special.timeLeft}
                 </Chip>
               </CardHeader>
-              
+
               <CardBody className="px-6 pb-6">
                 {/* Quantity Tracker */}
                 {special.limitedQuantity && (
@@ -193,11 +205,15 @@ export default function SpecialsPage() {
                         Limited Quantity
                       </span>
                       <span className="text-sm text-chocolate-brown/70">
-                        {special.limitedQuantity - (special.soldCount || 0)} left
+                        {special.limitedQuantity - (special.soldCount || 0)}{" "}
+                        left
                       </span>
                     </div>
-                    <Progress 
-                      value={((special.soldCount || 0) / special.limitedQuantity) * 100}
+                    <Progress
+                      value={
+                        ((special.soldCount || 0) / special.limitedQuantity) *
+                        100
+                      }
                       color="warning"
                       className="mb-2"
                     />
@@ -206,7 +222,7 @@ export default function SpecialsPage() {
                     </p>
                   </div>
                 )}
-                
+
                 <Button
                   size="lg"
                   className="w-full bg-golden-orange hover:bg-deep-amber text-chocolate-brown font-bold text-lg mb-3"
@@ -233,7 +249,7 @@ export default function SpecialsPage() {
           <h2 className="text-3xl font-bold text-chocolate-brown mb-6 text-center">
             🎁 Additional Offers
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Loyalty Program */}
             <Card className="bg-gradient-to-br from-mint-green/20 to-mint-green/10 border-2 border-mint-green/30">
@@ -243,9 +259,10 @@ export default function SpecialsPage() {
                   Loyalty Rewards
                 </h3>
                 <p className="text-chocolate-brown/70 mb-4">
-                  Earn points with every purchase! Get a free pastry after 10 visits.
+                  Earn points with every purchase! Get a free pastry after 10
+                  visits.
                 </p>
-                <Button 
+                <Button
                   size="md"
                   className="bg-mint-green text-chocolate-brown font-bold"
                 >
@@ -264,7 +281,7 @@ export default function SpecialsPage() {
                 <p className="text-chocolate-brown/70 mb-4">
                   50% off all beverages between 2-4 PM on weekdays!
                 </p>
-                <Button 
+                <Button
                   size="md"
                   variant="bordered"
                   className="border-caramel-beige text-chocolate-brown font-bold"

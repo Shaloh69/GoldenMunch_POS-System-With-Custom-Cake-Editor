@@ -1,12 +1,21 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/modal';
-import { Button } from '@heroui/button';
-import { Spinner } from '@heroui/spinner';
-import { Card, CardBody } from '@heroui/card';
-import Image from 'next/image';
-import { CustomCakeService, CustomCakeSessionResponse } from '@/services/customCake.service';
+import React, { useEffect, useState } from "react";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@heroui/modal";
+import { Button } from "@heroui/button";
+import { Spinner } from "@heroui/spinner";
+import { Card, CardBody } from "@heroui/card";
+import Image from "next/image";
+import {
+  CustomCakeService,
+  CustomCakeSessionResponse,
+} from "@/services/customCake.service";
 
 interface CustomCakeQRModalProps {
   isOpen: boolean;
@@ -23,10 +32,14 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
   kioskSessionId,
   menuItemId,
 }) => {
-  const [session, setSession] = useState<CustomCakeSessionResponse | null>(null);
+  const [session, setSession] = useState<CustomCakeSessionResponse | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(
+    null,
+  );
   const [timeRemaining, setTimeRemaining] = useState<number>(7200); // 2 hours in seconds (matches server session expiry)
 
   // Create session when modal opens
@@ -41,7 +54,9 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
       }
       if (session) {
         // Cancel the session if it wasn't completed
-        CustomCakeService.cancelSession(session.sessionToken).catch(console.error);
+        CustomCakeService.cancelSession(session.sessionToken).catch(
+          console.error,
+        );
       }
       setSession(null);
       setIsLoading(true);
@@ -69,23 +84,24 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
 
   const createSession = async () => {
     try {
-      console.log('🎨 [QR Modal] Creating session...', { kioskSessionId });
+      console.log("🎨 [QR Modal] Creating session...", { kioskSessionId });
       setIsLoading(true);
       setError(null);
 
-      const sessionData = await CustomCakeService.generateQRSession(kioskSessionId);
-      console.log('✅ [QR Modal] Session created successfully:', {
-        sessionToken: sessionData.sessionToken.substring(0, 30) + '...',
+      const sessionData =
+        await CustomCakeService.generateQRSession(kioskSessionId);
+      console.log("✅ [QR Modal] Session created successfully:", {
+        sessionToken: sessionData.sessionToken.substring(0, 30) + "...",
         expiresIn: sessionData.expiresIn,
       });
       setSession(sessionData);
 
       // Start polling for completion
-      console.log('🔄 [QR Modal] Starting polling...');
+      console.log("🔄 [QR Modal] Starting polling...");
       startPolling(sessionData.sessionToken);
     } catch (err) {
-      console.error('❌ [QR Modal] Failed to create session:', err);
-      setError('Failed to create customization session. Please try again.');
+      console.error("❌ [QR Modal] Failed to create session:", err);
+      setError("Failed to create customization session. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -96,9 +112,9 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
       try {
         const status = await CustomCakeService.pollSessionStatus(sessionId);
 
-        if (status.status === 'completed' && status.customizationData) {
+        if (status.status === "completed" && status.customizationData) {
           // Customization is complete!
-          console.log('🎉 [QR Modal] Customization completed!', {
+          console.log("🎉 [QR Modal] Customization completed!", {
             status: status.status,
             hasData: !!status.customizationData,
           });
@@ -107,12 +123,12 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
           }
           onComplete(status.customizationData);
           onClose();
-        } else if (status.status === 'expired') {
-          console.warn('⏰ [QR Modal] Session expired');
+        } else if (status.status === "expired") {
+          console.warn("⏰ [QR Modal] Session expired");
           handleTimeout();
         }
       } catch (err) {
-        console.error('❌ [QR Modal] Polling error:', err);
+        console.error("❌ [QR Modal] Polling error:", err);
       }
     }, 2000); // Poll every 2 seconds
 
@@ -124,12 +140,14 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
       clearInterval(pollingInterval);
       setPollingInterval(null);
     }
-    setError('Session expired. Please try again.');
+    setError("Session expired. Please try again.");
   };
 
   const handleCancel = () => {
     if (session && pollingInterval) {
-      CustomCakeService.cancelSession(session.sessionToken).catch(console.error);
+      CustomCakeService.cancelSession(session.sessionToken).catch(
+        console.error,
+      );
       clearInterval(pollingInterval);
       setPollingInterval(null);
     }
@@ -139,7 +157,7 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   return (
@@ -149,8 +167,8 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
       size="2xl"
       backdrop="blur"
       classNames={{
-        backdrop: 'bg-gradient-to-t from-purple-900/50 to-pink-900/50',
-        base: 'border-2 border-purple-200 bg-white shadow-2xl',
+        backdrop: "bg-gradient-to-t from-purple-900/50 to-pink-900/50",
+        base: "border-2 border-purple-200 bg-white shadow-2xl",
       }}
     >
       <ModalContent>
@@ -165,8 +183,14 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
         <ModalBody className="py-6">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <Spinner size="lg" className="mb-6" style={{ color: '#9333ea' }} />
-              <p className="text-2xl font-bold text-black mb-4">✨ Creating Your Session...</p>
+              <Spinner
+                size="lg"
+                className="mb-6"
+                style={{ color: "#9333ea" }}
+              />
+              <p className="text-2xl font-bold text-black mb-4">
+                ✨ Creating Your Session...
+              </p>
               <div className="text-base text-black/70 space-y-2 text-center font-medium">
                 <p>🎨 Preparing canvas</p>
                 <p>🍰 Loading design tools</p>
@@ -177,7 +201,9 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
             <Card className="bg-red-50 border-3 border-red-300 shadow-xl">
               <CardBody>
                 <div className="text-center py-8">
-                  <p className="text-2xl text-black font-bold mb-4">⚠️ {error}</p>
+                  <p className="text-2xl text-black font-bold mb-4">
+                    ⚠️ {error}
+                  </p>
                   <Button
                     className="bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 text-white font-bold text-lg py-6 px-8"
                     onClick={createSession}
@@ -208,7 +234,9 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
               <div className="text-center space-y-4">
                 <div className="flex items-center justify-center gap-3 text-xl">
                   <span className="text-3xl">⏱️</span>
-                  <span className="font-bold text-purple-600 text-2xl">{formatTime(timeRemaining)}</span>
+                  <span className="font-bold text-purple-600 text-2xl">
+                    {formatTime(timeRemaining)}
+                  </span>
                   <span className="text-black font-semibold">remaining</span>
                 </div>
 
@@ -230,8 +258,9 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
                 <Card className="bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-200 mt-6 shadow-lg">
                   <CardBody className="p-5">
                     <p className="text-sm text-black font-semibold text-center">
-                      💡 <strong>Tip:</strong> While you customize on your phone, feel free to let
-                      others use the kiosk. We'll notify you when it's ready!
+                      💡 <strong>Tip:</strong> While you customize on your
+                      phone, feel free to let others use the kiosk. We'll notify
+                      you when it's ready!
                     </p>
                   </CardBody>
                 </Card>

@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 
 interface Particle {
   left: number;
@@ -36,7 +36,20 @@ export const AnimatedBackground: React.FC = () => {
     setMounted(true);
 
     // Soft, airy café-themed emojis
-    const emojis = ['☕', '🥐', '🍰', '🧁', '🥖', '🥨', '🍪', '🧈', '🍯', '🌸', '✨', '🌼'];
+    const emojis = [
+      "☕",
+      "🥐",
+      "🍰",
+      "🧁",
+      "🥖",
+      "🥨",
+      "🍪",
+      "🧈",
+      "🍯",
+      "🌸",
+      "✨",
+      "🌼",
+    ];
 
     // Generate MORE floating particles for prominence
     const generatedParticles = [...Array(25)].map(() => ({
@@ -107,7 +120,7 @@ export const AnimatedBackground: React.FC = () => {
               height: `${bubble.size}px`,
               animationDelay: `${bubble.delay}s`,
               animationDuration: `${bubble.duration}s`,
-              boxShadow: '0 0 20px rgba(251, 205, 47, 0.4)',
+              boxShadow: "0 0 20px rgba(251, 205, 47, 0.4)",
             }}
           />
         ))}
@@ -125,7 +138,8 @@ export const AnimatedBackground: React.FC = () => {
               fontSize: `${particle.size}px`,
               animationDelay: `${particle.delay}s`,
               animationDuration: `${particle.duration}s`,
-              filter: 'drop-shadow(0 0 15px rgba(251, 205, 47, 0.6)) drop-shadow(0 0 25px rgba(245, 166, 35, 0.3))',
+              filter:
+                "drop-shadow(0 0 15px rgba(251, 205, 47, 0.6)) drop-shadow(0 0 25px rgba(245, 166, 35, 0.3))",
             }}
           >
             {particle.emoji}
@@ -146,7 +160,8 @@ export const AnimatedBackground: React.FC = () => {
               height: `${sparkle.size}px`,
               animationDelay: `${sparkle.delay}s`,
               animationDuration: `${sparkle.duration}s`,
-              boxShadow: '0 0 15px rgba(245, 166, 35, 0.8), 0 0 25px rgba(251, 205, 47, 0.5)',
+              boxShadow:
+                "0 0 15px rgba(245, 166, 35, 0.8), 0 0 25px rgba(251, 205, 47, 0.5)",
             }}
           />
         ))}

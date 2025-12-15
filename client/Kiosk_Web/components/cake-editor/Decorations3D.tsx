@@ -1,11 +1,15 @@
-'use client';
+"use client";
 
-import { useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { useRef } from "react";
+import { useFrame } from "@react-three/fiber";
+import * as THREE from "three";
 
 // Flower Decoration
-export function FlowerDecoration({ position, color = '#FF69B4', scale = 1 }: any) {
+export function FlowerDecoration({
+  position,
+  color = "#FF69B4",
+  scale = 1,
+}: any) {
   return (
     <group position={position} scale={scale}>
       {/* Flower center */}
@@ -40,17 +44,17 @@ export function FlowerDecoration({ position, color = '#FF69B4', scale = 1 }: any
 }
 
 // Ribbon Decoration
-export function RibbonDecoration({ position, color = '#FF1493', scale = 1 }: any) {
+export function RibbonDecoration({
+  position,
+  color = "#FF1493",
+  scale = 1,
+}: any) {
   return (
     <group position={position} scale={scale}>
       {/* Main ribbon loop */}
       <mesh rotation={[0, 0, Math.PI / 4]}>
         <torusGeometry args={[0.08, 0.015, 16, 32]} />
-        <meshStandardMaterial
-          color={color}
-          roughness={0.3}
-          metalness={0.2}
-        />
+        <meshStandardMaterial color={color} roughness={0.3} metalness={0.2} />
       </mesh>
 
       {/* Ribbon tails */}
@@ -73,13 +77,14 @@ export function RibbonDecoration({ position, color = '#FF1493', scale = 1 }: any
 }
 
 // Star Topper
-export function StarTopper({ position, color = '#FFD700', scale = 1 }: any) {
+export function StarTopper({ position, color = "#FFD700", scale = 1 }: any) {
   const starRef = useRef<THREE.Group>(null);
 
   // Gentle rotation animation
   useFrame((state) => {
     if (starRef.current) {
-      starRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.5) * 0.3;
+      starRef.current.rotation.y =
+        Math.sin(state.clock.elapsedTime * 0.5) * 0.3;
     }
   });
 
@@ -92,10 +97,7 @@ export function StarTopper({ position, color = '#FFD700', scale = 1 }: any) {
     const radius = i % 2 === 0 ? outerRadius : innerRadius;
     const angle = (i / 10) * Math.PI * 2 - Math.PI / 2;
     starPoints.push(
-      new THREE.Vector2(
-        Math.cos(angle) * radius,
-        Math.sin(angle) * radius
-      )
+      new THREE.Vector2(Math.cos(angle) * radius, Math.sin(angle) * radius),
     );
   }
 
@@ -127,13 +129,18 @@ export function StarTopper({ position, color = '#FFD700', scale = 1 }: any) {
       </mesh>
 
       {/* Sparkle effect */}
-      <pointLight position={[0, 0, 0.1]} intensity={0.5} distance={0.5} color={color} />
+      <pointLight
+        position={[0, 0, 0.1]}
+        intensity={0.5}
+        distance={0.5}
+        color={color}
+      />
     </group>
   );
 }
 
 // Heart Topper
-export function HeartTopper({ position, color = '#FF1493', scale = 1 }: any) {
+export function HeartTopper({ position, color = "#FF1493", scale = 1 }: any) {
   // Create heart shape
   const heartShape = new THREE.Shape();
   heartShape.moveTo(0, 0);
@@ -156,18 +163,18 @@ export function HeartTopper({ position, color = '#FF1493', scale = 1 }: any) {
             },
           ]}
         />
-        <meshStandardMaterial
-          color={color}
-          roughness={0.3}
-          metalness={0.4}
-        />
+        <meshStandardMaterial color={color} roughness={0.3} metalness={0.4} />
       </mesh>
     </group>
   );
 }
 
 // Butterfly Decoration
-export function ButterflyDecoration({ position, color = '#FF69B4', scale = 1 }: any) {
+export function ButterflyDecoration({
+  position,
+  color = "#FF69B4",
+  scale = 1,
+}: any) {
   const butterflyRef = useRef<THREE.Group>(null);
 
   // Gentle flapping animation
@@ -221,7 +228,11 @@ export function ButterflyDecoration({ position, color = '#FF69B4', scale = 1 }: 
 }
 
 // Pearl/Bead Decoration
-export function PearlDecoration({ position, color = '#F5F5DC', scale = 1 }: any) {
+export function PearlDecoration({
+  position,
+  color = "#F5F5DC",
+  scale = 1,
+}: any) {
   return (
     <group position={position} scale={scale}>
       <mesh>
@@ -239,10 +250,22 @@ export function PearlDecoration({ position, color = '#F5F5DC', scale = 1 }: any)
 
 // Sprinkle Decoration
 export function SprinkleDecoration({ position, color, scale = 1 }: any) {
-  const randomColor = color || ['#FF69B4', '#FFD700', '#00CED1', '#FF1493', '#32CD32'][Math.floor(Math.random() * 5)];
+  const randomColor =
+    color ||
+    ["#FF69B4", "#FFD700", "#00CED1", "#FF1493", "#32CD32"][
+      Math.floor(Math.random() * 5)
+    ];
 
   return (
-    <group position={position} scale={scale} rotation={[Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI]}>
+    <group
+      position={position}
+      scale={scale}
+      rotation={[
+        Math.random() * Math.PI,
+        Math.random() * Math.PI,
+        Math.random() * Math.PI,
+      ]}
+    >
       <mesh>
         <cylinderGeometry args={[0.008, 0.008, 0.04, 6]} />
         <meshStandardMaterial color={randomColor} roughness={0.3} />

@@ -41,6 +41,12 @@ const nextConfig = {
 
   // Standard .next directory for all builds
   distDir: '.next',
+
+  // Experimental: Skip static page generation to avoid build errors
+  experimental: {
+    workerThreads: false,
+    cpus: 1,
+  },
 };
 
 export default nextConfig;

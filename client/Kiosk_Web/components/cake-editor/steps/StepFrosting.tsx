@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { Card, CardBody } from '@heroui/card';
-import { Select, SelectItem } from '@heroui/select';
-import { Input } from '@heroui/input';
-import type { CakeDesign } from '@/app/cake-editor/page';
+import { Card, CardBody } from "@heroui/card";
+import { Select, SelectItem } from "@heroui/select";
+import { Input } from "@heroui/input";
+import type { CakeDesign } from "@/app/cake-editor/page";
 
 interface StepFrostingProps {
   design: CakeDesign;
@@ -12,29 +12,46 @@ interface StepFrostingProps {
 }
 
 const FROSTING_TYPES = [
-  { value: 'buttercream', label: 'Buttercream', description: 'Classic & creamy' },
-  { value: 'fondant', label: 'Fondant', description: 'Smooth & elegant' },
-  { value: 'whipped_cream', label: 'Whipped Cream', description: 'Light & fluffy' },
-  { value: 'ganache', label: 'Ganache', description: 'Rich chocolate' },
-  { value: 'cream_cheese', label: 'Cream Cheese', description: 'Tangy & smooth' },
+  {
+    value: "buttercream",
+    label: "Buttercream",
+    description: "Classic & creamy",
+  },
+  { value: "fondant", label: "Fondant", description: "Smooth & elegant" },
+  {
+    value: "whipped_cream",
+    label: "Whipped Cream",
+    description: "Light & fluffy",
+  },
+  { value: "ganache", label: "Ganache", description: "Rich chocolate" },
+  {
+    value: "cream_cheese",
+    label: "Cream Cheese",
+    description: "Tangy & smooth",
+  },
 ];
 
 const PRESET_COLORS = [
-  '#FFFFFF', // White
-  '#FFE4E1', // Pink
-  '#E6E6FA', // Lavender
-  '#FFD700', // Gold
-  '#87CEEB', // Sky Blue
-  '#98FB98', // Mint
-  '#FFB6C1', // Light Pink
-  '#DDA0DD', // Plum
+  "#FFFFFF", // White
+  "#FFE4E1", // Pink
+  "#E6E6FA", // Lavender
+  "#FFD700", // Gold
+  "#87CEEB", // Sky Blue
+  "#98FB98", // Mint
+  "#FFB6C1", // Light Pink
+  "#DDA0DD", // Plum
 ];
 
-export default function StepFrosting({ design, updateDesign }: StepFrostingProps) {
+export default function StepFrosting({
+  design,
+  updateDesign,
+}: StepFrostingProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Frosting Style</h2>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          Frosting Style
+        </h2>
         <p className="text-gray-600">Choose your frosting type and color</p>
       </div>
 
@@ -49,8 +66,8 @@ export default function StepFrosting({ design, updateDesign }: StepFrostingProps
               onClick={() => updateDesign({ frosting_type: type.value })}
               className={`${
                 design.frosting_type === type.value
-                  ? 'border-2 border-amber-500 bg-amber-50'
-                  : 'border-2 border-gray-200 hover:border-amber-300'
+                  ? "border-2 border-amber-500 bg-amber-50"
+                  : "border-2 border-gray-200 hover:border-amber-300"
               } transition-all`}
             >
               <CardBody className="p-4">
@@ -72,8 +89,8 @@ export default function StepFrosting({ design, updateDesign }: StepFrostingProps
               onClick={() => updateDesign({ frosting_color: color })}
               className={`w-12 h-12 rounded-full border-4 transition-all ${
                 design.frosting_color === color
-                  ? 'border-amber-500 scale-110'
-                  : 'border-gray-300 hover:border-amber-300'
+                  ? "border-amber-500 scale-110"
+                  : "border-gray-300 hover:border-amber-300"
               }`}
               style={{ backgroundColor: color }}
               aria-label={`Select color ${color}`}
@@ -99,7 +116,9 @@ export default function StepFrosting({ design, updateDesign }: StepFrostingProps
             min="0"
             max="100"
             value={design.candles_count.toString()}
-            onChange={(e) => updateDesign({ candles_count: parseInt(e.target.value) || 0 })}
+            onChange={(e) =>
+              updateDesign({ candles_count: parseInt(e.target.value) || 0 })
+            }
             variant="bordered"
           />
           <Select

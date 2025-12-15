@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Button } from '@heroui/button';
-import { Chip } from '@heroui/chip';
-import Link from 'next/link';
-import { useCart } from '@/contexts/CartContext';
-import { usePathname } from 'next/navigation';
+import React, { useState } from "react";
+import { Button } from "@heroui/button";
+import { Chip } from "@heroui/chip";
+import Link from "next/link";
+import { useCart } from "@/contexts/CartContext";
+import { usePathname } from "next/navigation";
 
 export const CartFooter: React.FC = () => {
   const pathname = usePathname();
@@ -13,7 +13,11 @@ export const CartFooter: React.FC = () => {
   const [isHidden, setIsHidden] = useState(false);
 
   // Hide footer on specific pages
-  if (pathname === '/cart' || pathname === '/idle' || pathname === '/custom-cake') {
+  if (
+    pathname === "/cart" ||
+    pathname === "/idle" ||
+    pathname === "/custom-cake"
+  ) {
     return null;
   }
 
@@ -30,14 +34,14 @@ export const CartFooter: React.FC = () => {
           className="bg-gradient-to-r from-[#D9B38C] to-[#C67B57] text-white shadow-2xl hover:scale-110 transition-all w-16 h-16 rounded-full"
           onClick={() => setIsHidden(!isHidden)}
         >
-          <span className="text-3xl">{isHidden ? '⬆️' : '⬇️'}</span>
+          <span className="text-3xl">{isHidden ? "⬆️" : "⬇️"}</span>
         </Button>
       </div>
 
       {/* Footer Bar */}
       <div
         className={`fixed left-0 right-0 z-40 transition-all duration-500 ease-in-out ${
-          isHidden ? 'bottom-[-200px]' : 'bottom-0'
+          isHidden ? "bottom-[-200px]" : "bottom-0"
         }`}
       >
         <div className="glass-footer border-t-4 border-[#D9B38C]/40 shadow-[0_-10px_40px_rgba(198,123,87,0.35)]">
@@ -50,8 +54,8 @@ export const CartFooter: React.FC = () => {
                 size="lg"
                 className={`${
                   itemCount > 0
-                    ? 'bg-gradient-to-r from-[#D9B38C] to-[#C67B57] shadow-[0_0_30px_rgba(198,123,87,0.5)] scale-105'
-                    : 'bg-[#C9B8A5]/50 opacity-70'
+                    ? "bg-gradient-to-r from-[#D9B38C] to-[#C67B57] shadow-[0_0_30px_rgba(198,123,87,0.5)] scale-105"
+                    : "bg-[#C9B8A5]/50 opacity-70"
                 } text-white font-bold py-10 hover:scale-110 transition-all rounded-2xl`}
                 isDisabled={itemCount === 0}
               >
@@ -59,10 +63,12 @@ export const CartFooter: React.FC = () => {
                   <div className="flex items-center gap-5">
                     <span className="text-6xl">🛒</span>
                     <div className="flex flex-col items-start">
-                      <span className="text-4xl drop-shadow-lg font-bold">Cart</span>
+                      <span className="text-4xl drop-shadow-lg font-bold">
+                        Cart
+                      </span>
                       {itemCount > 0 && (
                         <span className="text-xl text-[#FFF9F2]/90">
-                          {itemCount} {itemCount === 1 ? 'item' : 'items'}
+                          {itemCount} {itemCount === 1 ? "item" : "items"}
                         </span>
                       )}
                     </div>
@@ -94,15 +100,21 @@ export const CartFooter: React.FC = () => {
                   <div className="flex items-center gap-5">
                     <span className="text-6xl">🎂</span>
                     <div className="flex flex-col items-start">
-                      <span className="text-4xl drop-shadow-lg font-bold">Custom Cake</span>
-                      <span className="text-xl text-[#FFF9F2]/90">Design your dream cake</span>
+                      <span className="text-4xl drop-shadow-lg font-bold">
+                        Custom Cake
+                      </span>
+                      <span className="text-xl text-[#FFF9F2]/90">
+                        Design your dream cake
+                      </span>
                     </div>
                   </div>
 
                   {/* QR Code Indicator */}
                   <div className="flex flex-col items-center bg-white/20 backdrop-blur-sm px-6 py-3 rounded-xl border-2 border-white/40">
                     <span className="text-5xl mb-1">📱</span>
-                    <span className="text-sm font-semibold text-white">Scan QR</span>
+                    <span className="text-sm font-semibold text-white">
+                      Scan QR
+                    </span>
                   </div>
                 </div>
               </Button>

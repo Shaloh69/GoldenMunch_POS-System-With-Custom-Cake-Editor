@@ -5,4 +5,4 @@ export type IconSvgProps = SVGProps<SVGSVGElement> & {
 };
 
 // Re-export API types
-export * from './api';
+export * from "./api";

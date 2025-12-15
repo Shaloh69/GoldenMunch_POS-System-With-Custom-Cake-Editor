@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { Card, CardBody } from '@heroui/card';
-import { Chip } from '@heroui/chip';
-import { Textarea } from '@heroui/input';
-import type { CakeDesign } from '@/app/cake-editor/page';
+import { Card, CardBody } from "@heroui/card";
+import { Chip } from "@heroui/chip";
+import { Textarea } from "@heroui/input";
+import type { CakeDesign } from "@/app/cake-editor/page";
 
 interface StepReviewProps {
   design: CakeDesign;
@@ -11,34 +11,42 @@ interface StepReviewProps {
   options: any;
 }
 
-export default function StepReview({ design, updateDesign, options }: StepReviewProps) {
+export default function StepReview({
+  design,
+  updateDesign,
+  options,
+}: StepReviewProps) {
   const flavors = options?.flavors || [];
   const sizes = options?.sizes || [];
   const themes = options?.themes || [];
 
   const getFlavorName = (flavorId?: number) => {
-    if (!flavorId) return 'Not selected';
+    if (!flavorId) return "Not selected";
     const flavor = flavors.find((f: any) => f.flavor_id === flavorId);
-    return flavor?.flavor_name || 'Unknown';
+    return flavor?.flavor_name || "Unknown";
   };
 
   const getSizeName = (sizeId?: number) => {
-    if (!sizeId) return 'Not selected';
+    if (!sizeId) return "Not selected";
     const size = sizes.find((s: any) => s.size_id === sizeId);
-    return size?.size_name || 'Unknown';
+    return size?.size_name || "Unknown";
   };
 
   const getThemeName = (themeId?: number) => {
-    if (!themeId) return 'None';
+    if (!themeId) return "None";
     const theme = themes.find((t: any) => t.theme_id === themeId);
-    return theme?.theme_name || 'Unknown';
+    return theme?.theme_name || "Unknown";
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Review Your Design</h2>
-        <p className="text-gray-600">Check everything looks perfect before submitting</p>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          Review Your Design
+        </h2>
+        <p className="text-gray-600">
+          Check everything looks perfect before submitting
+        </p>
       </div>
 
       {/* Customer Info */}
@@ -61,7 +69,9 @@ export default function StepReview({ design, updateDesign, options }: StepReview
             {design.event_type && (
               <div className="flex justify-between">
                 <span className="text-gray-600">Event:</span>
-                <span className="font-medium capitalize">{design.event_type.replace('_', ' ')}</span>
+                <span className="font-medium capitalize">
+                  {design.event_type.replace("_", " ")}
+                </span>
               </div>
             )}
           </div>
@@ -80,14 +90,22 @@ export default function StepReview({ design, updateDesign, options }: StepReview
             </div>
             {Array.from({ length: design.num_layers }).map((_, index) => {
               const layerNum = index + 1;
-              const flavorId = design[`layer_${layerNum}_flavor_id` as keyof CakeDesign] as number | undefined;
-              const sizeId = design[`layer_${layerNum}_size_id` as keyof CakeDesign] as number | undefined;
+              const flavorId = design[
+                `layer_${layerNum}_flavor_id` as keyof CakeDesign
+              ] as number | undefined;
+              const sizeId = design[
+                `layer_${layerNum}_size_id` as keyof CakeDesign
+              ] as number | undefined;
 
               return (
-                <div key={layerNum} className="pl-4 border-l-2 border-amber-200">
+                <div
+                  key={layerNum}
+                  className="pl-4 border-l-2 border-amber-200"
+                >
                   <p className="font-medium text-sm">Layer {layerNum}</p>
                   <p className="text-sm text-gray-600">
-                    Flavor: {getFlavorName(flavorId)} • Size: {getSizeName(sizeId)}
+                    Flavor: {getFlavorName(flavorId)} • Size:{" "}
+                    {getSizeName(sizeId)}
                   </p>
                 </div>
               );
@@ -103,7 +121,9 @@ export default function StepReview({ design, updateDesign, options }: StepReview
           <div className="space-y-2 text-sm">
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Frosting Type:</span>
-              <span className="font-medium capitalize">{design.frosting_type?.replace('_', ' ')}</span>
+              <span className="font-medium capitalize">
+                {design.frosting_type?.replace("_", " ")}
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Frosting Color:</span>
@@ -117,7 +137,9 @@ export default function StepReview({ design, updateDesign, options }: StepReview
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Theme:</span>
-              <span className="font-medium">{getThemeName(design.theme_id)}</span>
+              <span className="font-medium">
+                {getThemeName(design.theme_id)}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Candles:</span>
@@ -137,7 +159,7 @@ export default function StepReview({ design, updateDesign, options }: StepReview
             <div className="p-4 bg-amber-50 rounded-lg">
               <p
                 className="text-2xl font-bold text-center"
-                style={{ color: design.text_color || '#FF1493' }}
+                style={{ color: design.text_color || "#FF1493" }}
               >
                 "{design.cake_text}"
               </p>
@@ -156,8 +178,10 @@ export default function StepReview({ design, updateDesign, options }: StepReview
         </label>
         <Textarea
           placeholder="Any dietary restrictions or special requests..."
-          value={design.special_instructions || ''}
-          onChange={(e) => updateDesign({ special_instructions: e.target.value })}
+          value={design.special_instructions || ""}
+          onChange={(e) =>
+            updateDesign({ special_instructions: e.target.value })
+          }
           rows={4}
           variant="bordered"
         />
@@ -170,8 +194,10 @@ export default function StepReview({ design, updateDesign, options }: StepReview
         </label>
         <Textarea
           placeholder="Allergies, vegetarian, vegan, etc..."
-          value={design.dietary_restrictions || ''}
-          onChange={(e) => updateDesign({ dietary_restrictions: e.target.value })}
+          value={design.dietary_restrictions || ""}
+          onChange={(e) =>
+            updateDesign({ dietary_restrictions: e.target.value })
+          }
           rows={2}
           variant="bordered"
         />
@@ -182,7 +208,9 @@ export default function StepReview({ design, updateDesign, options }: StepReview
         <h4 className="font-semibold text-blue-900 mb-2">📋 Next Steps</h4>
         <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
           <li>Your design will be submitted to our team for review</li>
-          <li>We'll contact you within 24 hours with pricing and availability</li>
+          <li>
+            We'll contact you within 24 hours with pricing and availability
+          </li>
           <li>Once approved, you can proceed with payment at the counter</li>
           <li>Typical preparation time is 3-7 days depending on complexity</li>
         </ul>

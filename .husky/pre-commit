@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run lint-staged in the Kiosk_Web directory
+cd client/Kiosk_Web && npx lint-staged

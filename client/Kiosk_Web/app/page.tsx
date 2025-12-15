@@ -1,14 +1,15 @@
+
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Button } from '@heroui/button';
-import { Card, CardBody } from '@heroui/card';
-import { Spinner } from '@heroui/spinner';
-import { useCart } from '@/contexts/CartContext';
-import { MenuService } from '@/services/menu.service';
-import type { MenuItem, Category } from '@/types/api';
-import { KioskSidebar } from '@/components/KioskSidebar';
-import { MenuCard } from '@/components/MenuCard';
+import { useState, useEffect } from "react";
+import { Button } from "@heroui/button";
+import { Card, CardBody } from "@heroui/card";
+import { Spinner } from "@heroui/spinner";
+import { useCart } from "@/contexts/CartContext";
+import { MenuService } from "@/services/menu.service";
+import type { MenuItem, Category } from "@/types/api";
+import { KioskSidebar } from "@/components/KioskSidebar";
+import { MenuCard } from "@/components/MenuCard";
 
 export default function HomePage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -29,14 +30,14 @@ export default function HomePage() {
       try {
         const [items, cats] = await Promise.all([
           MenuService.getMenuItems(),
-          MenuService.getCategories()
+          MenuService.getCategories(),
         ]);
 
         setMenuItems(items);
         setCategories(cats);
         setFilteredItems(items);
       } catch (err: any) {
-        setError(err.message || 'Failed to load menu. Please try again.');
+        setError(err.message || "Failed to load menu. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -46,17 +47,21 @@ export default function HomePage() {
 
     // Auto-refresh menu every 30 seconds
     const refreshInterval = setInterval(() => {
-      MenuService.getMenuItems().then(items => {
-        setMenuItems(items);
-      }).catch(err => {
-        console.error('Auto-refresh failed:', err);
-      });
+      MenuService.getMenuItems()
+        .then((items) => {
+          setMenuItems(items);
+        })
+        .catch((err) => {
+          console.error("Auto-refresh failed:", err);
+        });
 
-      MenuService.getCategories().then(cats => {
-        setCategories(cats);
-      }).catch(err => {
-        console.error('Category refresh failed:', err);
-      });
+      MenuService.getCategories()
+        .then((cats) => {
+          setCategories(cats);
+        })
+        .catch((err) => {
+          console.error("Category refresh failed:", err);
+        });
     }, 30000);
 
     return () => clearInterval(refreshInterval);
@@ -67,8 +72,8 @@ export default function HomePage() {
     let filtered = menuItems;
 
     if (selectedCategory !== null) {
-      filtered = menuItems.filter(item =>
-        item.categories?.some(cat => cat.category_id === selectedCategory)
+      filtered = menuItems.filter((item) =>
+        item.categories?.some((cat) => cat.category_id === selectedCategory),
       );
     }
 
@@ -76,7 +81,9 @@ export default function HomePage() {
   }, [menuItems, selectedCategory]);
 
   const getCartQuantity = (itemId: number): number => {
-    const cartItem = cartItems.find(item => item.menuItem.menu_item_id === itemId);
+    const cartItem = cartItems.find(
+      (item) => item.menuItem.menu_item_id === itemId,
+    );
     return cartItem?.quantity || 0;
   };
 
@@ -97,7 +104,7 @@ export default function HomePage() {
             classNames={{
               wrapper: "w-32 h-32",
               circle1: "border-b-sunny-yellow",
-              circle2: "border-b-deep-orange-yellow"
+              circle2: "border-b-deep-orange-yellow",
             }}
           />
           <p className="text-4xl font-bold text-charcoal-gray mt-8">
@@ -156,8 +163,8 @@ export default function HomePage() {
                   size="lg"
                   className={`${
                     selectedCategory === null
-                      ? 'bg-gradient-to-br from-sunny-yellow to-deep-orange-yellow text-black scale-105 shadow-xl shadow-sunny-yellow/40'
-                      : 'bg-gradient-to-br from-pure-white/80 to-sunny-yellow/10 backdrop-blur-sm border-2 border-sunny-yellow/50 text-black hover:border-sunny-yellow hover:shadow-lg'
+                      ? "bg-gradient-to-br from-sunny-yellow to-deep-orange-yellow text-black scale-105 shadow-xl shadow-sunny-yellow/40"
+                      : "bg-gradient-to-br from-pure-white/80 to-sunny-yellow/10 backdrop-blur-sm border-2 border-sunny-yellow/50 text-black hover:border-sunny-yellow hover:shadow-lg"
                   } font-bold text-2xl px-12 py-8 rounded-2xl transition-all touch-target-lg`}
                   onClick={() => setSelectedCategory(null)}
                 >
@@ -169,8 +176,8 @@ export default function HomePage() {
                     size="lg"
                     className={`${
                       selectedCategory === category.category_id
-                        ? 'bg-gradient-to-br from-sunny-yellow to-deep-orange-yellow text-black scale-105 shadow-xl shadow-sunny-yellow/40'
-                        : 'bg-gradient-to-br from-pure-white/80 to-sunny-yellow/10 backdrop-blur-sm border-2 border-sunny-yellow/50 text-black hover:border-sunny-yellow hover:shadow-lg'
+                        ? "bg-gradient-to-br from-sunny-yellow to-deep-orange-yellow text-black scale-105 shadow-xl shadow-sunny-yellow/40"
+                        : "bg-gradient-to-br from-pure-white/80 to-sunny-yellow/10 backdrop-blur-sm border-2 border-sunny-yellow/50 text-black hover:border-sunny-yellow hover:shadow-lg"
                     } font-bold text-2xl px-12 py-8 rounded-2xl transition-all touch-target-lg`}
                     onClick={() => setSelectedCategory(category.category_id)}
                   >
@@ -185,7 +192,9 @@ export default function HomePage() {
           {filteredItems.length === 0 ? (
             <Card className="bg-gradient-to-br from-pure-white/90 via-sunny-yellow/10 to-deep-orange-yellow/15 backdrop-blur-lg border-2 border-sunny-yellow/60 shadow-xl">
               <CardBody className="text-center py-24">
-                <div className="text-[120px] mb-8 animate-float drop-shadow-xl">🍽️</div>
+                <div className="text-[120px] mb-8 animate-float drop-shadow-xl">
+                  🍽️
+                </div>
                 <h3 className="text-5xl font-bold text-black mb-6 drop-shadow-lg">
                   No items found
                 </h3>
@@ -207,7 +216,8 @@ export default function HomePage() {
             <>
               <div className="text-center mb-8">
                 <h2 className="text-4xl font-bold text-black drop-shadow-sm">
-                  {filteredItems.length} Delicious {filteredItems.length === 1 ? 'Item' : 'Items'}
+                  {filteredItems.length} Delicious{" "}
+                  {filteredItems.length === 1 ? "Item" : "Items"}
                 </h2>
               </div>
 
@@ -241,7 +251,7 @@ export default function HomePage() {
               <Button
                 size="lg"
                 className="bg-gradient-to-br from-sunny-yellow via-deep-orange-yellow to-sunny-yellow text-black font-black text-3xl px-20 py-10 rounded-3xl shadow-2xl hover:shadow-[0_0_50px_rgba(251,205,47,0.7)] hover:scale-105 transition-all touch-target-lg border-4 border-deep-orange-yellow/50 animate-pulse-slow min-w-full"
-                onClick={() => window.location.href = '/custom-cake'}
+                onClick={() => (window.location.href = "/custom-cake")}
               >
                 🍰 Custom Cake Editor
               </Button>
@@ -251,10 +261,7 @@ export default function HomePage() {
       </div>
 
       {/* Sidebar */}
-      <KioskSidebar
-        selectedItem={selectedItem}
-        onClose={handleCloseSidebar}
-      />
+      <KioskSidebar selectedItem={selectedItem} onClose={handleCloseSidebar} />
     </>
   );
 }

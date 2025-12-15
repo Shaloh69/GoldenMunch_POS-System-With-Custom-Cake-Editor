@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { Input } from '@heroui/input';
-import { Select, SelectItem } from '@heroui/select';
-import { Switch } from '@heroui/switch';
-import { useState } from 'react';
-import type { CakeDesign } from '@/app/cake-editor/page';
+import { Input } from "@heroui/input";
+import { Select, SelectItem } from "@heroui/select";
+import { Switch } from "@heroui/switch";
+import { useState } from "react";
+import type { CakeDesign } from "@/app/cake-editor/page";
 
 interface StepTextProps {
   design: CakeDesign;
@@ -18,7 +18,12 @@ export default function StepText({ design, updateDesign }: StepTextProps) {
   const handleToggleText = (enabled: boolean) => {
     setEnableText(enabled);
     if (!enabled) {
-      updateDesign({ cake_text: '', text_color: '', text_font: '', text_position: '' });
+      updateDesign({
+        cake_text: "",
+        text_color: "",
+        text_font: "",
+        text_position: "",
+      });
     }
   };
 
@@ -48,11 +53,11 @@ export default function StepText({ design, updateDesign }: StepTextProps) {
           <Input
             label="Cake Text"
             placeholder="Happy Birthday!"
-            value={design.cake_text || ''}
+            value={design.cake_text || ""}
             onChange={(e) => updateDesign({ cake_text: e.target.value })}
             variant="bordered"
             maxLength={50}
-            description={`${(design.cake_text || '').length}/50 characters`}
+            description={`${(design.cake_text || "").length}/50 characters`}
           />
 
           {/* Text Color */}
@@ -61,13 +66,13 @@ export default function StepText({ design, updateDesign }: StepTextProps) {
             <div className="flex gap-3">
               <Input
                 type="color"
-                value={design.text_color || '#FF1493'}
+                value={design.text_color || "#FF1493"}
                 onChange={(e) => updateDesign({ text_color: e.target.value })}
                 variant="bordered"
                 className="w-24"
               />
               <Input
-                value={design.text_color || '#FF1493'}
+                value={design.text_color || "#FF1493"}
                 onChange={(e) => updateDesign({ text_color: e.target.value })}
                 variant="bordered"
                 className="flex-1"
@@ -79,7 +84,7 @@ export default function StepText({ design, updateDesign }: StepTextProps) {
           {/* Text Font */}
           <Select
             label="Text Font"
-            selectedKeys={design.text_font ? [design.text_font] : ['script']}
+            selectedKeys={design.text_font ? [design.text_font] : ["script"]}
             onChange={(e) => updateDesign({ text_font: e.target.value })}
             variant="bordered"
           >
@@ -93,7 +98,9 @@ export default function StepText({ design, updateDesign }: StepTextProps) {
           {/* Text Position */}
           <Select
             label="Text Position"
-            selectedKeys={design.text_position ? [design.text_position] : ['top']}
+            selectedKeys={
+              design.text_position ? [design.text_position] : ["top"]
+            }
             onChange={(e) => updateDesign({ text_position: e.target.value })}
             variant="bordered"
           >
@@ -110,7 +117,7 @@ export default function StepText({ design, updateDesign }: StepTextProps) {
           <p className="text-sm text-gray-600 mb-2">Preview:</p>
           <p
             className="text-3xl font-bold text-center"
-            style={{ color: design.text_color || '#FF1493' }}
+            style={{ color: design.text_color || "#FF1493" }}
           >
             {design.cake_text}
           </p>

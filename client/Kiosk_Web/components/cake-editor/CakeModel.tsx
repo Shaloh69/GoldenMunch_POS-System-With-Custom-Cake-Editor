@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { Cylinder, Text3D, Sphere } from '@react-three/drei';
-import * as THREE from 'three';
-import type { CakeDesign } from '@/app/cake-editor/page';
+import { useRef } from "react";
+import { useFrame } from "@react-three/fiber";
+import { Cylinder, Text3D, Sphere } from "@react-three/drei";
+import * as THREE from "three";
+import type { CakeDesign } from "@/app/cake-editor/page";
 
 interface CakeModelProps {
   design: CakeDesign;
@@ -16,7 +16,8 @@ export default function CakeModel({ design }: CakeModelProps) {
   // Gentle rotation animation
   useFrame((state) => {
     if (groupRef.current) {
-      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.1;
+      groupRef.current.rotation.y =
+        Math.sin(state.clock.elapsedTime * 0.3) * 0.1;
     }
   });
 
@@ -30,7 +31,7 @@ export default function CakeModel({ design }: CakeModelProps) {
   const getLayerHeight = (): number => 0.4;
 
   // Frosting color
-  const frostingColor = design.frosting_color || '#FFFFFF';
+  const frostingColor = design.frosting_color || "#FFFFFF";
 
   return (
     <group ref={groupRef} position={[0, -1, 0]}>
@@ -84,35 +85,43 @@ export default function CakeModel({ design }: CakeModelProps) {
       {/* Candles */}
       {design.candles_count > 0 && (
         <group position={[0, design.num_layers * getLayerHeight(), 0]}>
-          {Array.from({ length: Math.min(design.candles_count, 10) }).map((_, i) => {
-            const angle = (i / design.candles_count) * Math.PI * 2;
-            const radius = getLayerRadius(0, design.num_layers) * 0.7;
-            const x = Math.cos(angle) * radius;
-            const z = Math.sin(angle) * radius;
+          {Array.from({ length: Math.min(design.candles_count, 10) }).map(
+            (_, i) => {
+              const angle = (i / design.candles_count) * Math.PI * 2;
+              const radius = getLayerRadius(0, design.num_layers) * 0.7;
+              const x = Math.cos(angle) * radius;
+              const z = Math.sin(angle) * radius;
 
-            return (
-              <group key={i} position={[x, 0, z]}>
-                {/* Candle Body */}
-                <Cylinder args={[0.05, 0.05, 0.3, 8]} position={[0, 0.15, 0]}>
-                  <meshStandardMaterial color="#FFF8DC" />
-                </Cylinder>
-                {/* Flame */}
-                <Sphere args={[0.04, 8, 8]} position={[0, 0.32, 0]}>
-                  <meshStandardMaterial
-                    color="#FFD700"
-                    emissive="#FF4500"
-                    emissiveIntensity={2}
-                  />
-                </Sphere>
-              </group>
-            );
-          })}
+              return (
+                <group key={i} position={[x, 0, z]}>
+                  {/* Candle Body */}
+                  <Cylinder args={[0.05, 0.05, 0.3, 8]} position={[0, 0.15, 0]}>
+                    <meshStandardMaterial color="#FFF8DC" />
+                  </Cylinder>
+                  {/* Flame */}
+                  <Sphere args={[0.04, 8, 8]} position={[0, 0.32, 0]}>
+                    <meshStandardMaterial
+                      color="#FFD700"
+                      emissive="#FF4500"
+                      emissiveIntensity={2}
+                    />
+                  </Sphere>
+                </group>
+              );
+            },
+          )}
         </group>
       )}
 
       {/* Cake Text */}
       {design.cake_text && (
-        <group position={[0, design.num_layers * getLayerHeight() + 0.1, getLayerRadius(0, design.num_layers) + 0.1]}>
+        <group
+          position={[
+            0,
+            design.num_layers * getLayerHeight() + 0.1,
+            getLayerRadius(0, design.num_layers) + 0.1,
+          ]}
+        >
           <Text3D
             font="/fonts/helvetiker_regular.typeface.json"
             size={0.15}
@@ -125,7 +134,7 @@ export default function CakeModel({ design }: CakeModelProps) {
           >
             {design.cake_text}
             <meshStandardMaterial
-              color={design.text_color || '#FF1493'}
+              color={design.text_color || "#FF1493"}
               roughness={0.2}
               metalness={0.5}
             />
@@ -134,9 +143,10 @@ export default function CakeModel({ design }: CakeModelProps) {
       )}
 
       {/* 3D Decorations */}
-      {design.decorations_3d && design.decorations_3d.map((decoration, i) => (
-        <Decoration3D key={i} decoration={decoration} />
-      ))}
+      {design.decorations_3d &&
+        design.decorations_3d.map((decoration, i) => (
+          <Decoration3D key={i} decoration={decoration} />
+        ))}
     </group>
   );
 }
@@ -144,21 +154,25 @@ export default function CakeModel({ design }: CakeModelProps) {
 // Get flavor color (mock)
 function getFlavorColor(layerIndex: number, design: CakeDesign): string {
   const flavorId =
-    layerIndex === 0 ? design.layer_1_flavor_id :
-    layerIndex === 1 ? design.layer_2_flavor_id :
-    layerIndex === 2 ? design.layer_3_flavor_id :
-    layerIndex === 3 ? design.layer_4_flavor_id :
-    design.layer_5_flavor_id;
+    layerIndex === 0
+      ? design.layer_1_flavor_id
+      : layerIndex === 1
+        ? design.layer_2_flavor_id
+        : layerIndex === 2
+          ? design.layer_3_flavor_id
+          : layerIndex === 3
+            ? design.layer_4_flavor_id
+            : design.layer_5_flavor_id;
 
   // Map flavor IDs to colors
   const flavorColors: Record<number, string> = {
-    1: '#8B4513', // Chocolate - brown
-    2: '#FFE4B5', // Vanilla - cream
-    3: '#FFB6C1', // Strawberry - pink
-    4: '#DC143C', // Red Velvet - red
+    1: "#8B4513", // Chocolate - brown
+    2: "#FFE4B5", // Vanilla - cream
+    3: "#FFB6C1", // Strawberry - pink
+    4: "#DC143C", // Red Velvet - red
   };
 
-  return flavorColors[flavorId || 1] || '#FFE4B5';
+  return flavorColors[flavorId || 1] || "#FFE4B5";
 }
 
 // 3D Decoration Component - now supports all decoration types
@@ -174,12 +188,12 @@ function Decoration3D({ decoration }: { decoration: any }) {
   const scl = scale?.x || scale || 1;
 
   // Basic decorations (for compatibility)
-  if (type === 'flower') {
+  if (type === "flower") {
     return (
       <group position={pos} scale={scl}>
         {/* Simple flower representation */}
         <Sphere args={[0.08, 12, 12]}>
-          <meshStandardMaterial color={color || '#FF69B4'} roughness={0.4} />
+          <meshStandardMaterial color={color || "#FF69B4"} roughness={0.4} />
         </Sphere>
         {Array.from({ length: 5 }).map((_, i) => {
           const angle = (i / 5) * Math.PI * 2;
@@ -189,7 +203,10 @@ function Decoration3D({ decoration }: { decoration: any }) {
               args={[0.04, 8, 8]}
               position={[Math.cos(angle) * 0.06, 0, Math.sin(angle) * 0.06]}
             >
-              <meshStandardMaterial color={color || '#FF69B4'} roughness={0.3} />
+              <meshStandardMaterial
+                color={color || "#FF69B4"}
+                roughness={0.3}
+              />
             </Sphere>
           );
         })}
@@ -197,13 +214,13 @@ function Decoration3D({ decoration }: { decoration: any }) {
     );
   }
 
-  if (type === 'star') {
+  if (type === "star") {
     return (
       <group position={pos} scale={scl}>
         <Sphere args={[0.06, 5, 5]}>
           <meshStandardMaterial
-            color={color || '#FFD700'}
-            emissive={color || '#FFD700'}
+            color={color || "#FFD700"}
+            emissive={color || "#FFD700"}
             emissiveIntensity={0.5}
             roughness={0.2}
             metalness={0.8}
@@ -213,33 +230,37 @@ function Decoration3D({ decoration }: { decoration: any }) {
     );
   }
 
-  if (type === 'heart') {
+  if (type === "heart") {
     return (
       <group position={pos} scale={scl}>
         <Sphere args={[0.05, 16, 16]}>
-          <meshStandardMaterial color={color || '#FF1493'} roughness={0.3} />
+          <meshStandardMaterial color={color || "#FF1493"} roughness={0.3} />
         </Sphere>
       </group>
     );
   }
 
-  if (type === 'ribbon') {
+  if (type === "ribbon") {
     return (
       <group position={pos} scale={scl}>
         <mesh>
           <torusGeometry args={[0.06, 0.012, 12, 24]} />
-          <meshStandardMaterial color={color || '#FF1493'} roughness={0.3} metalness={0.2} />
+          <meshStandardMaterial
+            color={color || "#FF1493"}
+            roughness={0.3}
+            metalness={0.2}
+          />
         </mesh>
       </group>
     );
   }
 
-  if (type === 'pearl') {
+  if (type === "pearl") {
     return (
       <group position={pos} scale={scl}>
         <Sphere args={[0.02, 24, 24]}>
           <meshStandardMaterial
-            color={color || '#F5F5DC'}
+            color={color || "#F5F5DC"}
             roughness={0.1}
             metalness={0.9}
           />

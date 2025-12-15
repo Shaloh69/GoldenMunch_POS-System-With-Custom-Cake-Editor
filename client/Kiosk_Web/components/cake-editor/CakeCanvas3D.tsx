@@ -1,22 +1,37 @@
-'use client';
+"use client";
 
-import React, { Suspense, forwardRef, useImperativeHandle, useRef, useEffect } from 'react';
-import { Canvas, useThree } from '@react-three/fiber';
-import { OrbitControls, PerspectiveCamera, Environment, ContactShadows } from '@react-three/drei';
-import CakeModel from './CakeModel';
-import type { CakeDesign } from '@/app/cake-editor/page';
+import React, {
+  Suspense,
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+  useEffect,
+} from "react";
+import { Canvas, useThree } from "@react-three/fiber";
+import {
+  OrbitControls,
+  PerspectiveCamera,
+  Environment,
+  ContactShadows,
+} from "@react-three/drei";
+import CakeModel from "./CakeModel";
+import type { CakeDesign } from "@/app/cake-editor/page";
 
 interface CakeCanvas3DProps {
   design: CakeDesign;
 }
 
 // Component to expose screenshot functionality
-function ScreenshotHelper({ onCapture }: { onCapture: (capture: () => string) => void }) {
+function ScreenshotHelper({
+  onCapture,
+}: {
+  onCapture: (capture: () => string) => void;
+}) {
   const { gl } = useThree();
 
   // Expose capture function to parent
   useEffect(() => {
-    onCapture(() => gl.domElement.toDataURL('image/png'));
+    onCapture(() => gl.domElement.toDataURL("image/png"));
   }, [gl, onCapture]);
 
   return null;
@@ -78,13 +93,7 @@ const CakeCanvas3D = forwardRef<any, CakeCanvas3DProps>(({ design }, ref) => {
         />
 
         {/* Controls */}
-        <OrbitControls
-          
-          enableZoom={true}
-          minDistance={3}
-          maxDistance={8}
-          maxPolarAngle={Math.PI}
-        />
+        <OrbitControls />
 
         {/* Screenshot Helper */}
         <ScreenshotHelper onCapture={handleCaptureReady} />
@@ -93,6 +102,6 @@ const CakeCanvas3D = forwardRef<any, CakeCanvas3DProps>(({ design }, ref) => {
   );
 });
 
-CakeCanvas3D.displayName = 'CakeCanvas3D';
+CakeCanvas3D.displayName = "CakeCanvas3D";
 
 export default CakeCanvas3D;

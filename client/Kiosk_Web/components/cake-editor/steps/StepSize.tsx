@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { Card, CardBody } from '@heroui/card';
-import { Chip } from '@heroui/chip';
-import { CheckIcon } from '@heroicons/react/24/solid';
-import type { CakeDesign } from '@/app/cake-editor/page';
+import { Card, CardBody } from "@heroui/card";
+import { Chip } from "@heroui/chip";
+import { CheckIcon } from "@heroicons/react/24/solid";
+import type { CakeDesign } from "@/app/cake-editor/page";
 
 interface StepSizeProps {
   design: CakeDesign;
@@ -11,7 +11,11 @@ interface StepSizeProps {
   options: any;
 }
 
-export default function StepSize({ design, updateDesign, options }: StepSizeProps) {
+export default function StepSize({
+  design,
+  updateDesign,
+  options,
+}: StepSizeProps) {
   const sizes = options?.sizes || [];
 
   const handleSizeSelect = (layerIndex: number, sizeId: number) => {
@@ -40,7 +44,9 @@ export default function StepSize({ design, updateDesign, options }: StepSizeProp
         return (
           <div key={layerNumber}>
             <div className="flex items-center gap-2 mb-3">
-              <Chip color="warning" variant="flat">Layer {layerNumber}</Chip>
+              <Chip color="warning" variant="flat">
+                Layer {layerNumber}
+              </Chip>
               <span className="text-sm text-gray-500">
                 (Bottom layers should be larger)
               </span>
@@ -57,8 +63,8 @@ export default function StepSize({ design, updateDesign, options }: StepSizeProp
                     onClick={() => handleSizeSelect(layerNumber, size.size_id)}
                     className={`${
                       isSelected
-                        ? 'border-2 border-amber-500 bg-amber-50'
-                        : 'border-2 border-gray-200 hover:border-amber-300'
+                        ? "border-2 border-amber-500 bg-amber-50"
+                        : "border-2 border-gray-200 hover:border-amber-300"
                     } transition-all`}
                   >
                     <CardBody className="p-4 text-center relative">

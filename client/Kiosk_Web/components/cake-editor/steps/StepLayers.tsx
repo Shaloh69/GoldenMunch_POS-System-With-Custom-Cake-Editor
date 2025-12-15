@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { Button } from '@heroui/button';
-import { Card, CardBody } from '@heroui/card';
-import { CheckIcon } from '@heroicons/react/24/solid';
-import type { CakeDesign } from '@/app/cake-editor/page';
+import { Button } from "@heroui/button";
+import { Card, CardBody } from "@heroui/card";
+import { CheckIcon } from "@heroicons/react/24/solid";
+import type { CakeDesign } from "@/app/cake-editor/page";
 
 interface StepLayersProps {
   design: CakeDesign;
@@ -17,8 +17,12 @@ export default function StepLayers({ design, updateDesign }: StepLayersProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">How Many Layers?</h2>
-        <p className="text-gray-600">Choose the number of layers for your cake</p>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          How Many Layers?
+        </h2>
+        <p className="text-gray-600">
+          Choose the number of layers for your cake
+        </p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
@@ -33,8 +37,8 @@ export default function StepLayers({ design, updateDesign }: StepLayersProps) {
               onClick={() => updateDesign({ num_layers: layers })}
               className={`${
                 isSelected
-                  ? 'border-2 border-amber-500 bg-amber-50'
-                  : 'border-2 border-gray-200 hover:border-amber-300'
+                  ? "border-2 border-amber-500 bg-amber-50"
+                  : "border-2 border-gray-200 hover:border-amber-300"
               } transition-all`}
             >
               <CardBody className="p-4 text-center relative">
@@ -48,7 +52,7 @@ export default function StepLayers({ design, updateDesign }: StepLayersProps) {
                 <div className="text-4xl mb-2">🎂</div>
                 <div className="font-bold text-xl mb-1">{layers}</div>
                 <div className="text-sm text-gray-600 mb-2">
-                  {layers === 1 ? 'Layer' : 'Layers'}
+                  {layers === 1 ? "Layer" : "Layers"}
                 </div>
                 <div className="text-amber-600 font-semibold text-sm">
                   ₱{price}
@@ -61,7 +65,8 @@ export default function StepLayers({ design, updateDesign }: StepLayersProps) {
 
       <div className="mt-6 p-4 bg-blue-50 rounded-lg">
         <p className="text-sm text-blue-800">
-          💡 <strong>Tip:</strong> More layers create a more impressive cake and can serve more guests!
+          💡 <strong>Tip:</strong> More layers create a more impressive cake and
+          can serve more guests!
         </p>
       </div>
     </div>

@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Button } from '@heroui/button';
-import { useRouter, usePathname } from 'next/navigation';
+import React from "react";
+import { Button } from "@heroui/button";
+import { useRouter, usePathname } from "next/navigation";
 
 export const BackToMenuButton: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
 
   // Don't show on these pages
-  if (pathname === '/' || pathname === '/idle') {
+  if (pathname === "/" || pathname === "/idle") {
     return null;
   }
 
   const handleBackToMenu = () => {
-    router.push('/');
+    router.push("/");
   };
 
   return (

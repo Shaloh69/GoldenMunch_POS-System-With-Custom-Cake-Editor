@@ -23,12 +23,14 @@ Complete guide to deploying the GoldenMunch Kiosk web application to Render.com.
 ### Step 2: Connect Repository
 
 **Option A: Connect via GitHub (Recommended)**
+
 1. Click "Connect account" under GitHub
 2. Authorize Render to access your repositories
 3. Select repository: `Shaloh69/GoldenMunch_POS-System-With-Custom-Cake-Editor`
 4. Click "Connect"
 
 **Option B: Public Git Repository**
+
 1. Enter repository URL: `https://github.com/Shaloh69/GoldenMunch_POS-System-With-Custom-Cake-Editor`
 2. Click "Connect"
 
@@ -37,6 +39,7 @@ Complete guide to deploying the GoldenMunch Kiosk web application to Render.com.
 Fill in the following settings:
 
 **Basic Configuration:**
+
 ```yaml
 Name: goldenmunch-kiosk-web
 Region: Oregon (or closest to your location)
@@ -45,6 +48,7 @@ Root Directory: client/Kiosk_Web
 ```
 
 **Build & Deploy:**
+
 ```yaml
 Runtime: Node
 Build Command: npm install && npm run build
@@ -52,6 +56,7 @@ Start Command: npm run start
 ```
 
 **Instance Type:**
+
 - Free (0GB RAM, sleeps after inactivity)
 - Starter ($7/month, 512MB RAM, recommended)
 - Standard ($25/month, 2GB RAM, for high traffic)
@@ -72,6 +77,7 @@ PORT=3002
 ```
 
 **Important:**
+
 - Use your actual backend API URL
 - Verify the backend is deployed and accessible
 - PORT can be 3002 or 10000 (Render default)
@@ -79,9 +85,11 @@ PORT=3002
 ### Step 5: Auto-Deploy Settings
 
 **Auto-Deploy:**
+
 - ✅ Enable "Auto-Deploy" (deploys on git push to main branch)
 
 **Health Check:**
+
 - Path: `/` (optional)
 - Enable health check URL
 
@@ -98,11 +106,13 @@ PORT=3002
 ### Step 7: Get Your URL
 
 Once deployed, Render provides a URL:
+
 ```
 https://goldenmunch-kiosk-web.onrender.com
 ```
 
 **Or custom domain (optional):**
+
 1. Click "Settings" → "Custom Domains"
 2. Add your domain: `kiosk.goldenmunch.com`
 3. Configure DNS as instructed
@@ -114,6 +124,7 @@ https://goldenmunch-kiosk-web.onrender.com
 ### 1. Verify Deployment
 
 **Test the app:**
+
 ```bash
 # Open in browser
 open https://goldenmunch-kiosk-web.onrender.com
@@ -140,12 +151,14 @@ npm run dev
 ### 3. Monitor Deployment
 
 **Check logs:**
+
 1. Go to Render Dashboard
 2. Click on `goldenmunch-kiosk-web`
 3. Click "Logs" tab
 4. Monitor for errors
 
 **Common logs:**
+
 ```
 === Starting Next.js server ===
 Loaded env from .env.production
@@ -159,6 +172,7 @@ Ready on http://0.0.0.0:3002
 ### Auto-Deploy on Git Push
 
 **With auto-deploy enabled:**
+
 ```bash
 # Make changes to your code
 git add .
@@ -174,12 +188,14 @@ git push origin main
 ```
 
 **Check deployment status:**
+
 - Render Dashboard → Events tab
 - Email notifications (if enabled)
 
 ### Manual Deploy
 
 **Trigger manual deployment:**
+
 1. Go to Render Dashboard
 2. Click `goldenmunch-kiosk-web`
 3. Click "Manual Deploy" → "Deploy latest commit"
@@ -187,6 +203,7 @@ git push origin main
 ### Rollback to Previous Version
 
 **If deployment fails:**
+
 1. Go to Render Dashboard → Events
 2. Find previous successful deployment
 3. Click "Redeploy"
@@ -198,11 +215,13 @@ git push origin main
 ### View Real-Time Logs
 
 **Web Console:**
+
 1. Render Dashboard → `goldenmunch-kiosk-web`
 2. Click "Logs" tab
 3. Auto-refreshes in real-time
 
 **Filter logs:**
+
 - Build logs (during deployment)
 - Runtime logs (after deployment)
 - Error logs only
@@ -210,6 +229,7 @@ git push origin main
 ### Common Log Messages
 
 **Successful deployment:**
+
 ```
 === Build succeeded ===
 Creating optimized production build
@@ -222,6 +242,7 @@ Ready on http://0.0.0.0:3002
 ```
 
 **API connection success:**
+
 ```
 API client initialized
 Base URL: https://goldenmunch-pos-system-server.onrender.com/api
@@ -229,6 +250,7 @@ Timeout: 60000ms
 ```
 
 **Common errors:**
+
 ```
 Error: ECONNREFUSED - Backend API not accessible
 TypeError: Cannot read property 'X' of undefined - Check code
@@ -244,6 +266,7 @@ Build failed - Check TypeScript errors
 **Error: TypeScript compilation error**
 
 **Solution:**
+
 ```bash
 # Test build locally first
 npm run build
@@ -255,6 +278,7 @@ npm run lint
 **Error: Dependency installation failed**
 
 **Solution:**
+
 1. Check `package.json` for invalid dependencies
 2. Ensure Node version matches (`engines.node`)
 3. Clear Render build cache: Settings → "Clear build cache"
@@ -262,11 +286,13 @@ npm run lint
 ### Issue: Server Starts But Shows 500 Error
 
 **Check:**
+
 1. Environment variables are set correctly
 2. Backend API is accessible
 3. Check Render logs for specific error
 
 **Solution:**
+
 ```bash
 # Test API URL
 curl https://goldenmunch-pos-system-server.onrender.com/api/menu
@@ -277,11 +303,13 @@ curl https://goldenmunch-pos-system-server.onrender.com/api/menu
 ### Issue: App Loads But API Calls Fail
 
 **Check:**
+
 1. `NEXT_PUBLIC_API_URL` environment variable
 2. Backend CORS settings
 3. Backend API is running
 
 **Debug:**
+
 ```bash
 # Check environment variables in Render
 # Dashboard → Settings → Environment
@@ -295,8 +323,10 @@ NEXT_PUBLIC_API_URL=https://...
 **Problem**: Free tier sleeps after 15 minutes of inactivity
 
 **Solution:**
+
 1. Upgrade to Starter plan ($7/month)
 2. Or use cron job to ping every 10 minutes:
+
 ```bash
 # Add to cron (external service)
 */10 * * * * curl https://goldenmunch-kiosk-web.onrender.com
@@ -305,6 +335,7 @@ NEXT_PUBLIC_API_URL=https://...
 ### Issue: Slow Performance
 
 **Solutions:**
+
 1. **Upgrade instance**: Free → Starter → Standard
 2. **Enable caching**: Add caching headers in `next.config.mjs`
 3. **Optimize images**: Use Next.js Image component
@@ -313,11 +344,13 @@ NEXT_PUBLIC_API_URL=https://...
 ### Issue: Environment Variables Not Loading
 
 **Check:**
+
 1. Variables are in Render Dashboard (not .env.local)
 2. Variable names start with `NEXT_PUBLIC_` for client-side
 3. Restart deployment after adding variables
 
 **Solution:**
+
 1. Go to Settings → Environment
 2. Add variables
 3. Click "Save Changes"
@@ -330,11 +363,13 @@ NEXT_PUBLIC_API_URL=https://...
 ### Environment Variables
 
 ✅ **DO:**
+
 - Store sensitive data in Render environment variables
 - Use `NEXT_PUBLIC_` prefix for client-side vars
 - Keep `.env.production` in `.gitignore`
 
 ❌ **DON'T:**
+
 - Commit `.env.production` to git
 - Hardcode API keys in code
 - Expose backend secrets to client
@@ -348,14 +383,15 @@ NEXT_PUBLIC_API_URL=https://...
 ### CORS
 
 **Configure backend to allow:**
+
 ```javascript
 // Backend CORS config
 cors({
   origin: [
-    'https://goldenmunch-kiosk-web.onrender.com',
-    'http://localhost:3002', // For development
+    "https://goldenmunch-kiosk-web.onrender.com",
+    "http://localhost:3002", // For development
   ],
-})
+});
 ```
 
 ---
@@ -365,16 +401,17 @@ cors({
 ### 1. Enable Caching
 
 **Update `next.config.mjs`:**
+
 ```javascript
 const nextConfig = {
   // ... existing config
   headers: async () => [
     {
-      source: '/public/:path*',
+      source: "/public/:path*",
       headers: [
         {
-          key: 'Cache-Control',
-          value: 'public, max-age=31536000, immutable',
+          key: "Cache-Control",
+          value: "public, max-age=31536000, immutable",
         },
       ],
     },
@@ -385,8 +422,9 @@ const nextConfig = {
 ### 2. Optimize Images
 
 **Use Next.js Image component:**
+
 ```tsx
-import Image from 'next/image';
+import Image from "next/image";
 
 <Image
   src="/images/cake.jpg"
@@ -394,12 +432,13 @@ import Image from 'next/image';
   width={300}
   height={300}
   quality={80}
-/>
+/>;
 ```
 
 ### 3. Bundle Analysis
 
 **Check bundle size:**
+
 ```bash
 # Build and analyze
 npm run build
@@ -411,6 +450,7 @@ npm run build
 ### 4. Database Connection Pooling
 
 **If using database:**
+
 - Use connection pooling
 - Close connections properly
 - Limit concurrent connections
@@ -422,28 +462,33 @@ npm run build
 ### Render Pricing (as of 2025)
 
 **Free Tier:**
+
 - $0/month
 - 512MB RAM
 - Sleeps after 15 minutes inactivity
 - Good for testing only
 
 **Starter Plan:**
+
 - $7/month
 - 512MB RAM
 - Always on
 - Recommended for production
 
 **Standard Plan:**
+
 - $25/month
 - 2GB RAM
 - High traffic support
 - Auto-scaling
 
 **Bandwidth:**
+
 - 100GB/month included (all plans)
 - $0.10/GB overage
 
 **Estimate for kiosk:**
+
 - Expected: **Starter plan** ($7/month)
 - Traffic: Low (single kiosk device)
 - Total: ~$7/month
@@ -455,6 +500,7 @@ npm run build
 ### Deploy New Features
 
 **Standard workflow:**
+
 ```bash
 # 1. Make changes locally
 vim app/page.tsx
@@ -477,6 +523,7 @@ open https://goldenmunch-kiosk-web.onrender.com
 ### Urgent Hotfix
 
 **Fast deployment:**
+
 ```bash
 # 1. Fix the issue
 git add .
@@ -494,16 +541,19 @@ git push origin main
 ## 📊 Monitoring Checklist
 
 **Daily:**
+
 - [ ] Check Render logs for errors
 - [ ] Verify app is accessible
 - [ ] Check API connectivity
 
 **Weekly:**
+
 - [ ] Review deployment history
 - [ ] Check resource usage (RAM, CPU)
 - [ ] Update dependencies if needed
 
 **Monthly:**
+
 - [ ] Review costs and usage
 - [ ] Update Node.js/dependencies
 - [ ] Backup configuration
@@ -515,12 +565,14 @@ git push origin main
 Before deploying to production:
 
 **Code:**
+
 - [ ] All TypeScript errors fixed (`npm run lint`)
 - [ ] Build succeeds locally (`npm run build`)
 - [ ] All features tested locally
 - [ ] Environment variables documented
 
 **Render Configuration:**
+
 - [ ] Web service created
 - [ ] Repository connected
 - [ ] Root directory set: `client/Kiosk_Web`
@@ -530,6 +582,7 @@ Before deploying to production:
 - [ ] Auto-deploy enabled
 
 **Post-Deployment:**
+
 - [ ] App loads successfully
 - [ ] API calls work
 - [ ] Menu displays correctly
@@ -543,13 +596,16 @@ Before deploying to production:
 ## 🆘 Support & Resources
 
 **Render Documentation:**
+
 - https://render.com/docs
 - https://render.com/docs/deploy-nextjs-app
 
 **Next.js Documentation:**
+
 - https://nextjs.org/docs/deployment
 
 **Support Channels:**
+
 - Render Community: https://community.render.com
 - Render Support: support@render.com (Starter plan and above)
 

@@ -1,29 +1,36 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Button } from '@heroui/button';
-import { Card, CardBody } from '@heroui/card';
-import { Chip } from '@heroui/chip';
-import Link from 'next/link';
-import Image from 'next/image';
-import { useCart } from '@/contexts/CartContext';
-import { usePathname } from 'next/navigation';
-import type { MenuItem } from '@/types/api';
-import { getImageUrl } from '@/utils/imageUtils';
+import React, { useState } from "react";
+import { Button } from "@heroui/button";
+import { Card, CardBody } from "@heroui/card";
+import { Chip } from "@heroui/chip";
+import Link from "next/link";
+import Image from "next/image";
+import { useCart } from "@/contexts/CartContext";
+import { usePathname } from "next/navigation";
+import type { MenuItem } from "@/types/api";
+import { getImageUrl } from "@/utils/imageUtils";
 
 interface KioskSidebarProps {
   selectedItem: MenuItem | null;
   onClose: () => void;
 }
 
-export const KioskSidebar: React.FC<KioskSidebarProps> = ({ selectedItem, onClose }) => {
+export const KioskSidebar: React.FC<KioskSidebarProps> = ({
+  selectedItem,
+  onClose,
+}) => {
   const pathname = usePathname();
   const { addItem, items: cartItems, getItemCount, getTotal } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [isCartHidden, setIsCartHidden] = useState(false);
 
   // Don't show sidebar on cart, idle, or custom-cake pages
-  if (pathname === '/cart' || pathname === '/idle' || pathname === '/custom-cake') {
+  if (
+    pathname === "/cart" ||
+    pathname === "/idle" ||
+    pathname === "/custom-cake"
+  ) {
     return null;
   }
 
@@ -48,13 +55,17 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({ selectedItem, onClos
 
   const itemCount = getItemCount();
   const total = getTotal();
-  const isAvailable = selectedItem?.status === 'available' &&
-    (selectedItem?.is_infinite_stock || (selectedItem?.stock_quantity ?? 0) > 0);
+  const isAvailable =
+    selectedItem?.status === "available" &&
+    (selectedItem?.is_infinite_stock ||
+      (selectedItem?.stock_quantity ?? 0) > 0);
 
   return (
     <div className="fixed right-0 top-0 bottom-0 w-[35vw] max-w-[500px] bg-gradient-to-b from-pure-white/90 via-sunny-yellow/5 to-deep-orange-yellow/10 backdrop-blur-md border-l-4 border-sunny-yellow shadow-[-10px_0_40px_rgba(251,205,47,0.4)] z-30 flex flex-col">
       {/* Item Detail Section (Top 60%) */}
-      <div className={`flex-1 overflow-y-auto transition-all duration-500 ${selectedItem ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div
+        className={`flex-1 overflow-y-auto transition-all duration-500 ${selectedItem ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+      >
         {selectedItem && (
           <div className="p-6 h-full">
             <Card className="bg-gradient-to-br from-pure-white/90 via-sunny-yellow/5 to-deep-orange-yellow/10 backdrop-blur-sm border-2 border-sunny-yellow/60 shadow-xl h-full">
@@ -63,7 +74,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({ selectedItem, onClos
                 <div className="relative h-80 bg-gradient-to-br from-sunny-yellow/25 via-deep-orange-yellow/20 to-sunny-yellow/35 flex items-center justify-center overflow-hidden">
                   {getImageUrl(selectedItem.image_url) ? (
                     <Image
-                      src={getImageUrl(selectedItem.image_url) || ''}
+                      src={getImageUrl(selectedItem.image_url) || ""}
                       alt={selectedItem.name}
                       fill
                       className="object-cover"
@@ -84,12 +95,18 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({ selectedItem, onClos
                   {/* Badges */}
                   <div className="absolute top-4 left-4 flex flex-col gap-2">
                     {selectedItem.is_featured && (
-                      <Chip size="lg" className="font-bold text-base px-4 py-2 bg-deep-orange-yellow text-white shadow-lg">
+                      <Chip
+                        size="lg"
+                        className="font-bold text-base px-4 py-2 bg-deep-orange-yellow text-white shadow-lg"
+                      >
                         Popular
                       </Chip>
                     )}
                     {!isAvailable && (
-                      <Chip size="lg" className="font-bold text-base px-4 py-2 bg-red-500 text-white shadow-lg">
+                      <Chip
+                        size="lg"
+                        className="font-bold text-base px-4 py-2 bg-red-500 text-white shadow-lg"
+                      >
                         Sold Out
                       </Chip>
                     )}
@@ -106,19 +123,27 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({ selectedItem, onClos
 
                     {/* Description - All black text */}
                     <p className="text-xl text-black mb-5 leading-relaxed">
-                      {selectedItem.description || 'Delicious treat made fresh daily with the finest ingredients.'}
+                      {selectedItem.description ||
+                        "Delicious treat made fresh daily with the finest ingredients."}
                     </p>
 
                     {/* Category & Type - Larger */}
                     <div className="flex gap-4 mb-5">
-                      <Chip size="lg" className="bg-sunny-yellow text-black font-bold text-lg px-5 py-2 shadow-md">
+                      <Chip
+                        size="lg"
+                        className="bg-sunny-yellow text-black font-bold text-lg px-5 py-2 shadow-md"
+                      >
                         {selectedItem.item_type}
                       </Chip>
-                      {selectedItem.categories && selectedItem.categories.length > 0 && (
-                        <Chip size="lg" className="bg-deep-orange-yellow text-black font-bold text-lg px-5 py-2 shadow-md">
-                          {selectedItem.categories[0].name}
-                        </Chip>
-                      )}
+                      {selectedItem.categories &&
+                        selectedItem.categories.length > 0 && (
+                          <Chip
+                            size="lg"
+                            className="bg-deep-orange-yellow text-black font-bold text-lg px-5 py-2 shadow-md"
+                          >
+                            {selectedItem.categories[0].name}
+                          </Chip>
+                        )}
                     </div>
 
                     {/* Price - Larger and always black */}
@@ -132,9 +157,13 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({ selectedItem, onClos
                     {!selectedItem.is_infinite_stock && (
                       <p className="text-lg text-black mb-5">
                         {isAvailable ? (
-                          <span>📦 {selectedItem.stock_quantity} available</span>
+                          <span>
+                            📦 {selectedItem.stock_quantity} available
+                          </span>
                         ) : (
-                          <span className="text-black font-bold">❌ Out of stock</span>
+                          <span className="text-black font-bold">
+                            ❌ Out of stock
+                          </span>
                         )}
                       </p>
                     )}
@@ -145,7 +174,9 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({ selectedItem, onClos
                     <div className="space-y-5">
                       {/* Quantity Selector - Larger buttons */}
                       <div className="flex items-center gap-5">
-                        <span className="text-2xl font-semibold text-black">Quantity:</span>
+                        <span className="text-2xl font-semibold text-black">
+                          Quantity:
+                        </span>
                         <div className="flex items-center gap-4">
                           <Button
                             size="lg"
@@ -197,7 +228,9 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({ selectedItem, onClos
       </div>
 
       {/* Cart Section (Bottom 40%) - Always Present, portrait optimized */}
-      <div className={`border-t-4 border-sunny-yellow bg-gradient-to-b from-sunny-yellow/10 to-deep-orange-yellow/15 backdrop-blur-md transition-all duration-500 ${isCartHidden ? 'h-20' : 'h-[40vh]'}`}>
+      <div
+        className={`border-t-4 border-sunny-yellow bg-gradient-to-b from-sunny-yellow/10 to-deep-orange-yellow/15 backdrop-blur-md transition-all duration-500 ${isCartHidden ? "h-20" : "h-[40vh]"}`}
+      >
         {/* Toggle Button - Larger for touch */}
         <button
           onClick={() => setIsCartHidden(!isCartHidden)}
@@ -210,7 +243,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({ selectedItem, onClos
             </span>
           </div>
           <span className="text-3xl text-black">
-            {isCartHidden ? '▲' : '▼'}
+            {isCartHidden ? "▲" : "▼"}
           </span>
         </button>
 
@@ -232,13 +265,18 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({ selectedItem, onClos
                 {/* Cart Items List - Larger images, all black text */}
                 <div className="flex-1 overflow-y-auto mb-4 space-y-3">
                   {cartItems.map((cartItem) => (
-                    <Card key={cartItem.menuItem.menu_item_id} className="bg-gradient-to-r from-pure-white/90 to-sunny-yellow/10 backdrop-blur-sm border-3 border-sunny-yellow/40 shadow-md">
+                    <Card
+                      key={cartItem.menuItem.menu_item_id}
+                      className="bg-gradient-to-r from-pure-white/90 to-sunny-yellow/10 backdrop-blur-sm border-3 border-sunny-yellow/40 shadow-md"
+                    >
                       <CardBody className="p-4">
                         <div className="flex items-center gap-4">
                           <div className="w-20 h-20 bg-gradient-to-br from-sunny-yellow/20 to-deep-orange-yellow/20 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                             {getImageUrl(cartItem.menuItem.image_url) ? (
                               <Image
-                                src={getImageUrl(cartItem.menuItem.image_url) || ''}
+                                src={
+                                  getImageUrl(cartItem.menuItem.image_url) || ""
+                                }
                                 alt={cartItem.menuItem.name}
                                 width={80}
                                 height={80}
@@ -254,11 +292,18 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({ selectedItem, onClos
                               {cartItem.menuItem.name}
                             </h4>
                             <p className="text-base text-black font-semibold mt-1">
-                              {cartItem.quantity} × ${(Number(cartItem.menuItem.current_price) || 0).toFixed(2)}
+                              {cartItem.quantity} × $
+                              {(
+                                Number(cartItem.menuItem.current_price) || 0
+                              ).toFixed(2)}
                             </p>
                           </div>
                           <div className="text-xl font-black text-black">
-                            ${((Number(cartItem.menuItem.current_price) || 0) * cartItem.quantity).toFixed(2)}
+                            $
+                            {(
+                              (Number(cartItem.menuItem.current_price) || 0) *
+                              cartItem.quantity
+                            ).toFixed(2)}
                           </div>
                         </div>
                       </CardBody>
@@ -269,7 +314,9 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({ selectedItem, onClos
                 {/* Total - All black text */}
                 <div className="border-t-2 border-sunny-yellow pt-4 mb-4 bg-gradient-to-r from-sunny-yellow/15 to-deep-orange-yellow/10 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-2xl font-bold text-black">Total:</span>
+                    <span className="text-2xl font-bold text-black">
+                      Total:
+                    </span>
                     <span className="text-3xl font-black text-black">
                       ${total.toFixed(2)}
                     </span>
@@ -294,7 +341,9 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({ selectedItem, onClos
                     >
                       <div className="flex items-center justify-between w-full">
                         <span>🎂 Custom Cake</span>
-                        <span className="text-sm bg-black/20 px-3 py-1 rounded-lg text-black">📱 Scan QR</span>
+                        <span className="text-sm bg-black/20 px-3 py-1 rounded-lg text-black">
+                          📱 Scan QR
+                        </span>
                       </div>
                     </Button>
                   </div>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -20,37 +21,48 @@ interface Quote {
 }
 
 // Page types for the rotating screens
-type PageType = 'welcome' | 'featured' | 'quote1' | 'quote2' | 'custom-cake';
+type PageType = "welcome" | "featured" | "quote1" | "quote2" | "custom-cake";
 
 // Emoji mapping based on item types
 const getEmojiForItemType = (itemType: ItemType, itemName: string): string => {
   const nameLower = itemName.toLowerCase();
 
-  if (nameLower.includes('chocolate')) return '🍫';
-  if (nameLower.includes('strawberry')) return '🍓';
-  if (nameLower.includes('vanilla')) return '🍦';
-  if (nameLower.includes('lemon')) return '🍋';
-  if (nameLower.includes('coffee')) return '☕';
-  if (nameLower.includes('caramel')) return '🍮';
-  if (nameLower.includes('cheese')) return '🧀';
-  if (nameLower.includes('custom')) return '🎨';
+  if (nameLower.includes("chocolate")) return "🍫";
+  if (nameLower.includes("strawberry")) return "🍓";
+  if (nameLower.includes("vanilla")) return "🍦";
+  if (nameLower.includes("lemon")) return "🍋";
+  if (nameLower.includes("coffee")) return "☕";
+  if (nameLower.includes("caramel")) return "🍮";
+  if (nameLower.includes("cheese")) return "🧀";
+  if (nameLower.includes("custom")) return "🎨";
 
   switch (itemType) {
-    case ItemType.CAKE: return '🎂';
-    case ItemType.PASTRY: return '🥐';
-    case ItemType.BEVERAGE: return '☕';
-    case ItemType.SNACK: return '🍪';
-    case ItemType.DESSERT: return '🍰';
-    case ItemType.BREAD: return '🍞';
-    default: return '🧁';
+    case ItemType.CAKE:
+      return "🎂";
+    case ItemType.PASTRY:
+      return "🥐";
+    case ItemType.BEVERAGE:
+      return "☕";
+    case ItemType.SNACK:
+      return "🍪";
+    case ItemType.DESSERT:
+      return "🍰";
+    case ItemType.BREAD:
+      return "🍞";
+    default:
+      return "🧁";
   }
 };
 
 export default function IdlePage() {
-  const [currentPage, setCurrentPage] = useState<PageType>('welcome');
+  const [currentPage, setCurrentPage] = useState<PageType>("welcome");
   const [currentFeaturedIndex, setCurrentFeaturedIndex] = useState(0);
-  const [floatingElements, setFloatingElements] = useState<Array<{ id: number; x: number; y: number; emoji: string }>>([]);
-  const [sparkleElements, setSparkleElements] = useState<Array<{ id: number; x: number; y: number }>>([]);
+  const [floatingElements, setFloatingElements] = useState<
+    Array<{ id: number; x: number; y: number; emoji: string }>
+  >([]);
+  const [sparkleElements, setSparkleElements] = useState<
+    Array<{ id: number; x: number; y: number }>
+  >([]);
   const [featuredItems, setFeaturedItems] = useState<FeaturedItem[]>([]);
   const [isLoadingItems, setIsLoadingItems] = useState(true);
 
@@ -61,29 +73,44 @@ export default function IdlePage() {
     { text: "Happiness is a slice of cake", author: "Anonymous" },
     { text: "Baked fresh daily with love", author: "Golden Munch" },
     { text: "Where sweetness meets perfection", author: "Golden Munch" },
-    { text: "Creating memories, one cake at a time", author: "Golden Munch" }
+    { text: "Creating memories, one cake at a time", author: "Golden Munch" },
   ];
 
-  const bakeryEmojis = ['🍰', '🧁', '🎂', '🍪', '🥐', '🍩', '🥧', '✨', '⭐', '💫'];
+  const bakeryEmojis = [
+    "🍰",
+    "🧁",
+    "🎂",
+    "🍪",
+    "🥐",
+    "🍩",
+    "🥧",
+    "✨",
+    "⭐",
+    "💫",
+  ];
 
   // Fetch featured items from API
   useEffect(() => {
     const fetchFeaturedItems = async () => {
       try {
         setIsLoadingItems(true);
-        console.log('🎯 [Idle] Fetching featured menu items...');
+        console.log("🎯 [Idle] Fetching featured menu items...");
 
         const items = await MenuService.getMenuItems({ is_featured: true });
 
         const transformedItems: FeaturedItem[] = items
-          .filter(item => item.status === 'available')
+          .filter((item) => item.status === "available")
           .slice(0, 6)
-          .map(item => ({
+          .map((item) => ({
             id: item.menu_item_id,
             name: item.name,
-            image: item.image_url || getEmojiForItemType(item.item_type, item.name),
-            description: item.description || `Delicious ${item.name.toLowerCase()}`,
-            price: item.current_price ? `₱${item.current_price.toFixed(2)}` : 'Price varies'
+            image:
+              item.image_url || getEmojiForItemType(item.item_type, item.name),
+            description:
+              item.description || `Delicious ${item.name.toLowerCase()}`,
+            price: item.current_price
+              ? `₱${item.current_price.toFixed(2)}`
+              : "Price varies",
           }));
 
         if (transformedItems.length === 0) {
@@ -93,24 +120,24 @@ export default function IdlePage() {
               name: "Custom Cake Creation",
               image: "🎨",
               description: "Design your dream cake in stunning 3D",
-              price: "From ₱1,200"
-            }
+              price: "From ₱1,200",
+            },
           ]);
         } else {
           setFeaturedItems(transformedItems);
         }
 
-        console.log('✅ [Idle] Featured items ready:', transformedItems.length);
+        console.log("✅ [Idle] Featured items ready:", transformedItems.length);
       } catch (error) {
-        console.error('❌ [Idle] Error fetching featured items:', error);
+        console.error("❌ [Idle] Error fetching featured items:", error);
         setFeaturedItems([
           {
             id: 0,
             name: "Custom Cake Creation",
             image: "🎨",
             description: "Design your dream cake in stunning 3D",
-            price: "From ₱1,200"
-          }
+            price: "From ₱1,200",
+          },
         ]);
       } finally {
         setIsLoadingItems(false);
@@ -126,14 +153,14 @@ export default function IdlePage() {
       id: i,
       x: Math.random() * 100,
       y: Math.random() * 100,
-      emoji: bakeryEmojis[Math.floor(Math.random() * bakeryEmojis.length)]
+      emoji: bakeryEmojis[Math.floor(Math.random() * bakeryEmojis.length)],
     }));
     setFloatingElements(elements);
 
     const sparkles = Array.from({ length: 30 }, (_, i) => ({
       id: i,
       x: Math.random() * 100,
-      y: Math.random() * 100
+      y: Math.random() * 100,
     }));
     setSparkleElements(sparkles);
   }, []);
@@ -143,15 +170,21 @@ export default function IdlePage() {
     const getRandomDelay = () => 30000 + Math.random() * 10000; // 30-40 seconds
 
     const timer = setTimeout(() => {
-      setCurrentPage(prev => {
+      setCurrentPage((prev) => {
         // Page sequence: welcome -> featured -> quote1 -> quote2 -> custom-cake -> welcome
         switch (prev) {
-          case 'welcome': return 'featured';
-          case 'featured': return 'quote1';
-          case 'quote1': return 'quote2';
-          case 'quote2': return 'custom-cake';
-          case 'custom-cake': return 'welcome';
-          default: return 'welcome';
+          case "welcome":
+            return "featured";
+          case "featured":
+            return "quote1";
+          case "quote1":
+            return "quote2";
+          case "quote2":
+            return "custom-cake";
+          case "custom-cake":
+            return "welcome";
+          default:
+            return "welcome";
         }
       });
     }, getRandomDelay());
@@ -161,9 +194,9 @@ export default function IdlePage() {
 
   // Rotate featured items if on featured page
   useEffect(() => {
-    if (currentPage === 'featured' && featuredItems.length > 1) {
+    if (currentPage === "featured" && featuredItems.length > 1) {
       const timer = setInterval(() => {
-        setCurrentFeaturedIndex(prev => (prev + 1) % featuredItems.length);
+        setCurrentFeaturedIndex((prev) => (prev + 1) % featuredItems.length);
       }, 5000); // Change featured item every 5 seconds
 
       return () => clearInterval(timer);
@@ -172,17 +205,21 @@ export default function IdlePage() {
 
   // Handle interaction
   const handleInteraction = useCallback(() => {
-    window.location.href = '/';
+    window.location.href = "/";
   }, []);
 
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
-      if (event.key === ' ' || event.key === 'Enter' || event.key === 'Escape') {
+      if (
+        event.key === " " ||
+        event.key === "Enter" ||
+        event.key === "Escape"
+      ) {
         handleInteraction();
       }
     };
-    document.addEventListener('keydown', handleKeyPress);
-    return () => document.removeEventListener('keydown', handleKeyPress);
+    document.addEventListener("keydown", handleKeyPress);
+    return () => document.removeEventListener("keydown", handleKeyPress);
   }, [handleInteraction]);
 
   // Get random quote for quote pages
@@ -214,12 +251,12 @@ export default function IdlePage() {
             x: `${element.x + Math.sin(element.id) * 10}%`,
             y: `${element.y + Math.cos(element.id) * 10}%`,
             rotate: [0, 360],
-            scale: [1, 1.2, 1]
+            scale: [1, 1.2, 1],
           }}
           transition={{
             duration: 20 + element.id * 2,
             repeat: Infinity,
-            ease: "linear"
+            ease: "linear",
           }}
         >
           {element.emoji}
@@ -254,7 +291,7 @@ export default function IdlePage() {
       <div className="relative z-10 h-full flex items-center justify-center p-8">
         <AnimatePresence mode="wait">
           {/* PAGE 1: Welcome Screen */}
-          {currentPage === 'welcome' && (
+          {currentPage === "welcome" && (
             <motion.div
               key="welcome"
               initial={{ opacity: 0, scale: 0.9 }}
@@ -265,7 +302,11 @@ export default function IdlePage() {
             >
               <motion.div
                 animate={{ rotate: [0, 5, -5, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
                 className="text-[250px] mb-8"
               >
                 🍰
@@ -287,90 +328,94 @@ export default function IdlePage() {
           )}
 
           {/* PAGE 2: Featured Items */}
-          {currentPage === 'featured' && !isLoadingItems && featuredItems.length > 0 && (
-            <motion.div
-              key="featured"
-              initial={{ opacity: 0, x: 100 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -100 }}
-              transition={{ duration: 1 }}
-              className="w-full max-w-7xl mx-auto"
-            >
-              <div className="bg-gradient-to-br from-[#FAF7F2]/20 to-[#EAD7B7]/10 backdrop-blur-xl rounded-3xl p-16 shadow-[0_0_80px_rgba(234,215,183,0.4)] border-2 border-[#EAD7B7]/30">
-                <div className="flex flex-col lg:flex-row items-center justify-center gap-20">
-                  {/* Item image */}
-                  <motion.div
-                    key={currentFeaturedIndex}
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                    className="drop-shadow-2xl flex-shrink-0"
-                  >
-                    {featuredItems[currentFeaturedIndex].image.startsWith('http') ? (
-                      <img
-                        src={featuredItems[currentFeaturedIndex].image}
-                        alt={featuredItems[currentFeaturedIndex].name}
-                        className="w-[300px] h-[300px] object-cover rounded-3xl mx-auto"
-                      />
-                    ) : (
-                      <motion.div
-                        animate={{ rotate: [0, 10, -10, 0] }}
-                        transition={{ duration: 4, repeat: Infinity }}
-                        className="text-[300px] leading-none flex items-center justify-center"
-                      >
-                        {featuredItems[currentFeaturedIndex].image}
-                      </motion.div>
-                    )}
-                  </motion.div>
+          {currentPage === "featured" &&
+            !isLoadingItems &&
+            featuredItems.length > 0 && (
+              <motion.div
+                key="featured"
+                initial={{ opacity: 0, x: 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                transition={{ duration: 1 }}
+                className="w-full max-w-7xl mx-auto"
+              >
+                <div className="bg-gradient-to-br from-[#FAF7F2]/20 to-[#EAD7B7]/10 backdrop-blur-xl rounded-3xl p-16 shadow-[0_0_80px_rgba(234,215,183,0.4)] border-2 border-[#EAD7B7]/30">
+                  <div className="flex flex-col lg:flex-row items-center justify-center gap-20">
+                    {/* Item image */}
+                    <motion.div
+                      key={currentFeaturedIndex}
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.5 }}
+                      className="drop-shadow-2xl flex-shrink-0"
+                    >
+                      {featuredItems[currentFeaturedIndex].image.startsWith(
+                        "http",
+                      ) ? (
+                        <img
+                          src={featuredItems[currentFeaturedIndex].image}
+                          alt={featuredItems[currentFeaturedIndex].name}
+                          className="w-[300px] h-[300px] object-cover rounded-3xl mx-auto"
+                        />
+                      ) : (
+                        <motion.div
+                          animate={{ rotate: [0, 10, -10, 0] }}
+                          transition={{ duration: 4, repeat: Infinity }}
+                          className="text-[300px] leading-none flex items-center justify-center"
+                        >
+                          {featuredItems[currentFeaturedIndex].image}
+                        </motion.div>
+                      )}
+                    </motion.div>
 
-                  {/* Item details */}
-                  <div className="flex-1 text-left min-w-0">
-                    <div className="flex items-center gap-4 mb-6">
-                      <Star className="w-12 h-12 text-[#D97706] fill-[#D97706]" />
-                      <span className="text-[#EAD7B7] text-3xl font-semibold tracking-wider uppercase">
-                        Featured Special
-                      </span>
-                    </div>
-                    <h2 className="text-8xl font-bold text-[#FAF7F2] mb-8 drop-shadow-lg break-words">
-                      {featuredItems[currentFeaturedIndex].name}
-                    </h2>
-                    <p className="text-4xl text-[#EAD7B7] mb-10 leading-relaxed">
-                      {featuredItems[currentFeaturedIndex].description}
-                    </p>
-                    <div className="flex items-center gap-6">
-                      <motion.div
-                        animate={{ scale: [1, 1.05, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="bg-gradient-to-r from-[#D97706] to-[#7B4B28] text-[#FAF7F2] text-6xl font-bold px-12 py-6 rounded-3xl shadow-2xl"
-                      >
-                        {featuredItems[currentFeaturedIndex].price}
-                      </motion.div>
-                      <Sparkles className="w-16 h-16 text-[#D97706]" />
+                    {/* Item details */}
+                    <div className="flex-1 text-left min-w-0">
+                      <div className="flex items-center gap-4 mb-6">
+                        <Star className="w-12 h-12 text-[#D97706] fill-[#D97706]" />
+                        <span className="text-[#EAD7B7] text-3xl font-semibold tracking-wider uppercase">
+                          Featured Special
+                        </span>
+                      </div>
+                      <h2 className="text-8xl font-bold text-[#FAF7F2] mb-8 drop-shadow-lg break-words">
+                        {featuredItems[currentFeaturedIndex].name}
+                      </h2>
+                      <p className="text-4xl text-[#EAD7B7] mb-10 leading-relaxed">
+                        {featuredItems[currentFeaturedIndex].description}
+                      </p>
+                      <div className="flex items-center gap-6">
+                        <motion.div
+                          animate={{ scale: [1, 1.05, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                          className="bg-gradient-to-r from-[#D97706] to-[#7B4B28] text-[#FAF7F2] text-6xl font-bold px-12 py-6 rounded-3xl shadow-2xl"
+                        >
+                          {featuredItems[currentFeaturedIndex].price}
+                        </motion.div>
+                        <Sparkles className="w-16 h-16 text-[#D97706]" />
+                      </div>
                     </div>
                   </div>
+
+                  {/* Item indicators */}
+                  {featuredItems.length > 1 && (
+                    <div className="flex justify-center gap-4 mt-12">
+                      {featuredItems.map((_, index) => (
+                        <div
+                          key={index}
+                          className={`h-4 rounded-full transition-all duration-500 ${
+                            index === currentFeaturedIndex
+                              ? "w-20 bg-[#D97706]"
+                              : "w-4 bg-[#EAD7B7]/40"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
-
-                {/* Item indicators */}
-                {featuredItems.length > 1 && (
-                  <div className="flex justify-center gap-4 mt-12">
-                    {featuredItems.map((_, index) => (
-                      <div
-                        key={index}
-                        className={`h-4 rounded-full transition-all duration-500 ${
-                          index === currentFeaturedIndex
-                            ? 'w-20 bg-[#D97706]'
-                            : 'w-4 bg-[#EAD7B7]/40'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
+              </motion.div>
+            )}
 
           {/* PAGE 3: Quote 1 */}
-          {currentPage === 'quote1' && (
+          {currentPage === "quote1" && (
             <motion.div
               key="quote1"
               initial={{ opacity: 0, y: 50 }}
@@ -397,7 +442,7 @@ export default function IdlePage() {
           )}
 
           {/* PAGE 4: Quote 2 */}
-          {currentPage === 'quote2' && (
+          {currentPage === "quote2" && (
             <motion.div
               key="quote2"
               initial={{ opacity: 0, rotateY: 90 }}
@@ -424,7 +469,7 @@ export default function IdlePage() {
           )}
 
           {/* PAGE 5: Custom Cake Promotion */}
-          {currentPage === 'custom-cake' && (
+          {currentPage === "custom-cake" && (
             <motion.div
               key="custom-cake"
               initial={{ opacity: 0, scale: 0.8 }}
@@ -450,7 +495,11 @@ export default function IdlePage() {
                 <div className="flex items-center justify-center gap-12 mb-10">
                   <motion.div
                     animate={{ rotate: [0, 360] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                    transition={{
+                      duration: 4,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
                   >
                     <Sparkles className="w-16 h-16 text-[#FFD700]" />
                   </motion.div>
@@ -459,7 +508,11 @@ export default function IdlePage() {
                   </div>
                   <motion.div
                     animate={{ rotate: [0, -360] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                    transition={{
+                      duration: 4,
+                      repeat: Infinity,
+                      ease: "linear",
+                    }}
                   >
                     <Cake className="w-16 h-16 text-[#FFD700]" />
                   </motion.div>

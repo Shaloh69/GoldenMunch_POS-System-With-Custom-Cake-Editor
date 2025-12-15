@@ -1,14 +1,15 @@
+
 "use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardBody, CardHeader } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { Chip } from '@heroui/chip';
-import { Spinner } from '@heroui/spinner';
-import NextLink from 'next/link';
-import { MenuService } from '@/services/menu.service';
-import type { Category, MenuItem } from '@/types/api';
-import { useCart } from '@/contexts/CartContext';
+import { useState, useEffect } from "react";
+import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { Chip } from "@heroui/chip";
+import { Spinner } from "@heroui/spinner";
+import NextLink from "next/link";
+import { MenuService } from "@/services/menu.service";
+import type { Category, MenuItem } from "@/types/api";
+import { useCart } from "@/contexts/CartContext";
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -18,11 +19,11 @@ export default function CategoriesPage() {
   const { getItemCount, getTotal } = useCart();
 
   const getCategoryItemCount = (categoryId: number): number => {
-    return menuItems.filter(item => item.status === 'available').length;
+    return menuItems.filter((item) => item.status === "available").length;
   };
 
   const getCategoryEmoji = (index: number): string => {
-    const emojis = ['🍰', '🥐', '🍪', '☕', '🥪', '🍕', '🍔', '🍜', '🍱', '🍲'];
+    const emojis = ["🍰", "🥐", "🍪", "☕", "🥪", "🍕", "🍔", "🍜", "🍱", "🍲"];
     return emojis[index % emojis.length];
   };
 
@@ -34,14 +35,14 @@ export default function CategoriesPage() {
       try {
         const [cats, items] = await Promise.all([
           MenuService.getCategories(),
-          MenuService.getMenuItems()
+          MenuService.getMenuItems(),
         ]);
 
         setCategories(cats);
         setMenuItems(items);
       } catch (err: any) {
-        console.error('Error fetching data:', err);
-        setError(err.message || 'Failed to load categories. Please try again.');
+        console.error("Error fetching data:", err);
+        setError(err.message || "Failed to load categories. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -60,7 +61,7 @@ export default function CategoriesPage() {
               classNames={{
                 wrapper: "w-24 h-24",
                 circle1: "border-b-sunny-yellow",
-                circle2: "border-b-deep-orange-yellow"
+                circle2: "border-b-deep-orange-yellow",
               }}
             />
             <div className="absolute inset-0 animate-ping opacity-20">
@@ -83,13 +84,13 @@ export default function CategoriesPage() {
       <div className="min-h-screen flex items-center justify-center p-6">
         <Card className="max-w-md bg-gradient-to-br from-pure-white/90 via-sunny-yellow/10 to-deep-orange-yellow/15 backdrop-blur-lg border-2 border-sunny-yellow/60 shadow-xl animate-scale-in">
           <CardBody className="text-center p-8">
-            <div className="text-8xl mb-6 animate-bounce-slow drop-shadow-xl">⚠️</div>
+            <div className="text-8xl mb-6 animate-bounce-slow drop-shadow-xl">
+              ⚠️
+            </div>
             <h1 className="text-4xl font-bold text-black mb-4 drop-shadow-lg">
               Oops! Something went wrong
             </h1>
-            <p className="text-xl text-black/70 mb-8">
-              {error}
-            </p>
+            <p className="text-xl text-black/70 mb-8">{error}</p>
             <Button
               size="lg"
               className="bg-gradient-to-r from-sunny-yellow to-deep-orange-yellow text-black font-bold text-xl px-8 shadow-xl hover:scale-105 transition-all"
@@ -129,22 +130,32 @@ export default function CategoriesPage() {
           <Card className="bg-gradient-to-br from-pure-white/90 via-sunny-yellow/10 to-deep-orange-yellow/15 backdrop-blur-lg border-2 border-sunny-yellow/60 shadow-xl animate-slide-up">
             <CardBody className="p-6 text-center">
               <div className="text-5xl mb-2 drop-shadow-lg">📋</div>
-              <p className="text-3xl font-bold text-black drop-shadow-sm">{categories.length}</p>
+              <p className="text-3xl font-bold text-black drop-shadow-sm">
+                {categories.length}
+              </p>
               <p className="text-black/70 font-semibold">Categories</p>
             </CardBody>
           </Card>
-          <Card className="bg-gradient-to-br from-pure-white/90 via-sunny-yellow/10 to-deep-orange-yellow/15 backdrop-blur-lg border-2 border-sunny-yellow/60 shadow-xl animate-slide-up" style={{ animationDelay: '0.1s' }}>
+          <Card
+            className="bg-gradient-to-br from-pure-white/90 via-sunny-yellow/10 to-deep-orange-yellow/15 backdrop-blur-lg border-2 border-sunny-yellow/60 shadow-xl animate-slide-up"
+            style={{ animationDelay: "0.1s" }}
+          >
             <CardBody className="p-6 text-center">
               <div className="text-5xl mb-2 drop-shadow-lg">🍴</div>
-              <p className="text-3xl font-bold text-black drop-shadow-sm">{menuItems.length}</p>
+              <p className="text-3xl font-bold text-black drop-shadow-sm">
+                {menuItems.length}
+              </p>
               <p className="text-black/70 font-semibold">Total Items</p>
             </CardBody>
           </Card>
-          <Card className="bg-gradient-to-br from-pure-white/90 via-sunny-yellow/10 to-deep-orange-yellow/15 backdrop-blur-lg border-2 border-sunny-yellow/60 shadow-xl animate-slide-up" style={{ animationDelay: '0.2s' }}>
+          <Card
+            className="bg-gradient-to-br from-pure-white/90 via-sunny-yellow/10 to-deep-orange-yellow/15 backdrop-blur-lg border-2 border-sunny-yellow/60 shadow-xl animate-slide-up"
+            style={{ animationDelay: "0.2s" }}
+          >
             <CardBody className="p-6 text-center">
               <div className="text-5xl mb-2 drop-shadow-lg">✨</div>
               <p className="text-3xl font-bold text-black drop-shadow-sm">
-                {menuItems.filter(i => i.is_featured).length}
+                {menuItems.filter((i) => i.is_featured).length}
               </p>
               <p className="text-black/70 font-semibold">Featured</p>
             </CardBody>
@@ -155,7 +166,9 @@ export default function CategoriesPage() {
         {categories.length === 0 ? (
           <Card className="bg-gradient-to-br from-pure-white/90 via-sunny-yellow/10 to-deep-orange-yellow/15 backdrop-blur-lg border-2 border-sunny-yellow/60 shadow-xl animate-scale-in">
             <CardBody className="text-center py-16">
-              <div className="text-9xl mb-6 animate-float drop-shadow-xl">📋</div>
+              <div className="text-9xl mb-6 animate-float drop-shadow-xl">
+                📋
+              </div>
               <h3 className="text-4xl font-bold text-black mb-4 drop-shadow-lg">
                 No categories available
               </h3>
@@ -219,7 +232,8 @@ export default function CategoriesPage() {
                         {category.name}
                       </h3>
                       <p className="text-sm text-black/70 line-clamp-2 min-h-[40px]">
-                        {category.description || 'Delicious items in this category'}
+                        {category.description ||
+                          "Delicious items in this category"}
                       </p>
                     </div>
 
@@ -232,7 +246,11 @@ export default function CategoriesPage() {
                         {getCategoryItemCount(category.category_id)} items
                       </Chip>
                       {category.is_active && (
-                        <Chip variant="dot" size="sm" className="bg-green-500/20 text-green-700 font-semibold">
+                        <Chip
+                          variant="dot"
+                          size="sm"
+                          className="bg-green-500/20 text-green-700 font-semibold"
+                        >
                           Available
                         </Chip>
                       )}
@@ -249,7 +267,10 @@ export default function CategoriesPage() {
         )}
 
         {/* Quick Navigation */}
-        <div className="mt-16 text-center space-y-6 animate-slide-up" style={{ animationDelay: '0.3s' }}>
+        <div
+          className="mt-16 text-center space-y-6 animate-slide-up"
+          style={{ animationDelay: "0.3s" }}
+        >
           <Card className="bg-gradient-to-br from-pure-white/90 via-sunny-yellow/10 to-deep-orange-yellow/15 backdrop-blur-lg border-2 border-sunny-yellow/60 shadow-xl inline-block">
             <CardBody className="p-8">
               <h3 className="text-3xl font-bold text-black mb-6 drop-shadow-lg">

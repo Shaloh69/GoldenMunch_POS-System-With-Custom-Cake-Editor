@@ -1,9 +1,10 @@
-'use client';
 
-import React from 'react';
-import { Card, CardBody } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { useRouter } from 'next/navigation';
+"use client";
+
+import React from "react";
+import { Card, CardBody } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { useRouter } from "next/navigation";
 
 export default function CustomizeSuccessPage() {
   const router = useRouter();
@@ -27,7 +28,8 @@ export default function CustomizeSuccessPage() {
               📱 Next Steps:
             </p>
             <p className="text-chocolate-brown/80">
-              Return to the kiosk to review your design and complete your order. You can also continue browsing our menu!
+              Return to the kiosk to review your design and complete your order.
+              You can also continue browsing our menu!
             </p>
           </div>
           <div className="space-y-3 text-left text-chocolate-brown/70 bg-white/50 rounded-lg p-4 mb-6">
@@ -47,7 +49,7 @@ export default function CustomizeSuccessPage() {
           <Button
             size="lg"
             className="bg-gradient-to-r from-golden-orange to-deep-amber text-white font-bold text-xl px-12 py-6 h-auto"
-            onClick={() => router.push('/')}
+            onClick={() => router.push("/")}
           >
             Return to Main Menu
           </Button>

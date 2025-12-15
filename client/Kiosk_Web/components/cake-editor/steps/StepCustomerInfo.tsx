@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { Input } from '@heroui/input';
-import { Select, SelectItem } from '@heroui/select';
-import type { CakeDesign } from '@/app/cake-editor/page';
+import { Input } from "@heroui/input";
+import { Select, SelectItem } from "@heroui/select";
+import type { CakeDesign } from "@/app/cake-editor/page";
 
 interface StepCustomerInfoProps {
   design: CakeDesign;
@@ -10,12 +10,19 @@ interface StepCustomerInfoProps {
   options: any;
 }
 
-export default function StepCustomerInfo({ design, updateDesign }: StepCustomerInfoProps) {
+export default function StepCustomerInfo({
+  design,
+  updateDesign,
+}: StepCustomerInfoProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Let's Get Started!</h2>
-        <p className="text-gray-600">Tell us about yourself and your celebration</p>
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          Let's Get Started!
+        </h2>
+        <p className="text-gray-600">
+          Tell us about yourself and your celebration
+        </p>
       </div>
 
       <div className="space-y-4">
