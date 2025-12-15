@@ -11,9 +11,35 @@ if (process.getuid && process.getuid() === 0) {
   console.log('Running as root: --no-sandbox flag enabled');
 }
 
-// CRITICAL: Disable hardware acceleration for Raspberry Pi compatibility
-// This fixes GBM (Graphics Buffer Manager) errors on ARM devices
+// CRITICAL: Comprehensive graphics configuration for Raspberry Pi Wayland compatibility
+// These switches prevent DRM/GBM errors and force software rendering
+console.log('=== GRAPHICS CONFIGURATION ===');
+
+// Disable hardware acceleration completely
 app.disableHardwareAcceleration();
+console.log('Hardware acceleration: DISABLED');
+
+// Force software rendering and disable all GPU features
+app.commandLine.appendSwitch('disable-gpu');
+app.commandLine.appendSwitch('disable-gpu-compositing');
+app.commandLine.appendSwitch('disable-gpu-sandbox');
+app.commandLine.appendSwitch('disable-software-rasterizer', 'false'); // Enable software rasterizer
+console.log('GPU features: DISABLED');
+
+// Use software rendering for GL operations
+app.commandLine.appendSwitch('use-gl', 'disabled');
+console.log('OpenGL: DISABLED (using software rendering)');
+
+// Disable features that require GPU/DRM access
+app.commandLine.appendSwitch('disable-features', 'VizDisplayCompositor');
+app.commandLine.appendSwitch('disable-dev-shm-usage'); // Prevent shared memory issues
+console.log('Display compositor: DISABLED');
+
+// Force CPU-based rendering
+app.commandLine.appendSwitch('enable-features', 'CanvasOopRasterization');
+console.log('CPU rendering: ENABLED');
+
+console.log('=== END GRAPHICS CONFIGURATION ===');
 
 let mainWindow;
 let splashWindow;

@@ -5,11 +5,23 @@ PartOf=graphical-session.target
 
 [Service]
 Type=simple
+# Environment configuration
 Environment="NODE_ENV=development"
+Environment="ELECTRON_DISABLE_SECURITY_WARNINGS=true"
+# Ensure Wayland/X11 display access
+PassEnvironment=DISPLAY WAYLAND_DISPLAY XDG_RUNTIME_DIR XDG_SESSION_TYPE DESKTOP_SESSION
+
+# Wait for display to be ready before starting
 ExecStartPre=/bin/sleep 5
+
+# Start the kiosk application
 ExecStart=%h/GoldenMunch_POS-System-With-Custom-Cake-Editor/scripts/start-kiosk-wayland.sh
+
+# Restart policy - retry on failure with backoff
 Restart=on-failure
 RestartSec=10
+
+# Logging
 StandardOutput=journal
 StandardError=journal
 
