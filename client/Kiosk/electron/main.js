@@ -26,18 +26,28 @@ app.commandLine.appendSwitch('disable-gpu-sandbox');
 app.commandLine.appendSwitch('disable-software-rasterizer', 'false'); // Enable software rasterizer
 console.log('GPU features: DISABLED');
 
-// Use software rendering for GL operations
-app.commandLine.appendSwitch('use-gl', 'disabled');
-console.log('OpenGL: DISABLED (using software rendering)');
+// CRITICAL: Force SwiftShader software renderer to completely avoid DRM/GBM
+// This prevents "Failed to get fd for plane" and "Failed to export buffer to dma_buf" errors
+app.commandLine.appendSwitch('use-gl', 'swiftshader');
+app.commandLine.appendSwitch('enable-unsafe-swiftshader');
+console.log('OpenGL: Using SwiftShader (pure software rendering)');
 
-// Disable features that require GPU/DRM access
-app.commandLine.appendSwitch('disable-features', 'VizDisplayCompositor');
+// Disable ALL features that require GPU/DRM access
+app.commandLine.appendSwitch('disable-features',
+  'VizDisplayCompositor,UseChromeOSDirectVideoDecoder,UseSkiaRenderer');
 app.commandLine.appendSwitch('disable-dev-shm-usage'); // Prevent shared memory issues
-console.log('Display compositor: DISABLED');
+app.commandLine.appendSwitch('disable-accelerated-2d-canvas'); // Force software canvas
+app.commandLine.appendSwitch('disable-accelerated-video-decode'); // No hardware video
+console.log('Display compositor and hardware features: DISABLED');
 
-// Force CPU-based rendering
+// Force CPU-based rendering for all operations
 app.commandLine.appendSwitch('enable-features', 'CanvasOopRasterization');
 console.log('CPU rendering: ENABLED');
+
+// Prevent any Wayland-specific GPU access attempts
+app.commandLine.appendSwitch('ozone-platform', 'wayland');
+app.commandLine.appendSwitch('enable-features', 'UseOzonePlatform');
+console.log('Wayland platform: Enabled with software rendering');
 
 console.log('=== END GRAPHICS CONFIGURATION ===');
 

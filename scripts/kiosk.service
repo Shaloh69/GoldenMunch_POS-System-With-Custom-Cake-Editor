@@ -1,18 +1,22 @@
 [Unit]
-Description=GoldenMunch Kiosk Application
+Description=GoldenMunch Kiosk Application (X11 - DEPRECATED)
 After=graphical.target network-online.target
 Wants=network-online.target
 
+# NOTE: This service is deprecated and configured for X11
+# For Wayland systems (like rpd-labwc on Raspberry Pi), use kiosk-wayland.service instead
+# This file is kept for reference only
+
 [Service]
 Type=simple
-User=pi
-Group=pi
+User=%u
+Group=%u
 Environment="DISPLAY=:0"
-Environment="XAUTHORITY=/home/pi/.Xauthority"
+Environment="XAUTHORITY=%h/.Xauthority"
 Environment="NODE_ENV=production"
-WorkingDirectory=/home/pi/GoldenMunch_POS-System-With-Custom-Cake-Editor/client/Kiosk
+WorkingDirectory=%h/GoldenMunch_POS-System-With-Custom-Cake-Editor/client/Kiosk
 ExecStartPre=/bin/sleep 10
-ExecStart=/home/pi/GoldenMunch_POS-System-With-Custom-Cake-Editor/scripts/start-kiosk.sh
+ExecStart=%h/GoldenMunch_POS-System-With-Custom-Cake-Editor/scripts/start-kiosk.sh
 Restart=on-failure
 RestartSec=10
 
