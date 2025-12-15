@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export', // Enable static export for Electron
+  // Only enable static export for production builds (Electron)
+  // Development mode needs dynamic rendering
+  ...(process.env.NODE_ENV === 'production' && { output: 'export' }),
   reactStrictMode: true,
   transpilePackages: ['three', '@react-three/fiber', '@react-three/drei'],
   images: {
@@ -10,7 +12,7 @@ const nextConfig = {
     config.externals = [...(config.externals || []), { canvas: 'canvas' }];
     return config;
   },
-  // Disable automatic static optimization for Electron
+  // Use .next for dev, out for production
   distDir: process.env.NODE_ENV === 'production' ? 'out' : '.next',
 };
 
