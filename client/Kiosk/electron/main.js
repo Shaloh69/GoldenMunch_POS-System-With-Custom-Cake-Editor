@@ -29,7 +29,10 @@ app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-gpu-compositing');
 app.commandLine.appendSwitch('disable-gpu-sandbox');
 app.commandLine.appendSwitch('disable-software-rasterizer', 'false'); // Enable software rasterizer
+app.commandLine.appendSwitch('in-process-gpu'); // CRITICAL: Run GPU in process to prevent DRM access
+app.commandLine.appendSwitch('ignore-gpu-blocklist'); // Ignore GPU blocklist
 console.log('GPU features: DISABLED');
+console.log('GPU mode: IN-PROCESS (prevents DRM/GBM access)');
 
 // CRITICAL: Completely disable OpenGL to prevent ANY DRM/GBM access
 // This is more aggressive than swiftshader and prevents all GL initialization
