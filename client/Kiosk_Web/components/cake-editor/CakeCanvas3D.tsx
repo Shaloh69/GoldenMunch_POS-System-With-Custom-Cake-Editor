@@ -79,11 +79,11 @@ const CakeCanvas3D = forwardRef<any, CakeCanvas3DProps>(({ design }, ref) => {
 
         {/* Controls */}
         <OrbitControls
-          enablePan={false}
+          
           enableZoom={true}
           minDistance={3}
           maxDistance={8}
-          maxPolarAngle={Math.PI / 2}
+          maxPolarAngle={Math.PI}
         />
 
         {/* Screenshot Helper */}

@@ -42,7 +42,7 @@ export default function CustomCakePage() {
   // Poll for QR scan success using useEffect
   useEffect(() => {
     // Only poll when we have a session and are on the QR step
-    if (!qrSession?.sessionId || step !== 'qr') {
+    if (!qrSession?.sessionToken || step !== 'qr') {
       // Clear any existing polling interval
       if (pollIntervalRef.current) {
         clearInterval(pollIntervalRef.current);
@@ -54,7 +54,7 @@ export default function CustomCakePage() {
     // Start polling
     pollIntervalRef.current = setInterval(async () => {
       try {
-        const status = await CustomCakeService.pollSessionStatus(qrSession.sessionId);
+        const status = await CustomCakeService.pollSessionStatus(qrSession.sessionToken);
 
         if (status.status === 'completed') {
           // Clear the polling interval
@@ -82,7 +82,7 @@ export default function CustomCakePage() {
         pollIntervalRef.current = null;
       }
     };
-  }, [qrSession?.sessionId, step, router]);
+  }, [qrSession?.sessionToken, step, router]);
 
   // Countdown timer
   useEffect(() => {

@@ -309,11 +309,11 @@ export default function CustomizeCakePage() {
               onChange={(e) => setFrostingType(e.target.value)}
               size="lg"
             >
-              <SelectItem key="buttercream" value="buttercream">Buttercream</SelectItem>
-              <SelectItem key="fondant" value="fondant">Fondant</SelectItem>
-              <SelectItem key="whipped_cream" value="whipped_cream">Whipped Cream</SelectItem>
-              <SelectItem key="ganache" value="ganache">Ganache</SelectItem>
-              <SelectItem key="cream_cheese" value="cream_cheese">Cream Cheese</SelectItem>
+              <SelectItem key="buttercream">Buttercream</SelectItem>
+              <SelectItem key="fondant">Fondant</SelectItem>
+              <SelectItem key="whipped_cream">Whipped Cream</SelectItem>
+              <SelectItem key="ganache">Ganache</SelectItem>
+              <SelectItem key="cream_cheese">Cream Cheese</SelectItem>
             </Select>
           </CardBody>
         </Card>
@@ -356,10 +356,10 @@ export default function CustomizeCakePage() {
               onChange={(e) => setDesignComplexity(e.target.value)}
               size="lg"
             >
-              <SelectItem key="simple" value="simple">Simple</SelectItem>
-              <SelectItem key="moderate" value="moderate">Moderate</SelectItem>
-              <SelectItem key="complex" value="complex">Complex</SelectItem>
-              <SelectItem key="intricate" value="intricate">Intricate</SelectItem>
+              <SelectItem key="simple">Simple</SelectItem>
+              <SelectItem key="moderate">Moderate</SelectItem>
+              <SelectItem key="complex">Complex</SelectItem>
+              <SelectItem key="intricate">Intricate</SelectItem>
             </Select>
           </CardBody>
         </Card>

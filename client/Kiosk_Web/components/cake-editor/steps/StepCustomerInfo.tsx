@@ -55,12 +55,12 @@ export default function StepCustomerInfo({ design, updateDesign }: StepCustomerI
           onChange={(e) => updateDesign({ event_type: e.target.value })}
           variant="bordered"
         >
-          <SelectItem key="birthday" value="birthday">Birthday</SelectItem>
-          <SelectItem key="wedding" value="wedding">Wedding</SelectItem>
-          <SelectItem key="anniversary" value="anniversary">Anniversary</SelectItem>
-          <SelectItem key="graduation" value="graduation">Graduation</SelectItem>
-          <SelectItem key="baby_shower" value="baby_shower">Baby Shower</SelectItem>
-          <SelectItem key="other" value="other">Other</SelectItem>
+          <SelectItem key="birthday">Birthday</SelectItem>
+          <SelectItem key="wedding">Wedding</SelectItem>
+          <SelectItem key="anniversary">Anniversary</SelectItem>
+          <SelectItem key="graduation">Graduation</SelectItem>
+          <SelectItem key="baby_shower">Baby Shower</SelectItem>
+          <SelectItem key="other">Other</SelectItem>
         </Select>
 
         <Input

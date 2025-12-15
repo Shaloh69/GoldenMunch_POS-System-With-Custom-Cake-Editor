@@ -83,11 +83,11 @@ export default function StepText({ design, updateDesign }: StepTextProps) {
             onChange={(e) => updateDesign({ text_font: e.target.value })}
             variant="bordered"
           >
-            <SelectItem key="script" value="script">Script (Elegant)</SelectItem>
-            <SelectItem key="bold" value="bold">Bold</SelectItem>
-            <SelectItem key="elegant" value="elegant">Elegant</SelectItem>
-            <SelectItem key="playful" value="playful">Playful</SelectItem>
-            <SelectItem key="modern" value="modern">Modern</SelectItem>
+            <SelectItem key="script">Script (Elegant)</SelectItem>
+            <SelectItem key="bold">Bold</SelectItem>
+            <SelectItem key="elegant">Elegant</SelectItem>
+            <SelectItem key="playful">Playful</SelectItem>
+            <SelectItem key="modern">Modern</SelectItem>
           </Select>
 
           {/* Text Position */}
@@ -97,9 +97,9 @@ export default function StepText({ design, updateDesign }: StepTextProps) {
             onChange={(e) => updateDesign({ text_position: e.target.value })}
             variant="bordered"
           >
-            <SelectItem key="top" value="top">Top of Cake</SelectItem>
-            <SelectItem key="center" value="center">Center</SelectItem>
-            <SelectItem key="bottom" value="bottom">Bottom</SelectItem>
+            <SelectItem key="top">Top of Cake</SelectItem>
+            <SelectItem key="center">Center</SelectItem>
+            <SelectItem key="bottom">Bottom</SelectItem>
           </Select>
         </>
       )}

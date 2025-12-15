@@ -16,7 +16,7 @@ import { OrderService } from '@/services/order.service';
 import { printerService } from '@/services/printer.service';
 import { SettingsService } from '@/services/settings.service';
 import { getImageUrl } from '@/utils/imageUtils';
-import type {
+import {
   OrderType,
   OrderSource,
   PaymentMethod,
@@ -41,8 +41,8 @@ export default function CartPage() {
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [specialInstructions, setSpecialInstructions] = useState("");
-  const [orderType, setOrderType] = useState<OrderType>('takeout');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
+  const [orderType, setOrderType] = useState<OrderType>(OrderType.TAKEOUT);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(PaymentMethod.CASH);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [completedOrder, setCompletedOrder] = useState<CustomerOrder | null>(null);
@@ -122,7 +122,7 @@ export default function CartPage() {
 
       const orderData: CreateOrderRequest = {
         order_type: orderType,
-        order_source: 'kiosk',
+        order_source: OrderSource.KIOSK,
         payment_method: paymentMethod,
         special_instructions: specialInstructions || undefined,
         items: getOrderItems(),
@@ -180,8 +180,8 @@ export default function CartPage() {
     setCustomerName("");
     setCustomerPhone("");
     setSpecialInstructions("");
-    setOrderType('takeout');
-    setPaymentMethod('cash');
+    setOrderType(OrderType.TAKEOUT);
+    setPaymentMethod(PaymentMethod.CASH);
     setReferenceNumber("");
     setCompletedOrder(null);
     onOpenChange();
@@ -265,7 +265,7 @@ export default function CartPage() {
                       <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-sunny-yellow/30 to-deep-orange-yellow/30 flex items-center justify-center flex-shrink-0 shadow-inner overflow-hidden">
                         {getImageUrl(item.menuItem.image_url) && !failedImages.has(item.menuItem.image_url) ? (
                           <Image
-                            src={getImageUrl(item.menuItem.image_url) || ''}
+                            src={getImageUrl(item.menuItem.image_url) ?? ''}
                             alt={item.menuItem.name}
                             width={96}
                             height={96}
@@ -420,13 +420,13 @@ export default function CartPage() {
                     }
                   }}
                 >
-                  <SelectItem key="dine_in" value="dine_in" textValue="Dine In">
+                  <SelectItem key="dine_in" textValue="Dine In">
                     <span className="text-black font-semibold">🍽️ Dine In</span>
                   </SelectItem>
-                  <SelectItem key="takeout" value="takeout" textValue="Takeout">
+                  <SelectItem key="takeout" textValue="Takeout">
                     <span className="text-black font-semibold">🚗 Takeout</span>
                   </SelectItem>
-                  <SelectItem key="delivery" value="delivery" textValue="Delivery">
+                  <SelectItem key="delivery" textValue="Delivery">
                     <span className="text-black font-semibold">🚚 Delivery</span>
                   </SelectItem>
                 </Select>
@@ -454,13 +454,13 @@ export default function CartPage() {
                     }
                   }}
                 >
-                  <SelectItem key="cash" value="cash" textValue="Cash Payment">
+                  <SelectItem key="cash" textValue="Cash Payment">
                     <span className="text-black font-semibold">💵 Cash Payment</span>
                   </SelectItem>
-                  <SelectItem key="gcash" value="gcash" textValue="GCash Payment">
+                  <SelectItem key="gcash" textValue="GCash Payment">
                     <span className="text-black font-semibold">📱 GCash Payment</span>
                   </SelectItem>
-                  <SelectItem key="paymaya" value="paymaya" textValue="PayMaya Payment">
+                  <SelectItem key="paymaya" textValue="PayMaya Payment">
                     <span className="text-black font-semibold">💳 PayMaya Payment</span>
                   </SelectItem>
                 </Select>

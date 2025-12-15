@@ -108,10 +108,10 @@ export default function StepFrosting({ design, updateDesign }: StepFrostingProps
             onChange={(e) => updateDesign({ candle_type: e.target.value })}
             variant="bordered"
           >
-            <SelectItem key="regular" value="regular">Regular</SelectItem>
-            <SelectItem key="number" value="number">Number</SelectItem>
-            <SelectItem key="sparkler" value="sparkler">Sparkler</SelectItem>
-            <SelectItem key="none" value="none">None</SelectItem>
+            <SelectItem key="regular">Regular</SelectItem>
+            <SelectItem key="number">Number</SelectItem>
+            <SelectItem key="sparkler">Sparkler</SelectItem>
+            <SelectItem key="none">None</SelectItem>
           </Select>
         </div>
       </div>
