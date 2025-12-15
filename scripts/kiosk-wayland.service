@@ -10,8 +10,14 @@ Type=simple
 Environment="NODE_ENV=development"
 Environment="ELECTRON_DISABLE_SECURITY_WARNINGS=true"
 
+# CRITICAL: Force X11 and software rendering to prevent DRM/GBM errors
+Environment="ELECTRON_OZONE_PLATFORM_HINT=x11"
+Environment="LIBGL_ALWAYS_SOFTWARE=1"
+Environment="GALLIUM_DRIVER=llvmpipe"
+Environment="DISPLAY=:0"
+
 # Ensure Wayland/X11 display access
-PassEnvironment=DISPLAY WAYLAND_DISPLAY XDG_RUNTIME_DIR XDG_SESSION_TYPE DESKTOP_SESSION
+PassEnvironment=WAYLAND_DISPLAY XDG_RUNTIME_DIR XDG_SESSION_TYPE DESKTOP_SESSION
 
 # Wait for display to be ready before starting
 ExecStartPre=/bin/sleep 5

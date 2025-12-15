@@ -34,29 +34,21 @@ app.commandLine.appendSwitch('disable-webgl2');
 console.log('OpenGL/WebGL: COMPLETELY DISABLED');
 
 // Disable ALL features that require GPU/DRM access
+// CRITICAL: Combine all disabled features in ONE call to prevent overwriting
 app.commandLine.appendSwitch('disable-features',
-  'VizDisplayCompositor,UseChromeOSDirectVideoDecoder,UseSkiaRenderer,Vulkan');
+  'VizDisplayCompositor,UseChromeOSDirectVideoDecoder,UseSkiaRenderer,Vulkan,SharedArrayBuffer,GpuProcessHighPriorityWin,GpuMemoryBuffer');
 app.commandLine.appendSwitch('disable-dev-shm-usage'); // Prevent shared memory issues
 app.commandLine.appendSwitch('disable-accelerated-2d-canvas'); // Force software canvas
 app.commandLine.appendSwitch('disable-accelerated-video-decode'); // No hardware video
 app.commandLine.appendSwitch('disable-accelerated-mjpeg-decode'); // No hardware MJPEG
 console.log('Display compositor and hardware features: DISABLED');
-
-// Disable shared memory and DMA-BUF usage
-app.commandLine.appendSwitch('disable-dev-shm-usage');
-app.commandLine.appendSwitch('disable-features', 'SharedArrayBuffer');
 console.log('Shared memory and DMA-BUF: DISABLED');
 
-// For Wayland: Use X11 backend through XWayland to avoid native Wayland DRM issues
-// This provides better compatibility with limited GPU access
-if (process.env.WAYLAND_DISPLAY && !process.env.DISPLAY) {
-  // If only Wayland is available, try to use it with minimal features
-  app.commandLine.appendSwitch('ozone-platform', 'wayland');
-  console.log('Display: Using Wayland with minimal features');
-} else {
-  // Prefer X11/XWayland if available
-  console.log('Display: Using X11/XWayland backend');
-}
+// CRITICAL: Always use X11/XWayland backend to completely avoid native Wayland DRM access
+// Native Wayland requires DRM/GBM which causes errors on Raspberry Pi
+// XWayland provides compatibility without requiring direct DRM access
+app.commandLine.appendSwitch('ozone-platform', 'x11');
+console.log('Display: Forcing X11/XWayland backend (prevents DRM/GBM errors)');
 
 console.log('=== END GRAPHICS CONFIGURATION ===');
 

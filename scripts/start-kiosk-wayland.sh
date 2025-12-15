@@ -24,12 +24,25 @@ while [ -z "$WAYLAND_DISPLAY" ] && [ -z "$XDG_RUNTIME_DIR" ]; do
 done
 echo "✓ Session is ready"
 
-# Check environment
-echo "Display: $WAYLAND_DISPLAY"
-echo "XDG Runtime: $XDG_RUNTIME_DIR"
-echo "Desktop Session: $DESKTOP_SESSION"
-echo "User: $USER"
-echo "Home: $HOME"
+# CRITICAL: Set environment variables to prevent DRM/GBM errors
+# Force X11 usage even in Wayland sessions
+export ELECTRON_OZONE_PLATFORM_HINT=x11
+export DISPLAY="${DISPLAY:-:0}"  # Ensure DISPLAY is set for XWayland
+
+# Disable hardware acceleration at environment level
+export LIBGL_ALWAYS_SOFTWARE=1
+export GALLIUM_DRIVER=llvmpipe
+
+echo "Environment Configuration:"
+echo "  DISPLAY: $DISPLAY"
+echo "  WAYLAND_DISPLAY: $WAYLAND_DISPLAY"
+echo "  ELECTRON_OZONE_PLATFORM_HINT: $ELECTRON_OZONE_PLATFORM_HINT"
+echo "  LIBGL_ALWAYS_SOFTWARE: $LIBGL_ALWAYS_SOFTWARE"
+echo "  GALLIUM_DRIVER: $GALLIUM_DRIVER"
+echo "  XDG Runtime: $XDG_RUNTIME_DIR"
+echo "  Desktop Session: $DESKTOP_SESSION"
+echo "  User: $USER"
+echo "  Home: $HOME"
 
 # Detect script location and navigate to Kiosk directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
