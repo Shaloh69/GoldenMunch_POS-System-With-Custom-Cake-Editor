@@ -26,28 +26,37 @@ app.commandLine.appendSwitch('disable-gpu-sandbox');
 app.commandLine.appendSwitch('disable-software-rasterizer', 'false'); // Enable software rasterizer
 console.log('GPU features: DISABLED');
 
-// CRITICAL: Force SwiftShader software renderer to completely avoid DRM/GBM
-// This prevents "Failed to get fd for plane" and "Failed to export buffer to dma_buf" errors
-app.commandLine.appendSwitch('use-gl', 'swiftshader');
-app.commandLine.appendSwitch('enable-unsafe-swiftshader');
-console.log('OpenGL: Using SwiftShader (pure software rendering)');
+// CRITICAL: Completely disable OpenGL to prevent ANY DRM/GBM access
+// This is more aggressive than swiftshader and prevents all GL initialization
+app.commandLine.appendSwitch('use-gl', 'disabled');
+app.commandLine.appendSwitch('disable-webgl');
+app.commandLine.appendSwitch('disable-webgl2');
+console.log('OpenGL/WebGL: COMPLETELY DISABLED');
 
 // Disable ALL features that require GPU/DRM access
 app.commandLine.appendSwitch('disable-features',
-  'VizDisplayCompositor,UseChromeOSDirectVideoDecoder,UseSkiaRenderer');
+  'VizDisplayCompositor,UseChromeOSDirectVideoDecoder,UseSkiaRenderer,Vulkan');
 app.commandLine.appendSwitch('disable-dev-shm-usage'); // Prevent shared memory issues
 app.commandLine.appendSwitch('disable-accelerated-2d-canvas'); // Force software canvas
 app.commandLine.appendSwitch('disable-accelerated-video-decode'); // No hardware video
+app.commandLine.appendSwitch('disable-accelerated-mjpeg-decode'); // No hardware MJPEG
 console.log('Display compositor and hardware features: DISABLED');
 
-// Force CPU-based rendering for all operations
-app.commandLine.appendSwitch('enable-features', 'CanvasOopRasterization');
-console.log('CPU rendering: ENABLED');
+// Disable shared memory and DMA-BUF usage
+app.commandLine.appendSwitch('disable-dev-shm-usage');
+app.commandLine.appendSwitch('disable-features', 'SharedArrayBuffer');
+console.log('Shared memory and DMA-BUF: DISABLED');
 
-// Prevent any Wayland-specific GPU access attempts
-app.commandLine.appendSwitch('ozone-platform', 'wayland');
-app.commandLine.appendSwitch('enable-features', 'UseOzonePlatform');
-console.log('Wayland platform: Enabled with software rendering');
+// For Wayland: Use X11 backend through XWayland to avoid native Wayland DRM issues
+// This provides better compatibility with limited GPU access
+if (process.env.WAYLAND_DISPLAY && !process.env.DISPLAY) {
+  // If only Wayland is available, try to use it with minimal features
+  app.commandLine.appendSwitch('ozone-platform', 'wayland');
+  console.log('Display: Using Wayland with minimal features');
+} else {
+  // Prefer X11/XWayland if available
+  console.log('Display: Using X11/XWayland backend');
+}
 
 console.log('=== END GRAPHICS CONFIGURATION ===');
 

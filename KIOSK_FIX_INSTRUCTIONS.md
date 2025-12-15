@@ -4,11 +4,32 @@ This document provides step-by-step instructions to fix the kiosk issues identif
 
 ---
 
+## ⚠️ CRITICAL: Install Dependencies First!
+
+**The #1 issue** causing your errors is **missing node_modules**. You MUST install dependencies before anything else will work.
+
+---
+
 ## Quick Fix (Get it Running Now)
 
 Follow these steps in order on your Raspberry Pi:
 
-### Step 1: Install Dependencies
+### Step 1: Install Dependencies (CRITICAL!)
+
+**Option A: Use the Emergency Fix Script** (Recommended)
+
+```bash
+cd ~/GoldenMunch_POS-System-With-Custom-Cake-Editor
+bash scripts/emergency-fix-kiosk.sh
+```
+
+This script will:
+- Clean any old installations
+- Clear npm cache
+- Install all dependencies with extended timeouts
+- Verify critical packages are installed
+
+**Option B: Manual Installation**
 
 ```bash
 cd ~/GoldenMunch_POS-System-With-Custom-Cake-Editor/client/Kiosk
