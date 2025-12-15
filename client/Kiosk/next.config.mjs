@@ -4,12 +4,27 @@ const nextConfig = {
   // Development mode needs dynamic rendering
   ...(process.env.NODE_ENV === 'production' && { output: 'export' }),
   reactStrictMode: true,
-  transpilePackages: ['three', '@react-three/fiber', '@react-three/drei'],
+  // CRITICAL: Transpile HeroUI packages to fix RSC module errors
+  transpilePackages: [
+    'three',
+    '@react-three/fiber',
+    '@react-three/drei',
+    '@heroui/theme',
+    '@heroui/system',
+    '@heroui/system-rsc',
+    '@heroui/react-rsc-utils',
+  ],
   images: {
     unoptimized: true, // Required for static export
   },
   webpack: (config) => {
     config.externals = [...(config.externals || []), { canvas: 'canvas' }];
+    // Fix for HeroUI RSC modules
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@heroui/system-rsc': '@heroui/system',
+      '@heroui/react-rsc-utils': '@heroui/react-utils',
+    };
     return config;
   },
   // Use .next for dev, out for production
