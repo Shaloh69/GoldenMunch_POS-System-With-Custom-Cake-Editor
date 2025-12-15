@@ -1,0 +1,75 @@
+# Optimized production Dockerfile for Render deployment
+# Fixes: OOM errors, slow startup, HeroUI SSR issues
+# Memory requirement: 1GB instance recommended
+
+# ============================================
+# Stage 1: Dependencies
+# ============================================
+FROM node:20-alpine AS deps
+
+WORKDIR /app
+
+# Install dependencies
+COPY package*.json ./
+RUN npm ci --legacy-peer-deps --ignore-scripts && \
+    npm cache clean --force
+
+# ============================================
+# Stage 2: Builder (with memory optimization)
+# ============================================
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+
+# Set build environment
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
+
+# Increase Node.js memory limit for build (prevent stack overflow)
+ENV NODE_OPTIONS="--max-old-space-size=2048"
+
+# Build Next.js app (standalone output)
+RUN npm run build
+
+# ============================================
+# Stage 3: Production Runner
+# ============================================
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+# Install dumb-init for proper signal handling
+RUN apk add --no-cache dumb-init
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
+
+# Set production environment
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3002
+
+# Copy standalone build output
+COPY --from=builder --chown=nodejs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nodejs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nodejs:nodejs /app/public ./public
+
+# Switch to non-root user
+USER nodejs
+
+# Expose port
+EXPOSE 3002
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3002', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+
+# Use dumb-init
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start production server
+CMD ["node", "server.js"]
