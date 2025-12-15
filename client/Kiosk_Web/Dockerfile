@@ -7,7 +7,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies (with legacy-peer-deps for HeroUI compatibility)
-RUN npm ci --legacy-peer-deps && npm cache clean --force
+# Skip scripts to avoid husky setup in Docker
+RUN npm ci --legacy-peer-deps --ignore-scripts && npm cache clean --force
 
 # Copy source code
 COPY . .
@@ -28,7 +29,7 @@ RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
 
 # Copy package files and install production dependencies
 COPY package*.json ./
-RUN npm ci --legacy-peer-deps --omit=dev && npm cache clean --force
+RUN npm ci --legacy-peer-deps --omit=dev --ignore-scripts && npm cache clean --force
 
 # Copy built application
 COPY --from=builder /app/.next ./.next

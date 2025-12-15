@@ -35,24 +35,38 @@ The HeroUI component library has a circular dependency or infinite recursion iss
 
 ## Workarounds
 
-### Option A: Deploy Development Server (NOT RECOMMENDED)
+### Option A: Use Dockerfile.dev (TEMPORARY WORKAROUND)
 
-Deploy the development server to Render:
+**A ready-to-use workaround Dockerfile is included: `Dockerfile.dev`**
 
-**Dockerfile changes:**
-```dockerfile
-# Change build command
-RUN npm install
+This Dockerfile skips the build step and runs the dev server instead.
 
-# Change start command
-CMD ["npm", "run", "dev"]
+**To use on Render:**
+
+1. In your Render dashboard, go to your service settings
+2. Change the Dockerfile path from `Dockerfile` to `Dockerfile.dev`
+3. Redeploy
+
+**Or update render.yaml:**
+```yaml
+services:
+  - type: web
+    name: goldenmunch-kiosk-web
+    env: docker
+    dockerfilePath: ./client/Kiosk_Web/Dockerfile.dev
+    dockerContext: ./client/Kiosk_Web
 ```
 
+**Pros:**
+- ✅ Works immediately
+- ✅ No code changes needed
+- ✅ Easy to revert
+
 **Cons:**
-- Slower performance
-- No optimizations
-- Higher memory usage
-- Not production-ready
+- ⚠️ Slower performance
+- ⚠️ No optimizations
+- ⚠️ Higher memory usage (512MB+ recommended)
+- ⚠️ Not production-ready long-term
 
 ### Option B: Wait for HeroUI Fix
 
