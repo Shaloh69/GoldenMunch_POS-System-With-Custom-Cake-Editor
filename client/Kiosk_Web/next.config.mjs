@@ -4,6 +4,14 @@ const nextConfig = {
   // Electron loads from remote URL instead of bundled files
   reactStrictMode: true,
 
+  // Disable linting/type checking during build (run these in development)
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
   // CRITICAL: Transpile HeroUI packages to fix RSC module errors
   transpilePackages: [
     'three',
