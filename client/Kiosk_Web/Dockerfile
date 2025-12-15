@@ -33,7 +33,7 @@ RUN npm ci --omit=dev && npm cache clean --force
 # Copy built application
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/next.config.js ./
+COPY --from=builder /app/next.config.mjs ./
 
 # Change ownership
 RUN chown -R nodejs:nodejs /app
@@ -41,12 +41,12 @@ RUN chown -R nodejs:nodejs /app
 # Switch to non-root user
 USER nodejs
 
-# Expose port
-EXPOSE 3000
+# Expose port (can be overridden by PORT env var in Render)
+EXPOSE 3002
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+  CMD node -e "require('http').get('http://localhost:3002', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 # Use dumb-init
 ENTRYPOINT ["dumb-init", "--"]
