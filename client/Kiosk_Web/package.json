@@ -1,29 +1,16 @@
 {
-  "name": "goldenmunch-kiosk",
+  "name": "goldenmunch-kiosk-web",
   "version": "1.0.0",
-  "description": "GoldenMunch POS Kiosk Application",
+  "description": "GoldenMunch POS Kiosk Web Application - Next.js UI",
   "author": "GoldenMunch",
-  "main": "electron/main.js",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3002",
     "build": "next build",
     "start": "next start -p 3002",
     "lint": "eslint --fix",
-    "clean": "rm -rf node_modules package-lock.json",
-    "clean:win": "if exist node_modules rmdir /s /q node_modules && if exist package-lock.json del package-lock.json",
-    "fresh-install": "npm run clean && npm install",
-    "fresh-install:win": "npm run clean:win && npm install",
-    "install:safe": "npm install --fetch-timeout=300000 --fetch-retries=5",
-    "install:electron": "npm install electron --save-dev --fetch-timeout=600000 --fetch-retries=10",
-    "verify": "npm ls --depth=0 && npx electron --version",
-    "troubleshoot": "echo 'See NPM_TROUBLESHOOTING.md for detailed help' && npm cache verify",
-    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3002 && electron .\"",
-    "electron:dev:remote": "electron .",
-    "electron:build": "electron-builder",
-    "electron:build:win": "electron-builder --win",
-    "electron:build:mac": "electron-builder --mac",
-    "electron:build:linux": "electron-builder --linux"
+    "clean": "rm -rf node_modules package-lock.json .next",
+    "clean:win": "if exist node_modules rmdir /s /q node_modules && if exist package-lock.json del package-lock.json && if exist .next rmdir /s /q .next"
   },
   "engines": {
     "node": ">=18.17.0",
@@ -77,10 +64,6 @@
     "@react-three/fiber": "^8.17.10",
     "axios": "^1.6.0",
     "clsx": "2.1.1",
-    "escpos": "^3.0.0-alpha.6",
-    "escpos-network": "^3.0.0-alpha.5",
-    "escpos-serialport": "^3.0.0-alpha.4",
-    "escpos-usb": "^3.0.0-alpha.4",
     "framer-motion": "11.18.2",
     "intl-messageformat": "10.7.16",
     "lucide-react": "^0.555.0",
@@ -89,9 +72,7 @@
     "qrcode.react": "^4.2.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "serialport": "^12.0.0",
-    "three": "^0.169.0",
-    "usb": "^2.14.0"
+    "three": "^0.169.0"
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "15.3.4",
@@ -102,10 +83,6 @@
     "@types/react-dom": "18.3.0",
     "@typescript-eslint/eslint-plugin": "8.34.1",
     "@typescript-eslint/parser": "8.34.1",
-    "concurrently": "^9.1.2",
-    "electron": "^34.0.0",
-    "electron-builder": "^25.1.8",
-    "electron-devtools-installer": "^3.2.0",
     "eslint": "9.25.1",
     "eslint-config-next": "15.3.4",
     "eslint-config-prettier": "9.1.0",
@@ -121,8 +98,7 @@
     "prettier": "3.5.3",
     "tailwind-variants": "3.1.1",
     "tailwindcss": "4.1.11",
-    "typescript": "5.6.3",
-    "wait-on": "^8.0.1"
+    "typescript": "5.6.3"
   },
   "overrides": {
     "glob": "^11.0.0",

@@ -1,0 +1,74 @@
+{
+  "name": "goldenmunch-kiosk-electron",
+  "version": "1.0.0",
+  "description": "GoldenMunch POS Kiosk Electron Client - Loads remote Next.js app",
+  "author": "GoldenMunch",
+  "main": "electron/main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dev": "NODE_ENV=development electron .",
+    "build": "electron-builder",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "build:rpi": "electron-builder --linux --armv7l",
+    "clean": "rm -rf node_modules package-lock.json dist",
+    "clean:win": "if exist node_modules rmdir /s /q node_modules && if exist package-lock.json del package-lock.json && if exist dist rmdir /s /q dist"
+  },
+  "engines": {
+    "node": ">=18.17.0",
+    "npm": ">=9.0.0"
+  },
+  "dependencies": {
+    "escpos": "^3.0.0-alpha.6",
+    "escpos-network": "^3.0.0-alpha.5",
+    "escpos-serialport": "^3.0.0-alpha.4",
+    "escpos-usb": "^3.0.0-alpha.4",
+    "serialport": "^12.0.0",
+    "usb": "^2.14.0"
+  },
+  "devDependencies": {
+    "electron": "^34.0.0",
+    "electron-builder": "^25.1.8",
+    "electron-devtools-installer": "^3.2.0"
+  },
+  "build": {
+    "appId": "com.goldenmunch.kiosk",
+    "productName": "GoldenMunch Kiosk",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "electron/printer-config.json",
+        "to": "printer-config.json"
+      }
+    ],
+    "linux": {
+      "target": [
+        "deb",
+        "AppImage"
+      ],
+      "category": "Office",
+      "icon": "electron/icon.png"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "electron/icon.ico"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.business",
+      "icon": "electron/icon.icns"
+    }
+  }
+}
