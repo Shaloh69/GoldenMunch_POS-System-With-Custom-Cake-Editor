@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@heroui/system": "^2.4.24",
+    "@heroui/theme": "^2.4.24"
+  }
+}

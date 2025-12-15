@@ -42,6 +42,9 @@ const nextConfig = {
   // Standard .next directory for all builds
   distDir: '.next',
 
+  // Disable all static optimization to avoid HeroUI SSR issues
+  output: 'standalone',
+
   // Experimental: Skip static page generation to avoid build errors
   experimental: {
     workerThreads: false,
