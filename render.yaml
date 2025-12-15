@@ -1,0 +1,82 @@
+# Render Blueprint for GoldenMunch POS System
+# This file configures all services for automatic deployment
+
+services:
+  # Kiosk Web Application (Customer-facing UI)
+  - type: web
+    name: goldenmunch-kiosk-web
+    runtime: docker
+    region: oregon  # Change to your preferred region
+    plan: starter   # 1GB RAM ($7/month) - Free tier (512MB) may cause OOM
+    branch: main    # Deploy from main branch
+    rootDir: client/Kiosk_Web
+    dockerfilePath: ./Dockerfile.production
+    dockerContext: ./
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3002
+      - key: NEXT_TELEMETRY_DISABLED
+        value: 1
+      - key: NEXT_PUBLIC_API_URL
+        sync: false  # Set manually in Render dashboard
+    healthCheckPath: /
+    autoDeploy: true
+
+  # Backend API Server
+  - type: web
+    name: goldenmunch-api-server
+    runtime: docker
+    region: oregon
+    plan: starter
+    branch: main
+    rootDir: server
+    dockerfilePath: ./Dockerfile
+    dockerContext: ./
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DB_HOST
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_JWT_SECRET
+        generateValue: true
+      - key: CASHIER_JWT_SECRET
+        generateValue: true
+    healthCheckPath: /api/health
+    autoDeploy: true
+
+  # Admin Dashboard
+  - type: web
+    name: goldenmunch-admin-dashboard
+    runtime: docker
+    region: oregon
+    plan: starter
+    branch: main
+    rootDir: client/Admin_Dashboard
+    dockerfilePath: ./Dockerfile
+    dockerContext: ./
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3003
+      - key: NEXT_TELEMETRY_DISABLED
+        value: 1
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
+    healthCheckPath: /
+    autoDeploy: true
+
+# Database (MySQL) - Note: Use Render's managed database or external provider
+# Render doesn't support databases in render.yaml, must create manually in dashboard
