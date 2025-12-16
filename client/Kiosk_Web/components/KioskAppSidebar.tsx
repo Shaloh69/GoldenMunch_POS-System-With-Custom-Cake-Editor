@@ -26,8 +26,11 @@ export function KioskAppSidebar({
 
   // Don't show sidebar on idle, cart, and custom-cake pages
   if (pathname === "/idle" || pathname === "/cart" || pathname === "/custom-cake") {
+    console.log('KioskAppSidebar: Hidden on path', pathname);
     return null;
   }
+
+  console.log('KioskAppSidebar: Rendering on path', pathname, { selectedItem: selectedItem?.name, itemCount });
 
   const handleAddToCart = () => {
     if (selectedItem) {
@@ -56,7 +59,14 @@ export function KioskAppSidebar({
       (selectedItem?.stock_quantity ?? 0) > 0);
 
   return (
-    <div className="fixed right-0 top-0 bottom-0 w-[35vw] max-w-[500px] z-[9999] flex flex-col backdrop-blur-3xl bg-white/85 border-l-2 border-primary/20 shadow-[-20px_0_60px_rgba(251,205,47,0.2)]">
+    <div
+      className="fixed right-0 top-0 bottom-0 w-[35vw] max-w-[500px] z-[9999] flex flex-col backdrop-blur-3xl bg-white/85 border-l-2 border-primary/20 shadow-[-20px_0_60px_rgba(251,205,47,0.2)]"
+      style={{
+        backgroundColor: 'rgba(255, 255, 255, 0.85)',
+        backdropFilter: 'blur(48px)',
+        WebkitBackdropFilter: 'blur(48px)'
+      }}
+    >
       {/* Item Detail Section */}
       <div
         className={`flex-1 overflow-y-auto scrollbar-hide transition-all duration-500 p-0 ${selectedItem ? "opacity-100" : "opacity-0 pointer-events-none"}`}
