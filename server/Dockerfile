@@ -46,9 +46,8 @@ RUN mkdir -p uploads && chown -R nodejs:nodejs uploads
 # Switch to non-root user
 USER nodejs
 
-# Expose port (Render will assign dynamic PORT via env variable)
-EXPOSE 5000
-ENV PORT=5000
+# Expose port (Render will set PORT via environment variable)
+EXPOSE 10000
 
 # Health check - uses PORT environment variable for compatibility with Render
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
