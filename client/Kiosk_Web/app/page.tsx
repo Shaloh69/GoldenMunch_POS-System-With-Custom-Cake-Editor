@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -97,15 +96,19 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="h-[1920px] flex items-center justify-center">
-        <div className="text-center">
-          <Spinner
-            size="xl"
-            color="primary"
-            className="w-32 h-32"
-          />
-          <p className="text-4xl font-bold text-foreground mt-8">
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center animate-fade-in-up">
+          <div className="relative">
+            <Spinner size="xl" color="primary" className="w-32 h-32" />
+            <div className="absolute inset-0 animate-spin-slow">
+              <div className="text-6xl">🍰</div>
+            </div>
+          </div>
+          <p className="text-4xl font-bold text-foreground mt-8 animate-pulse-gentle">
             Loading Menu...
+          </p>
+          <p className="text-xl text-muted-foreground mt-2">
+            Preparing something delicious
           </p>
         </div>
       </div>
@@ -114,69 +117,72 @@ export default function HomePage() {
 
   if (error) {
     return (
-      <div className="h-[1920px] flex items-center justify-center p-6">
-        <Card className="max-w-2xl bg-card/20 backdrop-blur-lg border-2 border-primary/40">
-          <CardBody className="text-center p-12">
-            <div className="text-9xl mb-8">⚠️</div>
+      <div className="min-h-screen flex items-center justify-center p-8 animate-fade-in">
+        <div className="glass-card max-w-2xl p-12 animate-shake">
+          <div className="text-center">
+            <div className="text-9xl mb-8 animate-bounce-in">⚠️</div>
             <h1 className="text-5xl font-bold text-foreground mb-6">
               Oops! Something went wrong
             </h1>
-            <p className="text-2xl text-foreground/70 mb-10">{error}</p>
+            <p className="text-2xl text-muted-foreground mb-10">{error}</p>
             <Button
               size="lg"
-              className="bg-gradient-to-r from-primary to-secondary text-foreground font-bold text-2xl px-12 py-8 shadow-lg hover:shadow-xl transition-all"
+              className="btn-gradient text-2xl px-12 py-8 shadow-lg hover:shadow-xl transition-all touch-target"
               onClick={() => window.location.reload()}
             >
               Try Again
             </Button>
-          </CardBody>
-        </Card>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <>
-      <div className="min-h-screen overflow-y-auto pr-[35vw] max-pr-[500px] flex flex-col pt-20">
-        {/* Hero Header - Optimized for portrait */}
-        <div className="bg-gradient-to-br from-primary/30 via-card/90 to-secondary/30 backdrop-blur-sm border-b-4 border-primary py-8 px-8 mb-8 shadow-lg">
-          <div className="max-w-full mx-auto text-center">
-            <div className="text-8xl mb-4 animate-float drop-shadow-xl">🍰</div>
-            <h1 className="text-7xl font-black text-foreground drop-shadow-lg mb-3">
-              Golden Munch
-            </h1>
-            <p className="text-2xl text-foreground font-bold drop-shadow-sm">
-              Fresh • Delicious • Made with Love
-            </p>
+      <div className="min-h-screen overflow-y-auto pr-[35vw] max-pr-[500px] flex flex-col">
+        {/* Modern Hero Header */}
+        <header className="relative glass-header sticky top-0 z-20 animate-fade-in-down">
+          <div className="max-w-full mx-auto py-10 px-8">
+            <div className="text-center">
+              <div className="text-8xl mb-4 animate-bounce-in">🍰</div>
+              <h1 className="text-7xl font-black text-gradient drop-shadow-lg mb-3">
+                Golden Munch
+              </h1>
+              <p className="text-2xl font-semibold text-foreground/80">
+                Fresh • Delicious • Made with Love
+              </p>
+            </div>
           </div>
-        </div>
+        </header>
 
-        <div className="max-w-full mx-auto px-8">
-          {/* Categories - Touch optimized */}
+        <div className="flex-1 px-8 py-6">
+          {/* Modern Categories - Scrollable horizontal on mobile */}
           {categories.length > 0 && (
-            <div className="mb-8">
-              <div className="flex gap-5 justify-center flex-wrap">
+            <div className="mb-8 animate-fade-in-up animation-delay-200">
+              <div className="flex gap-4 justify-center flex-wrap">
                 <Button
                   size="lg"
+                  onClick={() => setSelectedCategory(null)}
                   className={`${
                     selectedCategory === null
-                      ? "bg-gradient-to-br from-primary to-secondary text-foreground scale-105 shadow-xl shadow-primary/50"
-                      : "bg-gradient-to-br from-card/90 to-primary/20 backdrop-blur-sm border-2 border-primary/50 text-foreground hover:border-primary hover:shadow-lg"
-                  } font-bold text-2xl px-12 py-8 rounded-2xl transition-all touch-target-lg`}
-                  onClick={() => setSelectedCategory(null)}
+                      ? "btn-gradient scale-105"
+                      : "glass-button"
+                  } font-bold text-xl px-10 py-7 rounded-2xl transition-all duration-300 touch-target`}
                 >
                   All Items
                 </Button>
-                {categories.map((category) => (
+                {categories.map((category, index) => (
                   <Button
                     key={category.category_id}
                     size="lg"
+                    onClick={() => setSelectedCategory(category.category_id)}
                     className={`${
                       selectedCategory === category.category_id
-                        ? "bg-gradient-to-br from-primary to-secondary text-foreground scale-105 shadow-xl shadow-primary/50"
-                        : "bg-gradient-to-br from-card/90 to-primary/20 backdrop-blur-sm border-2 border-primary/50 text-foreground hover:border-primary hover:shadow-lg"
-                    } font-bold text-2xl px-12 py-8 rounded-2xl transition-all touch-target-lg`}
-                    onClick={() => setSelectedCategory(category.category_id)}
+                        ? "btn-gradient scale-105"
+                        : "glass-button"
+                    } font-bold text-xl px-10 py-7 rounded-2xl transition-all duration-300 touch-target animate-fade-in`}
+                    style={{ animationDelay: `${index * 0.1 + 0.3}s` }}
                   >
                     {category.name}
                   </Button>
@@ -185,69 +191,75 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Menu Items Grid */}
+          {/* Menu Items Grid or Empty State */}
           {filteredItems.length === 0 ? (
-            <Card className="bg-gradient-to-br from-card/90 via-primary/25 to-secondary/30 backdrop-blur-lg border-2 border-primary shadow-xl">
-              <CardBody className="text-center py-24">
-                <div className="text-[120px] mb-8 animate-float drop-shadow-xl">
+            <div className="animate-fade-in-up">
+              <div className="glass-card p-16 text-center">
+                <div className="text-[120px] mb-8 animate-float-smooth">
                   🍽️
                 </div>
-                <h3 className="text-5xl font-bold text-foreground mb-6 drop-shadow-lg">
+                <h3 className="text-5xl font-bold text-foreground mb-6">
                   No items found
                 </h3>
-                <p className="text-2xl text-foreground/70 mb-10">
+                <p className="text-2xl text-muted-foreground mb-10">
                   No items in this category
                 </p>
                 {selectedCategory !== null && (
                   <Button
                     size="lg"
-                    className="bg-gradient-to-r from-primary to-secondary text-foreground font-bold px-12 py-8 text-2xl touch-target shadow-xl hover:scale-105 transition-all"
+                    className="btn-gradient text-2xl px-12 py-8 shadow-xl hover:scale-105 transition-all touch-target"
                     onClick={() => setSelectedCategory(null)}
                   >
                     Clear Filter
                   </Button>
                 )}
-              </CardBody>
-            </Card>
+              </div>
+            </div>
           ) : (
             <>
-              <div className="text-center mb-8">
-                <h2 className="text-4xl font-bold text-foreground drop-shadow-sm">
+              {/* Item Count with animation */}
+              <div className="text-center mb-6 animate-fade-in-up animation-delay-500">
+                <h2 className="text-4xl font-bold text-foreground">
                   {filteredItems.length} Delicious{" "}
                   {filteredItems.length === 1 ? "Item" : "Items"}
                 </h2>
               </div>
 
-              {/* 2 Column Grid - Portrait 21-inch optimized */}
-              <div className="grid grid-cols-2 gap-8 pb-8 flex-1">
-                {filteredItems.map((item) => (
-                  <MenuCard
+              {/* 2 Column Grid - Portrait optimized with stagger animation */}
+              <div className="grid grid-cols-2 gap-6 pb-8">
+                {filteredItems.map((item, index) => (
+                  <div
                     key={item.menu_item_id}
-                    item={item}
-                    onClick={handleItemClick}
-                    cartQuantity={getCartQuantity(item.menu_item_id)}
-                  />
+                    className="animate-fade-in-up"
+                    style={{ animationDelay: `${index * 0.05 + 0.6}s` }}
+                  >
+                    <MenuCard
+                      item={item}
+                      onClick={handleItemClick}
+                      cartQuantity={getCartQuantity(item.menu_item_id)}
+                    />
+                  </div>
                 ))}
               </div>
             </>
           )}
         </div>
 
-        {/* Promotional Section - Portrait optimized */}
-        <div className="mt-auto bg-gradient-to-r from-primary/30 via-secondary/25 to-primary/30 backdrop-blur-md border-t-4 border-primary py-10 px-8 shadow-2xl">
-          <div className="max-w-full mx-auto">
+        {/* Modern CTA Section - Sticky at bottom */}
+        <div className="mt-auto glass-footer sticky bottom-0 z-20 animate-fade-in-up animation-delay-1000">
+          <div className="max-w-full mx-auto py-8 px-8">
             <div className="flex flex-col items-center gap-6 text-center">
               <div>
-                <h3 className="text-5xl font-black text-foreground mb-3 drop-shadow-sm">
+                <h3 className="text-5xl font-black text-gradient mb-3">
                   🎂 Design Your Dream Cake!
                 </h3>
-                <p className="text-2xl text-foreground font-bold">
+                <p className="text-2xl text-foreground/80 font-semibold">
                   Create a custom cake perfectly tailored to your celebration
                 </p>
               </div>
               <Button
                 size="lg"
-                className="bg-gradient-to-br from-primary via-secondary to-primary text-foreground font-black text-3xl px-20 py-10 rounded-3xl shadow-2xl hover:shadow-[0_0_50px_rgba(251,205,47,0.7)] hover:scale-105 transition-all touch-target-lg border-4 border-secondary/50 animate-pulse-slow min-w-full"
+                className="btn-gradient text-3xl font-black px-20 py-10 rounded-3xl shadow-2xl hover:shadow-[0_0_50px_rgba(251,205,47,0.7)] hover:scale-105 transition-all touch-target-lg border-4 border-white/30 w-full max-w-3xl"
                 onClick={() => (window.location.href = "/custom-cake")}
               >
                 🍰 Custom Cake Editor
@@ -257,7 +269,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Sidebar */}
+      {/* Sidebar with slide animation */}
       <KioskSidebar selectedItem={selectedItem} onClose={handleCloseSidebar} />
     </>
   );

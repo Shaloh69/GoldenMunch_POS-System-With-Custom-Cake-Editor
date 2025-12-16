@@ -2,182 +2,126 @@
 
 import React, { useState, useEffect } from "react";
 
-interface Particle {
-  left: number;
-  top: number;
-  delay: number;
-  duration: number;
+interface FloatingOrb {
+  id: number;
+  x: number;
+  y: number;
   size: number;
-  emoji: string;
-}
-
-interface Bubble {
-  left: number;
-  delay: number;
   duration: number;
-  size: number;
-}
-
-interface GoldSparkle {
-  left: number;
-  top: number;
   delay: number;
-  duration: number;
-  size: number;
+  color: string;
 }
 
 export const AnimatedBackground: React.FC = () => {
   const [mounted, setMounted] = useState(false);
-  const [particles, setParticles] = useState<Particle[]>([]);
-  const [bubbles, setBubbles] = useState<Bubble[]>([]);
-  const [goldSparkles, setGoldSparkles] = useState<GoldSparkle[]>([]);
+  const [orbs, setOrbs] = useState<FloatingOrb[]>([]);
 
   useEffect(() => {
     setMounted(true);
 
-    // Soft, airy café-themed emojis
-    const emojis = [
-      "☕",
-      "🥐",
-      "🍰",
-      "🧁",
-      "🥖",
-      "🥨",
-      "🍪",
-      "🧈",
-      "🍯",
-      "🌸",
-      "✨",
-      "🌼",
+    // Generate subtle floating orbs - minimal and elegant
+    const orbColors = [
+      "rgba(255, 215, 0, 0.08)", // Gold
+      "rgba(255, 165, 0, 0.06)", // Orange
+      "rgba(255, 140, 0, 0.07)", // Dark Orange
+      "rgba(251, 205, 47, 0.09)", // Sunny Yellow
     ];
 
-    // Generate MORE floating particles for prominence
-    const generatedParticles = [...Array(25)].map(() => ({
-      left: Math.random() * 100,
-      top: Math.random() * 100,
-      delay: Math.random() * 8,
-      duration: 18 + Math.random() * 12,
-      size: 35 + Math.random() * 50, // LARGER particles
-      emoji: emojis[Math.floor(Math.random() * emojis.length)],
-    }));
-
-    // Generate MORE bubbles for better visibility
-    const generatedBubbles = [...Array(35)].map(() => ({
-      left: Math.random() * 100,
-      delay: Math.random() * 10,
-      duration: 12 + Math.random() * 10,
-      size: 40 + Math.random() * 100, // LARGER bubbles
-    }));
-
-    // Generate MORE sparkles
-    const generatedSparkles = [...Array(60)].map(() => ({
-      left: Math.random() * 100,
-      top: Math.random() * 100,
+    const generatedOrbs: FloatingOrb[] = [...Array(8)].map((_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      size: 200 + Math.random() * 400,
+      duration: 20 + Math.random() * 15,
       delay: Math.random() * 5,
-      duration: 2.5 + Math.random() * 3.5,
-      size: 3 + Math.random() * 5, // LARGER sparkles
+      color: orbColors[Math.floor(Math.random() * orbColors.length)],
     }));
 
-    setParticles(generatedParticles);
-    setBubbles(generatedBubbles);
-    setGoldSparkles(generatedSparkles);
+    setOrbs(generatedOrbs);
   }, []);
 
-  // Prevent hydration mismatch
   if (!mounted) {
     return (
       <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#FFF8DC] via-[#FFD700]/40 to-[#FF8C00]/35" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#FFF8DC] via-[#FFFBF0] to-[#FFF5E6]" />
       </div>
     );
   }
 
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden">
-      {/* Rich Gold & Orange Gradient Base - Luxurious and Warm */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#FFF8DC] via-[#FFD700]/40 to-[#FF8C00]/35" />
+      {/* Modern Gradient Base - Clean and Elegant */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#FFF8DC] via-[#FFFBF0] to-[#FFF5E6]" />
 
-      {/* Layered Gradient Waves - Gold and Orange accents */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#FF8C00]/30 via-transparent to-[#FFD700]/40 animate-wave" />
-      <div className="absolute inset-0 bg-gradient-to-b from-[#FFA500]/35 via-transparent to-[#FFAA00]/25 animate-wave-reverse" />
+      {/* Mesh Gradient Overlay - Subtle depth */}
+      <div
+        className="absolute inset-0 opacity-40"
+        style={{
+          backgroundImage: `
+            radial-gradient(at 0% 0%, rgba(255, 215, 0, 0.15) 0px, transparent 50%),
+            radial-gradient(at 100% 0%, rgba(255, 140, 0, 0.12) 0px, transparent 50%),
+            radial-gradient(at 100% 100%, rgba(255, 165, 0, 0.13) 0px, transparent 50%),
+            radial-gradient(at 0% 100%, rgba(251, 205, 47, 0.14) 0px, transparent 50%)
+          `,
+        }}
+      />
 
-      {/* Large Animated Orbs - Rich Gold & Orange Tones - PROMINENT */}
-      <div className="absolute -top-40 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-[#FFD700]/70 to-[#FFA500]/60 rounded-full mix-blend-multiply filter blur-3xl animate-pulse-slow" />
-      <div className="absolute top-1/3 -left-32 w-[500px] h-[500px] bg-gradient-to-br from-[#FFB347]/65 to-[#FFAA00]/55 rounded-full mix-blend-multiply filter blur-3xl animate-blob" />
-      <div className="absolute top-1/3 -right-32 w-[500px] h-[500px] bg-gradient-to-br from-[#FFA500]/70 to-[#FF8C00]/60 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000" />
-      <div className="absolute bottom-1/4 left-1/2 w-[600px] h-[600px] bg-gradient-to-br from-[#FF8C00]/60 to-[#FFD700]/65 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000" />
-      <div className="absolute -bottom-40 right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-[#FFAA00]/65 to-[#FFA500]/60 rounded-full mix-blend-multiply filter blur-3xl animate-pulse-slow animation-delay-3000" />
+      {/* Floating Gradient Orbs - Subtle and modern */}
+      {orbs.map((orb) => (
+        <div
+          key={orb.id}
+          className="absolute rounded-full mix-blend-multiply filter blur-3xl animate-float-smooth"
+          style={{
+            left: `${orb.x}%`,
+            top: `${orb.y}%`,
+            width: `${orb.size}px`,
+            height: `${orb.size}px`,
+            backgroundColor: orb.color,
+            animationDuration: `${orb.duration}s`,
+            animationDelay: `${orb.delay}s`,
+          }}
+        />
+      ))}
 
-      {/* Gold & Orange Bubbles Rising - VIVID */}
+      {/* Elegant Flowing Waves - Subtle movement */}
       <div className="absolute inset-0">
-        {bubbles.map((bubble, i) => (
-          <div
-            key={`bubble-${i}`}
-            className="absolute bottom-0 rounded-full bg-gradient-to-br from-[#FFD700]/40 to-[#FFA500]/35 backdrop-blur-sm animate-rise-bubble border-2 border-[#FF8C00]/50"
-            style={{
-              left: `${bubble.left}%`,
-              width: `${bubble.size}px`,
-              height: `${bubble.size}px`,
-              animationDelay: `${bubble.delay}s`,
-              animationDuration: `${bubble.duration}s`,
-              boxShadow: "0 0 25px rgba(255, 215, 0, 0.5), 0 0 40px rgba(255, 165, 0, 0.3)",
-            }}
+        <svg
+          className="absolute w-full h-full"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 1440 320"
+          preserveAspectRatio="none"
+        >
+          <path
+            fill="rgba(255, 215, 0, 0.05)"
+            fillOpacity="1"
+            d="M0,160L48,149.3C96,139,192,117,288,128C384,139,480,181,576,181.3C672,181,768,139,864,133.3C960,128,1056,160,1152,165.3C1248,171,1344,149,1392,138.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+            className="animate-wave-slow"
           />
-        ))}
-      </div>
-
-      {/* Floating Café Particles - GOLDEN GLOW */}
-      <div className="absolute inset-0">
-        {particles.map((particle, i) => (
-          <div
-            key={`particle-${i}`}
-            className="absolute animate-float-gentle opacity-75 hover:opacity-100 transition-opacity duration-700"
-            style={{
-              left: `${particle.left}%`,
-              top: `${particle.top}%`,
-              fontSize: `${particle.size}px`,
-              animationDelay: `${particle.delay}s`,
-              animationDuration: `${particle.duration}s`,
-              filter:
-                "drop-shadow(0 0 20px rgba(255, 215, 0, 0.7)) drop-shadow(0 0 35px rgba(255, 165, 0, 0.4))",
-            }}
-          >
-            {particle.emoji}
-          </div>
-        ))}
-      </div>
-
-      {/* Gold & Orange Sparkle Effect - BRILLIANT */}
-      <div className="absolute inset-0">
-        {goldSparkles.map((sparkle, i) => (
-          <div
-            key={`sparkle-${i}`}
-            className="absolute rounded-full bg-gradient-to-br from-[#FFD700] to-[#FFA500] animate-twinkle"
-            style={{
-              left: `${sparkle.left}%`,
-              top: `${sparkle.top}%`,
-              width: `${sparkle.size}px`,
-              height: `${sparkle.size}px`,
-              animationDelay: `${sparkle.delay}s`,
-              animationDuration: `${sparkle.duration}s`,
-              boxShadow:
-                "0 0 20px rgba(255, 215, 0, 0.9), 0 0 30px rgba(255, 165, 0, 0.6), 0 0 40px rgba(255, 140, 0, 0.3)",
-            }}
+        </svg>
+        <svg
+          className="absolute w-full h-full"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 1440 320"
+          preserveAspectRatio="none"
+        >
+          <path
+            fill="rgba(255, 165, 0, 0.04)"
+            fillOpacity="1"
+            d="M0,224L48,208C96,192,192,160,288,160C384,160,480,192,576,197.3C672,203,768,181,864,165.3C960,149,1056,139,1152,149.3C1248,160,1344,192,1392,208L1440,224L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+            className="animate-wave-slower"
           />
-        ))}
+        </svg>
       </div>
 
-      {/* Elegant Shimmer Overlay - Golden shimmer */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#FFD700]/10 via-transparent to-transparent animate-shimmer-down" />
+      {/* Subtle Gradient Overlay - Top to bottom fade */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white/20" />
 
-      {/* Soft Vignette - Orange/Gold tint */}
-      <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-[#FF8C00]/12" />
+      {/* Soft Vignette Effect */}
+      <div className="absolute inset-0 bg-radial-gradient from-transparent via-transparent to-black/[0.02]" />
 
-      {/* Bottom Glow - Warm Orange */}
-      <div className="absolute bottom-0 left-0 right-0 h-48 bg-gradient-to-t from-[#FFA500]/25 to-transparent" />
-
-      {/* Top Glow - Soft Gold */}
-      <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-[#FFD700]/15 to-transparent" />
+      {/* Gentle Light Spots - Modern touch */}
+      <div className="absolute top-20 right-20 w-96 h-96 bg-gradient-to-br from-[#FFD700]/10 to-transparent rounded-full filter blur-3xl animate-pulse-gentle" />
+      <div className="absolute bottom-20 left-20 w-96 h-96 bg-gradient-to-br from-[#FFA500]/10 to-transparent rounded-full filter blur-3xl animate-pulse-gentle animation-delay-3000" />
     </div>
   );
 };

@@ -40,9 +40,9 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
         menuItem: selectedItem,
         quantity: quantity,
       });
-      // Reset and close
+      // Reset and close with animation
       setQuantity(1);
-      onClose();
+      setTimeout(onClose, 300);
     }
   };
 
@@ -61,148 +61,169 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
       (selectedItem?.stock_quantity ?? 0) > 0);
 
   return (
-    <div className="fixed right-0 top-0 bottom-0 w-[35vw] max-w-[500px] bg-gradient-to-b from-card/95 to-secondary/10 backdrop-blur-xl border-l-4 border-primary shadow-[-10px_0_40px_rgba(255,215,0,0.5)] z-50 flex flex-col">
-      {/* Item Detail Section (Top 60%) */}
-      <div
-        className={`flex-1 overflow-y-auto transition-all duration-500 ${selectedItem ? "opacity-100" : "opacity-0 pointer-events-none"}`}
-      >
-        {selectedItem && (
-          <div className="p-6 h-full">
-            <Card className="bg-gradient-to-br from-card/90 via-primary/5 to-secondary/10 backdrop-blur-sm border-2 border-primary/60 shadow-xl h-full">
-              <CardBody className="p-0 flex flex-col h-full">
-                {/* Large Image */}
-                <div className="relative h-80 bg-gradient-to-br from-primary/25 via-secondary/20 to-primary/35 flex items-center justify-center overflow-hidden">
+    <div
+      className={`fixed right-0 top-0 bottom-0 w-[35vw] max-w-[500px] z-50 flex flex-col transition-transform duration-500 ${selectedItem ? "translate-x-0" : "translate-x-full"}`}
+    >
+      {/* Modern Glassmorphism Sidebar */}
+      <div className="h-full backdrop-blur-3xl bg-white/80 border-l-2 border-primary/20 shadow-[-20px_0_60px_rgba(251,205,47,0.2)] flex flex-col">
+        {/* Item Detail Section */}
+        <div
+          className={`flex-1 overflow-y-auto scrollbar-hide transition-all duration-500 ${selectedItem ? "opacity-100" : "opacity-0"}`}
+        >
+          {selectedItem && (
+            <div className="p-6 h-full animate-slide-in-left">
+              {/* Close Button - Floating modern */}
+              <button
+                onClick={onClose}
+                className="absolute top-8 right-8 w-14 h-14 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-foreground hover:scale-110 hover:rotate-90 transition-all duration-300 shadow-lg z-50 touch-target animate-bounce-in"
+              >
+                <span className="text-3xl font-bold">×</span>
+              </button>
+
+              <div className="modern-card h-full flex flex-col overflow-hidden">
+                {/* Large Image with gradient overlay */}
+                <div className="relative h-80 bg-gradient-to-br from-primary/10 to-secondary/10 overflow-hidden">
                   {getImageUrl(selectedItem.image_url) ? (
-                    <Image
-                      src={getImageUrl(selectedItem.image_url) || ""}
-                      alt={selectedItem.name}
-                      fill
-                      className="object-cover"
-                      sizes="30vw"
-                    />
+                    <>
+                      <Image
+                        src={getImageUrl(selectedItem.image_url) || ""}
+                        alt={selectedItem.name}
+                        fill
+                        className="object-cover transition-transform duration-700 hover:scale-110"
+                        sizes="30vw"
+                        priority
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                    </>
                   ) : (
-                    <div className="text-9xl">🍰</div>
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="text-9xl animate-pulse-gentle">🍰</div>
+                    </div>
                   )}
 
-                  {/* Close Button - Larger for touch */}
-                  <button
-                    onClick={onClose}
-                    className="absolute top-6 right-6 w-16 h-16 bg-primary rounded-full flex items-center justify-center text-foreground hover:bg-secondary hover:text-primary-foreground transition-all shadow-xl hover:scale-110 touch-target"
-                  >
-                    <span className="text-3xl font-bold">×</span>
-                  </button>
-
-                  {/* Badges */}
-                  <div className="absolute top-4 left-4 flex flex-col gap-2">
+                  {/* Floating Badges */}
+                  <div className="absolute top-4 left-4 flex flex-col gap-3 z-10">
                     {selectedItem.is_featured && (
-                      <Chip
-                        size="lg"
-                        className="font-bold text-base px-4 py-2 bg-secondary text-primary-foreground shadow-lg"
-                      >
-                        Popular
-                      </Chip>
+                      <div className="animate-bounce-in animation-delay-200">
+                        <Chip
+                          size="lg"
+                          className="font-bold text-base px-4 py-2 bg-gradient-to-r from-secondary to-accent text-white shadow-lg backdrop-blur-sm"
+                        >
+                          ⭐ Popular
+                        </Chip>
+                      </div>
                     )}
                     {!isAvailable && (
-                      <Chip
-                        size="lg"
-                        className="font-bold text-base px-4 py-2 bg-red-500 text-primary-foreground shadow-lg"
-                      >
-                        Sold Out
-                      </Chip>
+                      <div className="animate-shake">
+                        <Chip
+                          size="lg"
+                          className="font-bold text-base px-4 py-2 bg-red-500/90 text-white shadow-lg backdrop-blur-sm"
+                        >
+                          ❌ Sold Out
+                        </Chip>
+                      </div>
                     )}
                   </div>
                 </div>
 
-                {/* Item Details - White Background with Dark Text */}
-                <div className="p-6 flex-1 flex flex-col justify-between bg-gradient-to-b from-card/95 to-primary/5 backdrop-blur-sm">
-                  <div>
-                    {/* Name - Larger for portrait */}
-                    <h2 className="text-4xl font-black text-foreground mb-4">
-                      {selectedItem.name}
-                    </h2>
+                {/* Item Details - Clean white background */}
+                <div className="flex-1 bg-white p-6 flex flex-col overflow-y-auto scrollbar-hide">
+                  {/* Name */}
+                  <h2 className="text-4xl font-black text-gradient mb-4 animate-fade-in-up">
+                    {selectedItem.name}
+                  </h2>
 
-                    {/* Description - All black text */}
-                    <p className="text-xl text-foreground mb-5 leading-relaxed">
-                      {selectedItem.description ||
-                        "Delicious treat made fresh daily with the finest ingredients."}
-                    </p>
+                  {/* Description */}
+                  <p className="text-xl text-foreground/80 mb-6 leading-relaxed animate-fade-in-up animation-delay-200">
+                    {selectedItem.description ||
+                      "Delicious treat made fresh daily with the finest ingredients."}
+                  </p>
 
-                    {/* Category & Type - Larger */}
-                    <div className="flex gap-4 mb-5">
-                      <Chip
-                        size="lg"
-                        className="bg-primary text-foreground font-bold text-lg px-5 py-2 shadow-md"
-                      >
-                        {selectedItem.item_type}
-                      </Chip>
-                      {selectedItem.categories &&
-                        selectedItem.categories.length > 0 && (
-                          <Chip
-                            size="lg"
-                            className="bg-secondary text-foreground font-bold text-lg px-5 py-2 shadow-md"
-                          >
-                            {selectedItem.categories[0].name}
-                          </Chip>
-                        )}
-                    </div>
-
-                    {/* Price - Larger and always black */}
-                    <div className="mb-5">
-                      <span className="text-6xl font-black text-foreground">
-                        ${(Number(selectedItem.current_price) || 0).toFixed(2)}
-                      </span>
-                    </div>
-
-                    {/* Stock Info - All black text */}
-                    {!selectedItem.is_infinite_stock && (
-                      <p className="text-lg text-foreground mb-5">
-                        {isAvailable ? (
-                          <span>
-                            📦 {selectedItem.stock_quantity} available
-                          </span>
-                        ) : (
-                          <span className="text-foreground font-bold">
-                            ❌ Out of stock
-                          </span>
-                        )}
-                      </p>
-                    )}
+                  {/* Category Tags */}
+                  <div className="flex gap-3 mb-6 flex-wrap animate-fade-in-up animation-delay-500">
+                    <Chip
+                      size="lg"
+                      className="bg-primary/10 text-primary border border-primary/30 font-semibold text-base px-4 py-2"
+                    >
+                      {selectedItem.item_type}
+                    </Chip>
+                    {selectedItem.categories &&
+                      selectedItem.categories.length > 0 && (
+                        <Chip
+                          size="lg"
+                          className="bg-secondary/10 text-secondary border border-secondary/30 font-semibold text-base px-4 py-2"
+                        >
+                          {selectedItem.categories[0].name}
+                        </Chip>
+                      )}
                   </div>
 
-                  {/* Quantity Selector & Add Button - Larger for touch */}
+                  {/* Price - Large and prominent */}
+                  <div className="mb-6 animate-scale-in animation-delay-500">
+                    <span className="text-sm text-muted-foreground font-medium block mb-1">
+                      Price
+                    </span>
+                    <span className="text-6xl font-black text-gradient">
+                      ${(Number(selectedItem.current_price) || 0).toFixed(2)}
+                    </span>
+                  </div>
+
+                  {/* Stock Info */}
+                  {!selectedItem.is_infinite_stock && (
+                    <div className="mb-6 animate-fade-in-up animation-delay-1000">
+                      {isAvailable ? (
+                        <div className="flex items-center gap-2 text-lg text-foreground/80">
+                          <span>📦</span>
+                          <span>{selectedItem.stock_quantity} available</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 text-lg text-red-500 font-bold">
+                          <span>❌</span>
+                          <span>Out of stock</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Spacer */}
+                  <div className="flex-1 min-h-4" />
+
+                  {/* Quantity & Add to Cart */}
                   {isAvailable && (
-                    <div className="space-y-5">
-                      {/* Quantity Selector - Larger buttons */}
-                      <div className="flex items-center gap-5">
-                        <span className="text-2xl font-semibold text-foreground">
-                          Quantity:
+                    <div className="space-y-5 animate-fade-in-up animation-delay-1000">
+                      {/* Quantity Selector */}
+                      <div className="glass-card p-5 rounded-2xl">
+                        <span className="text-xl font-semibold text-foreground block mb-4">
+                          Quantity
                         </span>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-center gap-4">
                           <Button
                             size="icon"
-                            className="bg-primary/30 text-foreground font-bold text-3xl hover:bg-primary hover:text-foreground transition-all w-20 h-20 touch-target-lg"
                             onClick={() => handleQuantityChange(-1)}
+                            disabled={quantity <= 1}
+                            className="btn-gradient w-16 h-16 text-3xl font-bold touch-target transition-all hover:scale-110 active:scale-95"
                           >
                             −
                           </Button>
-                          <span className="text-4xl font-bold text-foreground min-w-[80px] text-center">
+                          <span className="text-5xl font-black text-gradient min-w-[100px] text-center">
                             {quantity}
                           </span>
                           <Button
                             size="icon"
-                            className="bg-primary/30 text-foreground font-bold text-3xl hover:bg-primary hover:text-foreground transition-all w-20 h-20 touch-target-lg"
                             onClick={() => handleQuantityChange(1)}
+                            disabled={quantity >= 99}
+                            className="btn-gradient w-16 h-16 text-3xl font-bold touch-target transition-all hover:scale-110 active:scale-95"
                           >
                             +
                           </Button>
                         </div>
                       </div>
 
-                      {/* Add to Cart Button - Larger */}
+                      {/* Add to Cart Button */}
                       <Button
                         size="lg"
-                        className="w-full bg-gradient-to-r from-primary to-secondary text-foreground font-bold text-3xl py-10 shadow-xl hover:shadow-2xl hover:scale-105 transition-all touch-target-lg"
                         onClick={handleAddToCart}
+                        className="btn-gradient w-full text-3xl font-black py-10 shadow-2xl hover:shadow-[0_0_40px_rgba(251,205,47,0.6)] hover:scale-105 transition-all touch-target-lg rounded-2xl"
                       >
                         🛒 Add to Cart
                       </Button>
@@ -213,63 +234,67 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
                     <Button
                       disabled
                       size="lg"
-                      className="w-full bg-gray-300 text-foreground font-semibold text-3xl py-10 touch-target-lg"
+                      className="w-full bg-gray-300 text-gray-600 font-semibold text-3xl py-10 touch-target-lg rounded-2xl opacity-60"
                     >
                       Unavailable
                     </Button>
                   )}
                 </div>
-              </CardBody>
-            </Card>
-          </div>
-        )}
-      </div>
-
-      {/* Cart Section (Bottom 40%) - Always Present, portrait optimized */}
-      <div
-        className={`border-t-4 border-primary bg-gradient-to-b from-primary/10 to-secondary/15 backdrop-blur-md transition-all duration-500 ${isCartHidden ? "h-20" : "h-[40vh]"}`}
-      >
-        {/* Toggle Button - Larger for touch */}
-        <button
-          onClick={() => setIsCartHidden(!isCartHidden)}
-          className="w-full px-8 py-5 flex items-center justify-between hover:bg-primary/30 transition-all touch-target-lg"
-        >
-          <div className="flex items-center gap-4">
-            <span className="text-4xl">🛒</span>
-            <span className="text-2xl font-bold text-foreground">
-              Your Cart {itemCount > 0 && `(${itemCount})`}
-            </span>
-          </div>
-          <span className="text-3xl text-foreground">
-            {isCartHidden ? "▲" : "▼"}
-          </span>
-        </button>
-
-        {/* Cart Content */}
-        {!isCartHidden && (
-          <div className="px-6 pb-6 h-[calc(40vh-4rem)] flex flex-col bg-gradient-to-b from-transparent to-primary/5">
-            {itemCount === 0 ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-center">
-                <div className="text-6xl mb-4">🛒</div>
-                <p className="text-xl text-foreground font-semibold">
-                  Your cart is empty
-                </p>
-                <p className="text-base text-foreground mt-2">
-                  Select items to get started
-                </p>
               </div>
-            ) : (
-              <>
-                {/* Cart Items List - Larger images, all black text */}
-                <div className="flex-1 overflow-y-auto mb-4 space-y-3">
-                  {cartItems.map((cartItem) => (
-                    <Card
-                      key={cartItem.menuItem.menu_item_id}
-                      className="bg-gradient-to-r from-card/90 to-primary/10 backdrop-blur-sm border-3 border-primary/40 shadow-md"
-                    >
-                      <CardBody className="p-4">
+            </div>
+          )}
+        </div>
+
+        {/* Cart Section - Modern collapsible */}
+        <div
+          className={`border-t-2 border-primary/20 transition-all duration-500 ${isCartHidden ? "h-20" : "h-[40vh]"} bg-gradient-to-b from-primary/5 to-white`}
+        >
+          {/* Toggle Button */}
+          <button
+            onClick={() => setIsCartHidden(!isCartHidden)}
+            className="w-full px-8 py-5 flex items-center justify-between hover:bg-primary/10 transition-all touch-target-lg group"
+          >
+            <div className="flex items-center gap-4">
+              <span className="text-4xl group-hover:scale-110 transition-transform">
+                🛒
+              </span>
+              <span className="text-2xl font-bold text-foreground">
+                Your Cart {itemCount > 0 && `(${itemCount})`}
+              </span>
+            </div>
+            <span
+              className={`text-3xl text-foreground transition-transform duration-300 ${isCartHidden ? "" : "rotate-180"}`}
+            >
+              ▼
+            </span>
+          </button>
+
+          {/* Cart Content */}
+          {!isCartHidden && (
+            <div className="px-6 pb-6 h-[calc(40vh-5rem)] flex flex-col">
+              {itemCount === 0 ? (
+                <div className="flex-1 flex flex-col items-center justify-center text-center animate-fade-in">
+                  <div className="text-6xl mb-4 animate-pulse-gentle">🛒</div>
+                  <p className="text-xl text-foreground font-semibold">
+                    Your cart is empty
+                  </p>
+                  <p className="text-base text-muted-foreground mt-2">
+                    Select items to get started
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* Cart Items List */}
+                  <div className="flex-1 overflow-y-auto mb-4 space-y-3 scrollbar-hide">
+                    {cartItems.map((cartItem, index) => (
+                      <div
+                        key={cartItem.menuItem.menu_item_id}
+                        className="glass-card p-4 rounded-xl hover:scale-[1.02] transition-transform animate-slide-in-right"
+                        style={{ animationDelay: `${index * 0.05}s` }}
+                      >
                         <div className="flex items-center gap-4">
-                          <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+                          {/* Item Image */}
+                          <div className="w-20 h-20 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
                             {getImageUrl(cartItem.menuItem.image_url) ? (
                               <Image
                                 src={
@@ -279,24 +304,27 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
                                 width={80}
                                 height={80}
                                 className="object-cover w-full h-full"
-                                unoptimized
                               />
                             ) : (
                               <span className="text-4xl">🍰</span>
                             )}
                           </div>
+
+                          {/* Item Info */}
                           <div className="flex-1 min-w-0">
-                            <h4 className="text-lg font-bold text-foreground truncate leading-tight">
+                            <h4 className="text-lg font-bold text-foreground truncate">
                               {cartItem.menuItem.name}
                             </h4>
-                            <p className="text-base text-foreground font-semibold mt-1">
+                            <p className="text-base text-muted-foreground font-medium">
                               {cartItem.quantity} × $
                               {(
                                 Number(cartItem.menuItem.current_price) || 0
                               ).toFixed(2)}
                             </p>
                           </div>
-                          <div className="text-xl font-black text-foreground">
+
+                          {/* Item Total */}
+                          <div className="text-xl font-black text-gradient">
                             $
                             {(
                               (Number(cartItem.menuItem.current_price) || 0) *
@@ -304,52 +332,54 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
                             ).toFixed(2)}
                           </div>
                         </div>
-                      </CardBody>
-                    </Card>
-                  ))}
-                </div>
-
-                {/* Total - All black text */}
-                <div className="border-t-2 border-primary pt-4 mb-4 bg-gradient-to-r from-primary/15 to-secondary/10 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-2xl font-bold text-foreground">
-                      Total:
-                    </span>
-                    <span className="text-3xl font-black text-foreground">
-                      ${total.toFixed(2)}
-                    </span>
+                      </div>
+                    ))}
                   </div>
 
-                  {/* Buttons - Larger for portrait touch */}
+                  {/* Total & Buttons */}
                   <div className="space-y-4">
+                    {/* Total */}
+                    <div className="glass-card p-5 rounded-2xl">
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl font-bold text-foreground">
+                          Total:
+                        </span>
+                        <span className="text-4xl font-black text-gradient">
+                          ${total.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Checkout Button */}
                     <Button
                       as={Link}
                       href="/cart"
                       size="lg"
-                      className="w-full bg-gradient-to-r from-primary to-secondary text-foreground font-bold text-2xl py-8 shadow-lg hover:shadow-xl hover:scale-105 transition-all touch-target-lg"
+                      className="btn-gradient w-full text-2xl font-bold py-8 shadow-xl hover:shadow-2xl hover:scale-105 transition-all touch-target-lg rounded-2xl"
                     >
                       View Cart & Checkout →
                     </Button>
 
+                    {/* Custom Cake Button */}
                     <Button
                       as={Link}
                       href="/custom-cake"
                       size="lg"
-                      className="w-full bg-gradient-to-r from-secondary via-primary to-secondary text-foreground font-bold text-2xl py-8 shadow-lg hover:shadow-xl hover:scale-105 transition-all touch-target-lg"
+                      className="glass-button w-full text-xl font-semibold py-7 transition-all touch-target rounded-2xl border-2 border-primary/30"
                     >
                       <div className="flex items-center justify-between w-full">
                         <span>🎂 Custom Cake</span>
-                        <span className="text-sm bg-black/20 px-3 py-1 rounded-lg text-foreground">
+                        <span className="text-sm bg-primary/20 px-3 py-1 rounded-lg">
                           📱 Scan QR
                         </span>
                       </div>
                     </Button>
                   </div>
-                </div>
-              </>
-            )}
-          </div>
-        )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
