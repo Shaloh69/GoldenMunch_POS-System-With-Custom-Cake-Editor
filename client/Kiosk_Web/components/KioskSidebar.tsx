@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardBody } from "@/components/ui/card";
 import { Chip } from "@/components/ui/badge";
 import Link from "next/link";
 import Image from "next/image";
@@ -280,7 +279,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
                   <div className="flex-1 overflow-y-auto mb-4 space-y-3 scrollbar-hide">
                     {cartItems.map((cartItem, index) => (
                       <div
-                        key={cartItem.menuItem.menu_item_id}
+                        key={`${cartItem.menuItem.menu_item_id}-${index}`}
                         className="glass-card p-4 rounded-xl animate-slide-in-right"
                         style={{ animationDelay: `${index * 0.05}s` }}
                       >
@@ -343,29 +342,29 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
                     </div>
 
                     {/* Checkout Button */}
-                    <Button
-                      as={Link}
-                      href="/cart"
-                      size="lg"
-                      className="btn-gradient w-full text-2xl font-bold py-8 shadow-xl touch-target-lg rounded-2xl active:scale-95"
-                    >
-                      View Cart & Checkout →
-                    </Button>
+                    <Link href="/cart" className="block">
+                      <Button
+                        size="lg"
+                        className="btn-gradient w-full text-2xl font-bold py-8 shadow-xl touch-target-lg rounded-2xl active:scale-95"
+                      >
+                        View Cart & Checkout →
+                      </Button>
+                    </Link>
 
                     {/* Custom Cake Button */}
-                    <Button
-                      as={Link}
-                      href="/custom-cake"
-                      size="lg"
-                      className="glass-button w-full text-xl font-semibold py-7 touch-target rounded-2xl border-2 border-primary/30 active:scale-95"
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <span>🎂 Custom Cake</span>
-                        <span className="text-sm bg-primary/20 px-3 py-1 rounded-lg">
-                          📱 Scan QR
-                        </span>
-                      </div>
-                    </Button>
+                    <Link href="/custom-cake" className="block">
+                      <Button
+                        size="lg"
+                        className="glass-button w-full text-xl font-semibold py-7 touch-target rounded-2xl border-2 border-primary/30 active:scale-95"
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <span>🎂 Custom Cake</span>
+                          <span className="text-sm bg-primary/20 px-3 py-1 rounded-lg">
+                            📱 Scan QR
+                          </span>
+                        </div>
+                      </Button>
+                    </Link>
                   </div>
                 </>
               )}
