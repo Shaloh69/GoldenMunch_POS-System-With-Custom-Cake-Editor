@@ -60,7 +60,7 @@ const Spinner = React.forwardRef<HTMLDivElement, SpinnerProps>(
 )
 Spinner.displayName = "Spinner"
 
-// Circular Progress variant (HeroUI compatible)
+// Circular Progress variant ()
 const CircularProgress = Spinner
 CircularProgress.displayName = "CircularProgress"
 

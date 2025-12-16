@@ -11,7 +11,6 @@ import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { BackToMenuButton } from "@/components/BackToMenuButton";
 
 // Force all routes to be dynamic (skip static generation)
-// This prevents HeroUI SSR circular dependency issues during build
 export const dynamic = 'force-dynamic';
 export const dynamicParams = true;
 
@@ -29,7 +28,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           fontSans.variable,
         )}
       >
-        <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
+        <Providers themeProps={{ attribute: "class", defaultTheme: "light" }}>
           <LayoutContent>{children}</LayoutContent>
         </Providers>
       </body>

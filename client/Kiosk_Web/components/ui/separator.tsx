@@ -26,7 +26,7 @@ const Separator = React.forwardRef<
 )
 Separator.displayName = SeparatorPrimitive.Root.displayName
 
-// HeroUI-compatible Divider alias
+// Divider alias
 const Divider = Separator
 Divider.displayName = "Divider"
 

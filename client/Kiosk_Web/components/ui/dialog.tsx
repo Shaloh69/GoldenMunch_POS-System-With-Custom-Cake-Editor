@@ -131,7 +131,7 @@ const DialogDescription = React.forwardRef<
 ))
 DialogDescription.displayName = DialogPrimitive.Description.displayName
 
-// HeroUI-compatible Modal exports
+// Modal exports
 const Modal = Dialog
 const ModalContent = DialogContent
 const ModalHeader = DialogHeader
@@ -143,7 +143,7 @@ const ModalFooter = DialogFooter
 const ModalTrigger = DialogTrigger
 const ModalClose = DialogClose
 
-// Hook for controlling modal state (HeroUI compatible)
+// Hook for controlling modal state ()
 export function useDisclosure(defaultOpen = false) {
   const [isOpen, setIsOpen] = React.useState(defaultOpen)
 

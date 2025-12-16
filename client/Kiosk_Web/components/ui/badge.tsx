@@ -57,7 +57,7 @@ export interface BadgeProps
 
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
   ({ className, variant, size, radius, isOneChar, content, children, ...props }, ref) => {
-    // If children exists, this is a badge wrapper (like HeroUI)
+    // If children exists, this is a badge wrapper 
     if (children) {
       return (
         <div className="relative inline-flex">
@@ -90,7 +90,7 @@ const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
 )
 Badge.displayName = "Badge"
 
-// HeroUI-compatible Chip component (alias for Badge)
+// Chip component (alias for Badge)
 const Chip = Badge
 Chip.displayName = "Chip"
 

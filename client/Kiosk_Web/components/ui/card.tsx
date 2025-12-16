@@ -109,7 +109,7 @@ const CardFooter = React.forwardRef<
 ))
 CardFooter.displayName = "CardFooter"
 
-// HeroUI-compatible Card.Body alias
+// CardBody alias for convenience
 const CardBody = CardContent
 CardBody.displayName = "CardBody"
 
