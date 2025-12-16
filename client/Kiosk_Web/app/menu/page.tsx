@@ -114,7 +114,7 @@ export default function MenuPage() {
             color="primary"
             className="w-32 h-32"
           />
-          <p className="text-4xl font-bold text-black mt-8">Loading Menu...</p>
+          <p className="text-4xl font-bold text-foreground mt-8">Loading Menu...</p>
         </div>
       </div>
     );
@@ -123,16 +123,16 @@ export default function MenuPage() {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
-        <Card className="max-w-2xl bg-pure-white/20 backdrop-blur-lg border-2 border-sunny-yellow/40">
+        <Card className="max-w-2xl bg-card/20 backdrop-blur-lg border-2 border-primary/40">
           <CardBody className="text-center p-12">
             <div className="text-9xl mb-8">⚠️</div>
-            <h1 className="text-5xl font-bold text-black mb-6">
+            <h1 className="text-5xl font-bold text-foreground mb-6">
               Oops! Something went wrong
             </h1>
-            <p className="text-2xl text-black mb-10">{error}</p>
+            <p className="text-2xl text-foreground mb-10">{error}</p>
             <Button
               size="lg"
-              className="bg-gradient-to-r from-sunny-yellow to-deep-orange-yellow text-black font-bold text-2xl px-12 py-8 shadow-lg hover:shadow-xl transition-all touch-target-lg"
+              className="bg-gradient-to-r from-primary to-secondary text-foreground font-bold text-2xl px-12 py-8 shadow-lg hover:shadow-xl transition-all touch-target-lg"
               onClick={() => window.location.reload()}
             >
               Try Again
@@ -147,11 +147,11 @@ export default function MenuPage() {
     <>
       <div className="min-h-screen pr-[35vw] max-pr-[500px] pt-16">
         {/* Compact Header */}
-        <div className="sticky top-0 z-40 bg-gradient-to-br from-sunny-yellow/25 via-pure-white/20 to-deep-orange-yellow/25 backdrop-blur-sm border-b-2 border-sunny-yellow py-3 px-4 mb-4 shadow-md">
+        <div className="sticky top-0 z-40 bg-gradient-to-br from-primary/25 via-pure-white/20 to-secondary/25 backdrop-blur-sm border-b-2 border-primary py-3 px-4 mb-4 shadow-md">
           <div className="max-w-full mx-auto">
             {/* Compact Title */}
             <div className="text-center mb-2">
-              <h1 className="text-3xl font-black text-black drop-shadow-md">
+              <h1 className="text-3xl font-black text-foreground drop-shadow-md">
                 Golden Munch
               </h1>
             </div>
@@ -165,9 +165,9 @@ export default function MenuPage() {
                 size="sm"
                 startContent={<span className="text-xl">🔍</span>}
                 classNames={{
-                  input: "text-base py-2 text-black",
+                  input: "text-base py-2 text-foreground",
                   inputWrapper:
-                    "bg-gradient-to-r from-pure-white/95 to-sunny-yellow/10 backdrop-blur-md shadow-md border-2 border-sunny-yellow/60 hover:border-sunny-yellow hover:shadow-lg transition-all min-h-[48px]",
+                    "bg-gradient-to-r from-pure-white/95 to-primary/10 backdrop-blur-md shadow-md border-2 border-primary/60 hover:border-primary hover:shadow-lg transition-all min-h-[48px]",
                 }}
               />
             </div>
@@ -184,8 +184,8 @@ export default function MenuPage() {
                   className={`
                     ${
                       selectedCategory === null
-                        ? "bg-gradient-to-br from-sunny-yellow to-deep-orange-yellow text-black shadow-lg"
-                        : "bg-gradient-to-br from-pure-white/80 to-sunny-yellow/10 backdrop-blur-sm border-2 border-sunny-yellow/50 text-black"
+                        ? "bg-gradient-to-br from-primary to-secondary text-foreground shadow-lg"
+                        : "bg-gradient-to-br from-pure-white/80 to-primary/10 backdrop-blur-sm border-2 border-primary/50 text-foreground"
                     }
                     font-bold text-base px-6 py-4 rounded-xl transition-all whitespace-nowrap flex-shrink-0 snap-start
                   `}
@@ -200,8 +200,8 @@ export default function MenuPage() {
                     className={`
                       ${
                         selectedCategory === category.category_id
-                          ? "bg-gradient-to-br from-sunny-yellow to-deep-orange-yellow text-black shadow-lg"
-                          : "bg-gradient-to-br from-pure-white/80 to-sunny-yellow/10 backdrop-blur-sm border-2 border-sunny-yellow/50 text-black"
+                          ? "bg-gradient-to-br from-primary to-secondary text-foreground shadow-lg"
+                          : "bg-gradient-to-br from-pure-white/80 to-primary/10 backdrop-blur-sm border-2 border-primary/50 text-foreground"
                       }
                       font-bold text-base px-6 py-4 rounded-xl transition-all whitespace-nowrap flex-shrink-0 snap-start
                     `}
@@ -216,15 +216,15 @@ export default function MenuPage() {
 
           {/* Menu Items - 2 Column Portrait Grid */}
           {filteredItems.length === 0 ? (
-            <Card className="bg-gradient-to-br from-pure-white/90 via-sunny-yellow/10 to-deep-orange-yellow/15 backdrop-blur-lg border-2 border-sunny-yellow/60 shadow-lg">
+            <Card className="bg-gradient-to-br from-pure-white/90 via-primary/10 to-secondary/15 backdrop-blur-lg border-2 border-primary/60 shadow-lg">
               <CardBody className="text-center py-12">
                 <div className="text-6xl mb-4 animate-float drop-shadow-lg">
                   🍽️
                 </div>
-                <h3 className="text-3xl font-bold text-black mb-3">
+                <h3 className="text-3xl font-bold text-foreground mb-3">
                   No items found
                 </h3>
-                <p className="text-lg text-black mb-6">
+                <p className="text-lg text-foreground mb-6">
                   {searchQuery
                     ? `No results for "${searchQuery}"`
                     : "No items available right now."}
@@ -232,7 +232,7 @@ export default function MenuPage() {
                 {(searchQuery || selectedCategory !== null) && (
                   <Button
                     size="md"
-                    className="bg-gradient-to-r from-sunny-yellow to-deep-orange-yellow text-black font-bold text-base px-6 py-4 shadow-lg hover:scale-105 transition-all"
+                    className="bg-gradient-to-r from-primary to-secondary text-foreground font-bold text-base px-6 py-4 shadow-lg hover:scale-105 transition-all"
                     onClick={() => {
                       setSearchQuery("");
                       setSelectedCategory(null);
@@ -246,7 +246,7 @@ export default function MenuPage() {
           ) : (
             <>
               <div className="mb-3 text-center">
-                <h2 className="text-xl font-bold text-black">
+                <h2 className="text-xl font-bold text-foreground">
                   {filteredItems.length}{" "}
                   {filteredItems.length === 1 ? "Item" : "Items"}
                 </h2>

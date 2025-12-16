@@ -24,7 +24,7 @@ export const BackToMenuButton: React.FC = () => {
         onClick={handleBackToMenu}
         className="
           bg-gradient-to-r from-sunny-yellow to-deep-orange-yellow
-          text-black font-bold text-2xl
+          text-foreground font-bold text-2xl
           px-8 py-8
           min-w-[200px] min-h-[80px]
           shadow-2xl hover:shadow-[0_0_30px_rgba(251,205,47,0.8)]

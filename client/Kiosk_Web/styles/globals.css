@@ -2,86 +2,63 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Golden Munch - Light Caramel & Cream Design (Soft + Airy) */
+/* Golden Munch - Rich Gold & Orange Theme */
 
-/* Color Palette Variables */
-:root {
-  --light-caramel: #d9b38c;
-  --cream-white: #fff9f2;
-  --soft-sand: #e8dcc8;
-  --warm-beige: #c9b8a5;
-  --muted-clay: #c67b57;
+@layer base {
+  :root {
+    /* Gold & Orange Color Palette */
+    --gold: #FFD700;
+    --orange: #FFA500;
+    --dark-orange: #FF8C00;
+    --light-gold: #FFAA00;
+    --cream: #FFF8DC;
 
-  /* Legacy variables for backward compatibility */
-  --dark-cocoa: #c67b57;
-  --milk-chocolate: #d9b38c;
-  --champagne-gold: #c9b8a5;
-  --soft-white: #fff9f2;
-  --deep-burgundy: #c67b57;
+    /* ShadCN CSS Variables - Gold/Orange Theme */
+    --background: 45 100% 97%;  /* Very light cream */
+    --foreground: 20 14% 15%;   /* Dark brown for text */
 
-  /* System font fallbacks (no internet required) */
-  --font-sans:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
-    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
-  --font-display:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
-    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
-  --font-mono: "Courier New", Courier, monospace;
-  --font-serif: Georgia, "Times New Roman", Times, serif;
+    --card: 45 100% 99%;        /* Almost white with gold tint */
+    --card-foreground: 20 14% 15%;
 
-  /* Shadcn/ui CSS Variables */
-  --background: 0 0% 100%;
-  --foreground: 0 0% 17%;
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 17%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 17%;
-  --primary: 45 98% 59%;
-  --primary-foreground: 0 0% 17%;
-  --secondary: 31 95% 56%;
-  --secondary-foreground: 0 0% 100%;
-  --muted: 0 0% 95%;
-  --muted-foreground: 0 0% 45%;
-  --accent: 31 95% 56%;
-  --accent-foreground: 0 0% 17%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 0 0% 90%;
-  --input: 0 0% 90%;
-  --ring: 45 98% 59%;
-  --radius: 0.5rem;
+    --popover: 45 100% 99%;
+    --popover-foreground: 20 14% 15%;
+
+    --primary: 45 100% 51%;     /* Pure gold #FFD700 */
+    --primary-foreground: 20 14% 15%;
+
+    --secondary: 39 100% 50%;   /* Orange #FFA500 */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 45 60% 95%;        /* Very light gold */
+    --muted-foreground: 20 14% 40%;
+
+    --accent: 33 100% 50%;      /* Dark orange #FF8C00 */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 45 50% 85%;       /* Light gold border */
+    --input: 45 50% 85%;
+    --ring: 45 100% 51%;        /* Gold ring */
+
+    --radius: 0.75rem;
+
+    /* System fonts */
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+    --font-mono: "Courier New", Courier, monospace;
+  }
 }
 
-.dark {
-  --background: 0 0% 17%;
-  --foreground: 0 0% 95%;
-  --card: 0 0% 17%;
-  --card-foreground: 0 0% 95%;
-  --popover: 0 0% 17%;
-  --popover-foreground: 0 0% 95%;
-  --primary: 45 98% 59%;
-  --primary-foreground: 0 0% 17%;
-  --secondary: 31 95% 56%;
-  --secondary-foreground: 0 0% 100%;
-  --muted: 0 0% 25%;
-  --muted-foreground: 0 0% 65%;
-  --accent: 31 95% 56%;
-  --accent-foreground: 0 0% 95%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 0 0% 95%;
-  --border: 0 0% 30%;
-  --input: 0 0% 30%;
-  --ring: 45 98% 59%;
-}
-
-/* Smooth scrolling for the kiosk */
+/* Smooth scrolling */
 html {
   scroll-behavior: smooth;
   font-size: 16px;
 }
 
-/* Disable text selection for kiosk interface */
+/* Make body transparent to show AnimatedBackground */
 body {
+  background: transparent !important;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;

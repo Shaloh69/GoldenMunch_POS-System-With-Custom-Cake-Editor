@@ -29,20 +29,20 @@ export const MenuCard: React.FC<MenuCardProps> = ({
       onClick={() => isAvailable && onClick(item)}
       className={`
         relative overflow-hidden h-[300px]
-        border-2 border-sunny-yellow/60
-        bg-gradient-to-br from-pure-white via-sunny-yellow/10 to-deep-orange-yellow/15
+        border-2 border-primary/60
+        bg-gradient-to-br from-pure-white via-primary/10 to-secondary/15
         backdrop-blur-sm shadow-lg
         touch-manipulation
         ${
           isAvailable
-            ? "cursor-pointer hover:border-sunny-yellow hover:shadow-[0_0_30px_rgba(251,205,47,0.5)]"
+            ? "cursor-pointer hover:border-primary hover:shadow-[0_0_30px_rgba(251,205,47,0.5)]"
             : "opacity-60 cursor-not-allowed grayscale"
         }
       `}
     >
       <CardBody className="p-0 h-full flex flex-col">
         {/* Image Section - Compact */}
-        <div className="relative h-[180px] w-full overflow-hidden bg-gradient-to-br from-sunny-yellow/20 via-deep-orange-yellow/15 to-sunny-yellow/30">
+        <div className="relative h-[180px] w-full overflow-hidden bg-gradient-to-br from-primary/20 via-secondary/15 to-primary/30">
           {getImageUrl(item.image_url) ? (
             <Image
               src={getImageUrl(item.image_url) || ""}
@@ -62,7 +62,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({
             {item.is_featured && (
               <Chip
                 size="sm"
-                className="font-bold text-xs px-2 py-1 bg-deep-orange-yellow text-white shadow-md"
+                className="font-bold text-xs px-2 py-1 bg-secondary text-white shadow-md"
               >
                 ⭐ Popular
               </Chip>
@@ -87,22 +87,22 @@ export const MenuCard: React.FC<MenuCardProps> = ({
         </div>
 
         {/* Compact Info Section */}
-        <div className="h-[120px] bg-gradient-to-b from-pure-white/95 to-sunny-yellow/5 backdrop-blur-sm p-3 flex flex-col justify-between border-t-2 border-sunny-yellow/30">
+        <div className="h-[120px] bg-gradient-to-b from-pure-white/95 to-primary/5 backdrop-blur-sm p-3 flex flex-col justify-between border-t-2 border-primary/30">
           {/* Item Name - Compact */}
-          <h3 className="text-lg font-bold text-black line-clamp-2 leading-tight">
+          <h3 className="text-lg font-bold text-foreground line-clamp-2 leading-tight">
             {item.name}
           </h3>
 
           {/* Price & Category */}
           <div className="flex items-end justify-between">
             <div>
-              <span className="text-2xl font-black text-black">
+              <span className="text-2xl font-black text-foreground">
                 ${(Number(item.current_price) || 0).toFixed(2)}
               </span>
             </div>
             <Chip
               size="sm"
-              className="bg-sunny-yellow text-black font-bold text-xs px-3 py-1 shadow-sm"
+              className="bg-primary text-foreground font-bold text-xs px-3 py-1 shadow-sm"
             >
               {item.item_type}
             </Chip>
@@ -111,8 +111,8 @@ export const MenuCard: React.FC<MenuCardProps> = ({
           {/* Tap Indicator - Compact */}
           {isAvailable && (
             <div className="mt-1">
-              <div className="inline-block bg-gradient-to-r from-sunny-yellow to-deep-orange-yellow px-3 py-1 rounded-full shadow-md">
-                <span className="text-black font-bold text-xs">👆 Tap</span>
+              <div className="inline-block bg-gradient-to-r from-primary to-secondary px-3 py-1 rounded-full shadow-md">
+                <span className="text-foreground font-bold text-xs">👆 Tap</span>
               </div>
             </div>
           )}
