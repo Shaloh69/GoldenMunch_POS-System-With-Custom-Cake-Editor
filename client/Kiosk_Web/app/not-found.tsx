@@ -2,6 +2,10 @@
 
 import Link from "next/link";
 
+// Force this page to be dynamic (no static generation)
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 export default function NotFound() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-cream-white to-caramel-beige">

@@ -28,9 +28,11 @@ COPY . .
 # Set build environment
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+ENV SKIP_ENV_VALIDATION=1
 
 # Increase Node.js memory limit for build (prevent stack overflow)
-ENV NODE_OPTIONS="--max-old-space-size=2048"
+# Also increase stack size to handle HeroUI recursion
+ENV NODE_OPTIONS="--max-old-space-size=2048 --stack-size=4096"
 
 # Build Next.js app (standalone output)
 RUN npm run build
