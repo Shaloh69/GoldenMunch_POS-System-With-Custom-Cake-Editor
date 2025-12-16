@@ -87,7 +87,7 @@ export const AnimatedBackground: React.FC = () => {
   if (!mounted) {
     return (
       <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#FFF9F2] via-[#E8DCC8] to-[#D9B38C]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#FFF8DC] via-[#FFD700]/40 to-[#FF8C00]/35" />
       </div>
     );
   }
@@ -95,18 +95,18 @@ export const AnimatedBackground: React.FC = () => {
   return (
     <div className="fixed inset-0 -z-10 overflow-hidden">
       {/* Rich Gold & Orange Gradient Base - Luxurious and Warm */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#FFF8DC] via-[#FFD700]/20 to-[#FF8C00]/10" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#FFF8DC] via-[#FFD700]/40 to-[#FF8C00]/35" />
 
       {/* Layered Gradient Waves - Gold and Orange accents */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#FF8C00]/20 via-transparent to-[#FFD700]/30 animate-wave" />
-      <div className="absolute inset-0 bg-gradient-to-b from-[#FFA500]/25 via-transparent to-[#FFAA00]/15 animate-wave-reverse" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#FF8C00]/30 via-transparent to-[#FFD700]/40 animate-wave" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#FFA500]/35 via-transparent to-[#FFAA00]/25 animate-wave-reverse" />
 
       {/* Large Animated Orbs - Rich Gold & Orange Tones - PROMINENT */}
-      <div className="absolute -top-40 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-[#FFD700]/55 to-[#FFA500]/45 rounded-full mix-blend-multiply filter blur-3xl animate-pulse-slow" />
-      <div className="absolute top-1/3 -left-32 w-[500px] h-[500px] bg-gradient-to-br from-[#FFB347]/50 to-[#FFAA00]/40 rounded-full mix-blend-multiply filter blur-3xl animate-blob" />
-      <div className="absolute top-1/3 -right-32 w-[500px] h-[500px] bg-gradient-to-br from-[#FFA500]/55 to-[#FF8C00]/45 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000" />
-      <div className="absolute bottom-1/4 left-1/2 w-[600px] h-[600px] bg-gradient-to-br from-[#FF8C00]/45 to-[#FFD700]/50 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000" />
-      <div className="absolute -bottom-40 right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-[#FFAA00]/50 to-[#FFA500]/45 rounded-full mix-blend-multiply filter blur-3xl animate-pulse-slow animation-delay-3000" />
+      <div className="absolute -top-40 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-[#FFD700]/70 to-[#FFA500]/60 rounded-full mix-blend-multiply filter blur-3xl animate-pulse-slow" />
+      <div className="absolute top-1/3 -left-32 w-[500px] h-[500px] bg-gradient-to-br from-[#FFB347]/65 to-[#FFAA00]/55 rounded-full mix-blend-multiply filter blur-3xl animate-blob" />
+      <div className="absolute top-1/3 -right-32 w-[500px] h-[500px] bg-gradient-to-br from-[#FFA500]/70 to-[#FF8C00]/60 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000" />
+      <div className="absolute bottom-1/4 left-1/2 w-[600px] h-[600px] bg-gradient-to-br from-[#FF8C00]/60 to-[#FFD700]/65 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000" />
+      <div className="absolute -bottom-40 right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-[#FFAA00]/65 to-[#FFA500]/60 rounded-full mix-blend-multiply filter blur-3xl animate-pulse-slow animation-delay-3000" />
 
       {/* Gold & Orange Bubbles Rising - VIVID */}
       <div className="absolute inset-0">

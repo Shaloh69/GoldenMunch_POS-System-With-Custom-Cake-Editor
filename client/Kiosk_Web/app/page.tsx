@@ -139,7 +139,7 @@ export default function HomePage() {
     <>
       <div className="min-h-screen overflow-y-auto pr-[35vw] max-pr-[500px] flex flex-col pt-20">
         {/* Hero Header - Optimized for portrait */}
-        <div className="bg-gradient-to-br from-primary/25 via-pure-white/20 to-secondary/25 backdrop-blur-sm border-b-4 border-primary py-8 px-8 mb-8 shadow-lg">
+        <div className="bg-gradient-to-br from-primary/30 via-card/90 to-secondary/30 backdrop-blur-sm border-b-4 border-primary py-8 px-8 mb-8 shadow-lg">
           <div className="max-w-full mx-auto text-center">
             <div className="text-8xl mb-4 animate-float drop-shadow-xl">🍰</div>
             <h1 className="text-7xl font-black text-foreground drop-shadow-lg mb-3">
@@ -160,8 +160,8 @@ export default function HomePage() {
                   size="lg"
                   className={`${
                     selectedCategory === null
-                      ? "bg-gradient-to-br from-primary to-secondary text-foreground scale-105 shadow-xl shadow-sunny-yellow/40"
-                      : "bg-gradient-to-br from-pure-white/80 to-primary/10 backdrop-blur-sm border-2 border-primary/50 text-foreground hover:border-primary hover:shadow-lg"
+                      ? "bg-gradient-to-br from-primary to-secondary text-foreground scale-105 shadow-xl shadow-primary/50"
+                      : "bg-gradient-to-br from-card/90 to-primary/20 backdrop-blur-sm border-2 border-primary/50 text-foreground hover:border-primary hover:shadow-lg"
                   } font-bold text-2xl px-12 py-8 rounded-2xl transition-all touch-target-lg`}
                   onClick={() => setSelectedCategory(null)}
                 >
@@ -173,8 +173,8 @@ export default function HomePage() {
                     size="lg"
                     className={`${
                       selectedCategory === category.category_id
-                        ? "bg-gradient-to-br from-primary to-secondary text-foreground scale-105 shadow-xl shadow-sunny-yellow/40"
-                        : "bg-gradient-to-br from-pure-white/80 to-primary/10 backdrop-blur-sm border-2 border-primary/50 text-foreground hover:border-primary hover:shadow-lg"
+                        ? "bg-gradient-to-br from-primary to-secondary text-foreground scale-105 shadow-xl shadow-primary/50"
+                        : "bg-gradient-to-br from-card/90 to-primary/20 backdrop-blur-sm border-2 border-primary/50 text-foreground hover:border-primary hover:shadow-lg"
                     } font-bold text-2xl px-12 py-8 rounded-2xl transition-all touch-target-lg`}
                     onClick={() => setSelectedCategory(category.category_id)}
                   >
@@ -187,7 +187,7 @@ export default function HomePage() {
 
           {/* Menu Items Grid */}
           {filteredItems.length === 0 ? (
-            <Card className="bg-gradient-to-br from-pure-white/90 via-primary/10 to-secondary/15 backdrop-blur-lg border-2 border-primary/60 shadow-xl">
+            <Card className="bg-gradient-to-br from-card/90 via-primary/25 to-secondary/30 backdrop-blur-lg border-2 border-primary shadow-xl">
               <CardBody className="text-center py-24">
                 <div className="text-[120px] mb-8 animate-float drop-shadow-xl">
                   🍽️
