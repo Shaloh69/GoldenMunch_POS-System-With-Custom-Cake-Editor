@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Button } from "@heroui/button";
+import { Button } from "@/components/ui/button";
 import { useRouter, usePathname } from "next/navigation";
 
 export const BackToMenuButton: React.FC = () => {

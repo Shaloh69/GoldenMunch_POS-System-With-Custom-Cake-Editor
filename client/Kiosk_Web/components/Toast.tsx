@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Card, CardBody } from "@heroui/card";
+import { Card, CardBody } from "@/components/ui/card";
 
 export type ToastType = "success" | "error" | "info" | "warning";
 

@@ -2,20 +2,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardBody, CardHeader } from "@heroui/card";
-import { Button } from "@heroui/button";
-import { Chip } from "@heroui/chip";
-import { Divider } from "@heroui/divider";
-import { Input } from "@heroui/input";
-import { Select, SelectItem } from "@heroui/select";
+import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Chip } from "@/components/ui/badge";
+import { Divider } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Select, SelectItem } from "@/components/ui/select";
 import {
-  Modal,
-  ModalContent,
-  ModalHeader,
+  Dialog as Modal,
+  DialogContent as ModalContent,
+  DialogHeader as ModalHeader,
   ModalBody,
-  ModalFooter,
+  DialogFooter as ModalFooter,
   useDisclosure,
-} from "@heroui/modal";
+} from "@/components/ui/dialog";
 import NextLink from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";

@@ -1,8 +1,8 @@
-import { Card, CardBody, CardHeader } from "@heroui/card";
-import { Button } from "@heroui/button";
-import { Chip } from "@heroui/chip";
-import { Badge } from "@heroui/badge";
-import { Progress } from "@heroui/progress";
+import { Card, CardBody, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Chip } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import NextLink from "next/link";
 
 export const dynamic = "force-dynamic";

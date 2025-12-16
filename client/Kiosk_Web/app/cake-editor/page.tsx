@@ -5,10 +5,10 @@ import { useEffect, useState, Suspense, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card, CardBody } from "@heroui/card";
-import { Button } from "@heroui/button";
-import { Progress } from "@heroui/progress";
-import { Spinner } from "@heroui/spinner";
+import { Card, CardBody } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Spinner } from "@/components/ui/spinner";
 import {
   ArrowLeftIcon,
   ArrowRightIcon,

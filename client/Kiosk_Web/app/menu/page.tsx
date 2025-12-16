@@ -2,10 +2,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@heroui/button";
-import { Card, CardBody } from "@heroui/card";
-import { Spinner } from "@heroui/spinner";
-import { Input } from "@heroui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardBody } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
+import { Input } from "@/components/ui/input";
 import { useCart } from "@/contexts/CartContext";
 import { MenuService } from "@/services/menu.service";
 import type { MenuItem, Category } from "@/types/api";

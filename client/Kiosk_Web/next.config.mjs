@@ -12,15 +12,11 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
 
-  // CRITICAL: Transpile HeroUI packages to fix RSC module errors
+  // Transpile Three.js packages for 3D cake editor
   transpilePackages: [
     'three',
     '@react-three/fiber',
     '@react-three/drei',
-    '@heroui/theme',
-    '@heroui/system',
-    '@heroui/system-rsc',
-    '@heroui/react-rsc-utils',
   ],
 
   // Unoptimized images for compatibility
@@ -30,12 +26,6 @@ const nextConfig = {
 
   webpack: (config) => {
     config.externals = [...(config.externals || []), { canvas: 'canvas' }];
-    // Fix for HeroUI RSC modules
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@heroui/system-rsc': '@heroui/system',
-      '@heroui/react-rsc-utils': '@heroui/react-utils',
-    };
     return config;
   },
 
@@ -50,10 +40,6 @@ const nextConfig = {
     workerThreads: false,
     cpus: 1,
   },
-
-  // Force all routes to be dynamic (no static generation)
-  // This prevents HeroUI circular dependency stack overflow during build
-  generateStaticParams: false,
 };
 
 export default nextConfig;

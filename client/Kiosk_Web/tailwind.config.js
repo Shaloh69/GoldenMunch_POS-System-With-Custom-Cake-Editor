@@ -1,11 +1,8 @@
-import { heroui } from "@heroui/theme";
-
 /** @type {import('tailwindcss').Config} */
 const config = {
   content: [
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
     extend: {
@@ -23,6 +20,46 @@ const config = {
         "chocolate-brown": "#2B2B2B",
         "caramel-beige": "#F3F3F3",
         "mint-green": "#A8D5BA",
+
+        // Shadcn/ui semantic colors
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+      },
+      borderRadius: {
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
         sans: ["var(--font-sans)"],
@@ -32,11 +69,21 @@ const config = {
         "bounce-slow": "bounce 3s infinite",
         "pulse-slow": "pulse 4s infinite",
         float: "float 6s ease-in-out infinite",
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
       },
       keyframes: {
         float: {
           "0%, 100%": { transform: "translateY(0px)" },
           "50%": { transform: "translateY(-20px)" },
+        },
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
       },
       // Portrait 21-inch monitor optimizations
@@ -46,46 +93,7 @@ const config = {
     },
   },
   darkMode: "class",
-  plugins: [
-    heroui({
-      themes: {
-        light: {
-          colors: {
-            background: "#FFFFFF", // pure-white
-            foreground: "#2B2B2B", // charcoal-gray
-            primary: {
-              50: "#FFFDF0",
-              100: "#FFF9E0",
-              200: "#FFF3C1",
-              300: "#FFED9F",
-              400: "#FBCD2F", // sunny-yellow
-              500: "#F9C41E",
-              600: "#F5A623", // deep-orange-yellow
-              700: "#E89113",
-              800: "#C77A0D",
-              900: "#A66408",
-              DEFAULT: "#FBCD2F", // sunny-yellow
-            },
-            secondary: {
-              DEFAULT: "#F5A623", // deep-orange-yellow
-            },
-            success: {
-              DEFAULT: "#A8D5BA", // mint-green (kept)
-            },
-          },
-        },
-        dark: {
-          colors: {
-            background: "#F3F3F3", // soft-warm-gray
-            foreground: "#2B2B2B", // charcoal-gray
-            primary: {
-              DEFAULT: "#FBCD2F", // sunny-yellow
-            },
-          },
-        },
-      },
-    }),
-  ],
+  plugins: [require("tailwindcss-animate")],
 };
 
 module.exports = config;

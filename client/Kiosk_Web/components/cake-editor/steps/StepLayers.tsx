@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@heroui/button";
-import { Card, CardBody } from "@heroui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardBody } from "@/components/ui/card";
 import { CheckIcon } from "@heroicons/react/24/solid";
 import type { CakeDesign } from "@/app/cake-editor/page";
 

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Modal, ModalContent, ModalBody } from "@heroui/modal";
-import { Button } from "@heroui/button";
+import { Dialog as Modal, DialogContent as ModalContent, ModalBody } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import Image from "next/image";
 
 interface ImageLightboxProps {
@@ -50,7 +50,7 @@ export default function ImageLightbox({
           backdrop: "bg-black/80",
         }}
       >
-        <ModalContent>
+        <DialogContent as ModalContent>
           <ModalBody className="flex items-center justify-center p-0 relative">
             {/* Close button */}
             <Button
@@ -83,7 +83,7 @@ export default function ImageLightbox({
               </p>
             </div>
           </ModalBody>
-        </ModalContent>
+        </DialogContent as ModalContent>
       </Modal>
     </>
   );

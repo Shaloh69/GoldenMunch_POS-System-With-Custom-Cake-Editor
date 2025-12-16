@@ -1,8 +1,8 @@
 "use client";
 
-import { Card, CardBody } from "@heroui/card";
-import { Chip } from "@heroui/chip";
-import { Textarea } from "@heroui/input";
+import { Card, CardBody } from "@/components/ui/card";
+import { Chip } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import type { CakeDesign } from "@/app/cake-editor/page";
 
 interface StepReviewProps {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@heroui/button";
+import { Button } from "@/components/ui/button";
 
 export const Counter = () => {
   const [count, setCount] = useState(0);

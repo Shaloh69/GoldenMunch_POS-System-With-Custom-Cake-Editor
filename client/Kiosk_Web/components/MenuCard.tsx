@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { Card, CardBody } from "@heroui/card";
-import { Chip } from "@heroui/chip";
+import { Card, CardBody } from "@/components/ui/card";
+import { Chip } from "@/components/ui/badge";
 import Image from "next/image";
 import type { MenuItem } from "@/types/api";
 import { getImageUrl } from "@/utils/imageUtils";

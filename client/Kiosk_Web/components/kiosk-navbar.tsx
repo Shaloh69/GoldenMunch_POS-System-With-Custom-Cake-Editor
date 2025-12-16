@@ -1,15 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import {
-  Navbar as HeroUINavbar,
-  NavbarContent,
-  NavbarBrand,
-  NavbarItem,
-} from "@heroui/navbar";
-import { Button } from "@heroui/button";
-import { Link } from "@heroui/link";
+import { Button } from "@/components/ui/button";
+import { Link } from "@/components/ui/link";
 import NextLink from "next/link";
+import { cn } from "@/lib/utils";
 
 export const KioskNavbar = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -107,69 +102,65 @@ export const KioskNavbar = () => {
   );
 
   return (
-    <HeroUINavbar
-      maxWidth="full"
-      position="sticky"
-      className="bg-golden-orange border-b-4 border-deep-amber shadow-lg"
-    >
-      {/* Left side - Logo and Title */}
-      <NavbarContent className="basis-1/3" justify="start">
-        <NavbarBrand as="div" className="gap-3 max-w-fit">
-          <NextLink className="flex justify-start items-center gap-2" href="/">
-            <span className="text-4xl">🍰</span>
-            <div>
-              <p className="font-bold text-2xl text-chocolate-brown">
-                Golden Munch
-              </p>
-              <p className="text-sm text-chocolate-brown/70">
-                Touch Screen Ordering
-              </p>
+    <nav className="sticky top-0 z-50 w-full bg-golden-orange border-b-4 border-deep-amber shadow-lg">
+      <div className="w-full px-6 py-4">
+        <div className="flex items-center justify-between">
+          {/* Left side - Logo and Title */}
+          <div className="basis-1/3 flex justify-start">
+            <div className="flex items-center gap-3">
+              <NextLink className="flex items-center gap-2" href="/">
+                <span className="text-4xl">🍰</span>
+                <div>
+                  <p className="font-bold text-2xl text-chocolate-brown">
+                    Golden Munch
+                  </p>
+                  <p className="text-sm text-chocolate-brown/70">
+                    Touch Screen Ordering
+                  </p>
+                </div>
+              </NextLink>
             </div>
-          </NextLink>
-        </NavbarBrand>
-      </NavbarContent>
-
-      {/* Center - Navigation Buttons */}
-      <NavbarContent className="basis-1/3" justify="center">
-        <div className="flex gap-4">
-          {navigationItems.map((item) => (
-            <NavbarItem key={item.href}>
-              <Button
-                as={NextLink}
-                href={item.href}
-                size="lg"
-                variant={item.variant}
-                className="text-chocolate-brown hover:bg-deep-amber/20 font-semibold text-lg px-6"
-              >
-                {item.label}
-              </Button>
-            </NavbarItem>
-          ))}
-        </div>
-      </NavbarContent>
-
-      {/* Right side - Time and Help */}
-      <NavbarContent className="basis-1/3" justify="end">
-        <NavbarItem className="hidden sm:flex">
-          <div className="text-right text-chocolate-brown">
-            <div className="font-bold text-xl">{formattedTime.time}</div>
-            <div className="text-sm opacity-70">{formattedTime.date}</div>
           </div>
-        </NavbarItem>
-        <NavbarItem>
-          <Button
-            size="lg"
-            className="bg-deep-amber hover:bg-chocolate-brown text-cream-white font-bold px-6"
-            onClick={() => {
-              // Handle help action - could open modal, navigate to help page, etc.
-              console.log("Help requested");
-            }}
-          >
-            🆘 Help
-          </Button>
-        </NavbarItem>
-      </NavbarContent>
-    </HeroUINavbar>
+
+          {/* Center - Navigation Buttons */}
+          <div className="basis-1/3 flex justify-center">
+            <div className="flex gap-4">
+              {navigationItems.map((item) => (
+                <Button
+                  key={item.href}
+                  asChild
+                  size="lg"
+                  variant={item.variant}
+                  className="text-chocolate-brown hover:bg-deep-amber/20 font-semibold text-lg px-6"
+                >
+                  <NextLink href={item.href}>{item.label}</NextLink>
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Right side - Time and Help */}
+          <div className="basis-1/3 flex justify-end items-center gap-4">
+            <div className="hidden sm:flex text-right text-chocolate-brown">
+              <div>
+                <div className="font-bold text-xl">{formattedTime.time}</div>
+                <div className="text-sm opacity-70">{formattedTime.date}</div>
+              </div>
+            </div>
+            <Button
+              size="lg"
+              className="bg-deep-amber hover:bg-chocolate-brown text-cream-white font-bold px-6"
+              onClick={() => {
+                // Handle help action - could open modal, navigate to help page, etc.
+                console.log("Help requested");
+              }}
+            >
+              🆘 Help
+            </Button>
+          </div>
+        </div>
+      </div>
+    </nav>
   );
 };
 

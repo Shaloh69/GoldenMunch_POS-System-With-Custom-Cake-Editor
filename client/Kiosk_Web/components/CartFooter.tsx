@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Button } from "@heroui/button";
-import { Chip } from "@heroui/chip";
+import { Button } from "@/components/ui/button";
+import { Chip } from "@/components/ui/badge";
 import Link from "next/link";
 import { useCart } from "@/contexts/CartContext";
 import { usePathname } from "next/navigation";

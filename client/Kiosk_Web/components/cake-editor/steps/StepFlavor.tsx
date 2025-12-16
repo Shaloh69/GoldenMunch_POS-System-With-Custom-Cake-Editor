@@ -1,7 +1,7 @@
 "use client";
 
-import { Card, CardBody } from "@heroui/card";
-import { Chip } from "@heroui/chip";
+import { Card, CardBody } from "@/components/ui/card";
+import { Chip } from "@/components/ui/badge";
 import { CheckIcon } from "@heroicons/react/24/solid";
 import type { CakeDesign } from "@/app/cake-editor/page";
 

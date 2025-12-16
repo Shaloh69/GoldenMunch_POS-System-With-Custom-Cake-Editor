@@ -1,8 +1,8 @@
 "use client";
 
-import { Card, CardBody } from "@heroui/card";
-import { Select, SelectItem } from "@heroui/select";
-import { Input } from "@heroui/input";
+import { Card, CardBody } from "@/components/ui/card";
+import { Select, SelectItem } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import type { CakeDesign } from "@/app/cake-editor/page";
 
 interface StepFrostingProps {

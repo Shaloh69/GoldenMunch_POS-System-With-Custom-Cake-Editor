@@ -1,8 +1,8 @@
 "use client";
 
-import { Button } from "@heroui/button";
-import { Card, CardBody } from "@heroui/card";
-import { Select, SelectItem } from "@heroui/select";
+import { Button } from "@/components/ui/button";
+import { Card, CardBody } from "@/components/ui/card";
+import { Select, SelectItem } from "@/components/ui/select";
 import type { CakeDesign } from "@/app/cake-editor/page";
 
 interface StepDecorationsProps {

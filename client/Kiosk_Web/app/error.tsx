@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { Button } from "@heroui/button";
-import { Card, CardBody } from "@heroui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardBody } from "@/components/ui/card";
 
 export default function Error({
   error,
