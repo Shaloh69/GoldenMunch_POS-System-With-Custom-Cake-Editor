@@ -217,22 +217,22 @@ export default function CartPage() {
 
   if (cartItems.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
-        <Card className="max-w-lg glass-card border-2 border-primary/60 shadow-xl animate-scale-in">
-          <CardBody className="text-center p-12">
-            <div className="text-9xl mb-6 animate-float drop-shadow-xl">🛒</div>
-            <h1 className="text-5xl font-bold text-foreground mb-4 drop-shadow-lg">
+      <div className="min-h-screen flex items-center justify-center p-6 animate-fade-in">
+        <Card className="max-w-2xl glass-card border-4 border-primary/40 shadow-2xl animate-scale-in">
+          <CardBody className="text-center p-16">
+            <div className="text-[140px] mb-8 animate-float drop-shadow-2xl">🛒</div>
+            <h1 className="text-6xl font-black text-gradient mb-6 drop-shadow-lg">
               Your Cart is Empty
             </h1>
-            <p className="text-xl text-foreground mb-8">
+            <p className="text-2xl text-foreground/80 mb-10 font-semibold">
               Looks like you haven't added any delicious treats yet!
             </p>
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-5">
               <Button
                 as={NextLink}
                 href="/"
                 size="lg"
-                className="bg-gradient-to-r from-primary to-secondary text-foreground font-bold text-xl px-10 py-7 shadow-xl hover:scale-105 transition-transform"
+                className="btn-gradient text-2xl px-14 py-9 shadow-2xl hover:scale-105 transition-all touch-target-lg"
               >
                 🍰 Browse Our Menu
               </Button>
@@ -240,8 +240,7 @@ export default function CartPage() {
                 as={NextLink}
                 href="/specials"
                 size="lg"
-                variant="bordered"
-                className="border-2 border-primary/60 text-foreground hover:bg-primary/10 font-bold text-lg px-10"
+                className="glass-button border-3 border-primary/60 text-foreground hover:bg-primary/20 font-bold text-xl px-14 py-8 touch-target"
               >
                 ⭐ View Today's Specials
               </Button>
@@ -253,33 +252,33 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Beautiful Header */}
-      <div className="glass-header border-b-4 border-primary shadow-lg">
-        <div className="max-w-7xl mx-auto p-8">
-          <div className="flex items-center gap-4 animate-slide-right">
-            <div className="text-7xl animate-bounce-slow">🛒</div>
+    <div className="min-h-screen animate-fade-in">
+      {/* Modern Header with Gradient */}
+      <div className="sticky top-0 z-40 glass-header border-b-4 border-primary/60 shadow-2xl mb-6 animate-fade-in-down">
+        <div className="max-w-7xl mx-auto p-10">
+          <div className="flex items-center gap-6 animate-slide-right">
+            <div className="text-8xl animate-bounce-slow drop-shadow-lg">🛒</div>
             <div>
-              <h1 className="text-5xl font-bold text-foreground mb-2 drop-shadow-lg">
+              <h1 className="text-6xl font-black text-gradient mb-3 drop-shadow-lg">
                 Your Cart
               </h1>
-              <p className="text-xl text-foreground font-semibold">
+              <p className="text-2xl text-foreground/90 font-bold">
                 {getItemCount()} {getItemCount() === 1 ? "item" : "items"} •
-                Ready to checkout?
+                Ready to checkout? 🎉
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto p-6 md:p-8 -mt-8">
+      <div className="max-w-7xl mx-auto p-6 md:p-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items - Takes 2 columns on large screens */}
-          <div className="lg:col-span-2 space-y-4">
-            <Card className="glass-card border-2 border-primary/60 shadow-xl animate-slide-up">
-              <CardHeader className="p-6 border-b-2 border-primary/30">
-                <h2 className="text-3xl font-bold text-foreground flex items-center gap-2 drop-shadow-lg">
-                  <span className="text-4xl">📦</span>
+          <div className="lg:col-span-2 space-y-6">
+            <Card className="glass-card border-3 border-primary/50 shadow-2xl animate-slide-up">
+              <CardHeader className="p-8 bg-gradient-to-r from-primary/10 to-secondary/10 border-b-3 border-primary/40">
+                <h2 className="text-4xl font-black text-gradient flex items-center gap-3 drop-shadow-lg">
+                  <span className="text-5xl animate-bounce-in">📦</span>
                   Your Order ({getItemCount()} items)
                 </h2>
               </CardHeader>
@@ -290,9 +289,9 @@ export default function CartPage() {
                     className="animate-slide-up"
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
-                    <div className="flex items-center gap-4 p-5 glass-card rounded-2xl hover:scale-[1.02] transition-all border-2 border-primary/40 hover:border-primary shadow-md">
+                    <div className="flex items-center gap-5 p-6 glass-card rounded-2xl hover:scale-[1.02] transition-all border-3 border-primary/30 hover:border-primary/60 shadow-lg hover:shadow-xl">
                       {/* Item Image - Fixed to show actual images */}
-                      <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center flex-shrink-0 shadow-inner overflow-hidden">
+                      <div className="w-28 h-28 rounded-2xl bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center flex-shrink-0 shadow-lg overflow-hidden">
                         {getImageUrl(item.menuItem.image_url) &&
                         item.menuItem.image_url &&
                         !failedImages.has(item.menuItem.image_url) ? (
@@ -419,12 +418,12 @@ export default function CartPage() {
           <div className="space-y-6">
             {/* Order Information */}
             <Card
-              className="glass-card border-2 border-primary/60 shadow-xl animate-slide-up"
+              className="glass-card border-3 border-primary/50 shadow-2xl animate-slide-up"
               style={{ animationDelay: "0.2s" }}
             >
-              <CardHeader className="p-6 glass-header border-b-2 border-primary/50">
-                <h2 className="text-2xl font-bold text-foreground flex items-center gap-2 drop-shadow-lg">
-                  <span className="text-3xl">📋</span>
+              <CardHeader className="p-7 bg-gradient-to-r from-primary/10 to-secondary/10 border-b-3 border-primary/40">
+                <h2 className="text-3xl font-black text-gradient flex items-center gap-3 drop-shadow-lg">
+                  <span className="text-4xl animate-bounce-in animation-delay-200">📋</span>
                   Order Details
                 </h2>
               </CardHeader>
@@ -571,34 +570,36 @@ export default function CartPage() {
 
             {/* Order Summary */}
             <Card
-              className="glass-card border-2 border-primary/60 shadow-xl animate-slide-up sticky top-24"
+              className="glass-card border-4 border-primary/60 shadow-2xl animate-slide-up sticky top-24"
               style={{ animationDelay: "0.3s" }}
             >
-              <CardHeader className="p-6 bg-gradient-to-r from-primary to-secondary">
-                <h2 className="text-2xl font-bold text-foreground flex items-center gap-2 drop-shadow-lg">
-                  <span className="text-3xl">💰</span>
+              <CardHeader className="p-8 bg-gradient-to-r from-primary/20 via-secondary/20 to-primary/20 border-b-3 border-primary/50">
+                <h2 className="text-3xl font-black text-gradient flex items-center gap-3 drop-shadow-lg">
+                  <span className="text-5xl animate-bounce-in animation-delay-500">💰</span>
                   Order Summary
                 </h2>
               </CardHeader>
-              <CardBody className="p-6">
-                <div className="space-y-4">
-                  <div className="flex justify-between text-2xl font-bold">
-                    <span className="text-foreground">
-                      Total ({getItemCount()} items)
-                    </span>
-                    <span className="text-foreground">₱{getTotal().toFixed(2)}</span>
+              <CardBody className="p-8">
+                <div className="space-y-6">
+                  <div className="glass-card p-6 rounded-2xl border-2 border-primary/40 shadow-lg">
+                    <div className="flex justify-between items-center">
+                      <span className="text-2xl font-bold text-foreground">
+                        Total ({getItemCount()} items)
+                      </span>
+                      <span className="text-4xl font-black text-gradient">₱{getTotal().toFixed(2)}</span>
+                    </div>
                   </div>
                 </div>
 
                 {error && (
-                  <div className="mt-4 p-4 bg-red-500/20 border-2 border-red-500 rounded-xl animate-scale-in">
-                    <p className="text-foreground font-semibold">⚠️ {error}</p>
+                  <div className="mt-6 p-5 bg-red-500/20 border-3 border-red-500 rounded-2xl animate-scale-in shadow-lg">
+                    <p className="text-foreground font-bold text-lg">⚠️ {error}</p>
                   </div>
                 )}
 
                 <Button
                   size="lg"
-                  className="w-full mt-6 bg-gradient-to-r from-primary to-secondary text-foreground font-bold text-xl py-7 shadow-xl hover:scale-105 transition-transform"
+                  className="w-full mt-8 btn-gradient text-2xl py-10 shadow-2xl hover:scale-105 transition-all touch-target-lg"
                   onClick={handleCheckout}
                   isLoading={isProcessing}
                 >
@@ -607,7 +608,7 @@ export default function CartPage() {
                     : `💳 Place Order - ₱${getTotal().toFixed(2)}`}
                 </Button>
 
-                <p className="text-xs text-foreground text-center mt-3 font-semibold">
+                <p className="text-sm text-foreground/80 text-center mt-4 font-semibold">
                   🔒 Secure checkout • By placing this order, you agree to our
                   terms
                 </p>
@@ -622,17 +623,17 @@ export default function CartPage() {
         <ModalContent
           size="2xl"
           classNames={{
-            base: "glass-card border-4 border-primary shadow-2xl",
+            base: "glass-card border-4 border-primary/60 shadow-2xl",
             header: "border-b-0",
-            body: "py-8",
+            body: "py-10",
             footer: "border-t-0",
           }}
         >
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1 text-center pt-8">
-                <div className="text-8xl mb-4 animate-bounce-slow">🎉</div>
-                <h2 className="text-4xl font-bold text-foreground drop-shadow-lg">
+              <ModalHeader className="flex flex-col gap-1 text-center pt-10">
+                <div className="text-[120px] mb-6 animate-bounce-slow drop-shadow-2xl">🎉</div>
+                <h2 className="text-5xl font-black text-gradient drop-shadow-lg mb-3">
                   Order Successful!
                 </h2>
               </ModalHeader>

@@ -128,7 +128,7 @@ export default function CustomCakePage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 animate-fade-in">
       <AnimatePresence mode="wait">
         {/* Welcome Screen */}
         {step === "welcome" && (
@@ -137,25 +137,25 @@ export default function CustomCakePage() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="max-w-2xl w-full"
+            className="max-w-3xl w-full"
           >
-            <div className="glass-card rounded-3xl shadow-[0_0_40px_rgba(234,215,183,0.3)] p-8 md:p-12">
+            <div className="glass-card rounded-3xl shadow-2xl border-4 border-primary/40 p-10 md:p-16">
               {/* Header */}
-              <div className="text-center mb-8">
+              <div className="text-center mb-10">
                 <motion.div
                   initial={{ y: -20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-pink-400 via-purple-400 to-indigo-400 rounded-full mb-6 shadow-2xl"
+                  className="inline-flex items-center justify-center w-40 h-40 bg-gradient-to-br from-pink-400 via-purple-400 to-indigo-400 rounded-full mb-8 shadow-2xl animate-bounce-in"
                 >
-                  <Cake className="w-16 h-16 text-white" />
+                  <Cake className="w-20 h-20 text-white drop-shadow-lg" />
                 </motion.div>
 
                 <motion.h1
                   initial={{ y: -20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="text-5xl md:text-6xl font-bold text-foreground mb-4"
+                  className="text-6xl md:text-7xl font-black text-gradient mb-6 drop-shadow-lg"
                 >
                   Design Your Dream Cake
                 </motion.h1>
@@ -164,9 +164,9 @@ export default function CustomCakePage() {
                   initial={{ y: -20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.4 }}
-                  className="text-2xl text-foreground/80 font-medium"
+                  className="text-3xl text-foreground/90 font-bold"
                 >
-                  Create a custom 3D cake design on your phone!
+                  Create a custom 3D cake design on your phone! 🎨
                 </motion.p>
               </div>
 
@@ -175,20 +175,20 @@ export default function CustomCakePage() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+                className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10"
               >
                 <FeatureCard
-                  icon={<Sparkles className="w-6 h-6" />}
+                  icon={<Sparkles className="w-8 h-8" />}
                   title="3D Editor"
                   description="Interactive cake designer"
                 />
                 <FeatureCard
-                  icon={<Cake className="w-6 h-6" />}
+                  icon={<Cake className="w-8 h-8" />}
                   title="Custom Layers"
                   description="Up to 5 layers & flavors"
                 />
                 <FeatureCard
-                  icon={<CheckCircle className="w-6 h-6" />}
+                  icon={<CheckCircle className="w-8 h-8" />}
                   title="Easy Process"
                   description="Design, submit, approve"
                 />
@@ -203,7 +203,7 @@ export default function CustomCakePage() {
                 whileTap={{ scale: 0.95 }}
                 onClick={generateQR}
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 text-white py-8 rounded-3xl text-3xl font-bold shadow-2xl hover:shadow-purple-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full btn-gradient py-12 rounded-3xl text-4xl font-black shadow-2xl hover:shadow-purple-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-target-lg"
               >
                 ✨ Start Designing ✨
               </motion.button>
@@ -212,9 +212,9 @@ export default function CustomCakePage() {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="mt-4 p-4 bg-red-50 border-2 border-red-300 rounded-xl text-foreground text-center font-semibold"
+                  className="mt-6 p-6 bg-red-500/20 border-3 border-red-500 rounded-2xl text-foreground text-center font-bold text-lg animate-scale-in shadow-lg"
                 >
-                  {error}
+                  ⚠️ {error}
                 </motion.div>
               )}
             </div>
@@ -256,20 +256,20 @@ export default function CustomCakePage() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="max-w-2xl w-full"
+            className="max-w-3xl w-full"
           >
-            <div className="glass-card rounded-3xl shadow-2xl p-8 md:p-12 border-2 border-purple-200">
+            <div className="glass-card rounded-3xl shadow-2xl p-10 md:p-16 border-4 border-primary/40">
               {/* Timer */}
               <motion.div
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
-                className="flex items-center justify-center gap-3 mb-6"
+                className="flex items-center justify-center gap-4 mb-8 glass-card p-6 rounded-2xl border-2 border-purple-400/60 shadow-lg"
               >
-                <Clock className="w-8 h-8 text-purple-600" />
-                <span className="text-3xl font-bold text-foreground">
+                <Clock className="w-10 h-10 text-purple-600 animate-bounce-in" />
+                <span className="text-5xl font-black text-gradient">
                   {formatTime(timeRemaining)}
                 </span>
-                <span className="text-foreground/70 text-xl">remaining</span>
+                <span className="text-foreground/80 text-2xl font-bold">remaining</span>
               </motion.div>
 
               {/* Instructions */}
@@ -277,16 +277,16 @@ export default function CustomCakePage() {
                 initial={{ y: -20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.1 }}
-                className="text-center mb-8"
+                className="text-center mb-10"
               >
-                <div className="inline-flex items-center gap-3 mb-4">
-                  <Smartphone className="w-10 h-10 text-pink-600" />
-                  <h2 className="text-4xl font-bold text-foreground">
+                <div className="inline-flex items-center gap-4 mb-5">
+                  <Smartphone className="w-12 h-12 text-pink-600 animate-bounce-in animation-delay-200" />
+                  <h2 className="text-5xl font-black text-gradient">
                     Scan with Your Phone
                   </h2>
                 </div>
-                <p className="text-xl text-foreground/80 font-medium">
-                  Open your camera app and point it at the QR code below
+                <p className="text-2xl text-foreground/90 font-bold">
+                  Open your camera app and point it at the QR code below 📱
                 </p>
               </motion.div>
 
@@ -521,12 +521,12 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl shadow-lg hover:shadow-xl transition-shadow">
-      <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full mb-4 shadow-lg">
+    <div className="text-center p-8 glass-card rounded-2xl shadow-xl hover:shadow-2xl transition-all hover:scale-105 border-2 border-primary/30">
+      <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full mb-5 shadow-2xl animate-bounce-in">
         {icon}
       </div>
-      <h3 className="font-bold text-foreground text-lg mb-2">{title}</h3>
-      <p className="text-sm text-foreground/70">{description}</p>
+      <h3 className="font-black text-foreground text-2xl mb-3 text-gradient">{title}</h3>
+      <p className="text-base text-foreground/80 font-semibold">{description}</p>
     </div>
   );
 }
@@ -534,10 +534,10 @@ function FeatureCard({
 function StepIndicator({ number, text }: { number: number; text: string }) {
   return (
     <div className="flex flex-col items-center">
-      <div className="w-14 h-14 bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 text-white rounded-full flex items-center justify-center font-bold text-xl mb-3 shadow-lg">
+      <div className="w-16 h-16 bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 text-white rounded-full flex items-center justify-center font-black text-2xl mb-4 shadow-2xl animate-bounce-in">
         {number}
       </div>
-      <span className="text-base text-foreground font-semibold">{text}</span>
+      <span className="text-lg text-foreground font-bold">{text}</span>
     </div>
   );
 }

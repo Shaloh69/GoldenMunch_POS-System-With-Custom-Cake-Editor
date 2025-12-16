@@ -94,53 +94,51 @@ export default function HomePage() {
     setSelectedItem(null);
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center animate-fade-in-up">
-          <div className="relative">
-            <Spinner size="xl" color="primary" className="w-32 h-32" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-6xl animate-pulse-gentle">🍰</div>
-            </div>
-          </div>
-          <p className="text-4xl font-bold text-foreground mt-8 animate-pulse-gentle">
-            Loading Menu...
-          </p>
-          <p className="text-xl text-muted-foreground mt-2">
-            Preparing something delicious
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-8 animate-fade-in">
-        <div className="glass-card max-w-2xl p-12 animate-shake">
-          <div className="text-center">
-            <div className="text-9xl mb-8 animate-bounce-in">⚠️</div>
-            <h1 className="text-5xl font-bold text-foreground mb-6">
-              Oops! Something went wrong
-            </h1>
-            <p className="text-2xl text-muted-foreground mb-10">{error}</p>
-            <Button
-              size="lg"
-              className="btn-gradient text-2xl px-12 py-8 shadow-lg touch-target"
-              onClick={() => window.location.reload()}
-            >
-              Try Again
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       <div className="min-h-screen overflow-y-auto pr-[35vw] max-pr-[500px] flex flex-col relative">
+        {loading && (
+          <div className="min-h-screen flex items-center justify-center">
+            <div className="text-center animate-fade-in-up">
+              <div className="relative">
+                <Spinner size="xl" color="primary" className="w-32 h-32" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-6xl animate-pulse-gentle">🍰</div>
+                </div>
+              </div>
+              <p className="text-4xl font-bold text-foreground mt-8 animate-pulse-gentle">
+                Loading Menu...
+              </p>
+              <p className="text-xl text-muted-foreground mt-2">
+                Preparing something delicious
+              </p>
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div className="min-h-screen flex items-center justify-center p-8 animate-fade-in">
+            <div className="glass-card max-w-2xl p-12 animate-shake">
+              <div className="text-center">
+                <div className="text-9xl mb-8 animate-bounce-in">⚠️</div>
+                <h1 className="text-5xl font-bold text-foreground mb-6">
+                  Oops! Something went wrong
+                </h1>
+                <p className="text-2xl text-muted-foreground mb-10">{error}</p>
+                <Button
+                  size="lg"
+                  className="btn-gradient text-2xl px-12 py-8 shadow-lg touch-target"
+                  onClick={() => window.location.reload()}
+                >
+                  Try Again
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!loading && !error && (
+          <>
         {/* Modern Hero Header */}
         <header className="glass-header sticky top-0 z-30 animate-fade-in-down">
           <div className="max-w-full mx-auto py-10 px-8">
@@ -267,9 +265,11 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+        </>
+        )}
       </div>
 
-      {/* Sidebar with slide animation */}
+      {/* Sidebar with slide animation - Always visible */}
       <KioskSidebar selectedItem={selectedItem} onClose={handleCloseSidebar} />
     </>
   );
