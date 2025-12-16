@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "next dev -p 3002",
     "build": "next build",
-    "start": "next start -p 3002",
+    "start": "next start",
     "lint": "eslint --fix",
     "clean": "rm -rf node_modules package-lock.json .next",
     "clean:win": "if exist node_modules rmdir /s /q node_modules && if exist package-lock.json del package-lock.json && if exist .next rmdir /s /q .next",
