@@ -17,6 +17,7 @@ import {
   CustomCakeService,
   CustomCakeSessionResponse,
 } from "@/services/customCake.service";
+import { KioskSidebar } from "@/components/KioskSidebar";
 
 type QRSession = CustomCakeSessionResponse;
 
@@ -29,7 +30,12 @@ export default function CustomCakePage() {
   const [step, setStep] = useState<
     "welcome" | "generating" | "qr" | "expired" | "success"
   >("welcome");
+  const [selectedItem, setSelectedItem] = useState<any>(null);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleCloseSidebar = () => {
+    setSelectedItem(null);
+  };
 
   // Generate QR Code
   const generateQR = useCallback(async () => {
@@ -128,7 +134,8 @@ export default function CustomCakePage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 animate-fade-in">
+    <>
+    <div className="min-h-screen flex items-center justify-center p-4 pr-[35vw] max-pr-[500px] animate-fade-in">
       <AnimatePresence mode="wait">
         {/* Welcome Screen */}
         {step === "welcome" && (
@@ -137,9 +144,9 @@ export default function CustomCakePage() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="max-w-3xl w-full"
+            className="w-full max-w-4xl mx-auto"
           >
-            <div className="glass-card rounded-3xl shadow-2xl border-4 border-primary/40 p-10 md:p-16">
+            <div className="glass-card rounded-3xl shadow-2xl border-4 border-primary/40 p-12 md:p-20">
               {/* Header */}
               <div className="text-center mb-10">
                 <motion.div
@@ -228,9 +235,9 @@ export default function CustomCakePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="max-w-md w-full text-center"
+            className="w-full max-w-2xl mx-auto text-center"
           >
-            <div className="glass-card rounded-3xl shadow-2xl p-12 border-2 border-purple-200">
+            <div className="glass-card rounded-3xl shadow-2xl p-16 border-4 border-primary/40">
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
@@ -256,9 +263,9 @@ export default function CustomCakePage() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="max-w-3xl w-full"
+            className="w-full max-w-4xl mx-auto"
           >
-            <div className="glass-card rounded-3xl shadow-2xl p-10 md:p-16 border-4 border-primary/40">
+            <div className="glass-card rounded-3xl shadow-2xl p-12 md:p-20 border-4 border-primary/40">
               {/* Timer */}
               <motion.div
                 initial={{ y: -20, opacity: 0 }}
@@ -378,9 +385,9 @@ export default function CustomCakePage() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="max-w-md w-full"
+            className="w-full max-w-2xl mx-auto"
           >
-            <div className="glass-card rounded-3xl shadow-2xl p-12 text-center border-2 border-red-200">
+            <div className="glass-card rounded-3xl shadow-2xl p-16 text-center border-4 border-red-400/60">
               <div className="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-red-400 to-orange-500 rounded-full mb-6 shadow-2xl">
                 <Clock className="w-16 h-16 text-white" />
               </div>
@@ -423,9 +430,9 @@ export default function CustomCakePage() {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            className="max-w-2xl w-full"
+            className="w-full max-w-4xl mx-auto"
           >
-            <div className="glass-card rounded-3xl shadow-2xl p-12 text-center border-2 border-green-200">
+            <div className="glass-card rounded-3xl shadow-2xl p-16 text-center border-4 border-green-400/60">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
@@ -507,6 +514,8 @@ export default function CustomCakePage() {
         )}
       </AnimatePresence>
     </div>
+    <KioskSidebar selectedItem={selectedItem} onClose={handleCloseSidebar} />
+    </>
   );
 }
 

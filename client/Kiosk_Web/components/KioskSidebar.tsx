@@ -25,12 +25,8 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
   const [quantity, setQuantity] = useState(1);
   const [isCartHidden, setIsCartHidden] = useState(false);
 
-  // Don't show sidebar on cart, idle, or custom-cake pages
-  if (
-    pathname === "/cart" ||
-    pathname === "/idle" ||
-    pathname === "/custom-cake"
-  ) {
+  // Don't show sidebar on idle page only
+  if (pathname === "/idle") {
     return null;
   }
 
