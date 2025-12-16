@@ -1,9 +1,14 @@
+"use client";
+
+import { useState } from "react";
 import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/badge";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { KioskSidebar } from "@/components/KioskSidebar";
+import { useCart } from "@/contexts/CartContext";
 import NextLink from "next/link";
+import type { MenuItem } from "@/types/api";
 
 export const dynamic = "force-dynamic";
 
@@ -93,6 +98,9 @@ const todaysSpecials: Special[] = [
 ];
 
 export default function SpecialsPage() {
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const { items: cartItems } = useCart();
+
   const getCurrentDate = () => {
     return new Date().toLocaleDateString("en-US", {
       weekday: "long",
@@ -102,220 +110,235 @@ export default function SpecialsPage() {
     });
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-cream-white to-caramel-beige">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-golden-orange via-deep-amber to-golden-orange text-chocolate-brown p-8 shadow-lg">
-        <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-5xl font-bold mb-2 animate-pulse-slow">
-            ⭐ Today's Specials ⭐
-          </h1>
-          <p className="text-xl opacity-90 mb-2">{getCurrentDate()}</p>
-          <p className="text-lg opacity-80">
-            Limited time offers - Don't miss out!
-          </p>
-        </div>
-      </div>
+  const handleItemClick = (special: Special) => {
+    // For now, just log - in future, convert Special to MenuItem
+    console.log("Special clicked:", special);
+  };
 
-      <div className="max-w-7xl mx-auto p-8">
-        {/* Flash Sale Banner */}
-        <div className="mb-8 bg-gradient-to-r from-deep-amber to-chocolate-brown text-cream-white p-6 rounded-2xl shadow-xl">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold mb-2">
-              🔥 Flash Sale Active! 🔥
-            </h2>
-            <p className="text-lg opacity-90">
-              Extra savings on selected items - while supplies last!
+  const handleCloseSidebar = () => {
+    setSelectedItem(null);
+  };
+
+  return (
+    <>
+      <div className="min-h-screen pr-[35vw] max-pr-[500px]">
+        {/* Modern Header */}
+        <div className="sticky top-0 z-40 glass-header py-6 px-4 mb-4 animate-fade-in-down">
+          <div className="max-w-full mx-auto text-center">
+            <h1 className="text-5xl font-black text-gradient drop-shadow-md mb-2 animate-bounce-in">
+              ⭐ Today's Specials ⭐
+            </h1>
+            <p className="text-xl text-foreground/80 mb-1 font-semibold">{getCurrentDate()}</p>
+            <p className="text-lg text-foreground/70">
+              Limited time offers - Don't miss out!
             </p>
           </div>
         </div>
 
-        {/* Today's Specials Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {todaysSpecials.map((special) => (
-            <Card
-              key={special.id}
-              className="hover:scale-105 transition-all duration-300 shadow-xl border-2 border-golden-orange/30 hover:border-golden-orange bg-cream-white relative overflow-hidden"
-            >
-              {/* Discount Badge */}
-              <div className="absolute top-4 right-4 z-10">
-                <Chip
-                  color="danger"
-                  size="lg"
-                  variant="solid"
-                  className="font-bold text-lg px-3 py-1"
-                >
-                  -{special.discount}%
-                </Chip>
-              </div>
-
-              {/* New Badge */}
-              {special.isNew && (
-                <div className="absolute top-4 left-4 z-10">
-                  <Chip
-                    color="success"
-                    size="sm"
-                    variant="flat"
-                    className="font-bold animate-pulse-slow"
-                  >
-                    🆕 NEW
-                  </Chip>
-                </div>
-              )}
-
-              <CardHeader className="flex flex-col items-center px-6 pt-8 pb-4">
-                <div className="text-8xl mb-4 animate-float">
-                  {special.emoji}
-                </div>
-                <h3 className="text-2xl font-bold text-chocolate-brown text-center mb-2">
-                  {special.name}
-                </h3>
-                <p className="text-chocolate-brown/70 text-center mb-4">
-                  {special.description}
-                </p>
-
-                {/* Price Display */}
-                <div className="text-center mb-4">
-                  <div className="flex items-center justify-center gap-3">
-                    <span className="text-lg text-chocolate-brown/60 line-through">
-                      ${special.originalPrice.toFixed(2)}
-                    </span>
-                    <span className="text-3xl font-bold text-deep-amber">
-                      ${special.specialPrice.toFixed(2)}
-                    </span>
-                  </div>
-                  <p className="text-sm text-chocolate-brown/70 mt-1">
-                    You save $
-                    {(special.originalPrice - special.specialPrice).toFixed(2)}!
-                  </p>
-                </div>
-
-                {/* Time Remaining */}
-                <Chip color="warning" size="sm" variant="flat" className="mb-4">
-                  ⏰ {special.timeLeft}
-                </Chip>
-              </CardHeader>
-
-              <CardBody className="px-6 pb-6">
-                {/* Quantity Tracker */}
-                {special.limitedQuantity && (
-                  <div className="mb-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-sm font-semibold text-chocolate-brown">
-                        Limited Quantity
-                      </span>
-                      <span className="text-sm text-chocolate-brown/70">
-                        {special.limitedQuantity - (special.soldCount || 0)}{" "}
-                        left
-                      </span>
-                    </div>
-                    <Progress
-                      value={
-                        ((special.soldCount || 0) / special.limitedQuantity) *
-                        100
-                      }
-                      color="warning"
-                      className="mb-2"
-                    />
-                    <p className="text-xs text-chocolate-brown/60 text-center">
-                      {special.soldCount || 0} of {special.limitedQuantity} sold
-                    </p>
-                  </div>
-                )}
-
-                <Button
-                  size="lg"
-                  className="w-full bg-golden-orange hover:bg-deep-amber text-chocolate-brown font-bold text-lg mb-3"
-                >
-                  🛒 Add Special to Cart
-                </Button>
-
-                <Button
-                  as={NextLink}
-                  href={`/?category=${special.category}`}
-                  size="md"
-                  variant="bordered"
-                  className="w-full border-golden-orange text-chocolate-brown hover:bg-golden-orange/10 font-semibold"
-                >
-                  View Similar Items
-                </Button>
-              </CardBody>
-            </Card>
-          ))}
-        </div>
-
-        {/* Additional Offers */}
-        <div className="mt-12">
-          <h2 className="text-3xl font-bold text-chocolate-brown mb-6 text-center">
-            🎁 Additional Offers
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Loyalty Program */}
-            <Card className="bg-gradient-to-br from-mint-green/20 to-mint-green/10 border-2 border-mint-green/30">
-              <CardBody className="p-6 text-center">
-                <div className="text-4xl mb-3">🏆</div>
-                <h3 className="text-xl font-bold text-chocolate-brown mb-2">
-                  Loyalty Rewards
-                </h3>
-                <p className="text-chocolate-brown/70 mb-4">
-                  Earn points with every purchase! Get a free pastry after 10
-                  visits.
-                </p>
-                <Button
-                  size="md"
-                  className="bg-mint-green text-chocolate-brown font-bold"
-                >
-                  Learn More
-                </Button>
-              </CardBody>
-            </Card>
-
-            {/* Happy Hour */}
-            <Card className="bg-gradient-to-br from-caramel-beige/30 to-caramel-beige/10 border-2 border-caramel-beige">
-              <CardBody className="p-6 text-center">
-                <div className="text-4xl mb-3">🕐</div>
-                <h3 className="text-xl font-bold text-chocolate-brown mb-2">
-                  Happy Hour Special
-                </h3>
-                <p className="text-chocolate-brown/70 mb-4">
-                  50% off all beverages between 2-4 PM on weekdays!
-                </p>
-                <Button
-                  size="md"
-                  variant="bordered"
-                  className="border-caramel-beige text-chocolate-brown font-bold"
-                >
-                  Set Reminder
-                </Button>
-              </CardBody>
-            </Card>
+        <div className="max-w-full mx-auto px-4">
+          {/* Flash Sale Banner */}
+          <div className="mb-6 glass-card p-6 rounded-2xl shadow-xl animate-scale-in border-2 border-primary/60">
+            <div className="text-center">
+              <h2 className="text-3xl font-bold text-foreground mb-2">
+                🔥 Flash Sale Active! 🔥
+              </h2>
+              <p className="text-lg text-foreground/80">
+                Extra savings on selected items - while supplies last!
+              </p>
+            </div>
           </div>
-        </div>
 
-        {/* Navigation */}
-        <div className="mt-12 text-center">
-          <div className="flex flex-wrap justify-center gap-4">
-            <Button
-              as={NextLink}
-              href="/"
-              size="lg"
-              className="bg-deep-amber hover:bg-chocolate-brown text-cream-white font-bold px-8"
-            >
-              🏠 Back to Menu
-            </Button>
-            <Button
-              as={NextLink}
-              href="/menu"
-              size="lg"
-              variant="bordered"
-              className="border-golden-orange text-chocolate-brown hover:bg-golden-orange/10 font-bold px-8"
-            >
-              📋 Browse Menu
-            </Button>
+          {/* Today's Specials Grid - 2 Column Layout */}
+          <div className="grid grid-cols-2 gap-6 pb-8">
+            {todaysSpecials.map((special, index) => (
+              <div
+                key={special.id}
+                className="animate-fade-in-up"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <Card className="modern-card hover:scale-105 transition-all duration-300 shadow-xl relative overflow-hidden h-full cursor-pointer">
+                  {/* Discount Badge */}
+                  <div className="absolute top-4 right-4 z-10 animate-bounce-in animation-delay-200">
+                    <Chip
+                      size="lg"
+                      className="font-bold text-base px-4 py-2 bg-red-500 text-white shadow-lg"
+                    >
+                      -{special.discount}%
+                    </Chip>
+                  </div>
+
+                  {/* New Badge */}
+                  {special.isNew && (
+                    <div className="absolute top-4 left-4 z-10 animate-pulse-gentle">
+                      <Chip
+                        size="sm"
+                        className="font-bold bg-green-500 text-white"
+                      >
+                        🆕 NEW
+                      </Chip>
+                    </div>
+                  )}
+
+                  <CardHeader className="flex flex-col items-center px-6 pt-8 pb-4">
+                    <div className="text-8xl mb-4 animate-float drop-shadow-lg">
+                      {special.emoji}
+                    </div>
+                    <h3 className="text-2xl font-bold text-foreground text-center mb-2">
+                      {special.name}
+                    </h3>
+                    <p className="text-foreground/70 text-center mb-4 text-sm">
+                      {special.description}
+                    </p>
+
+                    {/* Price Display */}
+                    <div className="text-center mb-4">
+                      <div className="flex items-center justify-center gap-3">
+                        <span className="text-lg text-foreground/60 line-through">
+                          ₱{special.originalPrice.toFixed(2)}
+                        </span>
+                        <span className="text-3xl font-bold text-gradient">
+                          ₱{special.specialPrice.toFixed(2)}
+                        </span>
+                      </div>
+                      <p className="text-sm text-foreground/70 mt-1 font-semibold">
+                        You save ₱
+                        {(special.originalPrice - special.specialPrice).toFixed(2)}!
+                      </p>
+                    </div>
+
+                    {/* Time Remaining */}
+                    <Chip
+                      size="sm"
+                      className="mb-4 bg-primary/20 text-foreground border border-primary/40"
+                    >
+                      ⏰ {special.timeLeft}
+                    </Chip>
+                  </CardHeader>
+
+                  <CardBody className="px-6 pb-6">
+                    {/* Quantity Tracker */}
+                    {special.limitedQuantity && (
+                      <div className="mb-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-semibold text-foreground">
+                            Limited Quantity
+                          </span>
+                          <span className="text-sm text-foreground/70">
+                            {special.limitedQuantity - (special.soldCount || 0)}{" "}
+                            left
+                          </span>
+                        </div>
+                        <Progress
+                          value={
+                            ((special.soldCount || 0) / special.limitedQuantity) *
+                            100
+                          }
+                          className="mb-2 h-2"
+                        />
+                        <p className="text-xs text-foreground/60 text-center">
+                          {special.soldCount || 0} of {special.limitedQuantity} sold
+                        </p>
+                      </div>
+                    )}
+
+                    <Button
+                      size="lg"
+                      className="w-full btn-gradient font-bold text-base mb-3 py-4 touch-target"
+                      onClick={() => handleItemClick(special)}
+                    >
+                      🛒 Add Special to Cart
+                    </Button>
+
+                    <Button
+                      as={NextLink}
+                      href={`/?category=${special.category}`}
+                      size="md"
+                      variant="bordered"
+                      className="w-full glass-button font-semibold text-sm"
+                    >
+                      View Similar Items
+                    </Button>
+                  </CardBody>
+                </Card>
+              </div>
+            ))}
+          </div>
+
+          {/* Additional Offers */}
+          <div className="mb-8 animate-fade-in-up animation-delay-1000">
+            <h2 className="text-3xl font-bold text-foreground mb-6 text-center">
+              🎁 Additional Offers
+            </h2>
+
+            <div className="grid grid-cols-2 gap-6">
+              {/* Loyalty Program */}
+              <Card className="glass-card border-2 border-primary/40">
+                <CardBody className="p-6 text-center">
+                  <div className="text-4xl mb-3 animate-bounce-slow">🏆</div>
+                  <h3 className="text-xl font-bold text-foreground mb-2">
+                    Loyalty Rewards
+                  </h3>
+                  <p className="text-foreground/70 mb-4 text-sm">
+                    Earn points with every purchase! Get a free pastry after 10
+                    visits.
+                  </p>
+                  <Button
+                    size="md"
+                    className="btn-gradient font-bold"
+                  >
+                    Learn More
+                  </Button>
+                </CardBody>
+              </Card>
+
+              {/* Happy Hour */}
+              <Card className="glass-card border-2 border-secondary/40">
+                <CardBody className="p-6 text-center">
+                  <div className="text-4xl mb-3 animate-pulse-gentle">🕐</div>
+                  <h3 className="text-xl font-bold text-foreground mb-2">
+                    Happy Hour Special
+                  </h3>
+                  <p className="text-foreground/70 mb-4 text-sm">
+                    50% off all beverages between 2-4 PM on weekdays!
+                  </p>
+                  <Button
+                    size="md"
+                    variant="bordered"
+                    className="glass-button font-bold"
+                  >
+                    Set Reminder
+                  </Button>
+                </CardBody>
+              </Card>
+            </div>
+          </div>
+
+          {/* Navigation */}
+          <div className="pb-8 text-center animate-fade-in-up animation-delay-2000">
+            <div className="flex gap-4">
+              <Button
+                as={NextLink}
+                href="/"
+                size="lg"
+                className="btn-gradient flex-1 font-bold text-lg py-6 touch-target"
+              >
+                🏠 Back to Menu
+              </Button>
+              <Button
+                as={NextLink}
+                href="/menu"
+                size="lg"
+                className="glass-button flex-1 font-bold text-lg py-6 touch-target"
+              >
+                📋 Browse Menu
+              </Button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Sidebar */}
+      <KioskSidebar selectedItem={selectedItem} onClose={handleCloseSidebar} />
+    </>
   );
 }
