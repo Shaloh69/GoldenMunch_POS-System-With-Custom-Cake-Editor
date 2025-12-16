@@ -52,7 +52,7 @@ RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
 # Set production environment
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=3002
+# PORT will be set by Render (typically 10000)
 
 # Copy standalone build output
 COPY --from=builder --chown=nodejs:nodejs /app/.next/standalone ./
@@ -62,12 +62,12 @@ COPY --from=builder --chown=nodejs:nodejs /app/public ./public
 # Switch to non-root user
 USER nodejs
 
-# Expose port
-EXPOSE 3002
+# Expose port (Render will set this via $PORT env var)
+EXPOSE 10000
 
-# Health check
+# Health check - uses $PORT from environment
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3002', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+  CMD node -e "const port = process.env.PORT || 10000; require('http').get('http://localhost:' + port, (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 # Use dumb-init
 ENTRYPOINT ["dumb-init", "--"]
