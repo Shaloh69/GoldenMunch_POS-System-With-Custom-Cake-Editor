@@ -306,12 +306,12 @@ export default function SpecialsPage() {
             </Button>
             <Button
               as={NextLink}
-              href="/categories"
+              href="/menu"
               size="lg"
               variant="bordered"
               className="border-golden-orange text-chocolate-brown hover:bg-golden-orange/10 font-bold px-8"
             >
-              📋 Browse Categories
+              📋 Browse Menu
             </Button>
           </div>
         </div>

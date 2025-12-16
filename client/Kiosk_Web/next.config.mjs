@@ -50,6 +50,10 @@ const nextConfig = {
     workerThreads: false,
     cpus: 1,
   },
+
+  // Force all routes to be dynamic (no static generation)
+  // This prevents HeroUI circular dependency stack overflow during build
+  generateStaticParams: false,
 };
 
 export default nextConfig;

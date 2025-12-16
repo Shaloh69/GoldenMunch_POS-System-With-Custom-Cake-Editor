@@ -10,6 +10,11 @@ import { fontSans } from "@/config/fonts";
 import { AnimatedBackground } from "@/components/AnimatedBackground";
 import { BackToMenuButton } from "@/components/BackToMenuButton";
 
+// Force all routes to be dynamic (skip static generation)
+// This prevents HeroUI SSR circular dependency issues during build
+export const dynamic = 'force-dynamic';
+export const dynamicParams = true;
+
 interface RootLayoutProps {
   children: React.ReactNode;
 }
