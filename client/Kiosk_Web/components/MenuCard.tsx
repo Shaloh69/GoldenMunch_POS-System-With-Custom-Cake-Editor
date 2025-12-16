@@ -29,20 +29,20 @@ export const MenuCard: React.FC<MenuCardProps> = ({
       onClick={() => isAvailable && onClick(item)}
       className={`
         relative overflow-hidden h-[300px]
-        border-2 border-primary/60
-        bg-gradient-to-br from-pure-white via-primary/10 to-secondary/15
+        border-2 border-primary
+        bg-gradient-to-br from-card via-primary/30 to-secondary/40
         backdrop-blur-sm shadow-lg
         touch-manipulation
         ${
           isAvailable
-            ? "cursor-pointer hover:border-primary hover:shadow-[0_0_30px_rgba(251,205,47,0.5)]"
+            ? "cursor-pointer hover:border-primary hover:shadow-[0_0_30px_hsl(var(--primary)/0.6)]"
             : "opacity-60 cursor-not-allowed grayscale"
         }
       `}
     >
       <CardBody className="p-0 h-full flex flex-col">
         {/* Image Section - Compact */}
-        <div className="relative h-[180px] w-full overflow-hidden bg-gradient-to-br from-primary/20 via-secondary/15 to-primary/30">
+        <div className="relative h-[180px] w-full overflow-hidden bg-gradient-to-br from-primary/30 via-secondary/35 to-accent/40">
           {getImageUrl(item.image_url) ? (
             <Image
               src={getImageUrl(item.image_url) || ""}
@@ -87,7 +87,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({
         </div>
 
         {/* Compact Info Section */}
-        <div className="h-[120px] bg-gradient-to-b from-pure-white/95 to-primary/5 backdrop-blur-sm p-3 flex flex-col justify-between border-t-2 border-primary/30">
+        <div className="h-[120px] bg-gradient-to-b from-card/95 to-primary/20 backdrop-blur-sm p-3 flex flex-col justify-between border-t-2 border-primary/50">
           {/* Item Name - Compact */}
           <h3 className="text-lg font-bold text-foreground line-clamp-2 leading-tight">
             {item.name}

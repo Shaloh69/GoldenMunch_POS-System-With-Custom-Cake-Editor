@@ -9,16 +9,16 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "border-transparent bg-sunny-yellow text-charcoal-gray shadow hover:bg-deep-orange-yellow",
+          "border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/90",
         secondary:
-          "border-transparent bg-deep-orange-yellow text-white shadow hover:bg-[#E89113]",
+          "border-transparent bg-secondary text-secondary-foreground shadow hover:bg-secondary/90",
         destructive:
-          "border-transparent bg-red-500 text-white shadow hover:bg-red-600",
-        outline: "text-sunny-yellow border-sunny-yellow",
-        solid: "border-transparent bg-sunny-yellow text-charcoal-gray",
-        flat: "border-transparent bg-sunny-yellow/20 text-sunny-yellow",
-        faded: "border-transparent bg-soft-warm-gray text-charcoal-gray",
-        dot: "border-sunny-yellow bg-transparent text-sunny-yellow pl-4 relative before:absolute before:left-1.5 before:top-1/2 before:-translate-y-1/2 before:w-2 before:h-2 before:rounded-full before:bg-sunny-yellow",
+          "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/90",
+        outline: "text-primary border-primary",
+        solid: "border-transparent bg-primary text-primary-foreground",
+        flat: "border-transparent bg-primary/30 text-primary",
+        faded: "border-transparent bg-muted text-muted-foreground",
+        dot: "border-primary bg-transparent text-primary pl-4 relative before:absolute before:left-1.5 before:top-1/2 before:-translate-y-1/2 before:w-2 before:h-2 before:rounded-full before:bg-primary",
       },
       size: {
         sm: "text-xs px-2 py-0.5",

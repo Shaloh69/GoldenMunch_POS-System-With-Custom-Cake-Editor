@@ -5,26 +5,26 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
         default:
-          "bg-sunny-yellow text-charcoal-gray hover:bg-deep-orange-yellow shadow-md",
+          "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md",
         destructive:
-          "bg-red-500 text-white hover:bg-red-600",
+          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-md",
         outline:
-          "border-2 border-sunny-yellow bg-transparent text-sunny-yellow hover:bg-sunny-yellow hover:text-charcoal-gray",
+          "border-2 border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground",
         secondary:
-          "bg-deep-orange-yellow text-white hover:bg-[#E89113]",
-        ghost: "hover:bg-sunny-yellow/10 hover:text-sunny-yellow",
-        link: "text-sunny-yellow underline-offset-4 hover:underline",
-        solid: "bg-sunny-yellow text-charcoal-gray hover:bg-deep-orange-yellow shadow-md",
-        bordered: "border-2 border-sunny-yellow bg-transparent text-sunny-yellow hover:bg-sunny-yellow hover:text-charcoal-gray",
-        flat: "bg-sunny-yellow/20 text-sunny-yellow hover:bg-sunny-yellow/30",
-        faded: "bg-soft-warm-gray text-charcoal-gray hover:bg-caramel-beige",
-        shadow: "bg-sunny-yellow text-charcoal-gray hover:bg-deep-orange-yellow shadow-lg",
-        light: "bg-sunny-yellow/10 text-sunny-yellow hover:bg-sunny-yellow/20",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/90 shadow-md",
+        ghost: "hover:bg-primary/20 hover:text-primary",
+        link: "text-primary underline-offset-4 hover:underline",
+        solid: "bg-primary text-primary-foreground hover:bg-secondary shadow-md",
+        bordered: "border-2 border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground",
+        flat: "bg-primary/30 text-primary hover:bg-primary/40",
+        faded: "bg-muted text-muted-foreground hover:bg-muted/80",
+        shadow: "bg-primary text-primary-foreground hover:bg-secondary shadow-lg",
+        light: "bg-primary/20 text-primary hover:bg-primary/30",
       },
       size: {
         default: "h-12 px-6 py-3 text-base",
