@@ -32,8 +32,8 @@ export function KioskAppSidebar({
   const [quantity, setQuantity] = useState(1);
   const [isCartHidden, setIsCartHidden] = useState(false);
 
-  // Don't show sidebar on idle page only
-  if (pathname === "/idle") {
+  // Don't show sidebar on idle, cart, and custom-cake pages
+  if (pathname === "/idle" || pathname === "/cart" || pathname === "/custom-cake") {
     return null;
   }
 
@@ -67,7 +67,7 @@ export function KioskAppSidebar({
     <Sidebar
       side="right"
       collapsible="none"
-      className="backdrop-blur-3xl bg-white/85 border-l-2 border-primary/20 shadow-[-20px_0_60px_rgba(251,205,47,0.2)]"
+      className="backdrop-blur-3xl bg-white/85 border-l-2 border-primary/20 shadow-[-20px_0_60px_rgba(251,205,47,0.2)] z-[9999]"
     >
       {/* Item Detail Section */}
       <SidebarHeader

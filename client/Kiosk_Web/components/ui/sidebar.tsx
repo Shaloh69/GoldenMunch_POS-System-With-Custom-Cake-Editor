@@ -139,7 +139,7 @@ const Sidebar = React.forwardRef<
       return (
         <div
           className={cn(
-            "flex h-full w-[--sidebar-width] max-w-[500px] flex-col bg-sidebar text-sidebar-foreground fixed top-0 bottom-0 z-50",
+            "flex h-full w-[--sidebar-width] max-w-[500px] flex-col bg-sidebar text-sidebar-foreground fixed top-0 bottom-0",
             side === "left" ? "left-0 border-r" : "right-0 border-l",
             className
           )}
