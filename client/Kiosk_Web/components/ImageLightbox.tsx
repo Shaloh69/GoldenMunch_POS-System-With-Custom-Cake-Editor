@@ -41,21 +41,19 @@ export default function ImageLightbox({
         {children}
       </div>
 
-      <Modal
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        size="full"
-        classNames={{
-          base: "bg-black/95",
-          backdrop: "bg-black/80",
-        }}
-      >
-        <DialogContent as ModalContent>
+      <Modal open={isOpen} onOpenChange={setIsOpen}>
+        <ModalContent
+          size="full"
+          hideCloseButton
+          classNames={{
+            base: "bg-black/95",
+            backdrop: "bg-black/80",
+          }}
+        >
           <ModalBody className="flex items-center justify-center p-0 relative">
             {/* Close button */}
             <Button
-              isIconOnly
-              className="absolute top-4 right-4 z-50 bg-white/10 hover:bg-white/20 backdrop-blur-lg text-white text-2xl"
+              className="absolute top-4 right-4 z-50 bg-white/10 hover:bg-white/20 backdrop-blur-lg text-white text-2xl w-12 h-12"
               onClick={() => setIsOpen(false)}
               size="lg"
             >
@@ -83,7 +81,7 @@ export default function ImageLightbox({
               </p>
             </div>
           </ModalBody>
-        </DialogContent as ModalContent>
+        </ModalContent>
       </Modal>
     </>
   );

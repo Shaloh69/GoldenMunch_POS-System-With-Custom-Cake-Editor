@@ -110,12 +110,9 @@ export default function MenuPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Spinner
-            size="lg"
-            classNames={{
-              wrapper: "w-32 h-32",
-              circle1: "border-b-sunny-yellow",
-              circle2: "border-b-deep-orange-yellow",
-            }}
+            size="xl"
+            color="primary"
+            className="w-32 h-32"
           />
           <p className="text-4xl font-bold text-black mt-8">Loading Menu...</p>
         </div>

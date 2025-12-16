@@ -346,10 +346,9 @@ export default function CartPage() {
                       <div className="flex flex-col items-center gap-3">
                         <div className="flex items-center gap-3 bg-sunny-yellow/20 rounded-full px-3 py-2 border-2 border-sunny-yellow/50 shadow-md">
                           <Button
-                            isIconOnly
-                            size="sm"
+                            size="icon"
                             variant="flat"
-                            className="rounded-full bg-deep-orange-yellow/40 hover:bg-deep-orange-yellow text-black font-bold transition-all"
+                            className="rounded-full bg-deep-orange-yellow/40 hover:bg-deep-orange-yellow text-black font-bold transition-all h-8 w-8"
                             onClick={() =>
                               updateQuantity(
                                 item.menuItem.menu_item_id,
@@ -363,9 +362,8 @@ export default function CartPage() {
                             {item.quantity}
                           </span>
                           <Button
-                            isIconOnly
-                            size="sm"
-                            className="rounded-full bg-gradient-to-r from-sunny-yellow to-deep-orange-yellow text-black font-bold shadow-lg transition-all hover:scale-110"
+                            size="icon"
+                            className="rounded-full bg-gradient-to-r from-sunny-yellow to-deep-orange-yellow text-black font-bold shadow-lg transition-all hover:scale-110 h-8 w-8"
                             onClick={() =>
                               updateQuantity(
                                 item.menuItem.menu_item_id,
@@ -545,7 +543,7 @@ export default function CartPage() {
                   <Button
                     size="lg"
                     className="w-full bg-gradient-to-r from-sunny-yellow to-deep-orange-yellow text-black font-bold shadow-lg hover:scale-105 transition-all"
-                    onPress={handleShowQRCode}
+                    onClick={handleShowQRCode}
                     isLoading={loadingQR}
                   >
                     {loadingQR
@@ -620,19 +618,16 @@ export default function CartPage() {
       </div>
 
       {/* Success Modal with Confetti Effect */}
-      <Modal
-        isOpen={isOpen}
-        onOpenChange={onOpenChange}
-        size="2xl"
-        isDismissable={false}
-        classNames={{
-          base: "bg-gradient-to-br from-pure-white/95 via-sunny-yellow/20 to-deep-orange-yellow/25 backdrop-blur-xl border-4 border-sunny-yellow shadow-2xl",
-          header: "border-b-0",
-          body: "py-8",
-          footer: "border-t-0",
-        }}
-      >
-        <ModalContent>
+      <Modal open={isOpen} onOpenChange={onOpenChange}>
+        <ModalContent
+          size="2xl"
+          classNames={{
+            base: "bg-gradient-to-br from-pure-white/95 via-sunny-yellow/20 to-deep-orange-yellow/25 backdrop-blur-xl border-4 border-sunny-yellow shadow-2xl",
+            header: "border-b-0",
+            body: "py-8",
+            footer: "border-t-0",
+          }}
+        >
           {(onClose) => (
             <>
               <ModalHeader className="flex flex-col gap-1 text-center pt-8">
@@ -710,17 +705,14 @@ export default function CartPage() {
       </Modal>
 
       {/* QR Code Payment Modal */}
-      <Modal
-        isOpen={isQROpen}
-        onClose={onQRClose}
-        size="2xl"
-        backdrop="blur"
-        classNames={{
-          backdrop: "bg-charcoal-gray/90",
-          base: "bg-gradient-to-br from-pure-white/95 via-sunny-yellow/20 to-deep-orange-yellow/25 backdrop-blur-xl border-4 border-sunny-yellow shadow-2xl",
-        }}
-      >
-        <ModalContent>
+      <Modal open={isQROpen} onOpenChange={(open) => !open && onQRClose()}>
+        <ModalContent
+          size="2xl"
+          classNames={{
+            backdrop: "bg-charcoal-gray/90",
+            base: "bg-gradient-to-br from-pure-white/95 via-sunny-yellow/20 to-deep-orange-yellow/25 backdrop-blur-xl border-4 border-sunny-yellow shadow-2xl",
+          }}
+        >
           <ModalHeader className="flex flex-col gap-1">
             <h2 className="text-2xl font-bold capitalize text-black">
               {paymentMethod} Payment
@@ -831,7 +823,7 @@ export default function CartPage() {
             <Button
               size="lg"
               className="bg-gradient-to-r from-sunny-yellow to-deep-orange-yellow text-black font-bold shadow-lg hover:scale-105 transition-all"
-              onPress={onQRClose}
+              onClick={onQRClose}
               isDisabled={!qrCodeUrl || !referenceNumber.trim()}
             >
               ✓ I've Entered My Reference Number

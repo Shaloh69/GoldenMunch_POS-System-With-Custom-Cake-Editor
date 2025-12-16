@@ -161,25 +161,22 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={handleCancel}
-      size="2xl"
-      backdrop="blur"
-      classNames={{
-        backdrop: "bg-gradient-to-t from-purple-900/50 to-pink-900/50",
-        base: "border-2 border-purple-200 bg-white shadow-2xl",
-      }}
-    >
-      <DialogContent as ModalContent>
-        <DialogHeader as ModalHeader className="flex flex-col gap-2 text-center pt-8">
+    <Modal open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
+      <ModalContent
+        size="2xl"
+        classNames={{
+          backdrop: "bg-gradient-to-t from-purple-900/50 to-pink-900/50",
+          base: "border-2 border-purple-200 bg-white shadow-2xl",
+        }}
+      >
+        <ModalHeader className="flex flex-col gap-2 text-center pt-8">
           <h2 className="text-4xl font-bold text-black">
             🎨 Design Your Custom Cake
           </h2>
           <p className="text-lg text-black/70 font-semibold">
             Scan the QR code with your phone to start customizing
           </p>
-        </DialogHeader as ModalHeader>
+        </ModalHeader>
         <ModalBody className="py-6">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12">
@@ -268,16 +265,16 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
             </div>
           ) : null}
         </ModalBody>
-        <DialogFooter as ModalFooter className="justify-center pb-8">
+        <ModalFooter className="justify-center pb-8">
           <Button
-            onPress={handleCancel}
+            onClick={handleCancel}
             size="lg"
             className="bg-gradient-to-r from-gray-600 to-gray-800 text-white font-bold text-lg py-6 px-10 rounded-xl hover:scale-105 transition-all shadow-xl"
           >
             Cancel
           </Button>
-        </DialogFooter as ModalFooter>
-      </DialogContent as ModalContent>
+        </ModalFooter>
+      </ModalContent>
     </Modal>
   );
 };

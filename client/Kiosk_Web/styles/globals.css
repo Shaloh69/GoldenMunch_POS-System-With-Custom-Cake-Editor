@@ -431,26 +431,55 @@ body {
   animation: shimmer-down 15s linear infinite;
 }
 
-/* Custom gradient backgrounds */
+/* Custom gradient backgrounds - Enhanced Gold/Orange Theme */
 .bg-golden-gradient {
-  background: linear-gradient(135deg, #f9a03f 0%, #d97706 100%);
+  background: linear-gradient(135deg, #FFD700 0%, #FF8C00 50%, #FFA500 100%);
 }
 
 .bg-munch-gradient {
-  background: linear-gradient(135deg, #fff8f0 0%, #e6c89c 50%, #f9a03f 100%);
+  background: linear-gradient(135deg, #FFF8DC 0%, #FFD700 25%, #FFA500 75%, #FF8C00 100%);
 }
 
 .bg-mesh-gradient {
   background:
-    radial-gradient(at 0% 0%, rgba(249, 160, 63, 0.15) 0px, transparent 50%),
-    radial-gradient(at 100% 0%, rgba(217, 119, 6, 0.15) 0px, transparent 50%),
+    radial-gradient(at 0% 0%, rgba(255, 215, 0, 0.2) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(255, 140, 0, 0.2) 0px, transparent 50%),
     radial-gradient(
       at 100% 100%,
-      rgba(249, 160, 63, 0.15) 0px,
+      rgba(255, 165, 0, 0.2) 0px,
       transparent 50%
     ),
-    radial-gradient(at 0% 100%, rgba(217, 119, 6, 0.15) 0px, transparent 50%),
-    linear-gradient(135deg, #fff8f0 0%, #fef6e7 100%);
+    radial-gradient(at 0% 100%, rgba(255, 215, 0, 0.15) 0px, transparent 50%),
+    linear-gradient(135deg, #FFF8DC 0%, #FAFAD2 100%);
+}
+
+/* New animated gradients for beautiful backgrounds */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.bg-animated-golden {
+  background: linear-gradient(-45deg, #FFD700, #FFA500, #FF8C00, #FFAA00, #FFD700);
+  background-size: 400% 400%;
+  animation: gradient-shift 15s ease infinite;
+}
+
+.bg-radial-golden {
+  background: radial-gradient(circle at 50% 50%, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
+}
+
+.bg-diagonal-golden {
+  background: linear-gradient(45deg, #FFD700 0%, #FFAA00 25%, #FFA500 50%, #FF8C00 75%, #FFD700 100%);
+  background-size: 200% 200%;
+  animation: gradient-shift 20s ease infinite;
 }
 
 .bg-glass {

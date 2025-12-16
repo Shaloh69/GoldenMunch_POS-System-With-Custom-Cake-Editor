@@ -24,18 +24,18 @@ export const MenuCard: React.FC<MenuCardProps> = ({
 
   return (
     <Card
-      isPressable
-      onPress={() => onClick(item)}
+      isPressable={isAvailable}
+      isHoverable={isAvailable}
+      onClick={() => isAvailable && onClick(item)}
       className={`
-        relative overflow-hidden cursor-pointer h-[300px]
+        relative overflow-hidden h-[300px]
         border-2 border-sunny-yellow/60
         bg-gradient-to-br from-pure-white via-sunny-yellow/10 to-deep-orange-yellow/15
         backdrop-blur-sm shadow-lg
-        transition-all duration-300
         touch-manipulation
         ${
           isAvailable
-            ? "hover:border-sunny-yellow hover:shadow-[0_0_30px_rgba(251,205,47,0.5)] hover:scale-[1.01]"
+            ? "cursor-pointer hover:border-sunny-yellow hover:shadow-[0_0_30px_rgba(251,205,47,0.5)]"
             : "opacity-60 cursor-not-allowed grayscale"
         }
       `}

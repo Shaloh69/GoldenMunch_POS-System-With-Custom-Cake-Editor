@@ -179,8 +179,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
                         </span>
                         <div className="flex items-center gap-4">
                           <Button
-                            size="lg"
-                            isIconOnly
+                            size="icon"
                             className="bg-sunny-yellow/30 text-black font-bold text-3xl hover:bg-sunny-yellow hover:text-black transition-all w-20 h-20 touch-target-lg"
                             onClick={() => handleQuantityChange(-1)}
                           >
@@ -190,8 +189,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
                             {quantity}
                           </span>
                           <Button
-                            size="lg"
-                            isIconOnly
+                            size="icon"
                             className="bg-sunny-yellow/30 text-black font-bold text-3xl hover:bg-sunny-yellow hover:text-black transition-all w-20 h-20 touch-target-lg"
                             onClick={() => handleQuantityChange(1)}
                           >
