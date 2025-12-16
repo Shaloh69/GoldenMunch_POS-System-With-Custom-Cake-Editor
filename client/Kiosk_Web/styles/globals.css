@@ -7,7 +7,7 @@
 @layer base {
   :root {
     /* ShadCN CSS Variables - Gold/Orange Theme */
-    --background: hsl(45 100% 97%);
+    --background: transparent;
     --foreground: hsl(20 14% 15%);
 
     --card: hsl(45 100% 99%);
@@ -45,7 +45,7 @@
   }
 
   .dark {
-    --background: hsl(20 14% 10%);
+    --background: transparent;
     --foreground: hsl(45 100% 97%);
     --card: hsl(20 14% 12%);
     --card-foreground: hsl(45 100% 97%);
