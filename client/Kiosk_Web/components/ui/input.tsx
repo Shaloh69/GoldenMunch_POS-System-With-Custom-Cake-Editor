@@ -52,6 +52,14 @@ export interface InputProps
   isReadOnly?: boolean
   isRequired?: boolean
   isDisabled?: boolean
+  classNames?: {
+    base?: string
+    label?: string
+    input?: string
+    inputWrapper?: string
+    description?: string
+    errorMessage?: string
+  }
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
@@ -74,19 +82,20 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     disabled,
     readOnly,
     required,
+    classNames,
     ...props
   }, ref) => {
     const hasError = isInvalid || !!errorMessage
 
     return (
-      <div className={cn("w-full space-y-2", fullWidth && "w-full")}>
+      <div className={cn("w-full space-y-2", fullWidth && "w-full", classNames?.base)}>
         {label && (
-          <label className="text-sm font-medium text-charcoal-gray">
+          <label className={cn("text-sm font-medium text-charcoal-gray", classNames?.label)}>
             {label}
             {(isRequired || required) && <span className="text-red-500 ml-1">*</span>}
           </label>
         )}
-        <div className="relative">
+        <div className={cn("relative", classNames?.inputWrapper)}>
           {startContent && (
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal-gray/70">
               {startContent}
@@ -97,7 +106,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             className={cn(
               inputVariants({ variant, inputSize, radius, isInvalid: hasError, fullWidth, className }),
               startContent && "pl-10",
-              endContent && "pr-10"
+              endContent && "pr-10",
+              classNames?.input
             )}
             ref={ref}
             disabled={disabled || isDisabled}
@@ -112,10 +122,10 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
         {description && !hasError && (
-          <p className="text-xs text-charcoal-gray/70">{description}</p>
+          <p className={cn("text-xs text-charcoal-gray/70", classNames?.description)}>{description}</p>
         )}
         {hasError && errorMessage && (
-          <p className="text-xs text-red-500">{errorMessage}</p>
+          <p className={cn("text-xs text-red-500", classNames?.errorMessage)}>{errorMessage}</p>
         )}
       </div>
     )
