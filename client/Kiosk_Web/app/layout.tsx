@@ -1,18 +1,33 @@
-"use client";
-
 import "@/styles/globals.css";
+import { Metadata, Viewport } from "next";
 import clsx from "clsx";
-import { usePathname } from "next/navigation";
 
 import { Providers } from "./providers";
+import { LayoutContent } from "@/components/LayoutContent";
 
 import { fontSans } from "@/config/fonts";
-import { AnimatedBackground } from "@/components/AnimatedBackground";
-import { BackToMenuButton } from "@/components/BackToMenuButton";
 
 // Force all routes to be dynamic (skip static generation)
 export const dynamic = 'force-dynamic';
 export const dynamicParams = true;
+
+export const metadata: Metadata = {
+  title: {
+    default: "GoldenMunch Kiosk",
+    template: `%s - GoldenMunch Kiosk`,
+  },
+  description: "GoldenMunch Point of Sale Kiosk - Self-Service Ordering",
+  icons: {
+    icon: "/favicon.ico",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "white" },
+    { media: "(prefers-color-scheme: dark)", color: "black" },
+  ],
+};
 
 interface RootLayoutProps {
   children: React.ReactNode;
@@ -20,7 +35,7 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html suppressHydrationWarning lang="en" className="bg-transparent">
+    <html suppressHydrationWarning lang="en" className="bg-transparent light">
       <head />
       <body
         className={clsx(
@@ -33,32 +48,5 @@ export default function RootLayout({ children }: RootLayoutProps) {
         </Providers>
       </body>
     </html>
-  );
-}
-
-function LayoutContent({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const isIdlePage = pathname === "/idle";
-
-  if (isIdlePage) {
-    // Return full-screen layout without sidebar for idle page
-    return (
-      <>
-        <AnimatedBackground />
-        <div className="relative z-10">{children}</div>
-      </>
-    );
-  }
-
-  // Full screen layout - Sidebar is handled within pages
-  return (
-    <>
-      <AnimatedBackground />
-      <BackToMenuButton />
-      <div className="relative min-h-screen z-10">
-        {/* Main Content Area */}
-        <main className="w-full overflow-y-auto relative z-10">{children}</main>
-      </div>
-    </>
   );
 }
