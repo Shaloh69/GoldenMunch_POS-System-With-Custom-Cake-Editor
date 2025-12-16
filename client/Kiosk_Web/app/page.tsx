@@ -100,8 +100,8 @@ export default function HomePage() {
         <div className="text-center animate-fade-in-up">
           <div className="relative">
             <Spinner size="xl" color="primary" className="w-32 h-32" />
-            <div className="absolute inset-0 animate-spin-slow">
-              <div className="text-6xl">🍰</div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-6xl animate-pulse-gentle">🍰</div>
             </div>
           </div>
           <p className="text-4xl font-bold text-foreground mt-8 animate-pulse-gentle">
@@ -127,7 +127,7 @@ export default function HomePage() {
             <p className="text-2xl text-muted-foreground mb-10">{error}</p>
             <Button
               size="lg"
-              className="btn-gradient text-2xl px-12 py-8 shadow-lg hover:shadow-xl transition-all touch-target"
+              className="btn-gradient text-2xl px-12 py-8 shadow-lg touch-target"
               onClick={() => window.location.reload()}
             >
               Try Again
@@ -142,7 +142,7 @@ export default function HomePage() {
     <>
       <div className="min-h-screen overflow-y-auto pr-[35vw] max-pr-[500px] flex flex-col">
         {/* Modern Hero Header */}
-        <header className="relative glass-header sticky top-0 z-20 animate-fade-in-down">
+        <header className="glass-header sticky top-0 z-20 animate-fade-in-down">
           <div className="max-w-full mx-auto py-10 px-8">
             <div className="text-center">
               <div className="text-8xl mb-4 animate-bounce-in">🍰</div>
@@ -157,7 +157,7 @@ export default function HomePage() {
         </header>
 
         <div className="flex-1 px-8 py-6">
-          {/* Modern Categories - Scrollable horizontal on mobile */}
+          {/* Modern Categories */}
           {categories.length > 0 && (
             <div className="mb-8 animate-fade-in-up animation-delay-200">
               <div className="flex gap-4 justify-center flex-wrap">
@@ -168,7 +168,7 @@ export default function HomePage() {
                     selectedCategory === null
                       ? "btn-gradient scale-105"
                       : "glass-button"
-                  } font-bold text-xl px-10 py-7 rounded-2xl transition-all duration-300 touch-target`}
+                  } font-bold text-xl px-10 py-7 rounded-2xl touch-target`}
                 >
                   All Items
                 </Button>
@@ -181,7 +181,7 @@ export default function HomePage() {
                       selectedCategory === category.category_id
                         ? "btn-gradient scale-105"
                         : "glass-button"
-                    } font-bold text-xl px-10 py-7 rounded-2xl transition-all duration-300 touch-target animate-fade-in`}
+                    } font-bold text-xl px-10 py-7 rounded-2xl touch-target animate-fade-in`}
                     style={{ animationDelay: `${index * 0.1 + 0.3}s` }}
                   >
                     {category.name}
@@ -207,7 +207,7 @@ export default function HomePage() {
                 {selectedCategory !== null && (
                   <Button
                     size="lg"
-                    className="btn-gradient text-2xl px-12 py-8 shadow-xl hover:scale-105 transition-all touch-target"
+                    className="btn-gradient text-2xl px-12 py-8 shadow-xl touch-target"
                     onClick={() => setSelectedCategory(null)}
                   >
                     Clear Filter
@@ -259,7 +259,7 @@ export default function HomePage() {
               </div>
               <Button
                 size="lg"
-                className="btn-gradient text-3xl font-black px-20 py-10 rounded-3xl shadow-2xl hover:shadow-[0_0_50px_rgba(251,205,47,0.7)] hover:scale-105 transition-all touch-target-lg border-4 border-white/30 w-full max-w-3xl"
+                className="btn-gradient text-3xl font-black px-20 py-10 rounded-3xl shadow-2xl touch-target-lg border-4 border-white/30 w-full max-w-3xl"
                 onClick={() => (window.location.href = "/custom-cake")}
               >
                 🍰 Custom Cake Editor

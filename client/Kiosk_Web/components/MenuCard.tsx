@@ -27,18 +27,17 @@ export const MenuCard: React.FC<MenuCardProps> = ({
       onClick={() => isAvailable && onClick(item)}
       className={`
         group relative overflow-hidden rounded-3xl h-[340px]
-        transition-all duration-300 ease-out
         touch-manipulation
         ${
           isAvailable
-            ? "cursor-pointer hover:-translate-y-2 hover:scale-[1.02] active:scale-[0.98]"
+            ? "cursor-pointer active:scale-[0.98]"
             : "opacity-60 cursor-not-allowed grayscale"
         }
       `}
     >
-      {/* Modern Card with glassmorphism */}
+      {/* Modern Card */}
       <div className="modern-card h-full flex flex-col">
-        {/* Image Section with gradient overlay */}
+        {/* Image Section */}
         <div className="relative h-[200px] w-full overflow-hidden bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10">
           {getImageUrl(item.image_url) ? (
             <>
@@ -46,14 +45,12 @@ export const MenuCard: React.FC<MenuCardProps> = ({
                 src={getImageUrl(item.image_url) || ""}
                 alt={item.name}
                 fill
-                className={`object-cover transition-all duration-500 ${
-                  isAvailable ? "group-hover:scale-110 group-hover:rotate-1" : ""
-                }`}
+                className="object-cover"
                 sizes="50vw"
                 priority={false}
               />
-              {/* Gradient overlay for better text visibility */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              {/* Gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent" />
             </>
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20">
@@ -63,7 +60,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({
             </div>
           )}
 
-          {/* Modern Badges - Top right */}
+          {/* Badges - Top right */}
           <div className="absolute top-3 right-3 flex flex-col gap-2 z-10">
             {item.is_featured && (
               <div className="animate-bounce-in">
@@ -97,11 +94,11 @@ export const MenuCard: React.FC<MenuCardProps> = ({
           )}
         </div>
 
-        {/* Info Section - Modern layout */}
+        {/* Info Section */}
         <div className="flex-1 bg-white p-4 flex flex-col justify-between">
           {/* Item Name */}
           <div className="mb-2">
-            <h3 className="text-xl font-bold text-foreground line-clamp-2 leading-tight group-hover:text-gradient transition-all duration-300">
+            <h3 className="text-xl font-bold text-foreground line-clamp-2 leading-tight">
               {item.name}
             </h3>
           </div>
@@ -127,9 +124,9 @@ export const MenuCard: React.FC<MenuCardProps> = ({
                 {item.item_type}
               </Chip>
 
-              {/* Tap Indicator - Appears on hover */}
+              {/* Tap Indicator */}
               {isAvailable && (
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="mt-1">
                   <div className="bg-gradient-to-r from-primary to-secondary px-3 py-1 rounded-full shadow-md">
                     <span className="text-foreground font-bold text-xs">
                       👆 Tap to View
@@ -141,8 +138,8 @@ export const MenuCard: React.FC<MenuCardProps> = ({
           </div>
         </div>
 
-        {/* Hover Effect - Colored border appears on hover */}
-        <div className="absolute inset-0 rounded-3xl border-4 border-transparent group-hover:border-primary/40 transition-all duration-300 pointer-events-none" />
+        {/* Border accent */}
+        <div className="absolute inset-0 rounded-3xl border-2 border-primary/20 pointer-events-none" />
       </div>
     </div>
   );

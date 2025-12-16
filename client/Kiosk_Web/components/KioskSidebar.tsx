@@ -40,9 +40,9 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
         menuItem: selectedItem,
         quantity: quantity,
       });
-      // Reset and close with animation
+      // Reset and close
       setQuantity(1);
-      setTimeout(onClose, 300);
+      onClose();
     }
   };
 
@@ -61,27 +61,25 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
       (selectedItem?.stock_quantity ?? 0) > 0);
 
   return (
-    <div
-      className={`fixed right-0 top-0 bottom-0 w-[35vw] max-w-[500px] z-50 flex flex-col transition-transform duration-500 ${selectedItem ? "translate-x-0" : "translate-x-full"}`}
-    >
+    <div className="fixed right-0 top-0 bottom-0 w-[35vw] max-w-[500px] z-50 flex flex-col">
       {/* Modern Glassmorphism Sidebar */}
-      <div className="h-full backdrop-blur-3xl bg-white/80 border-l-2 border-primary/20 shadow-[-20px_0_60px_rgba(251,205,47,0.2)] flex flex-col">
+      <div className="h-full backdrop-blur-3xl bg-white/85 border-l-2 border-primary/20 shadow-[-20px_0_60px_rgba(251,205,47,0.2)] flex flex-col">
         {/* Item Detail Section */}
         <div
-          className={`flex-1 overflow-y-auto scrollbar-hide transition-all duration-500 ${selectedItem ? "opacity-100" : "opacity-0"}`}
+          className={`flex-1 overflow-y-auto scrollbar-hide transition-all duration-500 ${selectedItem ? "opacity-100" : "opacity-0 pointer-events-none"}`}
         >
           {selectedItem && (
             <div className="p-6 h-full animate-slide-in-left">
-              {/* Close Button - Floating modern */}
+              {/* Close Button */}
               <button
                 onClick={onClose}
-                className="absolute top-8 right-8 w-14 h-14 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-foreground hover:scale-110 hover:rotate-90 transition-all duration-300 shadow-lg z-50 touch-target animate-bounce-in"
+                className="absolute top-8 right-8 w-14 h-14 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-foreground shadow-lg z-50 touch-target animate-bounce-in active:scale-95"
               >
                 <span className="text-3xl font-bold">×</span>
               </button>
 
               <div className="modern-card h-full flex flex-col overflow-hidden">
-                {/* Large Image with gradient overlay */}
+                {/* Large Image */}
                 <div className="relative h-80 bg-gradient-to-br from-primary/10 to-secondary/10 overflow-hidden">
                   {getImageUrl(selectedItem.image_url) ? (
                     <>
@@ -89,11 +87,11 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
                         src={getImageUrl(selectedItem.image_url) || ""}
                         alt={selectedItem.name}
                         fill
-                        className="object-cover transition-transform duration-700 hover:scale-110"
+                        className="object-cover"
                         sizes="30vw"
                         priority
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
                     </>
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
@@ -126,7 +124,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
                   </div>
                 </div>
 
-                {/* Item Details - Clean white background */}
+                {/* Item Details */}
                 <div className="flex-1 bg-white p-6 flex flex-col overflow-y-auto scrollbar-hide">
                   {/* Name */}
                   <h2 className="text-4xl font-black text-gradient mb-4 animate-fade-in-up">
@@ -158,7 +156,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
                       )}
                   </div>
 
-                  {/* Price - Large and prominent */}
+                  {/* Price */}
                   <div className="mb-6 animate-scale-in animation-delay-500">
                     <span className="text-sm text-muted-foreground font-medium block mb-1">
                       Price
@@ -201,7 +199,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
                             size="icon"
                             onClick={() => handleQuantityChange(-1)}
                             disabled={quantity <= 1}
-                            className="btn-gradient w-16 h-16 text-3xl font-bold touch-target transition-all hover:scale-110 active:scale-95"
+                            className="btn-gradient w-16 h-16 text-3xl font-bold touch-target active:scale-95"
                           >
                             −
                           </Button>
@@ -212,7 +210,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
                             size="icon"
                             onClick={() => handleQuantityChange(1)}
                             disabled={quantity >= 99}
-                            className="btn-gradient w-16 h-16 text-3xl font-bold touch-target transition-all hover:scale-110 active:scale-95"
+                            className="btn-gradient w-16 h-16 text-3xl font-bold touch-target active:scale-95"
                           >
                             +
                           </Button>
@@ -223,7 +221,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
                       <Button
                         size="lg"
                         onClick={handleAddToCart}
-                        className="btn-gradient w-full text-3xl font-black py-10 shadow-2xl hover:shadow-[0_0_40px_rgba(251,205,47,0.6)] hover:scale-105 transition-all touch-target-lg rounded-2xl"
+                        className="btn-gradient w-full text-3xl font-black py-10 shadow-2xl touch-target-lg rounded-2xl active:scale-95"
                       >
                         🛒 Add to Cart
                       </Button>
@@ -245,19 +243,17 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
           )}
         </div>
 
-        {/* Cart Section - Modern collapsible */}
+        {/* Cart Section - Always visible */}
         <div
           className={`border-t-2 border-primary/20 transition-all duration-500 ${isCartHidden ? "h-20" : "h-[40vh]"} bg-gradient-to-b from-primary/5 to-white`}
         >
           {/* Toggle Button */}
           <button
             onClick={() => setIsCartHidden(!isCartHidden)}
-            className="w-full px-8 py-5 flex items-center justify-between hover:bg-primary/10 transition-all touch-target-lg group"
+            className="w-full px-8 py-5 flex items-center justify-between bg-primary/5 active:bg-primary/10 touch-target-lg group"
           >
             <div className="flex items-center gap-4">
-              <span className="text-4xl group-hover:scale-110 transition-transform">
-                🛒
-              </span>
+              <span className="text-4xl">🛒</span>
               <span className="text-2xl font-bold text-foreground">
                 Your Cart {itemCount > 0 && `(${itemCount})`}
               </span>
@@ -289,7 +285,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
                     {cartItems.map((cartItem, index) => (
                       <div
                         key={cartItem.menuItem.menu_item_id}
-                        className="glass-card p-4 rounded-xl hover:scale-[1.02] transition-transform animate-slide-in-right"
+                        className="glass-card p-4 rounded-xl animate-slide-in-right"
                         style={{ animationDelay: `${index * 0.05}s` }}
                       >
                         <div className="flex items-center gap-4">
@@ -355,7 +351,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
                       as={Link}
                       href="/cart"
                       size="lg"
-                      className="btn-gradient w-full text-2xl font-bold py-8 shadow-xl hover:shadow-2xl hover:scale-105 transition-all touch-target-lg rounded-2xl"
+                      className="btn-gradient w-full text-2xl font-bold py-8 shadow-xl touch-target-lg rounded-2xl active:scale-95"
                     >
                       View Cart & Checkout →
                     </Button>
@@ -365,7 +361,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
                       as={Link}
                       href="/custom-cake"
                       size="lg"
-                      className="glass-button w-full text-xl font-semibold py-7 transition-all touch-target rounded-2xl border-2 border-primary/30"
+                      className="glass-button w-full text-xl font-semibold py-7 touch-target rounded-2xl border-2 border-primary/30 active:scale-95"
                     >
                       <div className="flex items-center justify-between w-full">
                         <span>🎂 Custom Cake</span>

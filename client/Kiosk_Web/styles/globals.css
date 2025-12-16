@@ -109,6 +109,19 @@ body {
   }
 }
 
+/* Gradient Shift Animation - For animated backgrounds */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
 /* Gentle Pulse - Subtle breathing effect */
 @keyframes pulse-gentle {
   0%,
@@ -402,6 +415,10 @@ body {
   animation: wave-slower 35s ease-in-out infinite;
 }
 
+.animate-gradient-shift {
+  animation: gradient-shift 15s ease-in-out infinite;
+}
+
 /* Animation Delays */
 .animation-delay-200 {
   animation-delay: 0.2s;
@@ -437,16 +454,6 @@ body {
     0 8px 32px rgba(0, 0, 0, 0.1),
     0 0 0 1px rgba(255, 255, 255, 0.5) inset;
   border-radius: calc(var(--radius) + 4px);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.glass-card:hover {
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow:
-    0 20px 40px rgba(251, 205, 47, 0.15),
-    0 8px 16px rgba(0, 0, 0, 0.1),
-    0 0 0 1px rgba(255, 255, 255, 0.6) inset;
-  transform: translateY(-4px);
 }
 
 /* Modern Card - Clean elevation */
@@ -454,7 +461,6 @@ body {
   background: white;
   border-radius: calc(var(--radius) + 4px);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   position: relative;
 }
@@ -472,19 +478,7 @@ body {
     hsl(39 100% 50%),
     hsl(33 100% 50%)
   );
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.modern-card:hover::before {
   opacity: 1;
-}
-
-.modern-card:hover {
-  transform: translateY(-8px);
-  box-shadow:
-    0 20px 40px rgba(251, 205, 47, 0.2),
-    0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
 /* Gradient Button - Premium feel */
@@ -498,36 +492,41 @@ body {
   border: none;
   color: hsl(20 14% 15%);
   font-weight: 700;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-gradient::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    135deg,
-    hsl(39 100% 50%),
-    hsl(33 100% 50%),
-    hsl(45 100% 51%)
-  );
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.btn-gradient:hover::before {
-  opacity: 1;
-}
-
-.btn-gradient:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(251, 205, 47, 0.4);
+  box-shadow: 0 4px 15px rgba(251, 205, 47, 0.3);
 }
 
 .btn-gradient:active {
-  transform: translateY(0);
+  transform: scale(0.98);
+}
+
+/* Glass Button */
+.glass-button {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid rgba(251, 205, 47, 0.3);
+}
+
+.glass-button:active {
+  transform: scale(0.98);
+}
+
+/* Glass Header */
+.glass-header {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 2px solid rgba(251, 205, 47, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* Glass Footer */
+.glass-footer {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 2px solid rgba(251, 205, 47, 0.2);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
 }
 
 /* Touch Feedback */
