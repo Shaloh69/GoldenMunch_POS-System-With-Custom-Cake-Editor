@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { KioskAppSidebar } from "@/components/KioskAppSidebar";
-import { SidebarProvider } from "@/components/ui/sidebar";
 import { useCart } from "@/contexts/CartContext";
 import NextLink from "next/link";
 import type { MenuItem } from "@/types/api";
@@ -121,7 +120,7 @@ export default function SpecialsPage() {
   };
 
   return (
-    <SidebarProvider defaultOpen={true}>
+    <>
       <div className="min-h-screen pr-[35vw] max-pr-[500px]">
         {/* Modern Header */}
         <div className="sticky top-0 z-40 glass-header py-6 px-4 mb-4 animate-fade-in-down">
@@ -340,6 +339,6 @@ export default function SpecialsPage() {
 
       {/* Sidebar */}
       <KioskAppSidebar selectedItem={selectedItem} onClose={handleCloseSidebar} />
-    </SidebarProvider>
+    </>
   );
 }

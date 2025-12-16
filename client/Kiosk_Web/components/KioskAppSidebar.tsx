@@ -7,14 +7,6 @@ import { usePathname } from "next/navigation";
 import { useCart } from "@/contexts/CartContext";
 import type { MenuItem } from "@/types/api";
 import { getImageUrl } from "@/utils/imageUtils";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarHeader,
-  SidebarSeparator,
-} from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/badge";
 
@@ -64,13 +56,9 @@ export function KioskAppSidebar({
       (selectedItem?.stock_quantity ?? 0) > 0);
 
   return (
-    <Sidebar
-      side="right"
-      collapsible="none"
-      className="backdrop-blur-3xl bg-white/85 border-l-2 border-primary/20 shadow-[-20px_0_60px_rgba(251,205,47,0.2)] z-[9999]"
-    >
+    <div className="fixed right-0 top-0 bottom-0 w-[35vw] max-w-[500px] z-[9999] flex flex-col backdrop-blur-3xl bg-white/85 border-l-2 border-primary/20 shadow-[-20px_0_60px_rgba(251,205,47,0.2)]">
       {/* Item Detail Section */}
-      <SidebarHeader
+      <div
         className={`flex-1 overflow-y-auto scrollbar-hide transition-all duration-500 p-0 ${selectedItem ? "opacity-100" : "opacity-0 pointer-events-none"}`}
       >
         {selectedItem && (
@@ -246,12 +234,10 @@ export function KioskAppSidebar({
             </div>
           </div>
         )}
-      </SidebarHeader>
-
-      <SidebarSeparator />
+      </div>
 
       {/* Cart Section - Always visible */}
-      <SidebarFooter
+      <div
         className={`border-t-2 border-primary/20 transition-all duration-500 p-0 ${isCartHidden ? "h-20" : "h-[40vh]"} bg-gradient-to-b from-primary/5 to-white`}
       >
         {/* Toggle Button */}
@@ -382,8 +368,8 @@ export function KioskAppSidebar({
             )}
           </div>
         )}
-      </SidebarFooter>
-    </Sidebar>
+      </div>
+    </div>
   );
 }
 

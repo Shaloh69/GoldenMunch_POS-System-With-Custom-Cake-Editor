@@ -9,7 +9,6 @@ import { MenuService } from "@/services/menu.service";
 import type { MenuItem, Category } from "@/types/api";
 import { KioskAppSidebar } from "@/components/KioskAppSidebar";
 import { MenuCard } from "@/components/MenuCard";
-import { SidebarProvider } from "@/components/ui/sidebar";
 
 export default function HomePage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -96,7 +95,7 @@ export default function HomePage() {
   };
 
   return (
-    <SidebarProvider defaultOpen={true}>
+    <>
       <div className="min-h-screen overflow-y-auto pr-[35vw] max-pr-[500px] flex flex-col relative">
         {loading && (
           <div className="min-h-screen flex items-center justify-center">
@@ -272,6 +271,6 @@ export default function HomePage() {
 
       {/* Sidebar with slide animation - Always visible */}
       <KioskAppSidebar selectedItem={selectedItem} onClose={handleCloseSidebar} />
-    </SidebarProvider>
+    </>
   );
 }
