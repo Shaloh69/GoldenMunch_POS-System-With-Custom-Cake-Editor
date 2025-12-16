@@ -13,34 +13,34 @@
     --light-gold: #FFAA00;
     --cream: #FFF8DC;
 
-    /* ShadCN CSS Variables - Gold/Orange Theme */
-    --background: 45 100% 97%;  /* Very light cream */
-    --foreground: 20 14% 15%;   /* Dark brown for text */
+    /* ShadCN CSS Variables - Gold/Orange Theme (WITH hsl() for Tailwind v4) */
+    --background: hsl(45 100% 97%);  /* Very light cream */
+    --foreground: hsl(20 14% 15%);   /* Dark brown for text */
 
-    --card: 45 100% 99%;        /* Almost white with gold tint */
-    --card-foreground: 20 14% 15%;
+    --card: hsl(45 100% 99%);        /* Almost white with gold tint */
+    --card-foreground: hsl(20 14% 15%);
 
-    --popover: 45 100% 99%;
-    --popover-foreground: 20 14% 15%;
+    --popover: hsl(45 100% 99%);
+    --popover-foreground: hsl(20 14% 15%);
 
-    --primary: 45 100% 51%;     /* Pure gold #FFD700 */
-    --primary-foreground: 20 14% 15%;
+    --primary: hsl(45 100% 51%);     /* Pure gold #FFD700 */
+    --primary-foreground: hsl(20 14% 15%);
 
-    --secondary: 39 100% 50%;   /* Orange #FFA500 */
-    --secondary-foreground: 0 0% 100%;
+    --secondary: hsl(39 100% 50%);   /* Orange #FFA500 */
+    --secondary-foreground: hsl(0 0% 100%);
 
-    --muted: 45 60% 95%;        /* Very light gold */
-    --muted-foreground: 20 14% 40%;
+    --muted: hsl(45 60% 95%);        /* Very light gold */
+    --muted-foreground: hsl(20 14% 40%);
 
-    --accent: 33 100% 50%;      /* Dark orange #FF8C00 */
-    --accent-foreground: 0 0% 100%;
+    --accent: hsl(33 100% 50%);      /* Dark orange #FF8C00 */
+    --accent-foreground: hsl(0 0% 100%);
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: hsl(0 84% 60%);
+    --destructive-foreground: hsl(0 0% 100%);
 
-    --border: 45 50% 85%;       /* Light gold border */
-    --input: 45 50% 85%;
-    --ring: 45 100% 51%;        /* Gold ring */
+    --border: hsl(45 50% 85%);       /* Light gold border */
+    --input: hsl(45 50% 85%);
+    --ring: hsl(45 100% 51%);        /* Gold ring */
 
     --radius: 0.75rem;
 
@@ -51,33 +51,33 @@
 
   /* Dark Mode Theme (Optional - for future use) */
   .dark {
-    --background: 20 14% 10%;   /* Dark brown background */
-    --foreground: 45 100% 97%;  /* Light cream text */
+    --background: hsl(20 14% 10%);   /* Dark brown background */
+    --foreground: hsl(45 100% 97%);  /* Light cream text */
 
-    --card: 20 14% 12%;         /* Slightly lighter dark brown */
-    --card-foreground: 45 100% 97%;
+    --card: hsl(20 14% 12%);         /* Slightly lighter dark brown */
+    --card-foreground: hsl(45 100% 97%);
 
-    --popover: 20 14% 12%;
-    --popover-foreground: 45 100% 97%;
+    --popover: hsl(20 14% 12%);
+    --popover-foreground: hsl(45 100% 97%);
 
-    --primary: 45 100% 60%;     /* Brighter gold for dark mode */
-    --primary-foreground: 20 14% 10%;
+    --primary: hsl(45 100% 60%);     /* Brighter gold for dark mode */
+    --primary-foreground: hsl(20 14% 10%);
 
-    --secondary: 39 100% 55%;   /* Brighter orange for dark mode */
-    --secondary-foreground: 20 14% 10%;
+    --secondary: hsl(39 100% 55%);   /* Brighter orange for dark mode */
+    --secondary-foreground: hsl(20 14% 10%);
 
-    --muted: 20 14% 20%;        /* Muted dark brown */
-    --muted-foreground: 45 60% 70%;
+    --muted: hsl(20 14% 20%);        /* Muted dark brown */
+    --muted-foreground: hsl(45 60% 70%);
 
-    --accent: 33 100% 55%;      /* Brighter dark orange */
-    --accent-foreground: 20 14% 10%;
+    --accent: hsl(33 100% 55%);      /* Brighter dark orange */
+    --accent-foreground: hsl(20 14% 10%);
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: hsl(0 84% 60%);
+    --destructive-foreground: hsl(0 0% 100%);
 
-    --border: 20 14% 25%;       /* Dark border */
-    --input: 20 14% 25%;
-    --ring: 45 100% 60%;        /* Bright gold ring */
+    --border: hsl(20 14% 25%);       /* Dark border */
+    --input: hsl(20 14% 25%);
+    --ring: hsl(45 100% 60%);        /* Bright gold ring */
   }
 }
 
