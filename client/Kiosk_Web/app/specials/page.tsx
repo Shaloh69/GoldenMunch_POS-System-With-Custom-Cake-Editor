@@ -5,7 +5,8 @@ import { Card, CardBody, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { KioskSidebar } from "@/components/KioskSidebar";
+import { KioskAppSidebar } from "@/components/KioskAppSidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useCart } from "@/contexts/CartContext";
 import NextLink from "next/link";
 import type { MenuItem } from "@/types/api";
@@ -120,8 +121,9 @@ export default function SpecialsPage() {
   };
 
   return (
-    <>
-      <div className="min-h-screen pr-[35vw] max-pr-[500px]">
+    <SidebarProvider defaultOpen={true}>
+      <SidebarInset className="pr-[35vw] max-pr-[500px]">
+        <div className="min-h-screen">
         {/* Modern Header */}
         <div className="sticky top-0 z-40 glass-header py-6 px-4 mb-4 animate-fade-in-down">
           <div className="max-w-full mx-auto text-center">
@@ -335,10 +337,11 @@ export default function SpecialsPage() {
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      </SidebarInset>
 
       {/* Sidebar */}
-      <KioskSidebar selectedItem={selectedItem} onClose={handleCloseSidebar} />
-    </>
+      <KioskAppSidebar selectedItem={selectedItem} onClose={handleCloseSidebar} />
+    </SidebarProvider>
   );
 }

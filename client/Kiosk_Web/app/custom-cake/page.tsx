@@ -17,7 +17,8 @@ import {
   CustomCakeService,
   CustomCakeSessionResponse,
 } from "@/services/customCake.service";
-import { KioskSidebar } from "@/components/KioskSidebar";
+import { KioskAppSidebar } from "@/components/KioskAppSidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 
 type QRSession = CustomCakeSessionResponse;
 
@@ -134,8 +135,9 @@ export default function CustomCakePage() {
   };
 
   return (
-    <>
-    <div className="min-h-screen flex items-center justify-center p-4 pr-[35vw] max-pr-[500px] animate-fade-in">
+    <SidebarProvider defaultOpen={true}>
+      <SidebarInset className="pr-[35vw] max-pr-[500px]">
+        <div className="min-h-screen flex items-center justify-center p-4 animate-fade-in">
       <AnimatePresence mode="wait">
         {/* Welcome Screen */}
         {step === "welcome" && (
@@ -513,9 +515,10 @@ export default function CustomCakePage() {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
-    <KioskSidebar selectedItem={selectedItem} onClose={handleCloseSidebar} />
-    </>
+        </div>
+      </SidebarInset>
+      <KioskAppSidebar selectedItem={selectedItem} onClose={handleCloseSidebar} />
+    </SidebarProvider>
   );
 }
 

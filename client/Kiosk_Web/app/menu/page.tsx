@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { useCart } from "@/contexts/CartContext";
 import { MenuService } from "@/services/menu.service";
 import type { MenuItem, Category } from "@/types/api";
-import { KioskSidebar } from "@/components/KioskSidebar";
+import { KioskAppSidebar } from "@/components/KioskAppSidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { MenuCard } from "@/components/MenuCard";
 
 export default function MenuPage() {
@@ -144,8 +145,9 @@ export default function MenuPage() {
   }
 
   return (
-    <>
-      <div className="min-h-screen pr-[35vw] max-pr-[500px] pt-16">
+    <SidebarProvider defaultOpen={true}>
+      <SidebarInset className="pr-[35vw] max-pr-[500px]">
+        <div className="min-h-screen pt-16">
         {/* Compact Header */}
         <div className="sticky top-0 z-40 bg-gradient-to-br from-primary/25 via-pure-white/20 to-secondary/25 backdrop-blur-sm border-b-2 border-primary py-3 px-4 mb-4 shadow-md">
           <div className="max-w-full mx-auto">
@@ -266,10 +268,11 @@ export default function MenuPage() {
             </>
           )}
         </div>
-      </div>
+        </div>
+      </SidebarInset>
 
       {/* Sidebar */}
-      <KioskSidebar selectedItem={selectedItem} onClose={handleCloseSidebar} />
-    </>
+      <KioskAppSidebar selectedItem={selectedItem} onClose={handleCloseSidebar} />
+    </SidebarProvider>
   );
 }

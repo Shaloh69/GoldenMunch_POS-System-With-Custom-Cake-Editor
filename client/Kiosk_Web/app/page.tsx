@@ -7,8 +7,9 @@ import { Spinner } from "@/components/ui/spinner";
 import { useCart } from "@/contexts/CartContext";
 import { MenuService } from "@/services/menu.service";
 import type { MenuItem, Category } from "@/types/api";
-import { KioskSidebar } from "@/components/KioskSidebar";
+import { KioskAppSidebar } from "@/components/KioskAppSidebar";
 import { MenuCard } from "@/components/MenuCard";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 
 export default function HomePage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -95,8 +96,8 @@ export default function HomePage() {
   };
 
   return (
-    <>
-      <div className="min-h-screen overflow-y-auto pr-[35vw] max-pr-[500px] flex flex-col relative">
+    <SidebarProvider defaultOpen={true}>
+      <SidebarInset className="pr-[35vw] max-pr-[500px]">
         {loading && (
           <div className="min-h-screen flex items-center justify-center">
             <div className="text-center animate-fade-in-up">
@@ -267,10 +268,10 @@ export default function HomePage() {
         </div>
         </>
         )}
-      </div>
+      </SidebarInset>
 
       {/* Sidebar with slide animation - Always visible */}
-      <KioskSidebar selectedItem={selectedItem} onClose={handleCloseSidebar} />
-    </>
+      <KioskAppSidebar selectedItem={selectedItem} onClose={handleCloseSidebar} />
+    </SidebarProvider>
   );
 }
