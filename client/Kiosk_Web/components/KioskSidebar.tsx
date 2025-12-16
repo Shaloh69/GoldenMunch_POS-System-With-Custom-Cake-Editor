@@ -68,10 +68,10 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
       >
         {selectedItem && (
           <div className="p-6 h-full">
-            <Card className="bg-gradient-to-br from-pure-white/90 via-sunny-yellow/5 to-deep-orange-yellow/10 backdrop-blur-sm border-2 border-primary/60 shadow-xl h-full">
+            <Card className="bg-gradient-to-br from-card/90 via-primary/5 to-secondary/10 backdrop-blur-sm border-2 border-primary/60 shadow-xl h-full">
               <CardBody className="p-0 flex flex-col h-full">
                 {/* Large Image */}
-                <div className="relative h-80 bg-gradient-to-br from-sunny-yellow/25 via-deep-orange-yellow/20 to-sunny-yellow/35 flex items-center justify-center overflow-hidden">
+                <div className="relative h-80 bg-gradient-to-br from-primary/25 via-secondary/20 to-primary/35 flex items-center justify-center overflow-hidden">
                   {getImageUrl(selectedItem.image_url) ? (
                     <Image
                       src={getImageUrl(selectedItem.image_url) || ""}
@@ -114,7 +114,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
                 </div>
 
                 {/* Item Details - White Background with Dark Text */}
-                <div className="p-6 flex-1 flex flex-col justify-between bg-gradient-to-b from-pure-white/95 to-sunny-yellow/5 backdrop-blur-sm">
+                <div className="p-6 flex-1 flex flex-col justify-between bg-gradient-to-b from-card/95 to-primary/5 backdrop-blur-sm">
                   <div>
                     {/* Name - Larger for portrait */}
                     <h2 className="text-4xl font-black text-foreground mb-4">
@@ -201,7 +201,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
                       {/* Add to Cart Button - Larger */}
                       <Button
                         size="lg"
-                        className="w-full bg-gradient-to-r from-sunny-yellow to-deep-orange-yellow text-foreground font-bold text-3xl py-10 shadow-xl hover:shadow-2xl hover:scale-105 transition-all touch-target-lg"
+                        className="w-full bg-gradient-to-r from-primary to-secondary text-foreground font-bold text-3xl py-10 shadow-xl hover:shadow-2xl hover:scale-105 transition-all touch-target-lg"
                         onClick={handleAddToCart}
                       >
                         🛒 Add to Cart
@@ -227,7 +227,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
 
       {/* Cart Section (Bottom 40%) - Always Present, portrait optimized */}
       <div
-        className={`border-t-4 border-primary bg-gradient-to-b from-sunny-yellow/10 to-deep-orange-yellow/15 backdrop-blur-md transition-all duration-500 ${isCartHidden ? "h-20" : "h-[40vh]"}`}
+        className={`border-t-4 border-primary bg-gradient-to-b from-primary/10 to-secondary/15 backdrop-blur-md transition-all duration-500 ${isCartHidden ? "h-20" : "h-[40vh]"}`}
       >
         {/* Toggle Button - Larger for touch */}
         <button
@@ -247,7 +247,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
 
         {/* Cart Content */}
         {!isCartHidden && (
-          <div className="px-6 pb-6 h-[calc(40vh-4rem)] flex flex-col bg-gradient-to-b from-transparent to-sunny-yellow/5">
+          <div className="px-6 pb-6 h-[calc(40vh-4rem)] flex flex-col bg-gradient-to-b from-transparent to-primary/5">
             {itemCount === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center">
                 <div className="text-6xl mb-4">🛒</div>
@@ -265,11 +265,11 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
                   {cartItems.map((cartItem) => (
                     <Card
                       key={cartItem.menuItem.menu_item_id}
-                      className="bg-gradient-to-r from-pure-white/90 to-sunny-yellow/10 backdrop-blur-sm border-3 border-primary/40 shadow-md"
+                      className="bg-gradient-to-r from-card/90 to-primary/10 backdrop-blur-sm border-3 border-primary/40 shadow-md"
                     >
                       <CardBody className="p-4">
                         <div className="flex items-center gap-4">
-                          <div className="w-20 h-20 bg-gradient-to-br from-sunny-yellow/20 to-deep-orange-yellow/20 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
+                          <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                             {getImageUrl(cartItem.menuItem.image_url) ? (
                               <Image
                                 src={
@@ -310,7 +310,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
                 </div>
 
                 {/* Total - All black text */}
-                <div className="border-t-2 border-primary pt-4 mb-4 bg-gradient-to-r from-sunny-yellow/15 to-deep-orange-yellow/10 rounded-lg p-4">
+                <div className="border-t-2 border-primary pt-4 mb-4 bg-gradient-to-r from-primary/15 to-secondary/10 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-2xl font-bold text-foreground">
                       Total:
@@ -326,7 +326,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
                       as={Link}
                       href="/cart"
                       size="lg"
-                      className="w-full bg-gradient-to-r from-sunny-yellow to-deep-orange-yellow text-foreground font-bold text-2xl py-8 shadow-lg hover:shadow-xl hover:scale-105 transition-all touch-target-lg"
+                      className="w-full bg-gradient-to-r from-primary to-secondary text-foreground font-bold text-2xl py-8 shadow-lg hover:shadow-xl hover:scale-105 transition-all touch-target-lg"
                     >
                       View Cart & Checkout →
                     </Button>
@@ -335,7 +335,7 @@ export const KioskSidebar: React.FC<KioskSidebarProps> = ({
                       as={Link}
                       href="/custom-cake"
                       size="lg"
-                      className="w-full bg-gradient-to-r from-deep-orange-yellow via-sunny-yellow to-deep-orange-yellow text-foreground font-bold text-2xl py-8 shadow-lg hover:shadow-xl hover:scale-105 transition-all touch-target-lg"
+                      className="w-full bg-gradient-to-r from-secondary via-primary to-secondary text-foreground font-bold text-2xl py-8 shadow-lg hover:shadow-xl hover:scale-105 transition-all touch-target-lg"
                     >
                       <div className="flex items-center justify-between w-full">
                         <span>🎂 Custom Cake</span>

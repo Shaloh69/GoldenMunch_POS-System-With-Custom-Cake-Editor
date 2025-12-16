@@ -247,7 +247,7 @@ export default function HomePage() {
               </div>
               <Button
                 size="lg"
-                className="bg-gradient-to-br from-primary via-secondary to-primary text-foreground font-black text-3xl px-20 py-10 rounded-3xl shadow-2xl hover:shadow-[0_0_50px_rgba(251,205,47,0.7)] hover:scale-105 transition-all touch-target-lg border-4 border-deep-orange-yellow/50 animate-pulse-slow min-w-full"
+                className="bg-gradient-to-br from-primary via-secondary to-primary text-foreground font-black text-3xl px-20 py-10 rounded-3xl shadow-2xl hover:shadow-[0_0_50px_rgba(251,205,47,0.7)] hover:scale-105 transition-all touch-target-lg border-4 border-secondary/50 animate-pulse-slow min-w-full"
                 onClick={() => (window.location.href = "/custom-cake")}
               >
                 🍰 Custom Cake Editor

@@ -30,7 +30,7 @@ export const BackToMenuButton: React.FC = () => {
           shadow-2xl hover:shadow-[0_0_30px_rgba(251,205,47,0.8)]
           hover:scale-105
           transition-all duration-300
-          border-4 border-deep-orange-yellow/50
+          border-4 border-secondary/50
           touch-manipulation
         "
         startContent={<span className="text-3xl">←</span>}
