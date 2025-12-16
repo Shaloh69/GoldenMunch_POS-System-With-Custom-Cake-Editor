@@ -30,8 +30,6 @@ export function KioskAppSidebar({
     return null;
   }
 
-  console.log('KioskAppSidebar: Rendering on path', pathname, { selectedItem: selectedItem?.name, itemCount });
-
   const handleAddToCart = () => {
     if (selectedItem) {
       addItem({
@@ -57,6 +55,8 @@ export function KioskAppSidebar({
     selectedItem?.status === "available" &&
     (selectedItem?.is_infinite_stock ||
       (selectedItem?.stock_quantity ?? 0) > 0);
+
+  console.log('KioskAppSidebar: Rendering on path', pathname, { selectedItem: selectedItem?.name, itemCount });
 
   return (
     <div
