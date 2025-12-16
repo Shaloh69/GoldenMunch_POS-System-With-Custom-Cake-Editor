@@ -20,11 +20,11 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html suppressHydrationWarning lang="en">
+    <html suppressHydrationWarning lang="en" className="bg-transparent">
       <head />
       <body
         className={clsx(
-          "min-h-screen text-foreground font-sans antialiased",
+          "min-h-screen bg-transparent text-foreground font-sans antialiased",
           fontSans.variable,
         )}
       >
