@@ -2,20 +2,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Chip } from "@/components/ui/badge";
-import { Divider } from "@/components/ui/separator";
-import { Input } from "@/components/ui/input";
-import { Select, SelectItem } from "@/components/ui/select";
 import {
-  Dialog as Modal,
-  DialogContent as ModalContent,
-  DialogHeader as ModalHeader,
-  ModalBody,
-  DialogFooter as ModalFooter,
-  useDisclosure,
-} from "@/components/ui/dialog";
+  Card, CardBody, CardHeader,
+  Button,
+  Chip,
+  Divider,
+  Input,
+  Select, SelectItem,
+  Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure
+} from "@/components/primitives";
 import NextLink from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";

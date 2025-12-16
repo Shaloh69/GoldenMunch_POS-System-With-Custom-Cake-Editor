@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardBody } from "@/components/ui/card";
+import { Button, Card, CardBody } from "@/components/primitives";
 
 export default function Error({
   error,

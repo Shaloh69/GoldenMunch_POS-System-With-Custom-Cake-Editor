@@ -7,8 +7,7 @@ import { usePathname } from "next/navigation";
 import { useCart } from "@/contexts/CartContext";
 import type { MenuItem } from "@/types/api";
 import { getImageUrl } from "@/utils/imageUtils";
-import { Button } from "@/components/ui/button";
-import { Chip } from "@/components/ui/badge";
+import { Button, Chip } from "@/components/primitives";
 
 interface KioskAppSidebarProps {
   selectedItem: MenuItem | null;

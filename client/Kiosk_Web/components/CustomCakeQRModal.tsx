@@ -2,15 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import {
-  Dialog as Modal,
-  DialogContent as ModalContent,
-  DialogHeader as ModalHeader,
-  ModalBody,
-  DialogFooter as ModalFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
-import { Card, CardBody } from "@/components/ui/card";
+  Modal, ModalContent, ModalHeader, ModalBody, ModalFooter,
+  Button, Spinner, Card, CardBody
+} from "@/components/primitives";
 import Image from "next/image";
 import {
   CustomCakeService,

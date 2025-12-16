@@ -1,10 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardBody, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Chip } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Card, CardBody, CardHeader, Button, Chip, Progress } from "@/components/primitives";
 import { KioskAppSidebar } from "@/components/KioskAppSidebar";
 import { useCart } from "@/contexts/CartContext";
 import NextLink from "next/link";

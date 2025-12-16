@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog as Modal, DialogContent as ModalContent, ModalBody } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { Modal, ModalContent, ModalBody, Button } from "@/components/primitives";
 import Image from "next/image";
 
 interface ImageLightboxProps {

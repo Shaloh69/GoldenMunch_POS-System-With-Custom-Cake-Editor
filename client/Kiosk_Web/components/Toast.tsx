@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Card, CardBody } from "@/components/ui/card";
+import { Card, CardBody } from "@/components/primitives";
 
 export type ToastType = "success" | "error" | "info" | "warning";
 

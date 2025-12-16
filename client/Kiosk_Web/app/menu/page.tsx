@@ -2,10 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardBody } from "@/components/ui/card";
-import { Spinner } from "@/components/ui/spinner";
-import { Input } from "@/components/ui/input";
+import { Button, Card, CardBody, Spinner, Input } from "@/components/primitives";
 import { useCart } from "@/contexts/CartContext";
 import { MenuService } from "@/services/menu.service";
 import type { MenuItem, Category } from "@/types/api";

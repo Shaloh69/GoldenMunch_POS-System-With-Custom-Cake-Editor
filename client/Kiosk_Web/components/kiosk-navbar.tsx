@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Button } from "@/components/ui/button";
-import { Link } from "@/components/ui/link";
+import { Button, Link } from "@/components/primitives";
 import NextLink from "next/link";
 import { cn } from "@/lib/utils";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/primitives";
 import { useRouter, usePathname } from "next/navigation";
 
 export const BackToMenuButton: React.FC = () => {

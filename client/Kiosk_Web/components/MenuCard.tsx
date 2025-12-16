@@ -1,8 +1,7 @@
 "use client";
 
 import React from "react";
-import { Card, CardBody } from "@/components/ui/card";
-import { Chip } from "@/components/ui/badge";
+import { Card, CardBody, Chip } from "@/components/primitives";
 import Image from "next/image";
 import type { MenuItem } from "@/types/api";
 import { getImageUrl } from "@/utils/imageUtils";
