@@ -218,7 +218,7 @@ export default function CartPage() {
   if (cartItems.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6">
-        <Card className="max-w-lg bg-gradient-to-br from-pure-white/90 via-primary/10 to-secondary/15 backdrop-blur-lg border-2 border-primary/60 shadow-xl animate-scale-in">
+        <Card className="max-w-lg glass-card border-2 border-primary/60 shadow-xl animate-scale-in">
           <CardBody className="text-center p-12">
             <div className="text-9xl mb-6 animate-float drop-shadow-xl">🛒</div>
             <h1 className="text-5xl font-bold text-foreground mb-4 drop-shadow-lg">
@@ -255,7 +255,7 @@ export default function CartPage() {
   return (
     <div className="min-h-screen">
       {/* Beautiful Header */}
-      <div className="bg-gradient-to-br from-primary/25 via-pure-white/20 to-secondary/25 backdrop-blur-sm border-b-4 border-primary shadow-lg">
+      <div className="glass-header border-b-4 border-primary shadow-lg">
         <div className="max-w-7xl mx-auto p-8">
           <div className="flex items-center gap-4 animate-slide-right">
             <div className="text-7xl animate-bounce-slow">🛒</div>
@@ -276,7 +276,7 @@ export default function CartPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items - Takes 2 columns on large screens */}
           <div className="lg:col-span-2 space-y-4">
-            <Card className="bg-gradient-to-br from-pure-white/90 via-primary/10 to-secondary/15 backdrop-blur-lg border-2 border-primary/60 shadow-xl animate-slide-up">
+            <Card className="glass-card border-2 border-primary/60 shadow-xl animate-slide-up">
               <CardHeader className="p-6 border-b-2 border-primary/30">
                 <h2 className="text-3xl font-bold text-foreground flex items-center gap-2 drop-shadow-lg">
                   <span className="text-4xl">📦</span>
@@ -290,7 +290,7 @@ export default function CartPage() {
                     className="animate-slide-up"
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
-                    <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-pure-white/95 to-primary/10 rounded-2xl hover:scale-[1.02] transition-all border-2 border-primary/40 hover:border-primary shadow-md">
+                    <div className="flex items-center gap-4 p-5 glass-card rounded-2xl hover:scale-[1.02] transition-all border-2 border-primary/40 hover:border-primary shadow-md">
                       {/* Item Image - Fixed to show actual images */}
                       <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center flex-shrink-0 shadow-inner overflow-hidden">
                         {getImageUrl(item.menuItem.image_url) &&
@@ -419,10 +419,10 @@ export default function CartPage() {
           <div className="space-y-6">
             {/* Order Information */}
             <Card
-              className="bg-gradient-to-br from-pure-white/90 via-primary/10 to-secondary/15 backdrop-blur-lg border-2 border-primary/60 shadow-xl animate-slide-up"
+              className="glass-card border-2 border-primary/60 shadow-xl animate-slide-up"
               style={{ animationDelay: "0.2s" }}
             >
-              <CardHeader className="p-6 bg-gradient-to-r from-primary/30 to-secondary/30 border-b-2 border-primary/50">
+              <CardHeader className="p-6 glass-header border-b-2 border-primary/50">
                 <h2 className="text-2xl font-bold text-foreground flex items-center gap-2 drop-shadow-lg">
                   <span className="text-3xl">📋</span>
                   Order Details
@@ -571,7 +571,7 @@ export default function CartPage() {
 
             {/* Order Summary */}
             <Card
-              className="bg-gradient-to-br from-pure-white/90 via-primary/10 to-secondary/15 backdrop-blur-lg border-2 border-primary/60 shadow-xl animate-slide-up sticky top-24"
+              className="glass-card border-2 border-primary/60 shadow-xl animate-slide-up sticky top-24"
               style={{ animationDelay: "0.3s" }}
             >
               <CardHeader className="p-6 bg-gradient-to-r from-primary to-secondary">
@@ -622,7 +622,7 @@ export default function CartPage() {
         <ModalContent
           size="2xl"
           classNames={{
-            base: "bg-gradient-to-br from-pure-white/95 via-primary/20 to-secondary/25 backdrop-blur-xl border-4 border-primary shadow-2xl",
+            base: "glass-card border-4 border-primary shadow-2xl",
             header: "border-b-0",
             body: "py-8",
             footer: "border-t-0",
@@ -642,7 +642,7 @@ export default function CartPage() {
                     <p className="text-2xl text-foreground mb-6 font-semibold">
                       Thank you for your order! 🙏
                     </p>
-                    <Card className="bg-gradient-to-br from-pure-white/90 to-primary/20 mb-6 animate-scale-in border-2 border-primary/60 shadow-lg">
+                    <Card className="glass-card mb-6 animate-scale-in border-2 border-primary/60 shadow-lg">
                       <CardBody className="p-8">
                         <p className="text-foreground text-lg mb-3 font-semibold">
                           Order Number
@@ -710,7 +710,7 @@ export default function CartPage() {
           size="2xl"
           classNames={{
             backdrop: "bg-charcoal-gray/90",
-            base: "bg-gradient-to-br from-pure-white/95 via-primary/20 to-secondary/25 backdrop-blur-xl border-4 border-primary shadow-2xl",
+            base: "glass-card border-4 border-primary shadow-2xl",
           }}
         >
           <ModalHeader className="flex flex-col gap-1">
@@ -750,7 +750,7 @@ export default function CartPage() {
                 </div>
 
                 {/* Instructions */}
-                <div className="bg-gradient-to-br from-pure-white/90 to-primary/10 p-4 rounded-lg border-2 border-primary/60 shadow-md">
+                <div className="glass-card p-4 rounded-lg border-2 border-primary/60 shadow-md">
                   <h3 className="font-semibold text-foreground mb-3">
                     Payment Instructions:
                   </h3>
@@ -773,7 +773,7 @@ export default function CartPage() {
                 </div>
 
                 {/* Reference Number Input */}
-                <div className="bg-gradient-to-br from-pure-white/95 to-primary/20 p-6 rounded-xl border-2 border-primary/60 shadow-lg">
+                <div className="glass-card p-6 rounded-xl border-2 border-primary/60 shadow-lg">
                   <Input
                     label={`${paymentMethod === "gcash" ? "GCash" : "PayMaya"} Reference Number`}
                     placeholder="Enter your reference number"

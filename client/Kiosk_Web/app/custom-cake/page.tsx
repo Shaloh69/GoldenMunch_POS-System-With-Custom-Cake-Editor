@@ -230,7 +230,7 @@ export default function CustomCakePage() {
             exit={{ opacity: 0 }}
             className="max-w-md w-full text-center"
           >
-            <div className="glass-card rounded-3xl shadow-2xl p-12 bg-white/95 backdrop-blur-xl border-2 border-purple-200">
+            <div className="glass-card rounded-3xl shadow-2xl p-12 border-2 border-purple-200">
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
@@ -258,7 +258,7 @@ export default function CustomCakePage() {
             exit={{ opacity: 0, scale: 0.9 }}
             className="max-w-2xl w-full"
           >
-            <div className="glass-card rounded-3xl shadow-2xl p-8 md:p-12 bg-white/95 backdrop-blur-xl border-2 border-purple-200">
+            <div className="glass-card rounded-3xl shadow-2xl p-8 md:p-12 border-2 border-purple-200">
               {/* Timer */}
               <motion.div
                 initial={{ y: -20, opacity: 0 }}
@@ -312,7 +312,7 @@ export default function CustomCakePage() {
                     className="absolute inset-0 border-4 border-purple-400 rounded-3xl blur-sm"
                   />
 
-                  <div className="relative bg-white p-10 rounded-3xl shadow-2xl border-4 border-gradient-to-r from-purple-300 via-pink-300 to-indigo-300">
+                  <div className="relative glass-card p-10 rounded-3xl shadow-2xl border-4 border-purple-300">
                     <QRCodeSVG
                       value={qrSession.editorUrl}
                       size={320}
@@ -380,7 +380,7 @@ export default function CustomCakePage() {
             exit={{ opacity: 0, scale: 0.9 }}
             className="max-w-md w-full"
           >
-            <div className="glass-card rounded-3xl shadow-2xl p-12 text-center bg-white/95 backdrop-blur-xl border-2 border-red-200">
+            <div className="glass-card rounded-3xl shadow-2xl p-12 text-center border-2 border-red-200">
               <div className="inline-flex items-center justify-center w-32 h-32 bg-gradient-to-br from-red-400 to-orange-500 rounded-full mb-6 shadow-2xl">
                 <Clock className="w-16 h-16 text-white" />
               </div>
@@ -425,7 +425,7 @@ export default function CustomCakePage() {
             exit={{ opacity: 0, scale: 0.8 }}
             className="max-w-2xl w-full"
           >
-            <div className="glass-card rounded-3xl shadow-2xl p-12 text-center bg-white/95 backdrop-blur-xl border-2 border-green-200">
+            <div className="glass-card rounded-3xl shadow-2xl p-12 text-center border-2 border-green-200">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
