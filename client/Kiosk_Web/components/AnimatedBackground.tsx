@@ -43,14 +43,14 @@ export const AnimatedBackground: React.FC = () => {
 
   if (!mounted) {
     return (
-      <div className="fixed inset-0 -z-10 overflow-hidden">
+      <div className="fixed inset-0 z-0 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-white via-[#F0FFFF] to-[#E0F8F7]" />
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden">
+    <div className="fixed inset-0 z-0 overflow-hidden">
       {/* Base - Clean White with Turquoise tint */}
       <div className="absolute inset-0 bg-gradient-to-br from-white via-[#F0FFFF] to-[#E0F8F7]" />
 

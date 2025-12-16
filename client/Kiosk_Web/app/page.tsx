@@ -140,9 +140,9 @@ export default function HomePage() {
 
   return (
     <>
-      <div className="min-h-screen overflow-y-auto pr-[35vw] max-pr-[500px] flex flex-col">
+      <div className="min-h-screen overflow-y-auto pr-[35vw] max-pr-[500px] flex flex-col relative">
         {/* Modern Hero Header */}
-        <header className="glass-header sticky top-0 z-20 animate-fade-in-down">
+        <header className="glass-header sticky top-0 z-30 animate-fade-in-down">
           <div className="max-w-full mx-auto py-10 px-8">
             <div className="text-center">
               <div className="text-8xl mb-4 animate-bounce-in">🍰</div>
@@ -246,7 +246,7 @@ export default function HomePage() {
         </div>
 
         {/* Modern CTA Section - Sticky at bottom */}
-        <div className="mt-auto glass-footer sticky bottom-0 z-20 animate-fade-in-up animation-delay-1000">
+        <div className="mt-auto glass-footer sticky bottom-0 z-30 animate-fade-in-up animation-delay-1000">
           <div className="max-w-full mx-auto py-8 px-8">
             <div className="flex flex-col items-center gap-6 text-center">
               <div>

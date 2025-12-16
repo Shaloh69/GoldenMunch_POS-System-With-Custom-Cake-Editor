@@ -45,7 +45,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     return (
       <>
         <AnimatedBackground />
-        {children}
+        <div className="relative z-10">{children}</div>
       </>
     );
   }
@@ -55,9 +55,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     <>
       <AnimatedBackground />
       <BackToMenuButton />
-      <div className="relative min-h-screen">
+      <div className="relative min-h-screen z-10">
         {/* Main Content Area */}
-        <main className="w-full overflow-y-auto">{children}</main>
+        <main className="w-full overflow-y-auto relative z-10">{children}</main>
       </div>
     </>
   );
