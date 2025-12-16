@@ -25,7 +25,7 @@ import { printerService } from "@/services/printer.service";
 import { SettingsService } from "@/services/settings.service";
 import { getImageUrl } from "@/utils/imageUtils";
 import { KioskAppSidebar } from "@/components/KioskAppSidebar";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import {
   OrderType,
   OrderSource,
@@ -263,8 +263,7 @@ export default function CartPage() {
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <SidebarInset className="pr-[35vw] max-pr-[500px]">
-        <div className="min-h-screen animate-fade-in">
+      <div className="min-h-screen pr-[35vw] max-pr-[500px] animate-fade-in">
       {/* Modern Header with Gradient */}
       <div className="sticky top-0 z-40 glass-header border-b-4 border-primary/60 shadow-2xl mb-6 animate-fade-in-down">
         <div className="max-w-7xl mx-auto p-10">
@@ -848,7 +847,6 @@ export default function CartPage() {
       {/* Spacer */}
       <div className="h-20"></div>
         </div>
-      </SidebarInset>
       <KioskAppSidebar selectedItem={selectedItem} onClose={handleCloseSidebar} />
     </SidebarProvider>
   );
