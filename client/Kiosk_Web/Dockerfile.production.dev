@@ -43,5 +43,5 @@ ENTRYPOINT ["dumb-init", "--"]
 
 # Start dev server on all interfaces for production use
 # This skips the build phase that fails with HeroUI SSR bugs
-# Note: Next.js dev server reads PORT from environment automatically
-CMD ["npm", "run", "dev", "--", "-H", "0.0.0.0"]
+# Use shell command to properly interpolate PORT environment variable (like cashieradmin does)
+CMD ["sh", "-c", "npx next dev -H 0.0.0.0 -p ${PORT:-3002}"]
