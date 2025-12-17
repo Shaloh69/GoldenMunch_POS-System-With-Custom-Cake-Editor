@@ -321,14 +321,6 @@ export default function SpecialsPage() {
               >
                 🏠 Back to Menu
               </Button>
-              <Button
-                as={NextLink}
-                href="/menu"
-                size="lg"
-                className="glass-button flex-1 font-bold text-lg py-6 touch-target"
-              >
-                📋 Browse Menu
-              </Button>
             </div>
           </div>
         </div>
