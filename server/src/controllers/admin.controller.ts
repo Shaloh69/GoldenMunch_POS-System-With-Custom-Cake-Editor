@@ -230,28 +230,29 @@ export const getInventoryTransactions = async (req: AuthRequest, res: Response) 
 export const getSalesAnalytics = async (req: AuthRequest, res: Response) => {
   const { start_date, end_date } = req.query;
 
-  // Validate date range
-  if (!start_date || !end_date) {
-    throw new AppError('start_date and end_date are required', 400);
-  }
-  validateDateRange(start_date as string, end_date as string, 365);
+  // Validate date range - if not provided, default to last 7 days
+  const endDate = end_date || new Date().toISOString().split('T')[0];
+  const startDate = start_date || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+  validateDateRange(startDate as string, endDate as string, 365);
 
   const sql = `
     SELECT
-      DATE(created_at) as date,
+      DATE(COALESCE(order_datetime, created_at)) as date,
       COUNT(*) as total_orders,
       COUNT(DISTINCT customer_id) as unique_customers,
-      SUM(total_amount) as total_revenue,
-      AVG(total_amount) as avg_order_value,
+      SUM(COALESCE(final_amount, total_amount)) as total_revenue,
+      AVG(COALESCE(final_amount, total_amount)) as avg_order_value,
       SUM(CASE WHEN payment_status = 'paid' THEN 1 ELSE 0 END) as paid_orders,
       SUM(CASE WHEN order_status = 'completed' THEN 1 ELSE 0 END) as completed_orders
     FROM customer_order
-    WHERE DATE(created_at) BETWEEN ? AND ?
-    GROUP BY DATE(created_at)
+    WHERE DATE(COALESCE(order_datetime, created_at)) BETWEEN ? AND ?
+      AND is_deleted = FALSE
+    GROUP BY DATE(COALESCE(order_datetime, created_at))
     ORDER BY date DESC
   `;
 
-  const analytics = await query(sql, [start_date, end_date]);
+  const analytics = await query(sql, [startDate, endDate]);
 
   res.json(successResponse('Sales analytics retrieved', analytics));
 };
