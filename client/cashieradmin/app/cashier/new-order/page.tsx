@@ -439,12 +439,12 @@ export default function NewOrderPage() {
                     onChange={(e) => handleDiscountChange(e.target.value)}
                   >
                     <SelectItem key="none">No Discount</SelectItem>
-                    {discounts.map((discount) => (
+                    {(discounts.map((discount) => (
                       <SelectItem key={discount.discount_type_id.toString()}>
                         {discount.name} - {discount.discount_percentage}%
                         {discount.requires_id && ' (Requires ID)'}
                       </SelectItem>
-                    ))}
+                    )) as any)}
                   </Select>
 
                   {selectedDiscount && selectedDiscount.requires_id && (

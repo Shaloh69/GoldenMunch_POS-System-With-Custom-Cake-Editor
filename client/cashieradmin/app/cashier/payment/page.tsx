@@ -1,12 +1,13 @@
 "use client";
 
-import type { CustomerOrder } from "@/types/api";
+import type { CustomerOrder, CustomerDiscountType } from "@/types/api";
 import { OrderStatus } from "@/types/api";
 
 import { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
+import { Select, SelectItem } from "@heroui/select";
 import {
   Modal,
   ModalContent,
@@ -36,9 +37,11 @@ import {
   QrCodeIcon,
   XCircleIcon,
   MagnifyingGlassIcon,
+  PercentBadgeIcon,
 } from "@heroicons/react/24/outline";
 
 import { OrderService } from "@/services/order.service";
+import { DiscountService } from "@/services/discount.service";
 
 const paymentMethodIcons: Record<string, JSX.Element> = {
   cash: <BanknotesIcon className="h-4 w-4" />,
@@ -74,6 +77,11 @@ export default function PaymentPage() {
   const [amountTendered, setAmountTendered] = useState("");
   const [calculatedChange, setCalculatedChange] = useState(0);
 
+  // Discount handling
+  const [discounts, setDiscounts] = useState<CustomerDiscountType[]>([]);
+  const [selectedDiscount, setSelectedDiscount] = useState<CustomerDiscountType | null>(null);
+  const [discountLoading, setDiscountLoading] = useState(false);
+
   // Stats
   const [stats, setStats] = useState({
     pendingCount: 0,
@@ -84,6 +92,7 @@ export default function PaymentPage() {
 
   useEffect(() => {
     loadPaymentData();
+    loadDiscounts();
     // Auto-refresh every 30 seconds
     const interval = setInterval(loadPaymentData, 30000);
 
@@ -177,6 +186,53 @@ export default function PaymentPage() {
     }
   };
 
+  const loadDiscounts = async () => {
+    try {
+      setDiscountLoading(true);
+      const response = await DiscountService.getActiveDiscountTypes();
+
+      if (response.success && response.data) {
+        setDiscounts(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to load discounts:', error);
+      // Don't show error toast for discount loading - not critical
+    } finally {
+      setDiscountLoading(false);
+    }
+  };
+
+  // Discount calculation functions
+  const calculateDiscount = (amount: number, discount: CustomerDiscountType | null): number => {
+    if (!discount) return 0;
+    return (amount * discount.discount_percentage) / 100;
+  };
+
+  const calculateFinalAmount = (): number => {
+    if (!selectedOrder) return 0;
+    const originalAmount = Number(selectedOrder.final_amount || 0);
+    const discountAmount = calculateDiscount(originalAmount, selectedDiscount);
+    return originalAmount - discountAmount;
+  };
+
+  const handleDiscountChange = (discountId: string) => {
+    if (!discountId || discountId === 'none') {
+      setSelectedDiscount(null);
+      return;
+    }
+
+    const discount = discounts.find(d => d.discount_type_id === parseInt(discountId));
+    if (discount) {
+      setSelectedDiscount(discount);
+      // Recalculate change if cash payment
+      if (selectedOrder?.payment_method === 'cash' && amountTendered) {
+        const finalAmount = Number(selectedOrder.final_amount || 0) - calculateDiscount(Number(selectedOrder.final_amount || 0), discount);
+        const change = Number(amountTendered) - finalAmount;
+        setCalculatedChange(Math.max(0, change));
+      }
+    }
+  };
+
   const handleQuickSearch = async () => {
     if (!searchQuery.trim()) {
       setSearchError("Please enter an order number or verification code");
@@ -241,7 +297,7 @@ export default function PaymentPage() {
   const handleVerifyPayment = async () => {
     if (!selectedOrder) return;
 
-    const finalAmount = Number(selectedOrder.final_amount || 0);
+    const finalAmount = calculateFinalAmount(); // Use discounted amount
 
     // Validate cash payment
     if (selectedOrder.payment_method === "cash") {
@@ -281,6 +337,7 @@ export default function PaymentPage() {
           selectedOrder.payment_method === "cash"
             ? Number(amountTendered)
             : undefined,
+        customer_discount_type_id: selectedDiscount?.discount_type_id || undefined,
       });
 
       if (response.success) {
@@ -405,7 +462,7 @@ export default function PaymentPage() {
     setAmountTendered(value);
     if (selectedOrder && value) {
       const tendered = Number(value);
-      const finalAmount = Number(selectedOrder.final_amount || 0);
+      const finalAmount = calculateFinalAmount(); // Use discounted amount if discount applied
 
       setCalculatedChange(tendered >= finalAmount ? tendered - finalAmount : 0);
     } else {
@@ -421,6 +478,9 @@ export default function PaymentPage() {
     setSelectedOrder(order);
     setReferenceNumber(order.gcash_reference_number || "");
     setVerifyError("");
+    setSelectedDiscount(null); // Reset discount for new order
+    setAmountTendered(""); // Reset cash amount
+    setCalculatedChange(0); // Reset change
     onOpen();
   };
 
@@ -811,13 +871,70 @@ export default function PaymentPage() {
 
                 <Divider />
 
-                <div>
-                  <p className="text-sm text-default-500 mb-2">
-                    Amount to Verify
-                  </p>
-                  <p className="text-4xl font-bold text-primary">
-                    {formatCurrency(selectedOrder.final_amount)}
-                  </p>
+                {/* Discount Selection */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-default-700 flex items-center gap-2">
+                    <PercentBadgeIcon className="h-5 w-5 text-primary" />
+                    Apply Discount
+                  </label>
+                  <Select
+                    placeholder="Select discount type (optional)"
+                    selectedKeys={selectedDiscount ? [selectedDiscount.discount_type_id.toString()] : []}
+                    onChange={(e) => handleDiscountChange(e.target.value)}
+                    classNames={{
+                      trigger: "border-2 border-primary-200",
+                    }}
+                  >
+                    <SelectItem key="none">No Discount</SelectItem>
+                    {(discounts.map((discount) => (
+                      <SelectItem key={discount.discount_type_id.toString()}>
+                        {discount.name} - {discount.discount_percentage}%
+                        {discount.requires_id && ' (Requires ID)'}
+                      </SelectItem>
+                    )) as any)}
+                  </Select>
+
+                  {selectedDiscount && selectedDiscount.requires_id && (
+                    <p className="text-xs text-warning flex items-center gap-1">
+                      <span>⚠️</span> Please verify customer ID before applying this discount
+                    </p>
+                  )}
+                </div>
+
+                <Divider />
+
+                {/* Amount Summary */}
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm text-default-500">Original Amount</p>
+                    <p className={`text-lg font-semibold ${selectedDiscount ? 'line-through text-default-400' : 'text-primary'}`}>
+                      {formatCurrency(selectedOrder.final_amount)}
+                    </p>
+                  </div>
+
+                  {selectedDiscount && (
+                    <>
+                      <div className="flex justify-between items-center text-success">
+                        <p className="text-sm flex items-center gap-1">
+                          <PercentBadgeIcon className="h-4 w-4" />
+                          Discount ({selectedDiscount.discount_percentage}%)
+                        </p>
+                        <p className="text-lg font-semibold">
+                          -{formatCurrency(calculateDiscount(Number(selectedOrder.final_amount), selectedDiscount))}
+                        </p>
+                      </div>
+                      <Divider className="my-2" />
+                    </>
+                  )}
+
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm font-medium text-default-700">
+                      {selectedDiscount ? 'Final Amount to Pay' : 'Amount to Verify'}
+                    </p>
+                    <p className="text-4xl font-bold text-primary">
+                      {formatCurrency(calculateFinalAmount())}
+                    </p>
+                  </div>
                 </div>
 
                 <Divider />

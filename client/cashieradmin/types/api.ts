@@ -616,6 +616,7 @@ export interface VerifyPaymentRequest {
   payment_method: PaymentMethod;
   reference_number?: string;
   amount_tendered?: number;
+  customer_discount_type_id?: number;
 }
 
 export interface UpdateOrderStatusRequest {

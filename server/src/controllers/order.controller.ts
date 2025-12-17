@@ -222,13 +222,13 @@ export const getOrderByVerificationCode = async (req: AuthRequest, res: Response
 
 // Verify payment
 export const verifyPayment = async (req: AuthRequest, res: Response) => {
-  const { order_id, reference_number, payment_method, amount_tendered } = req.body;
+  const { order_id, reference_number, payment_method, amount_tendered, customer_discount_type_id } = req.body;
   const cashier_id = req.user?.id;
 
   // Handle cash and cashless payments
   await transaction(async (conn: PoolConnection) => {
     const orderData = getFirstRow<any>(await conn.query(
-      'SELECT final_amount, payment_method FROM customer_order WHERE order_id = ?',
+      'SELECT subtotal, tax_amount, final_amount, payment_method FROM customer_order WHERE order_id = ?',
       [order_id]
     ));
 
@@ -236,7 +236,42 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
       throw new AppError('Order not found', 404);
     }
 
-    const finalAmount = parseFloat(orderData.final_amount || 0);
+    let finalAmount = parseFloat(orderData.final_amount || 0);
+    let discountAmount = 0;
+    let discountPercentage = 0;
+
+    // Apply discount if provided
+    if (customer_discount_type_id) {
+      const discountData = getFirstRow<any>(await conn.query(
+        'SELECT discount_percentage, name FROM customer_discount_type WHERE discount_type_id = ? AND is_active = TRUE',
+        [customer_discount_type_id]
+      ));
+
+      if (!discountData) {
+        throw new AppError('Invalid or inactive discount type', 400);
+      }
+
+      discountPercentage = parseFloat(discountData.discount_percentage || 0);
+      const subtotal = parseFloat(orderData.subtotal || 0);
+
+      // Calculate discount amount based on subtotal
+      discountAmount = (subtotal * discountPercentage) / 100;
+
+      // Recalculate final amount: subtotal + tax - discount
+      const taxAmount = parseFloat(orderData.tax_amount || 0);
+      finalAmount = subtotal + taxAmount - discountAmount;
+
+      // Update order with discount information
+      await conn.query(
+        `UPDATE customer_order
+         SET customer_discount_type_id = ?,
+             discount_amount = ?,
+             final_amount = ?
+         WHERE order_id = ?`,
+        [customer_discount_type_id, discountAmount, finalAmount, order_id]
+      );
+    }
+
     let amountPaid = finalAmount;
     let changeAmount = 0;
 
