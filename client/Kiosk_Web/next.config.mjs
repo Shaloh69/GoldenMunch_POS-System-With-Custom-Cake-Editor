@@ -4,10 +4,8 @@ const nextConfig = {
   // Electron loads from remote URL instead of bundled files
   reactStrictMode: true,
 
-  // Disable linting/type checking during build (run these in development)
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // Disable type checking during build (run these in development)
+  // Note: eslint config moved to .eslintrc.json (no longer supported in next.config)
   typescript: {
     ignoreBuildErrors: true,
   },
