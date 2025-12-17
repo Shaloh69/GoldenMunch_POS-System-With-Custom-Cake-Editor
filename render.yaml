@@ -20,7 +20,7 @@ services:
       - key: NEXT_TELEMETRY_DISABLED
         value: 1
       - key: NEXT_PUBLIC_API_URL
-        sync: false  # Set manually in Render dashboard
+        value: https://goldenmunch-pos-system-server.onrender.com/api
     healthCheckPath: /
     autoDeploy: true
 
@@ -74,7 +74,7 @@ services:
       - key: NEXT_TELEMETRY_DISABLED
         value: 1
       - key: NEXT_PUBLIC_API_URL
-        sync: false
+        value: https://goldenmunch-pos-system-server.onrender.com/api
     healthCheckPath: /
     autoDeploy: true
 
