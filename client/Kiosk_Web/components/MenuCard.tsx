@@ -25,7 +25,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({
     <div
       onClick={() => isAvailable && onClick(item)}
       className={`
-        group relative overflow-hidden rounded-3xl h-[340px]
+        group relative overflow-hidden rounded-3xl h-[450px]
         touch-manipulation
         ${
           isAvailable
@@ -37,7 +37,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({
       {/* Modern Card */}
       <div className="modern-card h-full flex flex-col">
         {/* Image Section */}
-        <div className="relative h-[200px] w-full overflow-hidden bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10">
+        <div className="relative h-[280px] w-full overflow-hidden bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10">
           {getImageUrl(item.image_url) ? (
             <>
               <Image

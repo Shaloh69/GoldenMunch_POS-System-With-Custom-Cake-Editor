@@ -223,8 +223,12 @@ export default function HomePage() {
               {/* Scrollable Categories Container */}
               <div
                 ref={categoryScrollRef}
-                className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-12"
-                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                className="flex flex-nowrap gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-12"
+                style={{
+                  scrollbarWidth: "none",
+                  msOverflowStyle: "none",
+                  WebkitOverflowScrolling: "touch"
+                }}
               >
                 <Button
                   size="lg"
@@ -314,8 +318,8 @@ export default function HomePage() {
                 </h2>
               </div>
 
-              {/* 2 Column Grid - Portrait optimized with stagger animation */}
-              <div className="grid grid-cols-2 gap-6 pb-8">
+              {/* 3 Column Grid with stagger animation */}
+              <div className="grid grid-cols-3 gap-6 pb-8">
                 {filteredItems.map((item, index) => (
                   <div
                     key={item.menu_item_id}
