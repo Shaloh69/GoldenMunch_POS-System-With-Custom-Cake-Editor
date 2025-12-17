@@ -65,12 +65,26 @@ app.use(cors({
     // Allow requests with no origin (like mobile apps, Postman, or curl)
     if (!origin) return callback(null, true);
 
+    // Check if origin is in the whitelist
     if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      logger.warn(`CORS blocked request from origin: ${origin}`);
-      callback(new Error(`Origin ${origin} not allowed by CORS policy`));
+      return callback(null, true);
     }
+
+    // Allow all Vercel preview deployments (*.vercel.app)
+    if (origin.endsWith('.vercel.app')) {
+      logger.info(`CORS allowed Vercel preview: ${origin}`);
+      return callback(null, true);
+    }
+
+    // Allow all Render preview deployments (*.onrender.com)
+    if (origin.endsWith('.onrender.com')) {
+      logger.info(`CORS allowed Render preview: ${origin}`);
+      return callback(null, true);
+    }
+
+    // Block all other origins
+    logger.warn(`CORS blocked request from origin: ${origin}`);
+    callback(new Error(`Origin ${origin} not allowed by CORS policy`));
   },
   credentials: true,
 }));
