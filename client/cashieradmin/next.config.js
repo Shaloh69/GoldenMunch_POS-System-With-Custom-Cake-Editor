@@ -1,10 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    // Don't run ESLint during production builds
-    // ESLint should be run separately in CI/CD
-    ignoreDuringBuilds: true,
-  },
+  // Note: eslint config removed (deprecated in Next.js 16)
+  // Linting no longer runs during builds by default
   images: {
     remotePatterns: [
       {
