@@ -2,7 +2,11 @@
 
 **Date:** December 17, 2025
 **Status:** ✅ FIXED
+**Database Version:** V4 (GoldenMunchPOSV4.sql)
 **Branch:** `claude/fix-candle-positioning-pr1TM`
+
+**🎉 All fixes are now integrated into the main schema V4!**
+No separate migration files needed - just deploy GoldenMunchPOSV4.sql
 
 ---
 
@@ -212,18 +216,23 @@ Waste Summary:      4 incidents, ₱1,625 cost
 
 ## 🚀 Deployment Instructions
 
-### Step 1: Run Database Migrations
+### Step 1: Deploy V4 Schema
 
-Execute the SQL files in order:
+**All fixes are now integrated into the main schema V4!**
 
 ```bash
 # Connect to your MySQL database
-mysql -u your_username -p defaultdb
+mysql -u your_username -p
 
-# Run migrations in order
-source /path/to/server/databaseSchema/migrations/002_add_analytics_procedures.sql
-source /path/to/server/databaseSchema/migrations/003_seed_sample_data.sql
+# Deploy the complete V4 schema
+source /path/to/server/databaseSchema/GoldenMunchPOSV4.sql
 ```
+
+**Note:** GoldenMunchPOSV4.sql includes:
+- All V3 tables and features
+- New analytics stored procedures
+- Fixed field compatibility
+- Comprehensive sample data for testing
 
 ### Step 2: Restart Backend Server
 
@@ -384,8 +393,8 @@ None - all changes are backwards compatible using `COALESCE`
 ## 📚 References
 
 ### Database Schema
-- Main Schema: `/server/databaseSchema/GoldenMunchPOSV3.sql`
-- Migrations: `/server/databaseSchema/migrations/`
+- **V4 Schema (Current)**: `/server/databaseSchema/GoldenMunchPOSV4.sql`
+- V3 Schema (Legacy): `/server/databaseSchema/GoldenMunchPOSV3.sql`
 
 ### Backend Controllers
 - Admin Controller: `/server/src/controllers/admin.controller.ts`
