@@ -128,12 +128,14 @@ export default function TransactionsPage() {
     const headers = [
       'Order ID',
       'Date',
+      'Customer Name',
       'Payment Method',
       'Status',
       'Items',
       'Subtotal',
       'Tax',
-      'Discount',
+      'Discount Type',
+      'Discount Amount',
       'Final Amount',
       'Amount Paid',
       'Change',
@@ -145,11 +147,13 @@ export default function TransactionsPage() {
       return [
         t.order_number || t.order_id,
         new Date(t.order_datetime).toLocaleString(),
+        t.customer?.name || 'Walk-in Customer',
         t.payment_method,
         t.payment_status,
         t.items?.map(item => `${(item as any).item_name || 'Item'} x${item.quantity}`).join('; ') || 'N/A',
         Number(t.total_amount || 0).toFixed(2),
         Number(t.tax_amount || 0).toFixed(2),
+        t.customer_discount?.name || 'None',
         Number(t.discount_amount || 0).toFixed(2),
         Number(t.final_amount || 0).toFixed(2),
         Number(transaction.amount_paid || t.final_amount || 0).toFixed(2),
@@ -365,6 +369,9 @@ export default function TransactionsPage() {
                     Order Details
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-default-600 uppercase tracking-wider">
+                    Customer
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-default-600 uppercase tracking-wider">
                     Items
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-default-600 uppercase tracking-wider">
@@ -381,7 +388,7 @@ export default function TransactionsPage() {
               <tbody className="bg-white divide-y divide-default-200">
                 {filteredTransactions.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-default-400">
+                    <td colSpan={6} className="px-4 py-8 text-center text-default-400">
                       No transactions found
                     </td>
                   </tr>
@@ -405,6 +412,18 @@ export default function TransactionsPage() {
                                 <code className="text-xs text-default-400 bg-default-100 px-1 rounded">
                                   {transaction.verification_code}
                                 </code>
+                              )}
+                            </div>
+                          </td>
+                          <td className="px-4 py-4">
+                            <div className="space-y-1">
+                              <p className="text-sm font-medium">
+                                {transaction.customer?.name || 'Walk-in'}
+                              </p>
+                              {transaction.customer_discount && (
+                                <Chip size="sm" color="secondary" variant="flat">
+                                  {transaction.customer_discount.name} - {Number(transaction.customer_discount_percentage || 0).toFixed(1)}%
+                                </Chip>
                               )}
                             </div>
                           </td>
@@ -447,10 +466,20 @@ export default function TransactionsPage() {
                           </td>
                           <td className="px-4 py-4 text-right">
                             <div className="space-y-1">
+                              {transaction.discount_amount && Number(transaction.discount_amount) > 0 && (
+                                <p className="text-xs text-default-500 line-through">
+                                  {formatCurrency(Number(transaction.total_amount) + Number(transaction.discount_amount))}
+                                </p>
+                              )}
                               <p className="font-bold text-lg">{formatCurrency(transaction.final_amount)}</p>
-                              {transaction.payment_method === 'cash' && (transaction as any).amount_paid && Number((transaction as any).amount_paid) > Number(transaction.final_amount || 0) && (
-                                <p className="text-xs text-default-500">
+                              {transaction.payment_method === 'cash' && (transaction as any).amount_paid && Number((transaction as any).amount_paid) > 0 && (
+                                <p className="text-xs text-success">
                                   Paid: {formatCurrency((transaction as any).amount_paid)}
+                                </p>
+                              )}
+                              {transaction.payment_method === 'cash' && (transaction as any).change_amount && Number((transaction as any).change_amount) > 0 && (
+                                <p className="text-xs text-warning">
+                                  Change: {formatCurrency((transaction as any).change_amount)}
                                 </p>
                               )}
                             </div>
@@ -471,7 +500,7 @@ export default function TransactionsPage() {
                         {/* Expanded Row - Items Detail */}
                         {isExpanded && transaction.items && transaction.items.length > 0 && (
                           <tr>
-                            <td colSpan={5} className="px-4 py-4 bg-default-50">
+                            <td colSpan={6} className="px-4 py-4 bg-default-50">
                               <div className="space-y-2">
                                 <p className="text-sm font-semibold text-default-700 mb-3">Order Items:</p>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
