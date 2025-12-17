@@ -135,7 +135,7 @@ export default function CustomCakePage() {
 
   return (
     <>
-      <div className="min-h-screen pr-[35vw] max-pr-[500px] flex items-center justify-center p-4 animate-fade-in">
+      <div className="min-h-screen flex items-center justify-center p-4 animate-fade-in">
       <AnimatePresence mode="wait">
         {/* Welcome Screen */}
         {step === "welcome" && (
