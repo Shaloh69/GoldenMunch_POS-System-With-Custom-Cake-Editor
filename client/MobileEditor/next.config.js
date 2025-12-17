@@ -1,3 +1,5 @@
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // For production: static export to be served from Express
@@ -8,6 +10,12 @@ const nextConfig = {
     unoptimized: true, // Required for static export
   },
   webpack: (config) => {
+    // Add path alias resolution for @/ imports
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname),
+    };
+
     config.externals = [...(config.externals || []), { canvas: 'canvas' }];
     return config;
   },
