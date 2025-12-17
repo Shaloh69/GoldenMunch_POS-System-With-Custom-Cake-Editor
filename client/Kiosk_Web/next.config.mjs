@@ -16,6 +16,18 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
 
+  // Transpile Three.js packages for 3D cake editor
+  transpilePackages: [
+    'three',
+    '@react-three/fiber',
+    '@react-three/drei',
+  ],
+
+  // Unoptimized images for compatibility
+  images: {
+    unoptimized: true,
+  },
+
   webpack: (config, { isServer, webpack }) => {
     // Add path alias resolution for @/ imports
     if (!config.resolve.alias) {
@@ -36,6 +48,18 @@ const nextConfig = {
     config.externals = [...(config.externals || []), { canvas: 'canvas' }];
 
     return config;
+  },
+
+  // Standard .next directory for all builds
+  distDir: '.next',
+
+  // Disable all static optimization to avoid HeroUI SSR issues
+  output: 'standalone',
+
+  // Experimental: Skip static page generation to avoid build errors
+  experimental: {
+    workerThreads: false,
+    cpus: 1,
   },
 };
 
