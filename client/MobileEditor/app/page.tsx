@@ -258,14 +258,14 @@ function CakeEditorContent() {
     return () => clearTimeout(timer);
   }, [design, currentStep]);
 
-  const saveDraft = async () => {
+  const saveDraft = async (): Promise<string | null> => {
     // Skip saving in debug mode
     if (debugMode && process.env.NODE_ENV !== 'production') {
       console.log('🔧 DEBUG MODE: Skipping draft save');
-      return;
+      return null;
     }
 
-    if (!sessionToken || !sessionValid) return;
+    if (!sessionToken || !sessionValid) return null;
 
     try {
       setSaving(true);
@@ -290,12 +290,17 @@ function CakeEditorContent() {
       console.log('Draft saved successfully:', data);
 
       // Store request_id if returned
-      if (data.data && data.data.request_id && !requestId) {
-        setRequestId(data.data.request_id);
+      if (data.data && data.data.request_id) {
+        const newRequestId = data.data.request_id;
+        setRequestId(newRequestId);
+        return newRequestId; // Return the request_id for immediate use
       }
+
+      return null;
     } catch (error) {
       console.error('Failed to save draft:', error);
       // Don't show error to user for auto-save
+      return null;
     } finally {
       setSaving(false);
     }
@@ -362,15 +367,20 @@ function CakeEditorContent() {
       }
 
       // Step 1: Save final draft to get request_id
-      if (!requestId) {
-        await saveDraft();
+      let finalRequestId = requestId;
+      if (!finalRequestId) {
+        const savedRequestId = await saveDraft();
+        if (!savedRequestId) {
+          throw new Error('Failed to save draft and get request ID');
+        }
+        finalRequestId = savedRequestId;
       }
 
       // Step 2: Capture 3D screenshots
       const screenshots = await captureScreenshots();
 
       // Step 3: Upload images (if we have them)
-      if (screenshots.length > 0 && requestId) {
+      if (screenshots.length > 0 && finalRequestId) {
         try {
           const imageUploads = screenshots.map((dataUrl, index) => ({
             url: dataUrl,
@@ -384,7 +394,7 @@ function CakeEditorContent() {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              request_id: requestId,
+              request_id: finalRequestId,
               images: imageUploads,
             }),
           });
@@ -401,12 +411,13 @@ function CakeEditorContent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          request_id: requestId,
+          request_id: finalRequestId,
         }),
       });
 
       if (!submitResponse.ok) {
-        throw new Error('Failed to submit request');
+        const errorData = await submitResponse.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to submit request');
       }
 
       const result = await submitResponse.json();
