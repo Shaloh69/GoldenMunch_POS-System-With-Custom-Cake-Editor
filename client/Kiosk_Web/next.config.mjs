@@ -37,13 +37,10 @@ const nextConfig = {
     config.resolve.alias['@'] = path.resolve(__dirname);
 
     // Fix Tailwind CSS v4 compatibility with HeroUI
-    // HeroUI expects Tailwind v3 plugin API, redirect to our compatibility shim
-    config.plugins.push(
-      new webpack.NormalModuleReplacementPlugin(
-        /^tailwindcss\/plugin(\.js)?$/,
-        path.resolve(__dirname, 'lib/shims/tailwindcss-plugin.js')
-      )
-    );
+    // Redirect tailwindcss/plugin imports to our compatibility shim
+    const shimPath = path.resolve(__dirname, 'lib/shims/tailwindcss-plugin.js');
+    config.resolve.alias['tailwindcss/plugin'] = shimPath;
+    config.resolve.alias['tailwindcss/plugin.js'] = shimPath;
 
     config.externals = [...(config.externals || []), { canvas: 'canvas' }];
 
