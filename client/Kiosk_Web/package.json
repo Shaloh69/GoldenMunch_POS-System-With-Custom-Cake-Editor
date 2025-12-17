@@ -4,7 +4,6 @@
   "description": "GoldenMunch POS Kiosk Web Application - Next.js UI",
   "author": "GoldenMunch",
   "private": true,
-  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build --webpack",
