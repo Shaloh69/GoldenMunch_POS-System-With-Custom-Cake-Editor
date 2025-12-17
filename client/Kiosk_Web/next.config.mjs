@@ -28,17 +28,21 @@ const nextConfig = {
     unoptimized: true,
   },
 
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, webpack }) => {
     // Add path alias resolution for @/ imports
-    // Use Object.assign to ensure the alias is properly set
     if (!config.resolve.alias) {
       config.resolve.alias = {};
     }
 
     config.resolve.alias['@'] = path.resolve(__dirname);
 
-    // Fix Tailwind CSS v4 compatibility with HeroUI (expects v3 module structure)
-    config.resolve.alias['tailwindcss/plugin.js'] = 'tailwindcss/plugin';
+    // Fix Tailwind CSS v4 compatibility with HeroUI using NormalModuleReplacementPlugin
+    config.plugins.push(
+      new webpack.NormalModuleReplacementPlugin(
+        /^tailwindcss\/plugin\.js$/,
+        'tailwindcss/plugin'
+      )
+    );
 
     config.externals = [...(config.externals || []), { canvas: 'canvas' }];
 
