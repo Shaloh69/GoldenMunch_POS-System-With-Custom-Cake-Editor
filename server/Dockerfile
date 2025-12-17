@@ -1,4 +1,5 @@
 # Multi-stage build for production
+# Cache bust: 2025-12-17 - TypeScript fixes applied
 FROM node:20-alpine AS builder
 
 WORKDIR /app
