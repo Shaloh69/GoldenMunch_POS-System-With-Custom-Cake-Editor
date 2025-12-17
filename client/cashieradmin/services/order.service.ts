@@ -30,6 +30,10 @@ export class OrderService {
     return apiClient.patch(`/cashier/orders/${id}/status`, data);
   }
 
+  static async createOrder(data: any) {
+    return apiClient.post('/kiosk/orders', data);
+  }
+
   static async verifyPayment(data: VerifyPaymentRequest, qrCodeFile?: File) {
     if (qrCodeFile) {
       const formData = new FormData();

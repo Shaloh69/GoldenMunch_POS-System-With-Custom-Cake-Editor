@@ -77,8 +77,8 @@ export default function NewOrderPage() {
     try {
       setLoading(true);
 
-      // Load menu items
-      const menuResponse = await MenuService.getActiveMenuItems();
+      // Load menu items (status=available filters for active items)
+      const menuResponse = await MenuService.getMenuItems({ status: 'available' });
       if (menuResponse.success && menuResponse.data) {
         setMenuItems(menuResponse.data);
       }
@@ -107,7 +107,7 @@ export default function NewOrderPage() {
         {
           menuItem: item,
           quantity: 1,
-          subtotal: item.current_price,
+          subtotal: item.current_price || 0,
         },
       ]);
     }
@@ -122,7 +122,7 @@ export default function NewOrderPage() {
     setCartItems(
       cartItems.map(ci =>
         ci.menuItem.menu_item_id === itemId
-          ? { ...ci, quantity: newQuantity, subtotal: ci.menuItem.current_price * newQuantity }
+          ? { ...ci, quantity: newQuantity, subtotal: (ci.menuItem.current_price || 0) * newQuantity }
           : ci
       )
     );
@@ -219,7 +219,9 @@ export default function NewOrderPage() {
       const response = await OrderService.createOrder(orderData);
 
       if (response.success && response.data) {
-        const orderId = typeof response.data === 'object' ? response.data.order_id : response.data;
+        const orderId = typeof response.data === 'object'
+          ? (response.data as any).order_id
+          : response.data;
         setCreatedOrderId(orderId);
         setSuccessMessage(`Order #${orderId} created successfully!`);
         setShowSuccessModal(true);
@@ -309,10 +311,10 @@ export default function NewOrderPage() {
                       <CardBody className="p-4">
                         <p className="font-bold text-rich-brown mb-2">{item.name}</p>
                         <p className="text-lg font-bold text-success">
-                          ₱{item.current_price.toFixed(2)}
+                          ₱{(item.current_price || 0).toFixed(2)}
                         </p>
                         <Chip size="sm" color="primary" variant="flat" className="mt-2">
-                          {item.category_name}
+                          {item.item_type}
                         </Chip>
                       </CardBody>
                     </Card>
@@ -354,7 +356,7 @@ export default function NewOrderPage() {
                       <div className="flex-1">
                         <p className="font-medium text-rich-brown">{item.menuItem.name}</p>
                         <p className="text-sm text-warm-brown">
-                          ₱{item.menuItem.current_price.toFixed(2)} each
+                          ₱{(item.menuItem.current_price || 0).toFixed(2)} each
                         </p>
                       </div>
 
