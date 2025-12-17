@@ -38,6 +38,7 @@ interface NavItem {
 const cashierNav: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
   { name: 'Orders', href: '/cashier/orders', icon: ShoppingCartIcon },
+  { name: 'Custom Cakes', href: '/cashier/custom-cakes', icon: CakeIcon },
   { name: 'Payment Verification', href: '/cashier/payment', icon: CreditCardIcon }
 ];
 
