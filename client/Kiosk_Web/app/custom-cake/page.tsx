@@ -368,7 +368,7 @@ export default function CustomCakePage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                onClick={() => router.push("/menu")}
+                onClick={() => router.push("/")}
                 className="w-full mt-6 py-5 flex items-center justify-center gap-3 bg-gradient-to-r from-gray-600 to-gray-800 text-white font-bold text-lg rounded-2xl hover:scale-105 transition-all shadow-xl"
               >
                 <ArrowLeft className="w-6 h-6" />
