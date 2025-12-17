@@ -37,6 +37,9 @@ const nextConfig = {
 
     config.resolve.alias['@'] = path.resolve(__dirname);
 
+    // Fix Tailwind CSS v4 compatibility with HeroUI (expects v3 module structure)
+    config.resolve.alias['tailwindcss/plugin.js'] = 'tailwindcss/plugin';
+
     config.externals = [...(config.externals || []), { canvas: 'canvas' }];
 
     return config;
