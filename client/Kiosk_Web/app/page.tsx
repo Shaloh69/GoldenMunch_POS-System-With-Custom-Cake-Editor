@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button, Card, CardBody, Spinner } from "@/components/primitives";
 import { useCart } from "@/contexts/CartContext";
 import { MenuService } from "@/services/menu.service";
@@ -16,7 +16,10 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(false);
   const { items: cartItems } = useCart();
+  const categoryScrollRef = useRef<HTMLDivElement>(null);
 
   // Fetch menu items and categories
   useEffect(() => {
@@ -92,6 +95,43 @@ export default function HomePage() {
     setSelectedItem(null);
   };
 
+  // Check scroll position and update arrow visibility
+  const checkScrollPosition = () => {
+    if (categoryScrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = categoryScrollRef.current;
+      setShowLeftArrow(scrollLeft > 0);
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  // Scroll categories left
+  const scrollLeft = () => {
+    if (categoryScrollRef.current) {
+      categoryScrollRef.current.scrollBy({ left: -300, behavior: "smooth" });
+    }
+  };
+
+  // Scroll categories right
+  const scrollRight = () => {
+    if (categoryScrollRef.current) {
+      categoryScrollRef.current.scrollBy({ left: 300, behavior: "smooth" });
+    }
+  };
+
+  // Update arrow visibility when categories change
+  useEffect(() => {
+    checkScrollPosition();
+  }, [categories]);
+
+  // Add scroll event listener
+  useEffect(() => {
+    const scrollContainer = categoryScrollRef.current;
+    if (scrollContainer) {
+      scrollContainer.addEventListener("scroll", checkScrollPosition);
+      return () => scrollContainer.removeEventListener("scroll", checkScrollPosition);
+    }
+  }, []);
+
   return (
     <>
       <div className="min-h-screen overflow-y-auto pr-[35vw] max-pr-[500px] flex flex-col relative">
@@ -153,10 +193,39 @@ export default function HomePage() {
         </header>
 
         <div className="flex-1 px-8 py-6">
-          {/* Modern Categories */}
+          {/* Modern Categories - Horizontal Scrollable */}
           {categories.length > 0 && (
-            <div className="mb-8 animate-fade-in-up animation-delay-200">
-              <div className="flex gap-4 justify-center flex-wrap">
+            <div className="mb-8 animate-fade-in-up animation-delay-200 relative">
+              {/* Left Arrow */}
+              {showLeftArrow && (
+                <button
+                  onClick={scrollLeft}
+                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 glass-button p-4 rounded-full shadow-lg hover:scale-110 transition-transform"
+                  aria-label="Scroll left"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={3}
+                    stroke="currentColor"
+                    className="w-8 h-8"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15.75 19.5L8.25 12l7.5-7.5"
+                    />
+                  </svg>
+                </button>
+              )}
+
+              {/* Scrollable Categories Container */}
+              <div
+                ref={categoryScrollRef}
+                className="flex gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-12"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              >
                 <Button
                   size="lg"
                   onClick={() => setSelectedCategory(null)}
@@ -164,7 +233,7 @@ export default function HomePage() {
                     selectedCategory === null
                       ? "btn-gradient scale-105"
                       : "glass-button"
-                  } font-bold text-xl px-10 py-7 rounded-2xl touch-target`}
+                  } font-bold text-xl px-10 py-7 rounded-2xl touch-target whitespace-nowrap flex-shrink-0`}
                 >
                   All Items
                 </Button>
@@ -177,13 +246,37 @@ export default function HomePage() {
                       selectedCategory === category.category_id
                         ? "btn-gradient scale-105"
                         : "glass-button"
-                    } font-bold text-xl px-10 py-7 rounded-2xl touch-target animate-fade-in`}
+                    } font-bold text-xl px-10 py-7 rounded-2xl touch-target animate-fade-in whitespace-nowrap flex-shrink-0`}
                     style={{ animationDelay: `${index * 0.1 + 0.3}s` }}
                   >
                     {category.name}
                   </Button>
                 ))}
               </div>
+
+              {/* Right Arrow */}
+              {showRightArrow && (
+                <button
+                  onClick={scrollRight}
+                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 glass-button p-4 rounded-full shadow-lg hover:scale-110 transition-transform"
+                  aria-label="Scroll right"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={3}
+                    stroke="currentColor"
+                    className="w-8 h-8"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                    />
+                  </svg>
+                </button>
+              )}
             </div>
           )}
 
