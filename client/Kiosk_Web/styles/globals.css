@@ -369,6 +369,17 @@ body {
   }
 }
 
+/* Orb Fade - Gentle fade in/out for background orbs */
+@keyframes orbFade {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 /* =============================================== */
 /* ANIMATION UTILITY CLASSES */
 /* =============================================== */
@@ -441,6 +452,12 @@ body {
 
 .animate-gradient-shift {
   animation: gradient-shift 15s ease-in-out infinite;
+}
+
+.animate-orb-fade {
+  animation-name: float-smooth, orbFade;
+  animation-iteration-count: infinite, infinite;
+  animation-timing-function: ease-in-out, ease-in-out;
 }
 
 /* Animation Delays */
