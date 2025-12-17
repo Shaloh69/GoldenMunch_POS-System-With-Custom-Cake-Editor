@@ -26,7 +26,7 @@ RUN chown -R nodejs:nodejs /app
 # Switch to non-root user
 USER nodejs
 
-# Expose port
+# Expose port (Render overrides with $PORT env var)
 EXPOSE 3002
 
 # Set production environment variables
@@ -34,13 +34,14 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3002
 
-# Health check
+# Health check - uses dynamic port from environment
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3002', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+  CMD node -e "const port = process.env.PORT || 3002; require('http').get('http://localhost:' + port, (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 # Use dumb-init
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start dev server on all interfaces for production use
 # This skips the build phase that fails with HeroUI SSR bugs
+# Note: Next.js dev server reads PORT from environment automatically
 CMD ["npm", "run", "dev", "--", "-H", "0.0.0.0"]

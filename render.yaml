@@ -10,7 +10,7 @@ services:
     plan: starter   # 1GB RAM ($7/month) - Free tier (512MB) may cause OOM
     branch: main    # Deploy from main branch
     rootDir: client/Kiosk_Web
-    dockerfilePath: ./Dockerfile.production
+    dockerfilePath: ./Dockerfile.production.dev  # Using dev server to bypass HeroUI SSR build issues
     dockerContext: ./
     envVars:
       - key: NODE_ENV
