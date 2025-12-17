@@ -213,6 +213,8 @@ export interface CustomerOrder {
   order_status: OrderStatus;
   payment_method: PaymentMethod;
   payment_status: PaymentStatus;
+  amount_paid?: number;
+  change_amount?: number;
   gcash_reference_number?: string;
   paymaya_reference_number?: string;
   card_transaction_ref?: string;
@@ -220,6 +222,9 @@ export interface CustomerOrder {
   discount_amount: number;
   tax_amount: number;
   final_amount: number;
+  customer_discount_type_id?: number;
+  customer_discount_percentage?: number;
+  customer_discount?: CustomerDiscountType;
   payment_verified_by?: number;
   payment_verified_at?: string;
   special_instructions?: string;
@@ -324,6 +329,18 @@ export interface PromotionRule {
   current_usage_count: number;
   display_on_kiosk: boolean;
   is_stackable: boolean;
+  is_active: boolean;
+  created_by: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CustomerDiscountType {
+  discount_type_id: number;
+  name: string;
+  description?: string;
+  discount_percentage: number;
+  requires_id: boolean;
   is_active: boolean;
   created_by: number;
   created_at: string;

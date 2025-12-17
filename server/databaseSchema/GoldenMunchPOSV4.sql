@@ -211,6 +211,21 @@ CREATE TABLE promotion_applicable_categories (
     FOREIGN KEY (category_id) REFERENCES category(category_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+-- Customer discount types (for student, senior, etc. discounts)
+CREATE TABLE customer_discount_type (
+    discount_type_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL COMMENT 'e.g., Student, Senior, PWD, Military',
+    description TEXT,
+    discount_percentage DECIMAL(5,2) NOT NULL COMMENT 'Percentage discount (0.00-100.00)',
+    requires_id BOOLEAN DEFAULT TRUE COMMENT 'Whether ID verification is required',
+    is_active BOOLEAN DEFAULT TRUE,
+    created_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES admin(admin_id) ON DELETE RESTRICT,
+    INDEX idx_discount_active (is_active)
+) ENGINE=InnoDB;
+
 -- ============================================================================
 -- SECTION 4: TAX RULES
 -- ============================================================================
@@ -517,6 +532,10 @@ CREATE TABLE customer_order (
     promotion_id INT NULL,
     promotion_discount DECIMAL(10,2) DEFAULT 0,
 
+    -- Applied Customer Discount (Student, Senior, etc.)
+    customer_discount_type_id INT NULL,
+    customer_discount_percentage DECIMAL(5,2) DEFAULT 0,
+
     -- Payment Status
     payment_status ENUM('unpaid', 'partial', 'paid', 'refunded') DEFAULT 'unpaid',
     payment_method ENUM('cash', 'credit_card', 'debit_card', 'gcash', 'paymaya', 'bank_transfer', 'loyalty_points', 'other') NULL,
@@ -542,6 +561,7 @@ CREATE TABLE customer_order (
     FOREIGN KEY (customer_id) REFERENCES customer(customer_id) ON DELETE SET NULL,
     FOREIGN KEY (cashier_id) REFERENCES cashier(cashier_id) ON DELETE SET NULL,
     FOREIGN KEY (promotion_id) REFERENCES promotion_rules(promotion_id) ON DELETE SET NULL,
+    FOREIGN KEY (customer_discount_type_id) REFERENCES customer_discount_type(discount_type_id) ON DELETE SET NULL,
 
     -- Indexes
     INDEX idx_order_number (order_number),
@@ -1942,6 +1962,14 @@ VALUES
 (8, 'base', 105.00, 40.00, '2025-01-01', '2026-12-31', TRUE),
 (9, 'base', 380.00, 170.00, '2025-01-01', '2026-12-31', TRUE),
 (10, 'base', 130.00, 50.00, '2025-01-01', '2026-12-31', TRUE);
+
+-- Add sample customer discount types
+INSERT IGNORE INTO customer_discount_type (discount_type_id, name, description, discount_percentage, requires_id, is_active, created_by)
+VALUES
+(1, 'Student Discount', 'Discount for students with valid student ID', 5.00, TRUE, TRUE, 1),
+(2, 'Senior Citizen Discount', 'Discount for senior citizens (60+ years old)', 20.00, TRUE, TRUE, 1),
+(3, 'PWD Discount', 'Person with Disability discount', 20.00, TRUE, TRUE, 1),
+(4, 'Military Discount', 'Discount for military personnel and veterans', 10.00, TRUE, TRUE, 1);
 
 -- Add sample customers
 INSERT IGNORE INTO customer (customer_id, name, phone, email, loyalty_points, total_spent, customer_tier)

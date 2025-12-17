@@ -14,6 +14,7 @@ import * as refundController from '../controllers/refund.controller';
 import * as wasteController from '../controllers/waste.controller';
 import * as feedbackController from '../controllers/feedback.controller';
 import * as promotionController from '../controllers/promotion.controller';
+import * as discountController from '../controllers/discount.controller';
 import * as customCakeSessionController from '../controllers/customCakeSession.controller';
 import * as customCakeController from '../controllers/customCake.controller';
 import * as paymentQRController from '../controllers/paymentQR.controller';
@@ -513,6 +514,17 @@ router.post('/admin/promotions/:id/categories', authenticateAdmin, asyncHandler(
 router.get('/admin/promotions/:id/assignments', authenticateAdmin, asyncHandler(promotionController.getPromotionAssignments));
 router.get('/admin/promotions/:id/usage', authenticateAdmin, asyncHandler(promotionController.getPromotionUsageLog));
 router.get('/admin/promotions/applicable', authenticateAdmin, asyncHandler(promotionController.getApplicablePromotions));
+
+// Customer Discounts (Student, Senior, etc.)
+router.get('/admin/discounts', authenticateAdmin, asyncHandler(discountController.getDiscountTypes));
+router.get('/admin/discounts/stats', authenticateAdmin, asyncHandler(discountController.getDiscountStats));
+router.get('/admin/discounts/:id', authenticateAdmin, asyncHandler(discountController.getDiscountTypeById));
+router.post('/admin/discounts', authenticateAdmin, asyncHandler(discountController.createDiscountType));
+router.put('/admin/discounts/:id', authenticateAdmin, asyncHandler(discountController.updateDiscountType));
+router.delete('/admin/discounts/:id', authenticateAdmin, asyncHandler(discountController.deleteDiscountType));
+
+// Customer Discounts (Cashier can view active discounts)
+router.get('/cashier/discounts', authenticateCashier, asyncHandler(discountController.getActiveDiscountTypes));
 
 // Feedback
 router.get('/admin/feedback', authenticateAdmin, asyncHandler(adminController.getFeedback));
