@@ -1,0 +1,580 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { Card, CardBody, CardHeader } from '@heroui/card';
+import { Button } from '@heroui/button';
+import { Input } from '@heroui/input';
+import { Select, SelectItem } from '@heroui/select';
+import { Chip } from '@heroui/chip';
+import { Divider } from '@heroui/divider';
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/modal';
+import { Spinner } from '@heroui/spinner';
+import { MenuService } from '@/services/menu.service';
+import { DiscountService } from '@/services/discount.service';
+import { OrderService } from '@/services/order.service';
+import type { MenuItem, CustomerDiscountType } from '@/types/api';
+import {
+  PlusIcon,
+  MinusIcon,
+  TrashIcon,
+  ShoppingCartIcon,
+  PercentBadgeIcon,
+  BanknotesIcon,
+  UserIcon,
+  PhoneIcon,
+  CheckCircleIcon,
+  MagnifyingGlassIcon,
+} from '@heroicons/react/24/outline';
+import { motion, AnimatePresence } from 'framer-motion';
+
+interface CartItem {
+  menuItem: MenuItem;
+  quantity: number;
+  subtotal: number;
+}
+
+interface OrderForm {
+  customer_name: string;
+  customer_phone: string;
+  customer_discount_type_id: number | null;
+  payment_method: 'cash' | 'gcash' | 'maya';
+  amount_paid: number;
+}
+
+export default function NewOrderPage() {
+  // Menu & Cart State
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Discount State
+  const [discounts, setDiscounts] = useState<CustomerDiscountType[]>([]);
+  const [selectedDiscount, setSelectedDiscount] = useState<CustomerDiscountType | null>(null);
+
+  // Order Form State
+  const [orderForm, setOrderForm] = useState<OrderForm>({
+    customer_name: '',
+    customer_phone: '',
+    customer_discount_type_id: null,
+    payment_method: 'cash',
+    amount_paid: 0,
+  });
+
+  // UI State
+  const [processingOrder, setProcessingOrder] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [createdOrderId, setCreatedOrderId] = useState<number | null>(null);
+
+  // Load menu items and discounts
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+
+      // Load menu items
+      const menuResponse = await MenuService.getActiveMenuItems();
+      if (menuResponse.success && menuResponse.data) {
+        setMenuItems(menuResponse.data);
+      }
+
+      // Load active discounts
+      const discountResponse = await DiscountService.getActiveDiscountTypes();
+      if (discountResponse.success && discountResponse.data) {
+        setDiscounts(discountResponse.data);
+      }
+    } catch (error: any) {
+      setErrorMessage(error.message || 'Failed to load data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cart Operations
+  const addToCart = (item: MenuItem) => {
+    const existingItem = cartItems.find(ci => ci.menuItem.menu_item_id === item.menu_item_id);
+
+    if (existingItem) {
+      updateQuantity(item.menu_item_id, existingItem.quantity + 1);
+    } else {
+      setCartItems([
+        ...cartItems,
+        {
+          menuItem: item,
+          quantity: 1,
+          subtotal: item.current_price,
+        },
+      ]);
+    }
+  };
+
+  const updateQuantity = (itemId: number, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      removeFromCart(itemId);
+      return;
+    }
+
+    setCartItems(
+      cartItems.map(ci =>
+        ci.menuItem.menu_item_id === itemId
+          ? { ...ci, quantity: newQuantity, subtotal: ci.menuItem.current_price * newQuantity }
+          : ci
+      )
+    );
+  };
+
+  const removeFromCart = (itemId: number) => {
+    setCartItems(cartItems.filter(ci => ci.menuItem.menu_item_id !== itemId));
+  };
+
+  const clearCart = () => {
+    setCartItems([]);
+    setOrderForm({
+      customer_name: '',
+      customer_phone: '',
+      customer_discount_type_id: null,
+      payment_method: 'cash',
+      amount_paid: 0,
+    });
+    setSelectedDiscount(null);
+  };
+
+  // Calculations
+  const calculateSubtotal = () => {
+    return cartItems.reduce((sum, item) => sum + item.subtotal, 0);
+  };
+
+  const calculateDiscount = () => {
+    if (!selectedDiscount) return 0;
+    const subtotal = calculateSubtotal();
+    return (subtotal * selectedDiscount.discount_percentage) / 100;
+  };
+
+  const calculateTotal = () => {
+    return calculateSubtotal() - calculateDiscount();
+  };
+
+  const calculateChange = () => {
+    if (orderForm.payment_method !== 'cash') return 0;
+    return Math.max(0, orderForm.amount_paid - calculateTotal());
+  };
+
+  // Handle discount selection
+  const handleDiscountChange = (discountId: string) => {
+    if (!discountId || discountId === 'none') {
+      setSelectedDiscount(null);
+      setOrderForm({ ...orderForm, customer_discount_type_id: null });
+      return;
+    }
+
+    const discount = discounts.find(d => d.discount_type_id === parseInt(discountId));
+    if (discount) {
+      setSelectedDiscount(discount);
+      setOrderForm({ ...orderForm, customer_discount_type_id: discount.discount_type_id });
+    }
+  };
+
+  // Handle order submission
+  const handleSubmitOrder = async () => {
+    // Validation
+    if (cartItems.length === 0) {
+      setErrorMessage('Please add items to cart');
+      return;
+    }
+
+    if (!orderForm.customer_name.trim()) {
+      setErrorMessage('Please enter customer name');
+      return;
+    }
+
+    if (orderForm.payment_method === 'cash' && orderForm.amount_paid < calculateTotal()) {
+      setErrorMessage('Amount paid is less than total');
+      return;
+    }
+
+    try {
+      setProcessingOrder(true);
+      setErrorMessage('');
+
+      // Prepare order data
+      const orderData = {
+        customer_name: orderForm.customer_name,
+        customer_phone: orderForm.customer_phone || null,
+        customer_discount_type_id: orderForm.customer_discount_type_id,
+        items: cartItems.map(ci => ({
+          menu_item_id: ci.menuItem.menu_item_id,
+          quantity: ci.quantity,
+          unit_price: ci.menuItem.current_price,
+        })),
+        payment_method: orderForm.payment_method,
+        amount_paid: orderForm.payment_method === 'cash' ? orderForm.amount_paid : calculateTotal(),
+        order_source: 'cashier',
+      };
+
+      const response = await OrderService.createOrder(orderData);
+
+      if (response.success && response.data) {
+        const orderId = typeof response.data === 'object' ? response.data.order_id : response.data;
+        setCreatedOrderId(orderId);
+        setSuccessMessage(`Order #${orderId} created successfully!`);
+        setShowSuccessModal(true);
+
+        // Clear form after success
+        setTimeout(() => {
+          clearCart();
+          setShowSuccessModal(false);
+        }, 3000);
+      } else {
+        setErrorMessage(response.message || 'Failed to create order');
+      }
+    } catch (error: any) {
+      setErrorMessage(error.message || 'Failed to create order');
+    } finally {
+      setProcessingOrder(false);
+    }
+  };
+
+  // Filter menu items by search
+  const filteredMenuItems = menuItems.filter(item =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="min-h-screen">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-rich-brown mb-2">Create New Order</h1>
+        <p className="text-warm-brown">Create walk-in orders with discount support</p>
+      </div>
+
+      {/* Error Message */}
+      <AnimatePresence>
+        {errorMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="mb-4"
+          >
+            <Card className="bg-danger-50 border-2 border-danger">
+              <CardBody>
+                <p className="text-danger font-medium">{errorMessage}</p>
+              </CardBody>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column - Menu Items */}
+        <div className="lg:col-span-2">
+          <Card className="shadow-lg">
+            <CardHeader className="flex flex-col gap-4 p-6">
+              <div className="flex items-center justify-between w-full">
+                <h2 className="text-xl font-bold text-rich-brown">Menu Items</h2>
+              </div>
+
+              {/* Search */}
+              <Input
+                placeholder="Search menu items..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                startContent={<MagnifyingGlassIcon className="h-5 w-5 text-default-400" />}
+                isClearable
+                onClear={() => setSearchTerm('')}
+              />
+            </CardHeader>
+
+            <Divider />
+
+            <CardBody className="p-4">
+              {loading ? (
+                <div className="flex justify-center py-12">
+                  <Spinner size="lg" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {filteredMenuItems.map((item) => (
+                    <Card
+                      key={item.menu_item_id}
+                      isPressable
+                      onPress={() => addToCart(item)}
+                      className="hover:scale-105 transition-transform cursor-pointer"
+                    >
+                      <CardBody className="p-4">
+                        <p className="font-bold text-rich-brown mb-2">{item.name}</p>
+                        <p className="text-lg font-bold text-success">
+                          ₱{item.current_price.toFixed(2)}
+                        </p>
+                        <Chip size="sm" color="primary" variant="flat" className="mt-2">
+                          {item.category_name}
+                        </Chip>
+                      </CardBody>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </CardBody>
+          </Card>
+        </div>
+
+        {/* Right Column - Cart & Checkout */}
+        <div className="space-y-4">
+          {/* Cart */}
+          <Card className="shadow-lg">
+            <CardHeader className="p-4 bg-gradient-to-r from-primary/10 to-secondary/10">
+              <div className="flex items-center gap-2">
+                <ShoppingCartIcon className="h-6 w-6 text-primary" />
+                <h2 className="text-xl font-bold text-rich-brown">
+                  Cart ({cartItems.length})
+                </h2>
+              </div>
+            </CardHeader>
+
+            <Divider />
+
+            <CardBody className="p-4 max-h-[400px] overflow-y-auto">
+              {cartItems.length === 0 ? (
+                <div className="text-center py-8 text-warm-brown">
+                  <ShoppingCartIcon className="h-12 w-12 mx-auto mb-2 text-default-300" />
+                  <p>Cart is empty</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {cartItems.map((item) => (
+                    <div
+                      key={item.menuItem.menu_item_id}
+                      className="flex items-center gap-3 p-3 bg-cream-white rounded-lg"
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium text-rich-brown">{item.menuItem.name}</p>
+                        <p className="text-sm text-warm-brown">
+                          ₱{item.menuItem.current_price.toFixed(2)} each
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          isIconOnly
+                          variant="flat"
+                          onPress={() => updateQuantity(item.menuItem.menu_item_id, item.quantity - 1)}
+                        >
+                          <MinusIcon className="h-4 w-4" />
+                        </Button>
+
+                        <span className="w-8 text-center font-bold">{item.quantity}</span>
+
+                        <Button
+                          size="sm"
+                          isIconOnly
+                          variant="flat"
+                          onPress={() => updateQuantity(item.menuItem.menu_item_id, item.quantity + 1)}
+                        >
+                          <PlusIcon className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          isIconOnly
+                          color="danger"
+                          variant="flat"
+                          onPress={() => removeFromCart(item.menuItem.menu_item_id)}
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardBody>
+          </Card>
+
+          {/* Customer & Discount Info */}
+          {cartItems.length > 0 && (
+            <Card className="shadow-lg">
+              <CardHeader className="p-4">
+                <h3 className="text-lg font-bold text-rich-brown">Customer Information</h3>
+              </CardHeader>
+
+              <Divider />
+
+              <CardBody className="p-4 space-y-4">
+                {/* Customer Name */}
+                <Input
+                  label="Customer Name"
+                  placeholder="Enter customer name"
+                  value={orderForm.customer_name}
+                  onChange={(e) => setOrderForm({ ...orderForm, customer_name: e.target.value })}
+                  startContent={<UserIcon className="h-4 w-4 text-default-400" />}
+                  isRequired
+                />
+
+                {/* Customer Phone */}
+                <Input
+                  label="Phone Number (Optional)"
+                  placeholder="Enter phone number"
+                  value={orderForm.customer_phone}
+                  onChange={(e) => setOrderForm({ ...orderForm, customer_phone: e.target.value })}
+                  startContent={<PhoneIcon className="h-4 w-4 text-default-400" />}
+                />
+
+                {/* Discount Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-rich-brown mb-2">
+                    <div className="flex items-center gap-2">
+                      <PercentBadgeIcon className="h-5 w-5" />
+                      Apply Discount
+                    </div>
+                  </label>
+                  <Select
+                    placeholder="Select discount type"
+                    selectedKeys={selectedDiscount ? [selectedDiscount.discount_type_id.toString()] : []}
+                    onChange={(e) => handleDiscountChange(e.target.value)}
+                  >
+                    <SelectItem key="none">No Discount</SelectItem>
+                    {discounts.map((discount) => (
+                      <SelectItem key={discount.discount_type_id.toString()}>
+                        {discount.name} - {discount.discount_percentage}%
+                        {discount.requires_id && ' (Requires ID)'}
+                      </SelectItem>
+                    ))}
+                  </Select>
+
+                  {selectedDiscount && selectedDiscount.requires_id && (
+                    <p className="text-xs text-warning mt-2">
+                      ⚠️ Please verify customer ID before applying this discount
+                    </p>
+                  )}
+                </div>
+
+                {/* Payment Method */}
+                <div>
+                  <label className="block text-sm font-medium text-rich-brown mb-2">
+                    Payment Method
+                  </label>
+                  <Select
+                    selectedKeys={[orderForm.payment_method]}
+                    onChange={(e) =>
+                      setOrderForm({ ...orderForm, payment_method: e.target.value as any })
+                    }
+                  >
+                    <SelectItem key="cash">Cash</SelectItem>
+                    <SelectItem key="gcash">GCash</SelectItem>
+                    <SelectItem key="maya">Maya</SelectItem>
+                  </Select>
+                </div>
+
+                {/* Amount Paid (Cash only) */}
+                {orderForm.payment_method === 'cash' && (
+                  <Input
+                    label="Amount Paid"
+                    type="number"
+                    placeholder="0.00"
+                    value={orderForm.amount_paid.toString()}
+                    onChange={(e) =>
+                      setOrderForm({ ...orderForm, amount_paid: parseFloat(e.target.value) || 0 })
+                    }
+                    startContent={<span className="text-default-400">₱</span>}
+                  />
+                )}
+              </CardBody>
+            </Card>
+          )}
+
+          {/* Order Summary */}
+          {cartItems.length > 0 && (
+            <Card className="shadow-lg bg-gradient-to-br from-primary/10 to-secondary/10">
+              <CardBody className="p-4 space-y-3">
+                <h3 className="text-lg font-bold text-rich-brown mb-2">Order Summary</h3>
+
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-warm-brown">Subtotal:</span>
+                    <span className="font-bold">₱{calculateSubtotal().toFixed(2)}</span>
+                  </div>
+
+                  {selectedDiscount && (
+                    <div className="flex justify-between text-success">
+                      <span>Discount ({selectedDiscount.discount_percentage}%):</span>
+                      <span className="font-bold">-₱{calculateDiscount().toFixed(2)}</span>
+                    </div>
+                  )}
+
+                  <Divider />
+
+                  <div className="flex justify-between text-lg">
+                    <span className="font-bold text-rich-brown">Total:</span>
+                    <span className="font-bold text-success">₱{calculateTotal().toFixed(2)}</span>
+                  </div>
+
+                  {orderForm.payment_method === 'cash' && orderForm.amount_paid > 0 && (
+                    <>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-warm-brown">Amount Paid:</span>
+                        <span>₱{orderForm.amount_paid.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-warm-brown">Change:</span>
+                        <span className="font-bold text-warning">₱{calculateChange().toFixed(2)}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <Divider />
+
+                <Button
+                  color="success"
+                  size="lg"
+                  className="w-full font-bold"
+                  onPress={handleSubmitOrder}
+                  isLoading={processingOrder}
+                  startContent={!processingOrder && <BanknotesIcon className="h-5 w-5" />}
+                >
+                  {processingOrder ? 'Processing...' : 'Complete Order'}
+                </Button>
+
+                <Button
+                  variant="light"
+                  size="sm"
+                  className="w-full"
+                  onPress={clearCart}
+                  isDisabled={processingOrder}
+                >
+                  Clear Cart
+                </Button>
+              </CardBody>
+            </Card>
+          )}
+        </div>
+      </div>
+
+      {/* Success Modal */}
+      <Modal isOpen={showSuccessModal} onClose={() => setShowSuccessModal(false)}>
+        <ModalContent>
+          <ModalHeader>
+            <div className="flex items-center gap-2 text-success">
+              <CheckCircleIcon className="h-6 w-6" />
+              Order Created Successfully!
+            </div>
+          </ModalHeader>
+          <ModalBody>
+            <p className="text-center text-lg">{successMessage}</p>
+            {createdOrderId && (
+              <p className="text-center text-2xl font-bold text-primary">
+                Order #{createdOrderId}
+              </p>
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+    </div>
+  );
+}

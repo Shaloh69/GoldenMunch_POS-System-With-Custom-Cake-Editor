@@ -25,6 +25,8 @@ import {
   XMarkIcon,
   BanknotesIcon,
   QrCodeIcon,
+  PlusCircleIcon,
+  PercentBadgeIcon,
 } from '@heroicons/react/24/outline';
 
 interface NavItem {
@@ -37,6 +39,7 @@ interface NavItem {
 
 const cashierNav: NavItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
+  { name: 'New Order', href: '/cashier/new-order', icon: PlusCircleIcon },
   { name: 'Orders', href: '/cashier/orders', icon: ShoppingCartIcon },
   { name: 'Custom Cakes', href: '/cashier/custom-cakes', icon: CakeIcon },
   { name: 'Payment Verification', href: '/cashier/payment', icon: CreditCardIcon }
@@ -48,6 +51,7 @@ const adminNav: NavItem[] = [
   { name: 'Transactions', href: '/admin/transactions', icon: BanknotesIcon, adminOnly: true },
   { name: 'Menu Management', href: '/admin/menu', icon: Square3Stack3DIcon, adminOnly: true },
   { name: 'Categories', href: '/admin/categories', icon: TagIcon, adminOnly: true },
+  { name: 'Discounts', href: '/admin/discounts', icon: PercentBadgeIcon, adminOnly: true },
   { name: 'Cashiers', href: '/admin/cashiers', icon: UserGroupIcon, adminOnly: true },
   { name: 'Custom Cakes', href: '/admin/custom-cakes', icon: CakeIcon, adminOnly: true },
   { name: 'Payment QR', href: '/admin/settings/payment-qr', icon: QrCodeIcon, adminOnly: true },
