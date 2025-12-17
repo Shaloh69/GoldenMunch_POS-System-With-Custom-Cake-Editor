@@ -11,6 +11,180 @@ interface CakeModelProps {
   options?: any;
 }
 
+/**
+ * Calculate optimal candle positions in a grid pattern within circular boundary
+ * @param count - Number of candles
+ * @param topRadius - Radius of the top layer
+ * @returns Array of [x, z] positions for each candle
+ */
+function getCandlePositions(count: number, topRadius: number): [number, number][] {
+  if (count <= 0) return [];
+
+  const positions: [number, number][] = [];
+  const safeRadius = topRadius * 0.85; // Use 85% of radius to ensure candles stay well within bounds
+
+  // Special cases for small numbers
+  if (count === 1) {
+    // Single candle in center
+    return [[0, 0]];
+  }
+
+  if (count === 2) {
+    // Two candles opposite each other
+    const spacing = safeRadius * 0.5;
+    return [[-spacing, 0], [spacing, 0]];
+  }
+
+  if (count === 3) {
+    // Three candles in triangle
+    const r = safeRadius * 0.5;
+    return [
+      [0, -r],
+      [r * Math.cos(Math.PI / 6), r * Math.sin(Math.PI / 6)],
+      [-r * Math.cos(Math.PI / 6), r * Math.sin(Math.PI / 6)]
+    ];
+  }
+
+  if (count === 4) {
+    // Four candles in square
+    const r = safeRadius * 0.5;
+    return [
+      [-r, -r], [r, -r],
+      [-r, r], [r, r]
+    ];
+  }
+
+  // For 5+ candles, use adaptive grid within circular boundary
+  // Calculate grid size that will fit the desired number of candles
+  const gridSize = Math.ceil(Math.sqrt(count));
+  const spacing = (safeRadius * 2) / (gridSize + 1);
+
+  // Generate grid positions
+  const gridPositions: [number, number][] = [];
+  for (let row = 0; row < gridSize; row++) {
+    for (let col = 0; col < gridSize; col++) {
+      const x = -safeRadius + spacing * (col + 1);
+      const z = -safeRadius + spacing * (row + 1);
+
+      // Check if position is within circular boundary
+      const distanceFromCenter = Math.sqrt(x * x + z * z);
+      if (distanceFromCenter <= safeRadius) {
+        gridPositions.push([x, z]);
+      }
+    }
+  }
+
+  // If we have more positions than needed, take the first 'count' positions
+  // If we have fewer, we'll need to add more in a circular pattern
+  if (gridPositions.length >= count) {
+    return gridPositions.slice(0, count);
+  }
+
+  // If grid didn't generate enough positions, add more in circular rings
+  let currentPositions = [...gridPositions];
+  let ringRadius = safeRadius * 0.6;
+  const ringStep = safeRadius * 0.15;
+
+  while (currentPositions.length < count && ringRadius <= safeRadius) {
+    const candlesInRing = Math.min(
+      count - currentPositions.length,
+      Math.floor(2 * Math.PI * ringRadius / 0.15) // Spacing based on circumference
+    );
+
+    for (let i = 0; i < candlesInRing; i++) {
+      if (currentPositions.length >= count) break;
+
+      const angle = (i / candlesInRing) * Math.PI * 2;
+      const x = Math.cos(angle) * ringRadius;
+      const z = Math.sin(angle) * ringRadius;
+
+      // Verify it's within bounds
+      if (Math.sqrt(x * x + z * z) <= safeRadius) {
+        currentPositions.push([x, z]);
+      }
+    }
+
+    ringRadius += ringStep;
+  }
+
+  return currentPositions.slice(0, count);
+}
+
+/**
+ * Individual 3D Candle Component with animation
+ */
+function Candle3D({ position, index }: { position: [number, number]; index: number }) {
+  const flameRef = useRef<THREE.Mesh>(null);
+
+  // Animate flame with slight flicker
+  useFrame((state) => {
+    if (flameRef.current) {
+      const time = state.clock.elapsedTime + index * 0.5; // Offset each flame
+      const flicker = Math.sin(time * 8) * 0.02 + Math.sin(time * 15) * 0.01;
+      flameRef.current.scale.setScalar(1 + flicker);
+
+      // Slight sway
+      flameRef.current.position.x = Math.sin(time * 2) * 0.01;
+    }
+  });
+
+  const candleHeight = 0.3;
+  const candleRadius = 0.04;
+  const wickHeight = 0.05;
+
+  return (
+    <group position={[position[0], 0, position[1]]}>
+      {/* Candle Body */}
+      <Cylinder args={[candleRadius, candleRadius * 1.1, candleHeight, 12]} position={[0, candleHeight / 2, 0]}>
+        <meshStandardMaterial
+          color="#FFF8DC"
+          roughness={0.6}
+          metalness={0.1}
+        />
+      </Cylinder>
+
+      {/* Wick */}
+      <Cylinder args={[0.005, 0.005, wickHeight, 4]} position={[0, candleHeight + wickHeight / 2, 0]}>
+        <meshStandardMaterial color="#2C2C2C" />
+      </Cylinder>
+
+      {/* Flame */}
+      <group position={[0, candleHeight + wickHeight, 0]}>
+        {/* Inner flame (bright yellow) */}
+        <Sphere ref={flameRef} args={[0.035, 8, 8]} position={[0, 0.02, 0]}>
+          <meshStandardMaterial
+            color="#FFFF00"
+            emissive="#FFD700"
+            emissiveIntensity={3}
+            transparent
+            opacity={0.9}
+          />
+        </Sphere>
+
+        {/* Outer flame (orange glow) */}
+        <Sphere args={[0.045, 8, 8]} position={[0, 0.02, 0]}>
+          <meshStandardMaterial
+            color="#FFA500"
+            emissive="#FF4500"
+            emissiveIntensity={2}
+            transparent
+            opacity={0.6}
+          />
+        </Sphere>
+
+        {/* Point light for flame glow */}
+        <pointLight
+          color="#FFD700"
+          intensity={0.5}
+          distance={0.5}
+          decay={2}
+          position={[0, 0.02, 0]}
+        />
+      </group>
+    </group>
+  );
+}
+
 export default function CakeModel({ design, options }: CakeModelProps) {
   const groupRef = useRef<THREE.Group>(null);
 
@@ -114,30 +288,10 @@ export default function CakeModel({ design, options }: CakeModelProps) {
 
       {/* Candles - positioned on top of the top layer */}
       {design.candles_count > 0 && (
-        <group position={[0, totalCakeHeight + 0.05, 0]}>
-          {Array.from({ length: Math.min(design.candles_count, 10) }).map((_, i) => {
-            const angle = (i / design.candles_count) * Math.PI * 2;
-            const radius = topLayerRadius * 0.6; // Position candles 60% from center of top layer
-            const x = Math.cos(angle) * radius;
-            const z = Math.sin(angle) * radius;
-
-            return (
-              <group key={i} position={[x, 0, z]}>
-                {/* Candle Body */}
-                <Cylinder args={[0.05, 0.05, 0.3, 8]} position={[0, 0.15, 0]}>
-                  <meshStandardMaterial color="#FFF8DC" />
-                </Cylinder>
-                {/* Flame */}
-                <Sphere args={[0.04, 8, 8]} position={[0, 0.32, 0]}>
-                  <meshStandardMaterial
-                    color="#FFD700"
-                    emissive="#FF4500"
-                    emissiveIntensity={2}
-                  />
-                </Sphere>
-              </group>
-            );
-          })}
+        <group position={[0, totalCakeHeight, 0]}>
+          {getCandlePositions(design.candles_count, topLayerRadius).map((pos, i) => (
+            <Candle3D key={i} position={pos} index={i} />
+          ))}
         </group>
       )}
 
