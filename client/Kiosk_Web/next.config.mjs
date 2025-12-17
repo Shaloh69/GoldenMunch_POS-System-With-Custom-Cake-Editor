@@ -36,11 +36,12 @@ const nextConfig = {
 
     config.resolve.alias['@'] = path.resolve(__dirname);
 
-    // Fix Tailwind CSS v4 compatibility with HeroUI using NormalModuleReplacementPlugin
+    // Fix Tailwind CSS v4 compatibility with HeroUI
+    // HeroUI expects Tailwind v3 plugin API, redirect to our compatibility shim
     config.plugins.push(
       new webpack.NormalModuleReplacementPlugin(
-        /^tailwindcss\/plugin\.js$/,
-        'tailwindcss/plugin'
+        /^tailwindcss\/plugin(\.js)?$/,
+        path.resolve(__dirname, 'lib/shims/tailwindcss-plugin.js')
       )
     );
 
