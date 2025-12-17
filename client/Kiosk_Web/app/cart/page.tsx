@@ -842,7 +842,6 @@ export default function CartPage() {
       {/* Spacer */}
       <div className="h-20"></div>
         </div>
-        </div>
       </div>
       <KioskAppSidebar selectedItem={selectedItem} onClose={handleCloseSidebar} />
     </>
