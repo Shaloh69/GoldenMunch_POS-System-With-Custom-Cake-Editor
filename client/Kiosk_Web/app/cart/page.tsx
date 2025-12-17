@@ -219,7 +219,7 @@ export default function CartPage() {
   if (cartItems.length === 0) {
     return (
       <>
-      <div className="min-h-screen flex items-center justify-center p-6 pr-[35vw] max-pr-[500px] animate-fade-in">
+      <div className="min-h-screen flex items-center justify-center p-6 animate-fade-in">
         <Card className="max-w-2xl glass-card border-4 border-primary/40 shadow-2xl animate-scale-in">
           <CardBody className="text-center p-16">
             <div className="text-[140px] mb-8 animate-float drop-shadow-2xl">🛒</div>
@@ -257,7 +257,8 @@ export default function CartPage() {
 
   return (
     <>
-      <div className="min-h-screen pr-[35vw] max-pr-[500px] animate-fade-in">
+      <div className="min-h-screen flex justify-center pr-[35vw] max-pr-[500px] animate-fade-in">
+        <div className="w-full max-w-7xl">
       {/* Modern Header with Gradient */}
       <div className="sticky top-0 z-40 glass-header border-b-4 border-primary/60 shadow-2xl mb-6 animate-fade-in-down">
         <div className="max-w-7xl mx-auto p-10">
@@ -624,7 +625,7 @@ export default function CartPage() {
       </div>
 
       {/* Success Modal with Confetti Effect */}
-      <Modal open={isOpen} onOpenChange={onOpenChange}>
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
         <ModalContent
           size="2xl"
           classNames={{
@@ -711,7 +712,7 @@ export default function CartPage() {
       </Modal>
 
       {/* QR Code Payment Modal */}
-      <Modal open={isQROpen} onOpenChange={(open) => !open && onQRClose()}>
+      <Modal isOpen={isQROpen} onOpenChange={(open) => { if (!open) onQRClose(); }}>
         <ModalContent
           size="2xl"
           classNames={{
@@ -841,6 +842,8 @@ export default function CartPage() {
       {/* Spacer */}
       <div className="h-20"></div>
         </div>
+        </div>
+      </div>
       <KioskAppSidebar selectedItem={selectedItem} onClose={handleCloseSidebar} />
     </>
   );
