@@ -30,12 +30,15 @@ const nextConfig = {
 
   webpack: (config, { isServer }) => {
     // Add path alias resolution for @/ imports
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@': __dirname,
-    };
+    // Use Object.assign to ensure the alias is properly set
+    if (!config.resolve.alias) {
+      config.resolve.alias = {};
+    }
+
+    config.resolve.alias['@'] = path.resolve(__dirname);
 
     config.externals = [...(config.externals || []), { canvas: 'canvas' }];
+
     return config;
   },
 
