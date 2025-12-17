@@ -195,35 +195,39 @@ export default function HomePage() {
         <div className="flex-1 px-8 py-6">
           {/* Modern Categories - Horizontal Scrollable */}
           {categories.length > 0 && (
-            <div className="mb-8 animate-fade-in-up animation-delay-200 relative">
-              {/* Left Arrow */}
-              {showLeftArrow && (
-                <button
-                  onClick={scrollLeft}
-                  className="absolute left-0 top-1/2 -translate-y-1/2 z-10 glass-button p-4 rounded-full shadow-lg hover:scale-110 transition-transform"
-                  aria-label="Scroll left"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={3}
-                    stroke="currentColor"
-                    className="w-8 h-8"
+            <div className="mb-8 animate-fade-in-up animation-delay-200 flex items-center gap-4">
+              {/* Left Arrow - Only show when scrolled */}
+              <div className="flex-shrink-0">
+                {showLeftArrow ? (
+                  <button
+                    onClick={scrollLeft}
+                    className="glass-button p-4 rounded-full shadow-lg hover:scale-110 transition-transform"
+                    aria-label="Scroll left"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M15.75 19.5L8.25 12l7.5-7.5"
-                    />
-                  </svg>
-                </button>
-              )}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={3}
+                      stroke="currentColor"
+                      className="w-8 h-8"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M15.75 19.5L8.25 12l7.5-7.5"
+                      />
+                    </svg>
+                  </button>
+                ) : (
+                  <div className="w-16" />
+                )}
+              </div>
 
               {/* Scrollable Categories Container */}
               <div
                 ref={categoryScrollRef}
-                className="flex flex-nowrap gap-4 overflow-x-auto scrollbar-hide scroll-smooth px-12"
+                className="flex-1 flex flex-nowrap gap-4 overflow-x-auto scrollbar-hide scroll-smooth"
                 style={{
                   scrollbarWidth: "none",
                   msOverflowStyle: "none",
@@ -258,29 +262,33 @@ export default function HomePage() {
                 ))}
               </div>
 
-              {/* Right Arrow */}
-              {showRightArrow && (
-                <button
-                  onClick={scrollRight}
-                  className="absolute right-0 top-1/2 -translate-y-1/2 z-10 glass-button p-4 rounded-full shadow-lg hover:scale-110 transition-transform"
-                  aria-label="Scroll right"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={3}
-                    stroke="currentColor"
-                    className="w-8 h-8"
+              {/* Right Arrow - Only show when there's more content */}
+              <div className="flex-shrink-0">
+                {showRightArrow ? (
+                  <button
+                    onClick={scrollRight}
+                    className="glass-button p-4 rounded-full shadow-lg hover:scale-110 transition-transform"
+                    aria-label="Scroll right"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                    />
-                  </svg>
-                </button>
-              )}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={3}
+                      stroke="currentColor"
+                      className="w-8 h-8"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M8.25 4.5l7.5 7.5-7.5 7.5"
+                      />
+                    </svg>
+                  </button>
+                ) : (
+                  <div className="w-16" />
+                )}
+              </div>
             </div>
           )}
 
