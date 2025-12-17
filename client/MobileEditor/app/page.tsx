@@ -258,7 +258,7 @@ function CakeEditorContent() {
     return () => clearTimeout(timer);
   }, [design, currentStep]);
 
-  const saveDraft = async (): Promise<string | null> => {
+  const saveDraft = async (): Promise<number | null> => {
     // Skip saving in debug mode
     if (debugMode && process.env.NODE_ENV !== 'production') {
       console.log('🔧 DEBUG MODE: Skipping draft save');

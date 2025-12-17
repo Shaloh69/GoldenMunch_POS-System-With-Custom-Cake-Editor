@@ -72,7 +72,7 @@ export const createDiscountType = async (req: AuthRequest, res: Response) => {
     throw new AppError('Discount percentage must be between 0 and 100', 400);
   }
 
-  const created_by = req.user?.admin_id || req.user?.cashier_id;
+  const created_by = req.user?.id;
   if (!created_by) {
     throw new AppError('User not authenticated', 401);
   }
