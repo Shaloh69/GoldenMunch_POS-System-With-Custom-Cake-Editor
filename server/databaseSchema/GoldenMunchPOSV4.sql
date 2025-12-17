@@ -1930,18 +1930,18 @@ VALUES
 (10, 'Lemon Tart', 'Tangy lemon tart', 'pastry', 'piece', 30, FALSE, 'available', 74.3);
 
 -- Add prices for menu items
-INSERT IGNORE INTO menu_item_price (menu_item_id, price_type, unit_price, cost_price, is_active)
+INSERT IGNORE INTO menu_item_price (menu_item_id, price_type, unit_price, cost_price, valid_from, valid_until, is_active)
 VALUES
-(1, 'base', 250.00, 100.00, TRUE),
-(2, 'base', 80.00, 30.00, TRUE),
-(3, 'base', 320.00, 150.00, TRUE),
-(4, 'base', 450.00, 200.00, TRUE),
-(5, 'base', 120.00, 40.00, TRUE),
-(6, 'base', 95.00, 35.00, TRUE),
-(7, 'base', 110.00, 45.00, TRUE),
-(8, 'base', 105.00, 40.00, TRUE),
-(9, 'base', 380.00, 170.00, TRUE),
-(10, 'base', 130.00, 50.00, TRUE);
+(1, 'base', 250.00, 100.00, '2025-01-01', '2026-12-31', TRUE),
+(2, 'base', 80.00, 30.00, '2025-01-01', '2026-12-31', TRUE),
+(3, 'base', 320.00, 150.00, '2025-01-01', '2026-12-31', TRUE),
+(4, 'base', 450.00, 200.00, '2025-01-01', '2026-12-31', TRUE),
+(5, 'base', 120.00, 40.00, '2025-01-01', '2026-12-31', TRUE),
+(6, 'base', 95.00, 35.00, '2025-01-01', '2026-12-31', TRUE),
+(7, 'base', 110.00, 45.00, '2025-01-01', '2026-12-31', TRUE),
+(8, 'base', 105.00, 40.00, '2025-01-01', '2026-12-31', TRUE),
+(9, 'base', 380.00, 170.00, '2025-01-01', '2026-12-31', TRUE),
+(10, 'base', 130.00, 50.00, '2025-01-01', '2026-12-31', TRUE);
 
 -- Add sample customers
 INSERT IGNORE INTO customer (customer_id, name, phone, email, loyalty_points, total_spent, customer_tier)

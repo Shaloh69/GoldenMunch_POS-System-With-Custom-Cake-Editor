@@ -8,6 +8,8 @@
 **🎉 All fixes are now integrated into the main schema V4!**
 No separate migration files needed - just deploy GoldenMunchPOSV4.sql
 
+**📝 Latest Update:** Fixed menu item prices showing ₱0.00 by adding `valid_from` and `valid_until` dates to sample data
+
 ---
 
 ## 🔍 Issues Identified
@@ -322,6 +324,40 @@ location.reload();
 ### 3. Date Range Validation
 **Issue:** Very large date ranges (>365 days) may timeout
 **Mitigation:** Backend validates max 365-day range
+
+---
+
+## 🔧 Recent Fixes (December 17, 2025)
+
+### Menu Item Prices Showing ₱0.00
+
+**Issue:** Menu management page displayed all items with ₱0.00 prices and price editing was unavailable.
+
+**Root Cause:**
+- The `menu_item_price` sample data INSERT statement was missing `valid_from` and `valid_until` dates
+- The kiosk API endpoint uses a subquery with `CURDATE() BETWEEN valid_from AND valid_until`
+- When these fields are NULL, the condition never matches, resulting in NULL prices
+
+**Solution:**
+Updated the `menu_item_price` INSERT statement in `GoldenMunchPOSV4.sql`:
+```sql
+-- Before (broken)
+INSERT IGNORE INTO menu_item_price (menu_item_id, price_type, unit_price, cost_price, is_active)
+VALUES (1, 'base', 250.00, 100.00, TRUE), ...
+
+-- After (fixed)
+INSERT IGNORE INTO menu_item_price (menu_item_id, price_type, unit_price, cost_price, valid_from, valid_until, is_active)
+VALUES (1, 'base', 250.00, 100.00, '2025-01-01', '2026-12-31', TRUE), ...
+```
+
+**Impact:**
+- ✅ Menu items now display correct prices (₱80 - ₱450)
+- ✅ Price edit modal works properly
+- ✅ Inventory value calculation shows correct totals
+- ✅ Average price analytics work correctly
+
+**Files Changed:**
+- `/server/databaseSchema/GoldenMunchPOSV4.sql` (line 1933)
 
 ---
 
