@@ -424,9 +424,9 @@ export default function CashierCustomCakesPage() {
                       setPaymentForm({ ...paymentForm, payment_method: e.target.value as any })
                     }
                   >
-                    <SelectItem key="cash" value="cash">Cash</SelectItem>
-                    <SelectItem key="gcash" value="gcash">GCash</SelectItem>
-                    <SelectItem key="maya" value="maya">Maya</SelectItem>
+                    <SelectItem key="cash">Cash</SelectItem>
+                    <SelectItem key="gcash">GCash</SelectItem>
+                    <SelectItem key="maya">Maya</SelectItem>
                   </Select>
                 </div>
 
