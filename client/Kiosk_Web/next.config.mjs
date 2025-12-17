@@ -1,3 +1,9 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // REMOVED static export - Next.js will run as standalone web app on Render
@@ -22,7 +28,13 @@ const nextConfig = {
     unoptimized: true,
   },
 
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
+    // Add path alias resolution for @/ imports
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': __dirname,
+    };
+
     config.externals = [...(config.externals || []), { canvas: 'canvas' }];
     return config;
   },
