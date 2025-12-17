@@ -42,6 +42,9 @@ const nextConfig = {
     config.resolve.alias['tailwindcss/plugin'] = shimPath;
     config.resolve.alias['tailwindcss/plugin.js'] = shimPath;
 
+    // Ensure tailwindcss package is resolvable from node_modules
+    config.resolve.alias['tailwindcss'] = path.resolve(__dirname, 'node_modules/tailwindcss');
+
     config.externals = [...(config.externals || []), { canvas: 'canvas' }];
 
     return config;

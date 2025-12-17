@@ -1,5 +1,9 @@
-// PostCSS configuration for Next.js
-// Tailwind CSS v4 is processed via CSS imports
+// PostCSS configuration for Next.js with Tailwind CSS v4
+const path = require('path');
+
 module.exports = {
-  plugins: {},
+  plugins: {
+    // Use the full path to ensure the plugin is found
+    [path.resolve(__dirname, 'node_modules/@tailwindcss/postcss')]: {},
+  },
 };
