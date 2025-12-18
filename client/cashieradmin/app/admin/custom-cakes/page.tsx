@@ -564,7 +564,40 @@ export default function CustomCakesPage() {
                   </>
                 )}
 
-                {/* Images */}
+                {/* Dietary Restrictions */}
+                {requestDetails.request.dietary_restrictions && (
+                  <>
+                    <Divider />
+                    <div>
+                      <h3 className="font-semibold text-lg mb-2">Dietary Restrictions</h3>
+                      <p className="text-gray-700 bg-amber-50 p-3 rounded-lg border-2 border-amber-200">
+                        {requestDetails.request.dietary_restrictions}
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {/* Reference Image */}
+                {requestDetails.request.reference_image && (
+                  <>
+                    <Divider />
+                    <div>
+                      <h3 className="font-semibold text-lg mb-3">Customer Reference Image</h3>
+                      <div className="bg-amber-50 p-4 rounded-lg border-2 border-amber-200">
+                        <p className="text-sm text-amber-800 mb-3 font-medium">
+                          📸 Customer provided this reference image for design inspiration
+                        </p>
+                        <img
+                          src={requestDetails.request.reference_image}
+                          alt="Customer reference design"
+                          className="max-w-full max-h-96 rounded-lg shadow-lg border-2 border-amber-300 mx-auto"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* 3D Preview Images */}
                 {requestDetails.images.length > 0 && (
                   <>
                     <Divider />

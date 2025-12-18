@@ -831,6 +831,7 @@ export interface CustomCakeRequest {
   special_instructions?: string;
   baker_notes?: string;
   dietary_restrictions?: string;
+  reference_image?: string; // Customer-uploaded reference image (Base64 or URL)
 
   // Event
   event_type?: string;
