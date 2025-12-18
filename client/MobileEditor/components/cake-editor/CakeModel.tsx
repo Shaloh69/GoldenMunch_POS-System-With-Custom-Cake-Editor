@@ -14,14 +14,20 @@ interface CakeModelProps {
 /**
  * Calculate optimal candle positions in a grid pattern within circular boundary
  * @param count - Number of candles
- * @param topRadius - Radius of the top layer
+ * @param topRadius - Radius of the top layer (including frosting)
  * @returns Array of [x, z] positions for each candle
  */
 function getCandlePositions(count: number, topRadius: number): [number, number][] {
   if (count <= 0) return [];
 
   const positions: [number, number][] = [];
-  const safeRadius = topRadius * 0.85; // Use 85% of radius to ensure candles stay well within bounds
+
+  // Calculate candle radius based on count (matches Candle3D sizing)
+  const sizeScale = count <= 5 ? 1 : Math.max(0.4, 1 - (count - 5) * 0.03);
+  const candleRadius = 0.04 * sizeScale;
+
+  // Account for candle physical size - subtract candle radius to keep edges within bounds
+  const safeRadius = topRadius * 0.90 - candleRadius;
 
   // Special cases for small numbers
   if (count === 1) {
@@ -112,8 +118,11 @@ function getCandlePositions(count: number, topRadius: number): [number, number][
 
 /**
  * Individual 3D Candle Component with animation
+ * @param position - X and Z position on the cake top
+ * @param index - Candle index for animation offset
+ * @param count - Total number of candles (for sizing)
  */
-function Candle3D({ position, index }: { position: [number, number]; index: number }) {
+function Candle3D({ position, index, count }: { position: [number, number]; index: number; count: number }) {
   const flameRef = useRef<THREE.Mesh>(null);
 
   // Animate flame with slight flicker
@@ -128,13 +137,18 @@ function Candle3D({ position, index }: { position: [number, number]; index: numb
     }
   });
 
-  const candleHeight = 0.3;
-  const candleRadius = 0.04;
-  const wickHeight = 0.05;
+  // Scale candles based on count - more candles = smaller candles
+  // Base size for 1-5 candles, then scale down progressively
+  const sizeScale = count <= 5 ? 1 : Math.max(0.4, 1 - (count - 5) * 0.03);
+
+  const candleHeight = 0.3 * sizeScale;
+  const candleRadius = 0.04 * sizeScale;
+  const wickHeight = 0.05 * sizeScale;
+  const flameSize = sizeScale;
 
   return (
     <group position={[position[0], 0, position[1]]}>
-      {/* Candle Body */}
+      {/* Candle Body - positioned to sit ON the surface (not floating) */}
       <Cylinder args={[candleRadius, candleRadius * 1.1, candleHeight, 12]} position={[0, candleHeight / 2, 0]}>
         <meshStandardMaterial
           color="#FFF8DC"
@@ -144,14 +158,14 @@ function Candle3D({ position, index }: { position: [number, number]; index: numb
       </Cylinder>
 
       {/* Wick */}
-      <Cylinder args={[0.005, 0.005, wickHeight, 4]} position={[0, candleHeight + wickHeight / 2, 0]}>
+      <Cylinder args={[0.005 * sizeScale, 0.005 * sizeScale, wickHeight, 4]} position={[0, candleHeight + wickHeight / 2, 0]}>
         <meshStandardMaterial color="#2C2C2C" />
       </Cylinder>
 
       {/* Flame */}
       <group position={[0, candleHeight + wickHeight, 0]}>
         {/* Inner flame (bright yellow) */}
-        <Sphere ref={flameRef} args={[0.035, 8, 8]} position={[0, 0.02, 0]}>
+        <Sphere ref={flameRef} args={[0.035 * flameSize, 8, 8]} position={[0, 0.02 * flameSize, 0]}>
           <meshStandardMaterial
             color="#FFFF00"
             emissive="#FFD700"
@@ -162,7 +176,7 @@ function Candle3D({ position, index }: { position: [number, number]; index: numb
         </Sphere>
 
         {/* Outer flame (orange glow) */}
-        <Sphere args={[0.045, 8, 8]} position={[0, 0.02, 0]}>
+        <Sphere args={[0.045 * flameSize, 8, 8]} position={[0, 0.02 * flameSize, 0]}>
           <meshStandardMaterial
             color="#FFA500"
             emissive="#FF4500"
@@ -175,10 +189,10 @@ function Candle3D({ position, index }: { position: [number, number]; index: numb
         {/* Point light for flame glow */}
         <pointLight
           color="#FFD700"
-          intensity={0.5}
+          intensity={0.5 * flameSize}
           distance={0.5}
           decay={2}
-          position={[0, 0.02, 0]}
+          position={[0, 0.02 * flameSize, 0]}
         />
       </group>
     </group>
@@ -235,7 +249,8 @@ export default function CakeModel({ design, options }: CakeModelProps) {
   const totalCakeHeight = design.num_layers * getLayerHeight();
 
   // Get the radius of the top layer (for candle positioning)
-  const topLayerRadius = getLayerRadius(design.num_layers);
+  // Account for frosting which extends the radius by 0.05
+  const topLayerRadius = getLayerRadius(design.num_layers) + 0.05;
 
   return (
     <group ref={groupRef} position={[0, -1, 0]}>
@@ -290,7 +305,7 @@ export default function CakeModel({ design, options }: CakeModelProps) {
       {design.candles_count > 0 && (
         <group position={[0, totalCakeHeight, 0]}>
           {getCandlePositions(design.candles_count, topLayerRadius).map((pos, i) => (
-            <Candle3D key={i} position={pos} index={i} />
+            <Candle3D key={i} position={pos} index={i} count={design.candles_count} />
           ))}
         </group>
       )}
