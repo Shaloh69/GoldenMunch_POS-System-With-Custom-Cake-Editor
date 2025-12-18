@@ -1,48 +1,15 @@
 import multer from 'multer';
 import path from 'path';
-import fs from 'fs';
 
-// Ensure upload directories exist
-const uploadDirs = ['./uploads/qr-codes', './uploads/products', './uploads/temp', './uploads/payment-qr'];
-uploadDirs.forEach(dir => {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-});
+/**
+ * Multer configuration for Supabase Storage
+ * Uses memory storage to temporarily hold files before uploading to Supabase
+ * No local file system storage is used - all files go directly to cloud storage
+ */
 
-// Storage configuration for QR codes
-const qrCodeStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, './uploads/qr-codes');
-  },
-  filename: (_req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `qr-${uniqueSuffix}${path.extname(file.originalname)}`);
-  }
-});
-
-// Storage configuration for product images
-const productStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, './uploads/products');
-  },
-  filename: (_req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `product-${uniqueSuffix}${path.extname(file.originalname)}`);
-  }
-});
-
-// Storage configuration for payment QR codes
-const paymentQRStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, './uploads/payment-qr');
-  },
-  filename: (req, file, cb) => {
-    const paymentMethod = req.body.payment_method || 'unknown';
-    const timestamp = Date.now();
-    cb(null, `${paymentMethod}-qr-${timestamp}${path.extname(file.originalname)}`);
-  }
-});
+// Use memory storage - files are stored in memory as Buffer objects
+// This is required for Supabase storage as we upload directly to cloud
+const memoryStorage = multer.memoryStorage();
 
 // File filter for images only
 const imageFilter = (_req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
@@ -57,9 +24,10 @@ const imageFilter = (_req: any, file: Express.Multer.File, cb: multer.FileFilter
   }
 };
 
-// Multer configurations
+// Multer configurations using memory storage
+// All files are uploaded to Supabase Storage instead of local disk
 export const uploadQRCode = multer({
-  storage: qrCodeStorage,
+  storage: memoryStorage,
   limits: {
     fileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760') // 10MB default
   },
@@ -67,7 +35,7 @@ export const uploadQRCode = multer({
 });
 
 export const uploadProductImage = multer({
-  storage: productStorage,
+  storage: memoryStorage,
   limits: {
     fileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760')
   },
@@ -76,7 +44,7 @@ export const uploadProductImage = multer({
 
 // Multiple file uploads
 export const uploadMultipleProducts = multer({
-  storage: productStorage,
+  storage: memoryStorage,
   limits: {
     fileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760'),
     files: 5 // Maximum 5 files
@@ -86,7 +54,7 @@ export const uploadMultipleProducts = multer({
 
 // Payment QR code upload
 export const uploadPaymentQR = multer({
-  storage: paymentQRStorage,
+  storage: memoryStorage,
   limits: {
     fileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760')
   },

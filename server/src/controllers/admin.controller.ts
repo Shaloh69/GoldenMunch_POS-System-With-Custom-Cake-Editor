@@ -4,12 +4,23 @@ import { query, callProcedure } from '../config/database';
 import { successResponse, buildSafeUpdateQuery, validateDateRange } from '../utils/helpers';
 import { AppError } from '../middleware/error.middleware';
 import { getFirstRow, getInsertId } from '../utils/typeGuards';
+import { uploadProductImage, replaceProductImage } from '../utils/supabaseUpload';
 
 // ==== MENU MANAGEMENT ====
 
 // Create menu item
 export const createMenuItem = async (req: AuthRequest, res: Response) => {
   const itemData = req.body;
+
+  // Upload image to Supabase if provided
+  let imageUrl = null;
+  if (req.file) {
+    const uploadResult = await uploadProductImage(req.file);
+    if (!uploadResult.success) {
+      throw new AppError(uploadResult.error || 'Failed to upload image', 400);
+    }
+    imageUrl = uploadResult.url;
+  }
 
   const result = await query(
     `INSERT INTO menu_item
@@ -33,7 +44,7 @@ export const createMenuItem = async (req: AuthRequest, res: Response) => {
       itemData.is_featured || false,
       itemData.allergen_info || null,
       itemData.nutritional_info || null,
-      req.file?.filename ? `/uploads/products/${req.file.filename}` : null,
+      imageUrl,
     ]
   );
 
@@ -45,6 +56,23 @@ export const createMenuItem = async (req: AuthRequest, res: Response) => {
 export const updateMenuItem = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const updates = req.body;
+
+  // Handle image upload if a new file is provided
+  if (req.file) {
+    // Get existing image URL
+    const existingItem = await query(
+      'SELECT image_url FROM menu_item WHERE menu_item_id = ?',
+      [id]
+    );
+    const oldImageUrl = getFirstRow<any>(existingItem)?.image_url || null;
+
+    // Upload new image and delete old one
+    const uploadResult = await replaceProductImage(oldImageUrl, req.file);
+    if (!uploadResult.success) {
+      throw new AppError(uploadResult.error || 'Failed to upload image', 400);
+    }
+    updates.image_url = uploadResult.url;
+  }
 
   const allowedColumns = [
     'name', 'description', 'item_type', 'unit_of_measure', 'stock_quantity',
@@ -356,11 +384,20 @@ export const getPromotionById = async (req: AuthRequest, res: Response) => {
 export const createCategory = async (req: AuthRequest, res: Response) => {
   const { name, description, display_order } = req.body;
   const admin_id = req.user?.id;
-  const image_url = req.file ? `/uploads/products/${req.file.filename}` : null;
+
+  // Upload image to Supabase if provided
+  let imageUrl = null;
+  if (req.file) {
+    const uploadResult = await uploadProductImage(req.file);
+    if (!uploadResult.success) {
+      throw new AppError(uploadResult.error || 'Failed to upload image', 400);
+    }
+    imageUrl = uploadResult.url;
+  }
 
   const result = await query(
     'INSERT INTO category (name, description, image_url, display_order, admin_id) VALUES (?, ?, ?, ?, ?)',
-    [name, description, image_url, display_order || 0, admin_id]
+    [name, description, imageUrl, display_order || 0, admin_id]
   );
 
   res.status(201).json(successResponse('Category created', { id: getInsertId(result) }));
@@ -370,6 +407,23 @@ export const createCategory = async (req: AuthRequest, res: Response) => {
 export const updateCategory = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const updates = req.body;
+
+  // Handle image upload if a new file is provided
+  if (req.file) {
+    // Get existing image URL
+    const existingCategory = await query(
+      'SELECT image_url FROM category WHERE category_id = ?',
+      [id]
+    );
+    const oldImageUrl = getFirstRow<any>(existingCategory)?.image_url || null;
+
+    // Upload new image and delete old one
+    const uploadResult = await replaceProductImage(oldImageUrl, req.file);
+    if (!uploadResult.success) {
+      throw new AppError(uploadResult.error || 'Failed to upload image', 400);
+    }
+    updates.image_url = uploadResult.url;
+  }
 
   const allowedColumns = ['name', 'description', 'image_url', 'display_order', 'is_active'];
 

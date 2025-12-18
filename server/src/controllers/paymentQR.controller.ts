@@ -4,8 +4,8 @@ import { query } from '../config/database';
 import { successResponse } from '../utils/helpers';
 import { AppError } from '../middleware/error.middleware';
 import { getFirstRow, getInsertId } from '../utils/typeGuards';
-import path from 'path';
-import fs from 'fs';
+import { uploadPaymentQR as uploadPaymentQRToSupabase, deleteFromSupabase, extractFilePathFromUrl } from '../utils/supabaseUpload';
+import { STORAGE_BUCKETS } from '../config/supabase';
 
 // Upload Payment QR Code (Admin only)
 export const uploadPaymentQR = async (req: AuthRequest, res: Response) => {
@@ -19,8 +19,13 @@ export const uploadPaymentQR = async (req: AuthRequest, res: Response) => {
     throw new AppError('QR code image is required', 400);
   }
 
-  const file = req.file;
-  const qrCodeUrl = `/uploads/payment-qr/${file.filename}`;
+  // Upload to Supabase
+  const uploadResult = await uploadPaymentQRToSupabase(req.file, payment_method);
+  if (!uploadResult.success) {
+    throw new AppError(uploadResult.error || 'Failed to upload QR code', 400);
+  }
+
+  const qrCodeUrl = uploadResult.url!;
   const settingKey = `${payment_method}_qr_code_url`;
 
   // Check if setting exists
@@ -32,19 +37,19 @@ export const uploadPaymentQR = async (req: AuthRequest, res: Response) => {
   );
 
   if (existingSetting) {
+    // Delete old QR code from Supabase if it exists
+    if (existingSetting.setting_value) {
+      const oldFilePath = extractFilePathFromUrl(existingSetting.setting_value, STORAGE_BUCKETS.PAYMENT_QR);
+      if (oldFilePath) {
+        await deleteFromSupabase(STORAGE_BUCKETS.PAYMENT_QR, oldFilePath);
+      }
+    }
+
     // Update existing setting
     await query(
       'UPDATE system_settings SET setting_value = ?, updated_by = ?, updated_at = NOW() WHERE setting_key = ?',
       [qrCodeUrl, req.user?.id, settingKey]
     );
-
-    // Delete old QR code file if it exists
-    if (existingSetting.setting_value && existingSetting.setting_value !== qrCodeUrl) {
-      const oldFilePath = path.join(__dirname, '../../', existingSetting.setting_value);
-      if (fs.existsSync(oldFilePath)) {
-        fs.unlinkSync(oldFilePath);
-      }
-    }
   } else {
     // Create new setting
     await query(
@@ -142,13 +147,12 @@ export const deletePaymentQR = async (req: AuthRequest, res: Response) => {
     throw new AppError(`${paymentMethod.toUpperCase()} QR code not found`, 404);
   }
 
-  // Delete the file from filesystem
-  const filePath = path.join(__dirname, '../../', existingSetting.setting_value);
-  if (fs.existsSync(filePath)) {
-    try {
-      fs.unlinkSync(filePath);
-    } catch (err) {
-      console.error('Failed to delete QR code file:', err);
+  // Delete the file from Supabase
+  const filePath = extractFilePathFromUrl(existingSetting.setting_value, STORAGE_BUCKETS.PAYMENT_QR);
+  if (filePath) {
+    const deleteResult = await deleteFromSupabase(STORAGE_BUCKETS.PAYMENT_QR, filePath);
+    if (!deleteResult.success) {
+      console.error('Failed to delete QR code from Supabase:', deleteResult.error);
       // Continue anyway to remove from database
     }
   }

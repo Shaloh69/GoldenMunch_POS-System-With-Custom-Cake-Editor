@@ -5,6 +5,7 @@ import { successResponse, buildSafeUpdateQuery, validateDateRange } from '../uti
 import { AppError } from '../middleware/error.middleware';
 import { getFirstRow, getAllRows, getInsertId, parseQueryNumber, parseQueryString, parseQueryBoolean } from '../utils/typeGuards';
 import bcrypt from 'bcrypt';
+import { uploadProductImage, replaceProductImage } from '../utils/supabaseUpload';
 
 // ==== CUSTOMER MANAGEMENT ====
 
@@ -326,11 +327,20 @@ export const updateTaxRule = async (req: AuthRequest, res: Response) => {
 // Flavors
 export const createFlavor = async (req: AuthRequest, res: Response) => {
   const { flavor_name, description, additional_cost, display_order } = req.body;
-  const image_url = req.file ? `/uploads/products/${req.file.filename}` : null;
+
+  // Upload image to Supabase if provided
+  let imageUrl = null;
+  if (req.file) {
+    const uploadResult = await uploadProductImage(req.file);
+    if (!uploadResult.success) {
+      throw new AppError(uploadResult.error || 'Failed to upload image', 400);
+    }
+    imageUrl = uploadResult.url;
+  }
 
   const result = await query(
     'INSERT INTO cake_flavors (flavor_name, description, image_url, additional_cost, display_order) VALUES (?, ?, ?, ?, ?)',
-    [flavor_name, description || null, image_url, additional_cost || 0, display_order || 0]
+    [flavor_name, description || null, imageUrl, additional_cost || 0, display_order || 0]
   );
 
   res.status(201).json(successResponse('Flavor created', { id: getInsertId(result) }));
@@ -345,8 +355,21 @@ export const updateFlavor = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const updates = req.body;
 
+  // Handle image upload if a new file is provided
   if (req.file) {
-    updates.image_url = `/uploads/products/${req.file.filename}`;
+    // Get existing image URL
+    const existingFlavor = await query(
+      'SELECT image_url FROM cake_flavors WHERE flavor_id = ?',
+      [id]
+    );
+    const oldImageUrl = getFirstRow<any>(existingFlavor)?.image_url || null;
+
+    // Upload new image and delete old one
+    const uploadResult = await replaceProductImage(oldImageUrl, req.file);
+    if (!uploadResult.success) {
+      throw new AppError(uploadResult.error || 'Failed to upload image', 400);
+    }
+    updates.image_url = uploadResult.url;
   }
 
   const allowedColumns = ['flavor_name', 'description', 'image_url', 'additional_cost', 'is_available', 'display_order'];
@@ -390,12 +413,21 @@ export const updateSize = async (req: AuthRequest, res: Response) => {
 // Themes
 export const createTheme = async (req: AuthRequest, res: Response) => {
   const { theme_name, description, base_additional_cost, preparation_days, display_order } = req.body;
-  const theme_image_url = req.file ? `/uploads/products/${req.file.filename}` : null;
+
+  // Upload image to Supabase if provided
+  let imageUrl = null;
+  if (req.file) {
+    const uploadResult = await uploadProductImage(req.file);
+    if (!uploadResult.success) {
+      throw new AppError(uploadResult.error || 'Failed to upload image', 400);
+    }
+    imageUrl = uploadResult.url;
+  }
 
   const result = await query(
-    `INSERT INTO custom_cake_theme (theme_name, description, theme_image_url, base_additional_cost, preparation_days, display_order)
+    `INSERT INTO custom_cake_theme (theme_name, description, sample_image_url, base_additional_cost, preparation_days, display_order)
      VALUES (?, ?, ?, ?, ?, ?)`,
-    [theme_name, description || null, theme_image_url, base_additional_cost || 0, preparation_days || 3, display_order || 0]
+    [theme_name, description || null, imageUrl, base_additional_cost || 0, preparation_days || 3, display_order || 0]
   );
 
   res.status(201).json(successResponse('Theme created', { id: getInsertId(result) }));
@@ -410,11 +442,24 @@ export const updateTheme = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const updates = req.body;
 
+  // Handle image upload if a new file is provided
   if (req.file) {
-    updates.theme_image_url = `/uploads/products/${req.file.filename}`;
+    // Get existing image URL
+    const existingTheme = await query(
+      'SELECT sample_image_url FROM custom_cake_theme WHERE theme_id = ?',
+      [id]
+    );
+    const oldImageUrl = getFirstRow<any>(existingTheme)?.sample_image_url || null;
+
+    // Upload new image and delete old one
+    const uploadResult = await replaceProductImage(oldImageUrl, req.file);
+    if (!uploadResult.success) {
+      throw new AppError(uploadResult.error || 'Failed to upload image', 400);
+    }
+    updates.sample_image_url = uploadResult.url;
   }
 
-  const allowedColumns = ['theme_name', 'description', 'theme_image_url', 'base_additional_cost', 'preparation_days', 'is_available', 'display_order'];
+  const allowedColumns = ['theme_name', 'description', 'sample_image_url', 'base_additional_cost', 'preparation_days', 'is_available', 'display_order'];
 
   const { setClause, values } = buildSafeUpdateQuery(updates, allowedColumns);
   await query(`UPDATE custom_cake_theme SET ${setClause} WHERE theme_id = ?`, [...values, id]);
