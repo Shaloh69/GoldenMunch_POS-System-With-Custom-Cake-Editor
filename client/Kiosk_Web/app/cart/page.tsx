@@ -238,14 +238,6 @@ export default function CartPage() {
               >
                 🍰 Browse Our Menu
               </Button>
-              <Button
-                as={NextLink}
-                href="/specials"
-                size="lg"
-                className="glass-button border-3 border-primary/60 text-foreground hover:bg-primary/20 font-bold text-xl px-14 py-8 touch-target"
-              >
-                ⭐ View Today's Specials
-              </Button>
             </div>
           </CardBody>
         </Card>
