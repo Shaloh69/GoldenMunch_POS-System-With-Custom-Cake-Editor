@@ -993,7 +993,7 @@ export const processPayment = async (req: AuthRequest, res: Response) => {
   }
 
   const orderId = await transaction(async (conn: mysql.PoolConnection) => {
-    // Get request details
+    // 1. Get approved request
     const [requests] = await conn.query<any[]>(
       `SELECT * FROM custom_cake_request WHERE request_id = ? AND status = 'approved'`,
       [requestId]
@@ -1009,16 +1009,15 @@ export const processPayment = async (req: AuthRequest, res: Response) => {
       throw new AppError('Payment already processed for this request', 400);
     }
 
-    // Verify amount
     if (Number(amount_paid) < Number(request.approved_price)) {
       throw new AppError('Insufficient payment amount', 400);
     }
 
-    // Find or create customer record
-    let customerId = null;
+    // 2. Find or create customer
+    let customerId: number | null = null;
+
     if (request.customer_phone) {
-      // Check if customer exists
-      const [existingCustomer] = await conn.query<any>(
+      const [existingCustomer] = await conn.query<any[]>(
         `SELECT customer_id FROM customer WHERE phone = ?`,
         [request.customer_phone]
       );
@@ -1026,26 +1025,37 @@ export const processPayment = async (req: AuthRequest, res: Response) => {
       if (existingCustomer.length > 0) {
         customerId = existingCustomer[0].customer_id;
       } else {
-        // Create new customer
         const [customerResult] = await conn.query<any>(
           `INSERT INTO customer (name, phone, email) VALUES (?, ?, ?)`,
-          [request.customer_name || 'Walk-in Customer', request.customer_phone, request.customer_email]
+          [
+            request.customer_name || 'Walk-in Customer',
+            request.customer_phone,
+            request.customer_email,
+          ]
         );
         customerId = customerResult.insertId;
       }
     }
 
-    // Create customer order with correct column names
+    // 3. Generate ORDER NUMBER ✅
+    const today = new Date();
+    const datePart = today.toISOString().slice(0, 10).replace(/-/g, '');
+    const randomPart = Math.floor(1000 + Math.random() * 9000);
+    const orderNumber = `ORD-${datePart}-${randomPart}`;
+
+    // 4. Create order (FIXED)
     const [orderResult] = await conn.query<any>(
       `INSERT INTO customer_order
-       (customer_id, order_type, order_status, order_source,
+       (order_number, customer_id, order_type, order_status, order_source,
         total_amount, final_amount, payment_method, payment_status,
         special_instructions, cashier_id, scheduled_pickup_datetime)
-       VALUES (?, 'custom_cake', 'pending', 'cashier', ?, ?, ?, 'paid', ?, ?, ?)`,
+       VALUES (?, ?, 'custom_cake', 'pending', 'cashier',
+               ?, ?, ?, 'paid', ?, ?, ?)`,
       [
+        orderNumber,
         customerId,
         request.approved_price,
-        request.approved_price, // final_amount = total_amount
+        request.approved_price,
         payment_method,
         `Custom Cake - Pickup: ${request.scheduled_pickup_date}`,
         cashier_id,
@@ -1055,7 +1065,7 @@ export const processPayment = async (req: AuthRequest, res: Response) => {
 
     const newOrderId = orderResult.insertId;
 
-    // Link order to request
+    // 5. Link request → order
     await conn.query(
       `UPDATE custom_cake_request
        SET order_id = ?, status = 'completed'
@@ -1063,7 +1073,7 @@ export const processPayment = async (req: AuthRequest, res: Response) => {
       [newOrderId, requestId]
     );
 
-    // Create notification
+    // 6. Notification
     if (request.customer_email) {
       await conn.query(
         `INSERT INTO custom_cake_notifications
@@ -1073,12 +1083,20 @@ export const processPayment = async (req: AuthRequest, res: Response) => {
           requestId,
           request.customer_email,
           'Payment Confirmed - Custom Cake Order',
-          `Your payment has been processed. Order #${newOrderId}. Pickup: ${request.scheduled_pickup_date}.`,
+          `Your payment has been processed.
+           Order #: ${orderNumber}
+           Pickup: ${request.scheduled_pickup_date}`,
         ]
       );
     }
 
     return newOrderId;
+  });
+
+  res.json({
+    success: true,
+    message: 'Payment processed successfully',
+    order_id: orderId,
   });
 
   // Process pending notifications (send payment confirmation email)
