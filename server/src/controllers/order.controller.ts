@@ -6,6 +6,9 @@ import { AppError } from '../middleware/error.middleware';
 import { getFirstRow } from '../utils/typeGuards';
 import { PoolConnection } from 'mysql2/promise';
 
+// In-memory tracking for QR code scans
+const scannedQRCodes = new Set<number>();
+
 // Create order (from kiosk or cashier)
 export const createOrder = async (req: AuthRequest, res: Response) => {
   const orderData: CreateOrderRequest = req.body;
@@ -174,6 +177,41 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
   });
 
   res.status(201).json(successResponse('Order created successfully', result));
+};
+
+// Get order by ID (for kiosk order confirmation page)
+export const getOrderById = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  const orderId = parseInt(id, 10);
+
+  if (isNaN(orderId)) {
+    throw new AppError('Invalid order ID', 400);
+  }
+
+  const orders = await query(
+    `SELECT co.*, c.name, c.phone
+     FROM customer_order co
+     LEFT JOIN customer c ON co.customer_id = c.customer_id
+     WHERE co.order_id = ?`,
+    [orderId]
+  );
+
+  const order = Array.isArray(orders) && orders.length > 0 ? orders[0] : null;
+
+  if (!order) {
+    throw new AppError('Order not found', 404);
+  }
+
+  // Get order items
+  const items = await query(
+    `SELECT oi.*, oi.subtotal as item_total, mi.name as menu_item_name
+     FROM order_item oi
+     LEFT JOIN menu_item mi ON oi.menu_item_id = mi.menu_item_id
+     WHERE oi.order_id = ?`,
+    [orderId]
+  );
+
+  res.json(successResponse('Order retrieved', { ...order, items }));
 };
 
 // Get order by verification code (using order_id as fallback)
@@ -484,4 +522,45 @@ export const getOrders = async (req: AuthRequest, res: Response) => {
       totalPages: Math.ceil(total / limitNum)
     }
   }));
+};
+
+// Mark QR code as scanned (called when customer views order-confirmation page)
+export const markQRScanned = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  const orderId = parseInt(id, 10);
+
+  if (isNaN(orderId)) {
+    throw new AppError('Invalid order ID', 400);
+  }
+
+  // Verify order exists
+  const order = await query(
+    'SELECT order_id FROM customer_order WHERE order_id = ?',
+    [orderId]
+  );
+
+  if (!Array.isArray(order) || order.length === 0) {
+    throw new AppError('Order not found', 404);
+  }
+
+  // Mark as scanned in memory
+  scannedQRCodes.add(orderId);
+
+  console.log(`✅ QR code scanned for order ${orderId}`);
+
+  res.json(successResponse('QR code marked as scanned', { order_id: orderId, scanned: true }));
+};
+
+// Check if QR code has been scanned
+export const checkQRStatus = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  const orderId = parseInt(id, 10);
+
+  if (isNaN(orderId)) {
+    throw new AppError('Invalid order ID', 400);
+  }
+
+  const isScanned = scannedQRCodes.has(orderId);
+
+  res.json(successResponse('QR status retrieved', { order_id: orderId, qr_scanned: isScanned }));
 };

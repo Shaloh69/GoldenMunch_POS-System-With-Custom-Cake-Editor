@@ -48,29 +48,33 @@ export default function OrderSuccessPage() {
     generateQR();
   }, [orderId, router]);
 
-  // Poll order status to detect when order is completed
+  // Poll QR scan status to detect when customer scans QR code
   useEffect(() => {
     if (!orderId || qrScanned) return;
 
-    const checkOrderStatus = async () => {
+    const checkQRStatus = async () => {
       try {
-        const orderData = await OrderService.getOrderById(parseInt(orderId));
-        setOrder(orderData);
+        // Check if QR code has been scanned
+        const isScanned = await OrderService.checkQRStatus(parseInt(orderId));
 
-        // Only redirect when order is COMPLETED (customer has paid and received order)
-        if (orderData.order_status === "completed") {
+        if (isScanned) {
+          console.log(`✅ QR code was scanned for order ${orderId}`);
           setQrScanned(true);
         }
+
+        // Also fetch order data to show live status updates
+        const orderData = await OrderService.getOrderById(parseInt(orderId));
+        setOrder(orderData);
       } catch (error) {
-        console.error("Error fetching order status:", error);
+        console.error("Error checking QR status:", error);
       }
     };
 
     // Initial check
-    checkOrderStatus();
+    checkQRStatus();
 
     // Poll every 3 seconds
-    const pollInterval = setInterval(checkOrderStatus, 3000);
+    const pollInterval = setInterval(checkQRStatus, 3000);
 
     return () => clearInterval(pollInterval);
   }, [orderId, qrScanned]);
@@ -94,16 +98,19 @@ export default function OrderSuccessPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-primary/10 flex items-center justify-center p-8">
       <div className="max-w-5xl w-full">
-        {/* Order Completed Success Modal */}
+        {/* QR Scanned Success Modal */}
         {qrScanned && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
             <div className="bg-gradient-to-br from-green-400 via-green-500 to-green-600 rounded-3xl p-12 max-w-2xl mx-4 shadow-2xl animate-scale-in">
               <div className="text-center">
-                <div className="text-9xl mb-6 animate-bounce">🎉</div>
+                <div className="text-9xl mb-6 animate-bounce">✅</div>
                 <h2 className="text-6xl font-black text-white mb-6 drop-shadow-lg">
-                  Order Completed Successfully!
+                  QR Code Scanned!
                 </h2>
                 <p className="text-3xl text-white font-bold mb-8">
+                  Customer has received the receipt
+                </p>
+                <p className="text-2xl text-white font-semibold mb-4">
                   Kiosk is ready for the next customer
                 </p>
                 <p className="text-xl text-white font-semibold bg-black/20 px-6 py-3 rounded-2xl inline-block">
@@ -214,26 +221,25 @@ export default function OrderSuccessPage() {
               </p>
             </div>
 
-            {/* Status Message - Show current order status */}
+            {/* Status Message - Waiting for QR scan */}
             <div className="bg-blue-50 border-2 border-blue-500 rounded-2xl p-8 max-w-2xl mx-auto">
               <div className="flex items-center justify-center gap-4">
                 <div className="text-5xl animate-pulse-gentle">
-                  {order?.order_status === "pending" && "⏳"}
-                  {order?.order_status === "confirmed" && "✅"}
-                  {order?.order_status === "preparing" && "👨‍🍳"}
-                  {order?.order_status === "ready" && "🎉"}
-                  {!order && "📱"}
+                  📱
                 </div>
                 <div className="text-left">
                   <p className="text-2xl font-bold text-black mb-2">
-                    {order?.order_status === "pending" && "Waiting for cashier confirmation..."}
-                    {order?.order_status === "confirmed" && "Order confirmed - Being prepared"}
-                    {order?.order_status === "preparing" && "Your order is being prepared"}
-                    {order?.order_status === "ready" && "Order ready for pickup!"}
-                    {!order && "Processing..."}
+                    Waiting for customer to scan QR code...
                   </p>
                   <p className="text-lg text-black">
-                    Page will auto-return when order is completed
+                    {order?.order_status === "pending" && "Order Status: Pending confirmation"}
+                    {order?.order_status === "confirmed" && "Order Status: Confirmed"}
+                    {order?.order_status === "preparing" && "Order Status: Being prepared"}
+                    {order?.order_status === "ready" && "Order Status: Ready for pickup"}
+                    {!order && "Loading order status..."}
+                  </p>
+                  <p className="text-lg text-black font-semibold mt-2">
+                    Kiosk will be ready for next customer after QR is scanned
                   </p>
                 </div>
               </div>

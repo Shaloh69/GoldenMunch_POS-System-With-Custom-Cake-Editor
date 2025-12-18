@@ -17,6 +17,15 @@ export default function OrderConfirmationPage() {
   const [showReadyModal, setShowReadyModal] = useState(false);
   const [showCompletedModal, setShowCompletedModal] = useState(false);
 
+  // Mark QR as scanned when page loads
+  useEffect(() => {
+    if (!orderId) return;
+
+    // Mark QR code as scanned (fire and forget)
+    OrderService.markQRScanned(parseInt(orderId));
+    console.log(`📱 Customer scanned QR code for order ${orderId}`);
+  }, [orderId]);
+
   // Fetch order details
   useEffect(() => {
     if (!orderId) {

@@ -377,7 +377,10 @@ router.get('/kiosk/capacity/check', asyncHandler(kioskController.checkCapacity))
 
 // Kiosk Orders
 router.post('/kiosk/orders', validate(schemas.createOrder), asyncHandler(orderController.createOrder));
+router.get('/kiosk/orders/id/:id', asyncHandler(orderController.getOrderById));
 router.get('/kiosk/orders/:code', asyncHandler(orderController.getOrderByVerificationCode));
+router.post('/kiosk/orders/:id/mark-qr-scanned', asyncHandler(orderController.markQRScanned));
+router.get('/kiosk/orders/:id/qr-status', asyncHandler(orderController.checkQRStatus));
 
 // Custom Cake Sessions (for QR code customization flow)
 // DEPRECATED: Old in-memory API - migrating to database-backed NEW API below

@@ -50,6 +50,51 @@ export class OrderService {
       throw error;
     }
   }
+
+  /**
+   * Get order by ID (for order confirmation page)
+   */
+  static async getOrderById(id: number): Promise<CustomerOrder> {
+    try {
+      const response = await apiClient.get<ApiResponse<CustomerOrder>>(
+        `/kiosk/orders/id/${id}`,
+      );
+      if (!response.data.data) {
+        throw new Error("Order not found");
+      }
+      return response.data.data;
+    } catch (error) {
+      console.error("Error fetching order:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Mark QR code as scanned (called when customer views order confirmation)
+   */
+  static async markQRScanned(orderId: number): Promise<void> {
+    try {
+      await apiClient.post(`/kiosk/orders/${orderId}/mark-qr-scanned`);
+    } catch (error) {
+      console.error("Error marking QR as scanned:", error);
+      // Don't throw - this is not critical for the user experience
+    }
+  }
+
+  /**
+   * Check if QR code has been scanned
+   */
+  static async checkQRStatus(orderId: number): Promise<boolean> {
+    try {
+      const response = await apiClient.get<ApiResponse<{ qr_scanned: boolean }>>(
+        `/kiosk/orders/${orderId}/qr-status`,
+      );
+      return response.data.data?.qr_scanned || false;
+    } catch (error) {
+      console.error("Error checking QR status:", error);
+      return false;
+    }
+  }
 }
 
 export default OrderService;
