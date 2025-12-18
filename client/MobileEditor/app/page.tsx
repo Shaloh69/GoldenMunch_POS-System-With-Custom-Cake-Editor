@@ -8,7 +8,7 @@ import { Card, CardBody } from '@nextui-org/card';
 import { Button } from '@nextui-org/button';
 import { Progress } from '@nextui-org/progress';
 import { Spinner } from '@nextui-org/spinner';
-import { ArrowLeftIcon, ArrowRightIcon, CheckCircleIcon, DevicePhoneMobileIcon, Bars3Icon, XMarkIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, ArrowRightIcon, CheckCircleIcon, QuestionMarkCircleIcon } from '@heroicons/react/24/outline';
 import { Popover, PopoverTrigger, PopoverContent } from '@nextui-org/popover';
 import StepCustomerInfo from '@/components/cake-editor/steps/StepCustomerInfo';
 import StepLayers from '@/components/cake-editor/steps/StepLayers';
@@ -68,6 +68,9 @@ export interface CakeDesign {
   // Notes
   special_instructions?: string;
   dietary_restrictions?: string;
+
+  // Reference Image
+  reference_image?: string; // Base64 or URL
 }
 
 // Editor Steps
@@ -94,8 +97,6 @@ function CakeEditorContent() {
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [requestId, setRequestId] = useState<number | null>(null);
-  const [isLandscape, setIsLandscape] = useState(false);
-  const [showLandscapeBanner, setShowLandscapeBanner] = useState(true);
   const [showControls, setShowControls] = useState(true);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -118,26 +119,6 @@ function CakeEditorContent() {
     candle_type: 'regular',
     decorations_3d: [],
   });
-
-  // Check orientation on mount and on resize
-  useEffect(() => {
-    const checkOrientation = () => {
-      const isCurrentlyLandscape = window.innerWidth > window.innerHeight;
-      setIsLandscape(isCurrentlyLandscape);
-    };
-
-    // Check on mount
-    checkOrientation();
-
-    // Listen for orientation changes
-    window.addEventListener('resize', checkOrientation);
-    window.addEventListener('orientationchange', checkOrientation);
-
-    return () => {
-      window.removeEventListener('resize', checkOrientation);
-      window.removeEventListener('orientationchange', checkOrientation);
-    };
-  }, []);
 
   // Validate session on mount
   useEffect(() => {
@@ -593,45 +574,11 @@ function CakeEditorContent() {
     );
   }
 
-  // Landscape mode banner - Optional suggestion (no longer blocking)
-  const LandscapeSuggestionBanner = () => {
-    if (isLandscape || !showLandscapeBanner) return null;
-
-    return (
-      <motion.div
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: -100, opacity: 0 }}
-        className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 text-white shadow-2xl"
-      >
-        <div className="p-3 sm:p-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 flex-1">
-            <DevicePhoneMobileIcon className="w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0 animate-pulse" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm sm:text-base font-bold">💡 Better in Landscape!</p>
-              <p className="text-xs sm:text-sm opacity-90">Rotate for a better view of your cake</p>
-            </div>
-          </div>
-          <button
-            onClick={() => setShowLandscapeBanner(false)}
-            className="p-2 hover:bg-white/20 rounded-full transition-colors flex-shrink-0"
-            aria-label="Dismiss banner"
-          >
-            <XMarkIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-          </button>
-        </div>
-      </motion.div>
-    );
-  };
-
   const CurrentStepComponent = STEPS[currentStep].component;
   const progress = ((currentStep + 1) / STEPS.length) * 100;
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 overflow-hidden">
-      {/* Landscape Suggestion Banner (Optional, Dismissible) */}
-      <LandscapeSuggestionBanner />
-
       {/* Full Screen 3D Canvas */}
       <div className="absolute inset-0 z-0">
         <CakeCanvas3D ref={canvasRef} design={design} options={options} />
@@ -911,10 +858,27 @@ function CakeEditorContent() {
                 <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center">
                   <CheckCircleIcon className="w-10 h-10 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-black mb-3">Are you sure?</h2>
-                <p className="text-base text-black/80 mb-6">
+                <h2 className="text-3xl font-bold text-black mb-3">Are you Finished?</h2>
+                <p className="text-lg text-black/90 mb-4 font-semibold">
                   Ready to submit your custom cake design for review?
                 </p>
+
+                {/* Important Disclaimer */}
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border-2 border-amber-300 mb-6 text-left">
+                  <h4 className="font-bold text-amber-900 mb-3 text-base">⚠️ Important Disclaimer</h4>
+                  <div className="space-y-2 text-sm text-black/80">
+                    <p className="font-semibold">
+                      • The 3D cake is <span className="text-amber-700 font-bold">for reference purposes only</span>
+                    </p>
+                    <p className="font-semibold">
+                      • Admin will contact you for further details and finalizations
+                    </p>
+                    <p className="font-semibold">
+                      • <span className="text-red-600 font-bold">Make sure you inputted the right credentials</span> for this exact purpose or we will not be able to contact you
+                    </p>
+                  </div>
+                </div>
+
                 <div className="flex gap-3">
                   <Button
                     onClick={() => setShowConfirmModal(false)}
@@ -925,7 +889,7 @@ function CakeEditorContent() {
                   <Button
                     onClick={handleConfirmSubmit}
                     isLoading={submitting}
-                    className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-4 text-base"
+                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-4 text-base"
                   >
                     Yes, Submit!
                   </Button>

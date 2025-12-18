@@ -1,8 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { Card, CardBody } from '@nextui-org/card';
 import { Chip } from '@nextui-org/chip';
 import { Textarea } from '@nextui-org/input';
+import { Button } from '@nextui-org/button';
+import { PhotoIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import type { CakeDesign } from '@/app/page';
 
 interface StepReviewProps {
@@ -15,6 +18,49 @@ export default function StepReview({ design, updateDesign, options }: StepReview
   const flavors = options?.flavors || [];
   const sizes = options?.sizes || [];
   const themes = options?.themes || [];
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image size must be less than 5MB');
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file');
+      return;
+    }
+
+    setUploadingImage(true);
+
+    try {
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result as string;
+        updateDesign({ reference_image: base64String });
+        setUploadingImage(false);
+      };
+      reader.onerror = () => {
+        alert('Failed to read image file');
+        setUploadingImage(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Failed to upload image');
+      setUploadingImage(false);
+    }
+  };
+
+  const removeReferenceImage = () => {
+    updateDesign({ reference_image: undefined });
+  };
 
   const getFlavorName = (flavorId?: number) => {
     if (!flavorId) return 'Not selected';
@@ -176,6 +222,62 @@ export default function StepReview({ design, updateDesign, options }: StepReview
           variant="bordered"
         />
       </div>
+
+      {/* Reference Image Upload */}
+      <Card className="border-2 border-dashed border-amber-300 bg-amber-50/30">
+        <CardBody className="p-4">
+          <div className="text-center">
+            <PhotoIcon className="w-12 h-12 mx-auto mb-3 text-amber-600" />
+            <h4 className="font-semibold text-lg mb-2 text-gray-800">Not sure of your design?</h4>
+            <p className="text-sm text-gray-600 mb-4">
+              You can upload a reference image here!
+            </p>
+
+            {!design.reference_image ? (
+              <div>
+                <input
+                  type="file"
+                  id="reference-image"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  disabled={uploadingImage}
+                />
+                <label htmlFor="reference-image">
+                  <Button
+                    as="span"
+                    color="warning"
+                    variant="flat"
+                    className="cursor-pointer"
+                    isLoading={uploadingImage}
+                  >
+                    {uploadingImage ? 'Uploading...' : 'Upload Reference Image'}
+                  </Button>
+                </label>
+                <p className="text-xs text-gray-500 mt-2">Max size: 5MB • Supported: JPG, PNG, GIF</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="relative inline-block">
+                  <img
+                    src={design.reference_image}
+                    alt="Reference cake design"
+                    className="max-w-full max-h-64 rounded-lg border-2 border-amber-300 shadow-lg"
+                  />
+                  <button
+                    onClick={removeReferenceImage}
+                    className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                    aria-label="Remove image"
+                  >
+                    <XMarkIcon className="w-5 h-5" />
+                  </button>
+                </div>
+                <p className="text-sm text-green-600 font-medium">✓ Reference image uploaded</p>
+              </div>
+            )}
+          </div>
+        </CardBody>
+      </Card>
 
       {/* Important Note */}
       <div className="p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
