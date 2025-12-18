@@ -16,7 +16,6 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useCart } from "@/contexts/CartContext";
 import { OrderService } from "@/services/order.service";
-import { printerService } from "@/services/printer.service";
 import { SettingsService } from "@/services/settings.service";
 import { getImageUrl } from "@/utils/imageUtils";
 import { KioskAppSidebar } from "@/components/KioskAppSidebar";
@@ -160,38 +159,10 @@ export default function CartPage() {
       }
 
       const order = await OrderService.createOrder(orderData);
-      setCompletedOrder(order);
       clearCart();
-      onOpen();
 
-      // ✅ FIX: Print receipt after successful order creation
-      try {
-        console.log("🖨️ Attempting to print receipt...");
-        const receiptData = printerService.formatOrderForPrint({
-          ...order,
-          items: cartItems.map((item) => ({
-            name: item.menuItem.name,
-            quantity: item.quantity,
-            unit_price: item.menuItem.current_price,
-            special_instructions: item.special_instructions,
-          })),
-          total_amount: getSubtotal(),
-          tax_amount: getTax(),
-          final_amount: getTotal(),
-          discount_amount: 0,
-        });
-
-        const printResult = await printerService.printReceipt(receiptData);
-        if (printResult.success) {
-          console.log("✅ Receipt printed successfully");
-        } else {
-          console.warn("⚠️ Receipt printing failed:", printResult.error);
-          // Don't block order completion if printing fails
-        }
-      } catch (printErr) {
-        console.error("❌ Receipt printing error:", printErr);
-        // Don't block order completion if printing fails
-      }
+      // Redirect to order success page with QR code
+      router.push(`/order-success?orderId=${order.order_id}&orderNumber=${order.order_number}`);
     } catch (err: any) {
       console.error("Error creating order:", err);
       setError(err.message || "Failed to create order. Please try again.");

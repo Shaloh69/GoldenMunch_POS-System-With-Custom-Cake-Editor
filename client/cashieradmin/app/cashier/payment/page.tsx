@@ -42,6 +42,7 @@ import {
 
 import { OrderService } from "@/services/order.service";
 import { DiscountService } from "@/services/discount.service";
+import { printerService } from "@/services/printer.service";
 
 const paymentMethodIcons: Record<string, JSX.Element> = {
   cash: <BanknotesIcon className="h-4 w-4" />,
@@ -361,6 +362,38 @@ export default function PaymentPage() {
             color: "success",
             timeout: 5000,
           });
+        }
+
+        // Print receipt after successful payment verification
+        try {
+          console.log("🖨️ Printing receipt for completed order...");
+          const receiptData = printerService.formatOrderForPrint({
+            ...selectedOrder,
+            final_amount: finalAmount, // Use discounted amount
+            discount_amount: selectedDiscount ? calculateDiscount(Number(selectedOrder.final_amount || 0), selectedDiscount) : 0,
+          });
+
+          const printResult = await printerService.printReceipt(receiptData);
+          if (printResult.success) {
+            console.log("✅ Receipt printed successfully");
+            addToast({
+              title: "Receipt Printed",
+              description: `Receipt for ${orderNum} has been printed`,
+              color: "success",
+              timeout: 3000,
+            });
+          } else {
+            console.warn("⚠️ Receipt printing failed:", printResult.error);
+            addToast({
+              title: "Printing Warning",
+              description: printResult.error || "Receipt printing failed, but payment was successful",
+              color: "warning",
+              timeout: 5000,
+            });
+          }
+        } catch (printErr) {
+          console.error("❌ Receipt printing error:", printErr);
+          // Don't block the flow if printing fails
         }
 
         await loadPaymentData();
