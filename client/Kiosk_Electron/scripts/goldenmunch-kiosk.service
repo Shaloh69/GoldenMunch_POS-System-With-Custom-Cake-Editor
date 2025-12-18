@@ -1,0 +1,32 @@
+[Unit]
+Description=GoldenMunch Kiosk Electron Application
+After=network-online.target graphical.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=user
+Group=user
+WorkingDirectory=/home/user/GoldenMunch_POS-System-With-Custom-Cake-Editor/client/Kiosk_Electron
+
+# Environment variables
+Environment="DISPLAY=:0"
+Environment="XAUTHORITY=/home/user/.Xauthority"
+Environment="NODE_ENV=production"
+Environment="ELECTRON_OZONE_PLATFORM_HINT=x11"
+Environment="XDG_SESSION_TYPE=x11"
+
+# Start the kiosk script
+ExecStart=/home/user/GoldenMunch_POS-System-With-Custom-Cake-Editor/client/Kiosk_Electron/scripts/start-kiosk.sh
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=goldenmunch-kiosk
+
+[Install]
+WantedBy=graphical.target
