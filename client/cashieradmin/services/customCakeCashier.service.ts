@@ -49,7 +49,14 @@ export class CustomCakeCashierService {
       `/cashier/custom-cakes/${requestId}/process-payment`,
       data
     );
-    return response.data as { order_id: number };
+    // Check if response was successful
+    if (!response.success) {
+      throw new Error(response.message || response.error || 'Failed to process payment');
+    }  // Ensure data exists
+    if (!response.data) {
+      throw new Error('No data returned from payment processing');
+    }
+    return response.data;
   }
 
   /**
