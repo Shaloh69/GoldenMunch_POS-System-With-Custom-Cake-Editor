@@ -125,8 +125,8 @@ export default function SpecialsPage() {
             <h1 className="text-5xl font-black text-gradient drop-shadow-md mb-2 animate-bounce-in">
               ⭐ Today's Specials ⭐
             </h1>
-            <p className="text-xl text-foreground/80 mb-1 font-semibold">{getCurrentDate()}</p>
-            <p className="text-lg text-foreground/70">
+            <p className="text-xl text-black mb-1 font-semibold">{getCurrentDate()}</p>
+            <p className="text-lg text-black/70">
               Limited time offers - Don't miss out!
             </p>
           </div>
@@ -136,10 +136,10 @@ export default function SpecialsPage() {
           {/* Flash Sale Banner */}
           <div className="mb-6 glass-card p-6 rounded-2xl shadow-xl animate-scale-in border-2 border-primary/60">
             <div className="text-center">
-              <h2 className="text-3xl font-bold text-foreground mb-2">
+              <h2 className="text-3xl font-bold text-black mb-2">
                 🔥 Flash Sale Active! 🔥
               </h2>
-              <p className="text-lg text-foreground/80">
+              <p className="text-lg text-black">
                 Extra savings on selected items - while supplies last!
               </p>
             </div>
@@ -180,24 +180,24 @@ export default function SpecialsPage() {
                     <div className="text-8xl mb-4 animate-float drop-shadow-lg">
                       {special.emoji}
                     </div>
-                    <h3 className="text-2xl font-bold text-foreground text-center mb-2">
+                    <h3 className="text-2xl font-bold text-black text-center mb-2">
                       {special.name}
                     </h3>
-                    <p className="text-foreground/70 text-center mb-4 text-sm">
+                    <p className="text-black/70 text-center mb-4 text-sm">
                       {special.description}
                     </p>
 
                     {/* Price Display */}
                     <div className="text-center mb-4">
                       <div className="flex items-center justify-center gap-3">
-                        <span className="text-lg text-foreground/60 line-through">
+                        <span className="text-lg text-black/60 line-through">
                           ₱{special.originalPrice.toFixed(2)}
                         </span>
                         <span className="text-3xl font-bold text-gradient">
                           ₱{special.specialPrice.toFixed(2)}
                         </span>
                       </div>
-                      <p className="text-sm text-foreground/70 mt-1 font-semibold">
+                      <p className="text-sm text-black/70 mt-1 font-semibold">
                         You save ₱
                         {(special.originalPrice - special.specialPrice).toFixed(2)}!
                       </p>
@@ -206,7 +206,7 @@ export default function SpecialsPage() {
                     {/* Time Remaining */}
                     <Chip
                       size="sm"
-                      className="mb-4 bg-primary/20 text-foreground border border-primary/40"
+                      className="mb-4 bg-primary/20 text-black border border-primary/40"
                     >
                       ⏰ {special.timeLeft}
                     </Chip>
@@ -217,10 +217,10 @@ export default function SpecialsPage() {
                     {special.limitedQuantity && (
                       <div className="mb-4">
                         <div className="flex justify-between items-center mb-2">
-                          <span className="text-sm font-semibold text-foreground">
+                          <span className="text-sm font-semibold text-black">
                             Limited Quantity
                           </span>
-                          <span className="text-sm text-foreground/70">
+                          <span className="text-sm text-black/70">
                             {special.limitedQuantity - (special.soldCount || 0)}{" "}
                             left
                           </span>
@@ -232,7 +232,7 @@ export default function SpecialsPage() {
                           }
                           className="mb-2 h-2"
                         />
-                        <p className="text-xs text-foreground/60 text-center">
+                        <p className="text-xs text-black/60 text-center">
                           {special.soldCount || 0} of {special.limitedQuantity} sold
                         </p>
                       </div>
@@ -263,7 +263,7 @@ export default function SpecialsPage() {
 
           {/* Additional Offers */}
           <div className="mb-8 animate-fade-in-up animation-delay-1000">
-            <h2 className="text-3xl font-bold text-foreground mb-6 text-center">
+            <h2 className="text-3xl font-bold text-black mb-6 text-center">
               🎁 Additional Offers
             </h2>
 
@@ -272,10 +272,10 @@ export default function SpecialsPage() {
               <Card className="glass-card border-2 border-primary/40">
                 <CardBody className="p-6 text-center">
                   <div className="text-4xl mb-3 animate-bounce-slow">🏆</div>
-                  <h3 className="text-xl font-bold text-foreground mb-2">
+                  <h3 className="text-xl font-bold text-black mb-2">
                     Loyalty Rewards
                   </h3>
-                  <p className="text-foreground/70 mb-4 text-sm">
+                  <p className="text-black/70 mb-4 text-sm">
                     Earn points with every purchase! Get a free pastry after 10
                     visits.
                   </p>
@@ -292,10 +292,10 @@ export default function SpecialsPage() {
               <Card className="glass-card border-2 border-secondary/40">
                 <CardBody className="p-6 text-center">
                   <div className="text-4xl mb-3 animate-pulse-gentle">🕐</div>
-                  <h3 className="text-xl font-bold text-foreground mb-2">
+                  <h3 className="text-xl font-bold text-black mb-2">
                     Happy Hour Special
                   </h3>
-                  <p className="text-foreground/70 mb-4 text-sm">
+                  <p className="text-black/70 mb-4 text-sm">
                     50% off all beverages between 2-4 PM on weekdays!
                   </p>
                   <Button

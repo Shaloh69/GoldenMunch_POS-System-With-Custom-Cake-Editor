@@ -217,7 +217,7 @@ export default function HomePage() {
               <h1 className="text-4xl font-black text-gradient drop-shadow-lg mb-1">
                 Golden Munch
               </h1>
-              <p className="text-lg font-semibold text-foreground/80">
+              <p className="text-lg font-semibold text-black">
                 Fresh • Delicious • Made with Love
               </p>
             </div>
@@ -331,10 +331,10 @@ export default function HomePage() {
                 <div className="text-[120px] mb-8 animate-float-smooth">
                   🍽️
                 </div>
-                <h3 className="text-5xl font-bold text-foreground mb-6">
+                <h3 className="text-5xl font-bold text-black mb-6">
                   No items found
                 </h3>
-                <p className="text-2xl text-muted-foreground mb-10">
+                <p className="text-2xl text-black mb-10">
                   No items in this category
                 </p>
                 {selectedCategory !== null && (
@@ -352,7 +352,7 @@ export default function HomePage() {
             <>
               {/* Item Count with animation */}
               <div className="text-center mb-6 animate-fade-in-up animation-delay-500">
-                <h2 className="text-4xl font-bold text-foreground">
+                <h2 className="text-4xl font-bold text-black">
                   {filteredItems.length} Delicious{" "}
                   {filteredItems.length === 1 ? "Item" : "Items"}
                 </h2>
@@ -386,7 +386,7 @@ export default function HomePage() {
                 <h3 className="text-5xl font-black text-gradient mb-3">
                   🎂 Design Your Dream Cake!
                 </h3>
-                <p className="text-2xl text-foreground/80 font-semibold">
+                <p className="text-2xl text-black font-semibold">
                   Create a custom cake perfectly tailored to your celebration
                 </p>
               </div>

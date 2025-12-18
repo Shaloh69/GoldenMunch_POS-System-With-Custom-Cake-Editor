@@ -164,10 +164,10 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
         }}
       >
         <ModalHeader className="flex flex-col gap-2 text-center pt-8">
-          <h2 className="text-4xl font-bold text-foreground">
+          <h2 className="text-4xl font-bold text-black">
             🎨 Design Your Custom Cake
           </h2>
-          <p className="text-lg text-foreground/70 font-semibold">
+          <p className="text-lg text-black/70 font-semibold">
             Scan the QR code with your phone to start customizing
           </p>
         </ModalHeader>
@@ -179,10 +179,10 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
                 className="mb-6"
                 style={{ color: "#9333ea" }}
               />
-              <p className="text-2xl font-bold text-foreground mb-4">
+              <p className="text-2xl font-bold text-black mb-4">
                 ✨ Creating Your Session...
               </p>
-              <div className="text-base text-foreground/70 space-y-2 text-center font-medium">
+              <div className="text-base text-black/70 space-y-2 text-center font-medium">
                 <p>🎨 Preparing canvas</p>
                 <p>🍰 Loading design tools</p>
                 <p>📱 Generating QR code</p>
@@ -192,7 +192,7 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
             <Card className="bg-red-50 border-3 border-red-300 shadow-xl">
               <CardBody>
                 <div className="text-center py-8">
-                  <p className="text-2xl text-foreground font-bold mb-4">
+                  <p className="text-2xl text-black font-bold mb-4">
                     ⚠️ {error}
                   </p>
                   <Button
@@ -228,10 +228,10 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
                   <span className="font-bold text-purple-600 text-2xl">
                     {formatTime(timeRemaining)}
                   </span>
-                  <span className="text-foreground font-semibold">remaining</span>
+                  <span className="text-black font-semibold">remaining</span>
                 </div>
 
-                <div className="space-y-3 text-base text-foreground font-semibold">
+                <div className="space-y-3 text-base text-black font-semibold">
                   <p className="flex items-center justify-center gap-3">
                     <span className="text-2xl">📱</span>
                     <span>Open your phone's camera app</span>
@@ -248,7 +248,7 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
 
                 <Card className="bg-gradient-to-r from-purple-100 to-pink-100 border-2 border-purple-200 mt-6 shadow-lg">
                   <CardBody className="p-5">
-                    <p className="text-sm text-foreground font-semibold text-center">
+                    <p className="text-sm text-black font-semibold text-center">
                       💡 <strong>Tip:</strong> While you customize on your
                       phone, feel free to let others use the kiosk. We'll notify
                       you when it's ready!

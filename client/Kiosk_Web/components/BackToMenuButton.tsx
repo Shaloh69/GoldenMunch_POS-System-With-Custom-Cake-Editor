@@ -33,7 +33,7 @@ export const BackToMenuButton: React.FC = () => {
           isDisabled={isNavigating}
           className="
             bg-gradient-to-r from-sunny-yellow to-deep-orange-yellow
-            text-foreground font-bold text-5xl
+            text-black font-bold text-5xl
             px-0 py-0
             w-[80px] h-[80px]
             shadow-2xl hover:shadow-[0_0_30px_rgba(251,205,47,0.8)]
@@ -55,7 +55,7 @@ export const BackToMenuButton: React.FC = () => {
           <div className="bg-gradient-to-r from-sunny-yellow to-deep-orange-yellow p-12 rounded-3xl shadow-2xl border-4 border-secondary animate-scale-in">
             <div className="flex flex-col items-center gap-6">
               <div className="text-8xl animate-bounce-slow">🏠</div>
-              <h2 className="text-5xl font-black text-foreground text-center drop-shadow-lg">
+              <h2 className="text-5xl font-black text-black text-center drop-shadow-lg">
                 Going Back to the Menu
               </h2>
               <div className="flex gap-3">

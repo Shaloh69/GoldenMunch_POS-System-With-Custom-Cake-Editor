@@ -146,7 +146,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({
         <div className="flex-1 bg-white p-4 flex flex-col justify-between">
           {/* Item Name */}
           <div className="mb-2">
-            <h3 className="text-xl font-bold text-foreground line-clamp-2 leading-tight">
+            <h3 className="text-xl font-bold text-black line-clamp-2 leading-tight">
               {item.name}
             </h3>
           </div>
@@ -155,7 +155,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({
           <div className="flex items-end justify-between mt-auto">
             {/* Price */}
             <div className="flex flex-col">
-              <span className="text-sm text-muted-foreground font-medium">
+              <span className="text-sm text-black font-medium">
                 Price
               </span>
               <span className="text-3xl font-black text-gradient">
@@ -176,7 +176,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({
               {isAvailable && (
                 <div className="mt-1">
                   <div className="bg-gradient-to-r from-primary to-secondary px-3 py-1 rounded-full shadow-md">
-                    <span className="text-foreground font-bold text-xs">
+                    <span className="text-black font-bold text-xs">
                       👆 Tap to View
                     </span>
                   </div>

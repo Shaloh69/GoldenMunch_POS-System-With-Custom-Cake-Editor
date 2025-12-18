@@ -63,7 +63,7 @@ export function KioskAppSidebar({
       {/* Sidebar Toggle Button - Always visible */}
       <button
         onClick={() => setIsSidebarHidden(!isSidebarHidden)}
-        className={`fixed top-1/2 -translate-y-1/2 z-[10000] bg-gradient-to-br from-primary to-secondary text-foreground font-bold shadow-xl rounded-l-2xl flex items-center justify-center touch-target transition-all duration-500 ${
+        className={`fixed top-1/2 -translate-y-1/2 z-[10000] bg-gradient-to-br from-primary to-secondary text-black font-bold shadow-xl rounded-l-2xl flex items-center justify-center touch-target transition-all duration-500 ${
           isSidebarHidden ? "right-0" : "right-[35vw] max-right-[500px]"
         }`}
         style={{
@@ -96,7 +96,7 @@ export function KioskAppSidebar({
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="absolute top-8 right-8 w-14 h-14 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-foreground shadow-lg z-50 touch-target animate-bounce-in active:scale-95"
+              className="absolute top-8 right-8 w-14 h-14 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-black shadow-lg z-50 touch-target animate-bounce-in active:scale-95"
             >
               <span className="text-3xl font-bold">×</span>
             </button>
@@ -155,7 +155,7 @@ export function KioskAppSidebar({
                 </h2>
 
                 {/* Description */}
-                <p className="text-xl text-foreground/80 mb-6 leading-relaxed animate-fade-in-up animation-delay-200">
+                <p className="text-xl text-black mb-6 leading-relaxed animate-fade-in-up animation-delay-200">
                   {selectedItem.description ||
                     "Delicious treat made fresh daily with the finest ingredients."}
                 </p>
@@ -181,7 +181,7 @@ export function KioskAppSidebar({
 
                 {/* Price */}
                 <div className="mb-6 animate-scale-in animation-delay-500">
-                  <span className="text-sm text-muted-foreground font-medium block mb-1">
+                  <span className="text-sm text-black font-medium block mb-1">
                     Price
                   </span>
                   <span className="text-6xl font-black text-gradient">
@@ -193,7 +193,7 @@ export function KioskAppSidebar({
                 {!selectedItem.is_infinite_stock && (
                   <div className="mb-6 animate-fade-in-up animation-delay-1000">
                     {isAvailable ? (
-                      <div className="flex items-center gap-2 text-lg text-foreground/80">
+                      <div className="flex items-center gap-2 text-lg text-black">
                         <span>📦</span>
                         <span>{selectedItem.stock_quantity} available</span>
                       </div>
@@ -214,7 +214,7 @@ export function KioskAppSidebar({
                   <div className="space-y-5 animate-fade-in-up animation-delay-1000">
                     {/* Quantity Selector */}
                     <div className="glass-card p-5 rounded-2xl">
-                      <span className="text-xl font-semibold text-foreground block mb-4">
+                      <span className="text-xl font-semibold text-black block mb-4">
                         Quantity
                       </span>
                       <div className="flex items-center justify-center gap-4">
@@ -277,12 +277,12 @@ export function KioskAppSidebar({
         >
           <div className="flex items-center gap-4">
             <span className="text-4xl">🛒</span>
-            <span className="text-2xl font-bold text-foreground">
+            <span className="text-2xl font-bold text-black">
               Your Cart {itemCount > 0 && `(${itemCount})`}
             </span>
           </div>
           <span
-            className={`text-3xl text-foreground transition-transform duration-300 ${isCartHidden ? "" : "rotate-180"}`}
+            className={`text-3xl text-black transition-transform duration-300 ${isCartHidden ? "" : "rotate-180"}`}
           >
             ▼
           </span>
@@ -294,10 +294,10 @@ export function KioskAppSidebar({
             {itemCount === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center animate-fade-in">
                 <div className="text-6xl mb-4 animate-pulse-gentle">🛒</div>
-                <p className="text-xl text-foreground font-semibold">
+                <p className="text-xl text-black font-semibold">
                   Your cart is empty
                 </p>
-                <p className="text-base text-muted-foreground mt-2">
+                <p className="text-base text-black mt-2">
                   Select items to get started
                 </p>
               </div>
@@ -331,10 +331,10 @@ export function KioskAppSidebar({
 
                         {/* Item Info */}
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-lg font-bold text-foreground truncate">
+                          <h4 className="text-lg font-bold text-black truncate">
                             {cartItem.menuItem.name}
                           </h4>
-                          <p className="text-base text-muted-foreground font-medium">
+                          <p className="text-base text-black font-medium">
                             {cartItem.quantity} × ₱
                             {(
                               Number(cartItem.menuItem.current_price) || 0
@@ -360,7 +360,7 @@ export function KioskAppSidebar({
                   {/* Total */}
                   <div className="glass-card p-5 rounded-2xl">
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold text-foreground">
+                      <span className="text-2xl font-bold text-black">
                         Total:
                       </span>
                       <span className="text-4xl font-black text-gradient">

@@ -171,7 +171,7 @@ export default function CustomCakePage() {
                   initial={{ y: -20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.4 }}
-                  className="text-3xl text-foreground/90 font-bold"
+                  className="text-3xl text-black font-bold"
                 >
                   Create a custom 3D cake design on your phone! 🎨
                 </motion.p>
@@ -219,7 +219,7 @@ export default function CustomCakePage() {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="mt-6 p-6 bg-red-500/20 border-3 border-red-500 rounded-2xl text-foreground text-center font-bold text-lg animate-scale-in shadow-lg"
+                  className="mt-6 p-6 bg-red-500/20 border-3 border-red-500 rounded-2xl text-black text-center font-bold text-lg animate-scale-in shadow-lg"
                 >
                   ⚠️ {error}
                 </motion.div>
@@ -246,10 +246,10 @@ export default function CustomCakePage() {
                 <Cake className="w-16 h-16 text-white" />
               </motion.div>
 
-              <h2 className="text-4xl font-bold text-foreground mb-4">
+              <h2 className="text-4xl font-bold text-black mb-4">
                 Preparing Your Canvas
               </h2>
-              <p className="text-foreground/70 text-xl font-medium">
+              <p className="text-black/70 text-xl font-medium">
                 Setting up your custom cake designer...
               </p>
             </div>
@@ -276,7 +276,7 @@ export default function CustomCakePage() {
                 <span className="text-5xl font-black text-gradient">
                   {formatTime(timeRemaining)}
                 </span>
-                <span className="text-foreground/80 text-2xl font-bold">remaining</span>
+                <span className="text-black text-2xl font-bold">remaining</span>
               </motion.div>
 
               {/* Instructions */}
@@ -292,7 +292,7 @@ export default function CustomCakePage() {
                     Scan with Your Phone
                   </h2>
                 </div>
-                <p className="text-2xl text-foreground/90 font-bold">
+                <p className="text-2xl text-black font-bold">
                   Open your camera app and point it at the QR code below 📱
                 </p>
               </motion.div>
@@ -392,10 +392,10 @@ export default function CustomCakePage() {
                 <Clock className="w-16 h-16 text-white" />
               </div>
 
-              <h2 className="text-4xl font-bold text-foreground mb-4">
+              <h2 className="text-4xl font-bold text-black mb-4">
                 Session Expired
               </h2>
-              <p className="text-foreground/70 text-xl font-medium mb-8">
+              <p className="text-black/70 text-xl font-medium mb-8">
                 Your QR code session has timed out. Please generate a new one to
                 continue.
               </p>
@@ -446,7 +446,7 @@ export default function CustomCakePage() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="text-5xl font-bold text-foreground mb-4"
+                className="text-5xl font-bold text-black mb-4"
               >
                 Successfully Scanned!
               </motion.h2>
@@ -455,7 +455,7 @@ export default function CustomCakePage() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="text-2xl text-foreground/80 font-medium mb-8"
+                className="text-2xl text-black font-medium mb-8"
               >
                 Your custom cake design is now loading on your phone
               </motion.p>
@@ -466,23 +466,23 @@ export default function CustomCakePage() {
                 transition={{ delay: 0.4 }}
                 className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl p-8 mb-8 border-2 border-purple-200"
               >
-                <h3 className="text-2xl font-bold text-foreground mb-6">
+                <h3 className="text-2xl font-bold text-black mb-6">
                   Next Steps:
                 </h3>
                 <div className="space-y-4 text-left">
-                  <p className="text-lg text-foreground flex items-start gap-4">
+                  <p className="text-lg text-black flex items-start gap-4">
                     <span className="text-3xl">🎨</span>
                     <span className="font-semibold">
                       Design your perfect cake on your phone
                     </span>
                   </p>
-                  <p className="text-lg text-foreground flex items-start gap-4">
+                  <p className="text-lg text-black flex items-start gap-4">
                     <span className="text-3xl">🪑</span>
                     <span className="font-semibold">
                       Please take a seat and relax while you design
                     </span>
                   </p>
-                  <p className="text-lg text-foreground flex items-start gap-4">
+                  <p className="text-lg text-black flex items-start gap-4">
                     <span className="text-3xl">✨</span>
                     <span className="font-semibold">
                       We'll notify you when it's ready for approval
@@ -495,7 +495,7 @@ export default function CustomCakePage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className="text-foreground/70 text-xl font-medium mb-6"
+                className="text-black/70 text-xl font-medium mb-6"
               >
                 Returning to menu in 5 seconds...
               </motion.p>
@@ -534,8 +534,8 @@ function FeatureCard({
       <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full mb-5 shadow-2xl animate-bounce-in">
         {icon}
       </div>
-      <h3 className="font-black text-foreground text-2xl mb-3 text-gradient">{title}</h3>
-      <p className="text-base text-foreground/80 font-semibold">{description}</p>
+      <h3 className="font-black text-black text-2xl mb-3 text-gradient">{title}</h3>
+      <p className="text-base text-black font-semibold">{description}</p>
     </div>
   );
 }
@@ -546,7 +546,7 @@ function StepIndicator({ number, text }: { number: number; text: string }) {
       <div className="w-16 h-16 bg-gradient-to-br from-purple-500 via-pink-500 to-indigo-500 text-white rounded-full flex items-center justify-center font-black text-2xl mb-4 shadow-2xl animate-bounce-in">
         {number}
       </div>
-      <span className="text-lg text-foreground font-bold">{text}</span>
+      <span className="text-lg text-black font-bold">{text}</span>
     </div>
   );
 }
