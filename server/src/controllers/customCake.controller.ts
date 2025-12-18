@@ -752,7 +752,7 @@ export const getRequestDetails = async (req: AuthRequest, res: Response) => {
    * [1] request images (from custom_cake_request_images table)
    * [2] notifications (from custom_cake_notifications table)
    */
-  const mainDetails = getFirstRow(results[0]);
+  const mainDetails = getFirstRow(results[0]) as Record<string, any>;
   const images = results[1] || [];
   const notifications = results[2] || [];
 
