@@ -3,6 +3,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import QRCode from "qrcode";
+import { OrderService } from "@/services/order.service";
+import type { CustomerOrder } from "@/types/api";
 
 export default function OrderSuccessPage() {
   const router = useRouter();
@@ -11,16 +13,18 @@ export default function OrderSuccessPage() {
   const orderNumber = searchParams.get("orderNumber");
 
   const [qrCodeUrl, setQrCodeUrl] = useState("");
-  const [countdown, setCountdown] = useState(15);
+  const [order, setOrder] = useState<CustomerOrder | null>(null);
+  const [qrScanned, setQrScanned] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState(5);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  // Generate QR code
   useEffect(() => {
     if (!orderId) {
       router.push("/");
       return;
     }
 
-    // Generate QR code
     const generateQR = async () => {
       try {
         const orderConfirmationUrl = `${window.location.origin}/order-confirmation?orderId=${orderId}`;
@@ -42,25 +46,74 @@ export default function OrderSuccessPage() {
     };
 
     generateQR();
-  }, [orderId]);
+  }, [orderId, router]);
 
-  // Countdown timer to return to menu
+  // Poll order status to detect when order is completed
   useEffect(() => {
-    if (countdown === 0) {
+    if (!orderId || qrScanned) return;
+
+    const checkOrderStatus = async () => {
+      try {
+        const orderData = await OrderService.getOrderById(parseInt(orderId));
+        setOrder(orderData);
+
+        // Only redirect when order is COMPLETED (customer has paid and received order)
+        if (orderData.order_status === "completed") {
+          setQrScanned(true);
+        }
+      } catch (error) {
+        console.error("Error fetching order status:", error);
+      }
+    };
+
+    // Initial check
+    checkOrderStatus();
+
+    // Poll every 3 seconds
+    const pollInterval = setInterval(checkOrderStatus, 3000);
+
+    return () => clearInterval(pollInterval);
+  }, [orderId, qrScanned]);
+
+  // Countdown to redirect after QR is scanned
+  useEffect(() => {
+    if (!qrScanned) return;
+
+    if (redirectCountdown === 0) {
       router.push("/");
       return;
     }
 
     const timer = setInterval(() => {
-      setCountdown((prev) => prev - 1);
+      setRedirectCountdown((prev) => prev - 1);
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [countdown, router]);
+  }, [qrScanned, redirectCountdown, router]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-primary/10 flex items-center justify-center p-8">
       <div className="max-w-5xl w-full">
+        {/* Order Completed Success Modal */}
+        {qrScanned && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
+            <div className="bg-gradient-to-br from-green-400 via-green-500 to-green-600 rounded-3xl p-12 max-w-2xl mx-4 shadow-2xl animate-scale-in">
+              <div className="text-center">
+                <div className="text-9xl mb-6 animate-bounce">🎉</div>
+                <h2 className="text-6xl font-black text-white mb-6 drop-shadow-lg">
+                  Order Completed Successfully!
+                </h2>
+                <p className="text-3xl text-white font-bold mb-8">
+                  Kiosk is ready for the next customer
+                </p>
+                <p className="text-xl text-white font-semibold bg-black/20 px-6 py-3 rounded-2xl inline-block">
+                  Returning to menu in {redirectCountdown} seconds...
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Success Message */}
         <div className="text-center mb-12 animate-fade-in-down">
           <div className="inline-block bg-green-500 rounded-full p-12 mb-8 animate-bounce-in shadow-2xl">
@@ -161,17 +214,29 @@ export default function OrderSuccessPage() {
               </p>
             </div>
 
-            {/* Countdown */}
-            <div className="bg-primary/5 rounded-2xl p-8 max-w-2xl mx-auto">
-              <p className="text-2xl text-black font-semibold mb-4">
-                Returning to menu in
-              </p>
-              <p className="text-8xl font-black text-gradient animate-pulse-gentle">
-                {countdown}
-              </p>
-              <p className="text-xl text-black font-medium mt-4">
-                seconds
-              </p>
+            {/* Status Message - Show current order status */}
+            <div className="bg-blue-50 border-2 border-blue-500 rounded-2xl p-8 max-w-2xl mx-auto">
+              <div className="flex items-center justify-center gap-4">
+                <div className="text-5xl animate-pulse-gentle">
+                  {order?.order_status === "pending" && "⏳"}
+                  {order?.order_status === "confirmed" && "✅"}
+                  {order?.order_status === "preparing" && "👨‍🍳"}
+                  {order?.order_status === "ready" && "🎉"}
+                  {!order && "📱"}
+                </div>
+                <div className="text-left">
+                  <p className="text-2xl font-bold text-black mb-2">
+                    {order?.order_status === "pending" && "Waiting for cashier confirmation..."}
+                    {order?.order_status === "confirmed" && "Order confirmed - Being prepared"}
+                    {order?.order_status === "preparing" && "Your order is being prepared"}
+                    {order?.order_status === "ready" && "Order ready for pickup!"}
+                    {!order && "Processing..."}
+                  </p>
+                  <p className="text-lg text-black">
+                    Page will auto-return when order is completed
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
