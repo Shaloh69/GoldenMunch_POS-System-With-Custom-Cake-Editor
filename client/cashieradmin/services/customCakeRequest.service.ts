@@ -145,6 +145,9 @@ export class CustomCakeRequestService {
    * Get status label
    */
   static getStatusLabel(status: string): string {
+    if (!status) {
+      return 'Unknown';
+    }
     return status
       .split('_')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
