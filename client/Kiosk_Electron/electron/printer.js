@@ -159,7 +159,8 @@ class ThermalPrinterService {
           paymentMethod,
           verificationCode,
           customerName,
-          specialInstructions
+          specialInstructions,
+          referenceNumber
         } = orderData;
 
         // Header
@@ -168,11 +169,9 @@ class ThermalPrinterService {
           .align('ct')
           .style('bu')
           .size(2, 2)
-          .text('GOLDENMUNCH BAKERY')
+          .text('GOLDENMUNCH')
           .size(1, 1)
           .style('normal')
-          .text('')
-          .text('Thank you for your order!')
           .text('');
 
         // Order Info
@@ -233,7 +232,6 @@ class ThermalPrinterService {
         }
 
         this.printer
-          .text(this.padText('Tax (12%):', this.formatPrice(tax)))
           .text(this.line())
           .style('b')
           .size(1, 1)
@@ -244,8 +242,17 @@ class ThermalPrinterService {
 
         // Payment Info
         this.printer
-          .text(this.padText('Payment:', paymentMethod.toUpperCase()))
-          .text('');
+          .text(this.padText('Payment:', paymentMethod.toUpperCase()));
+
+        // Reference Number for GCash/PayPal/Maya
+        if (referenceNumber && (paymentMethod.toLowerCase() === 'gcash' ||
+                                 paymentMethod.toLowerCase() === 'maya' ||
+                                 paymentMethod.toLowerCase() === 'paypal')) {
+          this.printer
+            .text(this.padText('Reference #:', referenceNumber));
+        }
+
+        this.printer.text('');
 
         // Special Instructions
         if (specialInstructions) {
@@ -255,15 +262,8 @@ class ThermalPrinterService {
             .text('');
         }
 
-        // Footer
+        // Footer - Simple cut
         this.printer
-          .align('ct')
-          .text('Visit us again!')
-          .text('www.goldenmunch.com')
-          .text('')
-          .text('For inquiries: (02) 1234-5678')
-          .text('')
-          .qrcode('ORDER:' + orderNumber, { model: 2, size: 6 })
           .text('')
           .cut()
           .close(() => {

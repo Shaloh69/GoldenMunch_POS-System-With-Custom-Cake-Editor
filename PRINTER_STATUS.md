@@ -28,11 +28,12 @@ Your GoldenMunch POS system has **complete thermal printer support** already imp
 - Customer name (if provided)
 - Verification code (large, bold)
 - Itemized list with quantities and prices
-- Subtotal, tax, discount, total
+- Subtotal and total (tax removed)
+- Discount (if applicable)
 - Payment method
+- **Reference number** (for GCash/Maya/PayPal payments only)
 - Special instructions
-- QR code with order number
-- Branded header and footer
+- Simple header: "GOLDENMUNCH"
 
 ---
 
@@ -187,12 +188,11 @@ window.electron.printer.printTest()
 
 ## 📄 Sample Receipt Output
 
+### Cash Payment:
 ```
 ================================
-    GOLDENMUNCH BAKERY
+      GOLDENMUNCH
 ================================
-
-   Thank you for your order!
 
 Order #:           ORD-12345
 Date:              2025-12-18
@@ -207,21 +207,43 @@ Item                Qty   Price
 Chocolate Cake      x2    ₱900.00
 Coffee              x1    ₱120.00
 Croissant           x3    ₱240.00
-
 --------------------------------
 Subtotal:               ₱1260.00
-Tax (12%):              ₱151.20
 --------------------------------
-TOTAL:                  ₱1411.20
+TOTAL:                  ₱1260.00
 --------------------------------
 
 Payment:                CASH
 
-Visit us again!
-www.goldenmunch.com
-For inquiries: (02) 1234-5678
+```
 
-      [QR CODE: ORDER:ORD-12345]
+### GCash/Maya/PayPal Payment:
+```
+================================
+      GOLDENMUNCH
+================================
+
+Order #:           ORD-12345
+Date:              2025-12-18
+Time:              14:30:15
+
+      Verification Code:
+          ABC123
+
+--------------------------------
+Item                Qty   Price
+--------------------------------
+Chocolate Cake      x2    ₱900.00
+Coffee              x1    ₱120.00
+Croissant           x3    ₱240.00
+--------------------------------
+Subtotal:               ₱1260.00
+--------------------------------
+TOTAL:                  ₱1260.00
+--------------------------------
+
+Payment:                GCASH
+Reference #:            1234567890
 
 ```
 

@@ -20,6 +20,7 @@ export interface ReceiptData {
   verificationCode?: string;
   customerName?: string;
   specialInstructions?: string;
+  referenceNumber?: string;
 }
 
 export interface ReportData {
@@ -182,6 +183,7 @@ class PrinterService {
       customerName: order.customer_name || order.customerName,
       specialInstructions:
         order.special_instructions || order.specialInstructions,
+      referenceNumber: order.reference_number || order.referenceNumber,
     };
   }
 }
