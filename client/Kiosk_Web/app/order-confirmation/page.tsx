@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button, Chip, Divider } from "@/components/primitives";
 import { OrderService } from "@/services/order.service";
-import type { CustomerOrder } from "@/types/api";
+import type { CustomerOrder, OrderStatus } from "@/types/api";
 
 export default function OrderConfirmationPage() {
   const router = useRouter();
@@ -14,18 +14,27 @@ export default function OrderConfirmationPage() {
   const [order, setOrder] = useState<CustomerOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [countdown, setCountdown] = useState(30);
+  const [showReadyModal, setShowReadyModal] = useState(false);
+  const [showCompletedModal, setShowCompletedModal] = useState(false);
 
+  // Fetch order details
   useEffect(() => {
     if (!orderId) {
       router.push("/");
       return;
     }
 
-    // Fetch order details
     const fetchOrder = async () => {
       try {
         const orderData = await OrderService.getOrderById(parseInt(orderId));
         setOrder(orderData);
+
+        // Check initial status
+        if (orderData.order_status === "ready" && !showReadyModal) {
+          setShowReadyModal(true);
+        } else if (orderData.order_status === "completed" && !showCompletedModal) {
+          setShowCompletedModal(true);
+        }
       } catch (error) {
         console.error("Error fetching order:", error);
       } finally {
@@ -34,10 +43,32 @@ export default function OrderConfirmationPage() {
     };
 
     fetchOrder();
+
+    // Poll for order status updates every 5 seconds
+    const pollInterval = setInterval(fetchOrder, 5000);
+
+    return () => clearInterval(pollInterval);
   }, [orderId, router]);
 
-  // Countdown timer to return to menu
+  // Handle completed order - auto close after 10 seconds
   useEffect(() => {
+    if (showCompletedModal) {
+      const timer = setTimeout(() => {
+        window.close(); // Try to close the window/tab
+        // If can't close (e.g., not opened by script), redirect to home
+        router.push("/");
+      }, 10000); // 10 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [showCompletedModal, router]);
+
+  // Countdown timer to return to menu (only if not ready or completed)
+  useEffect(() => {
+    if (showReadyModal || showCompletedModal) {
+      return; // Don't countdown if showing modals
+    }
+
     if (countdown === 0) {
       router.push("/");
       return;
@@ -48,7 +79,7 @@ export default function OrderConfirmationPage() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [countdown, router]);
+  }, [countdown, router, showReadyModal, showCompletedModal]);
 
   if (loading) {
     return (
@@ -89,9 +120,92 @@ export default function OrderConfirmationPage() {
     });
   };
 
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+      pending: "bg-yellow-500",
+      confirmed: "bg-blue-500",
+      preparing: "bg-orange-500",
+      ready: "bg-green-500",
+      completed: "bg-gray-500",
+      cancelled: "bg-red-500",
+    };
+    return colors[status] || "bg-gray-500";
+  };
+
+  const getStatusIcon = (status: string) => {
+    const icons: Record<string, string> = {
+      pending: "⏳",
+      confirmed: "✅",
+      preparing: "👨‍🍳",
+      ready: "🎉",
+      completed: "✨",
+      cancelled: "❌",
+    };
+    return icons[status] || "📋";
+  };
+
+  const getStatusMessage = (status: string) => {
+    const messages: Record<string, string> = {
+      pending: "Your order has been received and is pending confirmation",
+      confirmed: "Your order has been confirmed and will be prepared shortly",
+      preparing: "Your order is being prepared by our kitchen staff",
+      ready: "Your order is ready for pickup!",
+      completed: "Your order has been completed. Thank you!",
+      cancelled: "Your order has been cancelled",
+    };
+    return messages[status] || "Processing your order...";
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-white to-secondary/10 py-12 px-8">
       <div className="max-w-4xl mx-auto">
+        {/* Order Ready Modal */}
+        {showReadyModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white rounded-3xl p-12 max-w-2xl mx-4 shadow-2xl animate-scale-in">
+              <div className="text-center">
+                <div className="text-9xl mb-6 animate-bounce">🎉</div>
+                <h2 className="text-6xl font-black text-gradient mb-6">
+                  Your Order is Ready!
+                </h2>
+                <p className="text-3xl text-black font-bold mb-4">
+                  Order #{order?.order_number}
+                </p>
+                <p className="text-2xl text-black mb-8">
+                  Please proceed to the counter to collect your order
+                </p>
+                <Button
+                  size="lg"
+                  className="btn-gradient text-3xl font-black px-16 py-10 rounded-3xl shadow-2xl"
+                  onClick={() => setShowReadyModal(false)}
+                >
+                  Got it! ✓
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Order Completed Modal */}
+        {showCompletedModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
+            <div className="bg-gradient-to-br from-primary via-secondary to-accent rounded-3xl p-12 max-w-2xl mx-4 shadow-2xl animate-scale-in">
+              <div className="text-center">
+                <div className="text-9xl mb-6 animate-pulse-gentle">✨</div>
+                <h2 className="text-6xl font-black text-black mb-6 drop-shadow-lg">
+                  Thank you for eating at Golden Munch!
+                </h2>
+                <p className="text-3xl text-black font-bold mb-8">
+                  Enjoy! 🍰
+                </p>
+                <p className="text-xl text-black font-semibold">
+                  This page will close in 10 seconds...
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Success Header */}
         <div className="text-center mb-12 animate-fade-in-down">
           <div className="inline-block bg-green-500 rounded-full p-8 mb-6 animate-bounce-in shadow-2xl">
@@ -115,6 +229,26 @@ export default function OrderConfirmationPage() {
           <p className="text-3xl text-black font-semibold">
             Thank you for your order
           </p>
+
+          {/* Order Status Badge */}
+          {order && (
+            <div className="mt-8 inline-block">
+              <div className={`${getStatusColor(order.order_status)} text-white px-8 py-4 rounded-2xl shadow-xl flex items-center gap-4 animate-pulse-gentle`}>
+                <span className="text-5xl">{getStatusIcon(order.order_status)}</span>
+                <div className="text-left">
+                  <p className="text-sm font-semibold uppercase tracking-wider">
+                    Order Status
+                  </p>
+                  <p className="text-2xl font-black capitalize">
+                    {order.order_status}
+                  </p>
+                </div>
+              </div>
+              <p className="text-xl text-black font-semibold mt-4 max-w-2xl">
+                {getStatusMessage(order.order_status)}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Order Slip Card */}
@@ -316,19 +450,30 @@ export default function OrderConfirmationPage() {
           </div>
         </div>
 
-        {/* Return Button with Countdown */}
-        <div className="text-center mt-12 animate-fade-in-up animation-delay-500">
-          <p className="text-xl text-black mb-6 font-semibold">
-            Returning to menu in {countdown} seconds...
-          </p>
-          <Button
-            size="lg"
-            className="btn-gradient text-3xl font-black px-16 py-10 rounded-3xl shadow-2xl touch-target-lg"
-            onClick={() => router.push("/")}
-          >
-            🏠 Return to Menu Now
-          </Button>
-        </div>
+        {/* Return Button with Countdown - Only show if not ready or completed */}
+        {!showReadyModal && !showCompletedModal && (
+          <div className="text-center mt-12 animate-fade-in-up animation-delay-500">
+            <p className="text-xl text-black mb-6 font-semibold">
+              Returning to menu in {countdown} seconds...
+            </p>
+            <Button
+              size="lg"
+              className="btn-gradient text-3xl font-black px-16 py-10 rounded-3xl shadow-2xl touch-target-lg"
+              onClick={() => router.push("/")}
+            >
+              🏠 Return to Menu Now
+            </Button>
+          </div>
+        )}
+
+        {/* Keep page open when order is ready */}
+        {showReadyModal && !showCompletedModal && (
+          <div className="text-center mt-12 animate-fade-in-up">
+            <p className="text-2xl text-black font-semibold bg-green-100 border-2 border-green-500 rounded-2xl px-8 py-6 inline-block">
+              💡 Keep this page open to track your order status
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
