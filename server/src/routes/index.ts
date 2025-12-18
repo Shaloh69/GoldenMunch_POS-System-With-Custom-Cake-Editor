@@ -581,6 +581,7 @@ router.put('/admin/cake/themes/:id', authenticateAdmin, uploadProductImage.singl
 
 // Custom Cake Requests Management
 router.get('/admin/custom-cakes/pending', authenticateAdmin, asyncHandler(customCakeController.getPendingRequests));
+router.get('/admin/custom-cakes/all', authenticateAdmin, asyncHandler(customCakeController.getAllRequests));
 router.get('/admin/custom-cakes/:requestId', authenticateAdmin, asyncHandler(customCakeController.getRequestDetails));
 router.post('/admin/custom-cakes/:requestId/approve', authenticateAdmin, asyncHandler(customCakeController.approveRequest));
 router.post('/admin/custom-cakes/:requestId/reject', authenticateAdmin, asyncHandler(customCakeController.rejectRequest));

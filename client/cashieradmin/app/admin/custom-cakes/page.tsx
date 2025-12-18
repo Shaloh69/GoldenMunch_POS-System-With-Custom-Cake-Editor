@@ -71,7 +71,7 @@ export default function CustomCakesPage() {
 
   // Initial Data Fetch
   useEffect(() => {
-    fetchPendingRequests();
+    fetchAllRequests();
   }, []);
 
   // Calculate Stats
@@ -105,13 +105,13 @@ export default function CustomCakesPage() {
   }, [requests, searchTerm]);
 
   // API Calls
-  const fetchPendingRequests = async () => {
+  const fetchAllRequests = async () => {
     try {
       setLoading(true);
-      const data = await CustomCakeRequestService.getPendingRequests();
+      const data = await CustomCakeRequestService.getAllRequests();
       setRequests(data);
     } catch (error) {
-      console.error('Failed to fetch pending requests:', error);
+      console.error('Failed to fetch custom cake requests:', error);
     } finally {
       setLoading(false);
     }
@@ -171,7 +171,7 @@ export default function CustomCakesPage() {
       await CustomCakeRequestService.approveRequest(selectedRequest.request_id, approveForm);
       setShowApproveModal(false);
       setSelectedRequest(null);
-      await fetchPendingRequests();
+      await fetchAllRequests();
       alert('Custom cake request approved successfully!');
     } catch (error: any) {
       console.error('Failed to approve request:', error);
@@ -189,7 +189,7 @@ export default function CustomCakesPage() {
       await CustomCakeRequestService.rejectRequest(selectedRequest.request_id, rejectForm);
       setShowRejectModal(false);
       setSelectedRequest(null);
-      await fetchPendingRequests();
+      await fetchAllRequests();
       alert('Custom cake request rejected');
     } catch (error: any) {
       console.error('Failed to reject request:', error);
@@ -333,7 +333,7 @@ export default function CustomCakesPage() {
               <Button
                 color="primary"
                 variant="flat"
-                onClick={fetchPendingRequests}
+                onClick={fetchAllRequests}
                 isLoading={loading}
               >
                 Refresh

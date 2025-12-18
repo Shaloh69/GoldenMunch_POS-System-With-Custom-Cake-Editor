@@ -61,6 +61,14 @@ export class CustomCakeRequestService {
   }
 
   /**
+   * Get ALL custom cake requests (all statuses)
+   */
+  static async getAllRequests(): Promise<CustomCakeRequest[]> {
+    const response = await apiClient.get<CustomCakeRequest[]>('/admin/custom-cakes/all');
+    return response.data || [];
+  }
+
+  /**
    * Get detailed information about a custom cake request
    */
   static async getRequestDetails(requestId: number): Promise<CustomCakeRequestDetails> {

@@ -705,6 +705,29 @@ export const getPendingRequests = async (req: AuthRequest, res: Response) => {
   res.json(successResponse('Pending requests retrieved', requests));
 };
 
+/**
+ * Get ALL custom cake requests (all statuses) for admin management
+ * GET /api/admin/custom-cakes
+ */
+export const getAllRequests = async (req: AuthRequest, res: Response) => {
+  const requests = await query<any[]>(
+    `SELECT * FROM custom_cake_request
+     WHERE status != 'draft'
+     ORDER BY
+       CASE status
+         WHEN 'pending_review' THEN 1
+         WHEN 'approved' THEN 2
+         WHEN 'rejected' THEN 3
+         WHEN 'completed' THEN 4
+         WHEN 'cancelled' THEN 5
+         ELSE 6
+       END,
+       submitted_at DESC`
+  );
+
+  res.json(successResponse('All custom cake requests retrieved', requests));
+};
+
 // ============================================================================
 // 8. ADMIN - GET REQUEST DETAILS
 // ============================================================================
