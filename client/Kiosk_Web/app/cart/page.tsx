@@ -257,7 +257,7 @@ export default function CartPage() {
 
   return (
     <>
-      <div className="min-h-screen flex justify-center pr-[35vw] max-pr-[500px] animate-fade-in">
+      <div className="min-h-screen flex justify-center animate-fade-in">
         <div className="w-full max-w-7xl">
       {/* Modern Header with Gradient */}
       <div className="sticky top-0 z-40 glass-header border-b-4 border-primary/60 shadow-2xl mb-6 animate-fade-in-down">

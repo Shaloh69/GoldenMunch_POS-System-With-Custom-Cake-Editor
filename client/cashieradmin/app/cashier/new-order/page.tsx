@@ -9,6 +9,7 @@ import { Chip } from '@heroui/chip';
 import { Divider } from '@heroui/divider';
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/modal';
 import { Spinner } from '@heroui/spinner';
+import Image from 'next/image';
 import { MenuService } from '@/services/menu.service';
 import { DiscountService } from '@/services/discount.service';
 import { OrderService } from '@/services/order.service';
@@ -26,6 +27,7 @@ import {
   MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getImageUrl } from '@/utils/imageUtils';
 
 interface CartItem {
   menuItem: MenuItem;
@@ -308,14 +310,37 @@ export default function NewOrderPage() {
                       onPress={() => addToCart(item)}
                       className="hover:scale-105 transition-transform cursor-pointer"
                     >
-                      <CardBody className="p-4">
-                        <p className="font-bold text-rich-brown mb-2">{item.name}</p>
-                        <p className="text-lg font-bold text-success">
-                          ₱{Number(item.current_price).toFixed(2)}
-                        </p>
-                        <Chip size="sm" color="primary" variant="flat" className="mt-2">
-                          {item.item_type}
-                        </Chip>
+                      <CardBody className="p-0">
+                        {/* Image Section */}
+                        <div className="relative h-40 w-full overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10">
+                          {getImageUrl(item.image_url) ? (
+                            <Image
+                              src={getImageUrl(item.image_url) || ''}
+                              alt={item.name}
+                              fill
+                              className="object-cover"
+                              sizes="(max-width: 768px) 50vw, 33vw"
+                              unoptimized
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <span className="text-5xl">🍰</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Info Section */}
+                        <div className="p-4">
+                          <p className="font-bold text-rich-brown mb-2 line-clamp-2 min-h-[3rem]">
+                            {item.name}
+                          </p>
+                          <p className="text-lg font-bold text-success mb-2">
+                            ₱{Number(item.current_price).toFixed(2)}
+                          </p>
+                          <Chip size="sm" color="primary" variant="flat">
+                            {item.item_type}
+                          </Chip>
+                        </div>
                       </CardBody>
                     </Card>
                   ))}

@@ -110,7 +110,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({
                 Price
               </span>
               <span className="text-3xl font-black text-gradient">
-                ${(Number(item.current_price) || 0).toFixed(2)}
+                ₱{(Number(item.current_price) || 0).toFixed(2)}
               </span>
             </div>
 
