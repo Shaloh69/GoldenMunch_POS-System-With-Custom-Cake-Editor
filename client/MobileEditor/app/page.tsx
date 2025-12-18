@@ -442,8 +442,8 @@ function CakeEditorContent() {
       placement: "top" as const
     },
     {
-      title: "Control Panel",
-      content: "Swipe or tap the toggle button to show/hide this panel for a full 3D cake view!",
+      title: "Hide Control Panel",
+      content: "Swipe down on the drag handle, tap the X button, or use the toggle button to hide this panel for a full 3D cake view!",
       target: "panel",
       placement: "top" as const
     },
@@ -584,56 +584,54 @@ function CakeEditorContent() {
         <CakeCanvas3D ref={canvasRef} design={design} options={options} />
       </div>
 
-      {/* Toggle Controls Button - Moved to bottom center when footer is hidden */}
-      <div className={`fixed ${showControls ? 'bottom-2 left-2' : 'bottom-4 left-1/2 -translate-x-1/2'} sm:bottom-4 z-50 transition-all`}>
-        <Popover
-          isOpen={showTutorial && tutorialStep === 0}
-          placement={tutorialSteps[0].placement}
-          showArrow
-        >
-          <PopoverTrigger>
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              onClick={() => setShowControls(!showControls)}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 sm:p-4 rounded-full shadow-2xl hover:scale-110 transition-all active:scale-95 min-w-[48px] min-h-[48px] flex items-center justify-center"
-              aria-label={showControls ? "Hide controls" : "Show controls"}
-            >
-              {showControls ? (
-                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      {/* Toggle Controls Button - Floats above panel when visible, center when hidden */}
+      {!showControls && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+          <Popover
+            isOpen={showTutorial && tutorialStep === 0}
+            placement={tutorialSteps[0].placement}
+            showArrow
+          >
+            <PopoverTrigger>
+              <motion.button
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                onClick={() => setShowControls(true)}
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 sm:p-4 rounded-full shadow-2xl hover:scale-110 transition-all active:scale-95 min-w-[56px] min-h-[56px] flex items-center justify-center gap-2"
+                aria-label="Show controls"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
                 </svg>
-              )}
-            </motion.button>
-          </PopoverTrigger>
-          <PopoverContent className="bg-gradient-to-br from-purple-500 to-pink-500 text-white border-2 border-white max-w-xs">
-            <div className="p-3">
-              <div className="text-base font-bold mb-2">{tutorialSteps[0].title}</div>
-              <div className="text-sm mb-3">{tutorialSteps[0].content}</div>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={handleSkipTutorial}
-                  className="flex-1 bg-white/20 text-white font-bold"
-                >
-                  Skip
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleNextTutorialStep}
-                  className="flex-1 bg-white text-purple-600 font-bold"
-                >
-                  Next
-                </Button>
+                <span className="text-sm font-bold hidden sm:inline">Show Panel</span>
+              </motion.button>
+            </PopoverTrigger>
+            <PopoverContent className="bg-gradient-to-br from-purple-500 to-pink-500 text-white border-2 border-white max-w-xs">
+              <div className="p-3">
+                <div className="text-base font-bold mb-2">{tutorialSteps[0].title}</div>
+                <div className="text-sm mb-3">{tutorialSteps[0].content}</div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    onClick={handleSkipTutorial}
+                    className="flex-1 bg-white/20 text-white font-bold"
+                  >
+                    Skip
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleNextTutorialStep}
+                    className="flex-1 bg-white text-purple-600 font-bold"
+                  >
+                    Next
+                  </Button>
+                </div>
               </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-      </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      )}
 
 
       {/* Help Button (restart tutorial) - Moved to top right */}
@@ -678,27 +676,38 @@ function CakeEditorContent() {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed left-0 right-0 bottom-0 bg-white/98 backdrop-blur-xl shadow-2xl z-40 rounded-t-3xl border-t-4 border-purple-300 max-h-[75vh] flex flex-col"
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 300 }}
+            dragElastic={0.2}
+            onDragEnd={(e, { offset, velocity }) => {
+              // If dragged down more than 100px or with sufficient velocity, hide panel
+              if (offset.y > 100 || velocity.y > 500) {
+                setShowControls(false);
+              }
+            }}
+            className="fixed left-0 right-0 bottom-0 bg-white/98 backdrop-blur-xl shadow-2xl z-40 rounded-t-3xl border-t-4 border-purple-300 max-h-[75vh] flex flex-col touch-pan-y"
           >
-            {/* Drag Handle */}
-            <div className="flex justify-center pt-2 pb-1">
-              <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+            {/* Drag Handle - Now functional! */}
+            <div className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing">
+              <div className="w-16 h-1.5 bg-gray-400 rounded-full"></div>
             </div>
 
-            {/* Header with Price and Progress */}
+            {/* Header with Price, Progress, and Close Button */}
             <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-3 flex-shrink-0">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex-1">
                   <h1 className="text-base sm:text-lg font-bold">🎂 Customize Your Cake</h1>
                   <p className="text-xs opacity-90">Step {currentStep + 1} of {STEPS.length}: {STEPS[currentStep].name}</p>
                 </div>
+
+                {/* Price Display */}
                 <Popover
                   isOpen={showTutorial && tutorialStep === 1}
                   placement="top"
                   showArrow
                 >
                   <PopoverTrigger>
-                    <div className="bg-white/20 backdrop-blur-md rounded-lg px-3 py-2 ml-3">
+                    <div className="bg-white/20 backdrop-blur-md rounded-lg px-3 py-2 ml-2">
                       <p className="text-xs font-bold">Est. Price</p>
                       <p className="text-lg sm:text-xl font-bold">₱{calculatePrice(design)}</p>
                     </div>
@@ -726,6 +735,17 @@ function CakeEditorContent() {
                     </div>
                   </PopoverContent>
                 </Popover>
+
+                {/* Close Button */}
+                <button
+                  onClick={() => setShowControls(false)}
+                  className="ml-2 p-2 hover:bg-white/20 rounded-full transition-colors active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                  aria-label="Hide panel"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
               </div>
               <Progress value={progress} className="mt-1" classNames={{ indicator: 'bg-white' }} size="sm" />
               {saving && (
