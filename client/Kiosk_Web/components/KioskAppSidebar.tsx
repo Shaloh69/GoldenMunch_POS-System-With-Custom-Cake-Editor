@@ -22,6 +22,7 @@ export function KioskAppSidebar({
   const { addItem, items: cartItems, getItemCount, getTotal } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [isCartHidden, setIsCartHidden] = useState(false);
+  const [isSidebarHidden, setIsSidebarHidden] = useState(false);
 
   // Don't show sidebar on idle, cart, and custom-cake pages
   if (pathname === "/idle" || pathname === "/cart" || pathname === "/custom-cake") {
@@ -58,14 +59,34 @@ export function KioskAppSidebar({
   console.log('KioskAppSidebar: Rendering on path', pathname, { selectedItem: selectedItem?.name, itemCount });
 
   return (
-    <div
-      className="fixed right-0 top-0 bottom-0 w-[35vw] max-w-[500px] z-[9999] flex flex-col backdrop-blur-3xl bg-white/85 border-l-2 border-primary/20 shadow-[-20px_0_60px_rgba(251,205,47,0.2)]"
-      style={{
-        backgroundColor: 'rgba(255, 255, 255, 0.85)',
-        backdropFilter: 'blur(48px)',
-        WebkitBackdropFilter: 'blur(48px)'
-      }}
-    >
+    <>
+      {/* Sidebar Toggle Button - Always visible */}
+      <button
+        onClick={() => setIsSidebarHidden(!isSidebarHidden)}
+        className={`fixed top-1/2 -translate-y-1/2 z-[10000] bg-gradient-to-br from-primary to-secondary text-foreground font-bold shadow-xl rounded-l-2xl flex items-center justify-center touch-target transition-all duration-500 ${
+          isSidebarHidden ? "right-0" : "right-[35vw] max-right-[500px]"
+        }`}
+        style={{
+          right: isSidebarHidden ? "0" : "min(35vw, 500px)",
+          writingMode: "vertical-rl",
+          padding: "1rem 0.5rem",
+        }}
+        aria-label={isSidebarHidden ? "Show sidebar" : "Hide sidebar"}
+      >
+        <span className="text-2xl">{isSidebarHidden ? "◀" : "▶"}</span>
+      </button>
+
+      {/* Sidebar Container */}
+      <div
+        className={`fixed right-0 top-0 bottom-0 w-[35vw] max-w-[500px] z-[9999] flex flex-col backdrop-blur-3xl bg-white/85 border-l-2 border-primary/20 shadow-[-20px_0_60px_rgba(251,205,47,0.2)] transition-transform duration-500 ease-in-out ${
+          isSidebarHidden ? "translate-x-full" : "translate-x-0"
+        }`}
+        style={{
+          backgroundColor: 'rgba(255, 255, 255, 0.85)',
+          backdropFilter: 'blur(48px)',
+          WebkitBackdropFilter: 'blur(48px)'
+        }}
+      >
       {/* Item Detail Section */}
       <div
         className={`flex-1 overflow-y-auto scrollbar-hide transition-all duration-500 p-0 ${selectedItem ? "opacity-100" : "opacity-0 pointer-events-none"}`}
@@ -379,6 +400,7 @@ export function KioskAppSidebar({
         )}
       </div>
     </div>
+    </>
   );
 }
 

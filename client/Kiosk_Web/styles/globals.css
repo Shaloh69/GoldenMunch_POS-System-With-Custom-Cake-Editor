@@ -380,6 +380,22 @@ body {
   }
 }
 
+/* Fly to Cart - Animation for items being added to cart */
+@keyframes flyToCart {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(30vw, -20vh) scale(0.5) rotate(10deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(35vw, -30vh) scale(0.1) rotate(20deg);
+    opacity: 0;
+  }
+}
+
 /* =============================================== */
 /* ANIMATION UTILITY CLASSES */
 /* =============================================== */
@@ -458,6 +474,12 @@ body {
   animation-name: float-smooth, orbFade;
   animation-iteration-count: infinite, infinite;
   animation-timing-function: ease-in-out, ease-in-out;
+}
+
+.animate-fly-to-cart {
+  animation: flyToCart 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  pointer-events: none;
+  z-index: 10000;
 }
 
 /* Animation Delays */

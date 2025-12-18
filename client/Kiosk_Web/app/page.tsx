@@ -166,7 +166,7 @@ export default function HomePage() {
 
   return (
     <>
-      <div className="min-h-screen overflow-y-auto pr-[35vw] max-pr-[500px] flex flex-col relative">
+      <div className="min-h-screen overflow-y-auto pr-0 flex flex-col relative">
         {loading && (
           <div className="min-h-screen flex items-center justify-center">
             <div className="text-center animate-fade-in-up">
@@ -209,15 +209,15 @@ export default function HomePage() {
 
         {!loading && !error && (
           <>
-        {/* Modern Hero Header */}
+        {/* Modern Hero Header - Compact Version */}
         <header className="glass-header sticky top-0 z-30 animate-fade-in-down">
-          <div className="max-w-full mx-auto py-10 px-8">
+          <div className="max-w-full mx-auto py-4 px-6">
             <div className="text-center">
-              <div className="text-8xl mb-4 animate-bounce-in">🍰</div>
-              <h1 className="text-7xl font-black text-gradient drop-shadow-lg mb-3">
+              <div className="text-5xl mb-2 animate-bounce-in">🍰</div>
+              <h1 className="text-4xl font-black text-gradient drop-shadow-lg mb-1">
                 Golden Munch
               </h1>
-              <p className="text-2xl font-semibold text-foreground/80">
+              <p className="text-lg font-semibold text-foreground/80">
                 Fresh • Delicious • Made with Love
               </p>
             </div>

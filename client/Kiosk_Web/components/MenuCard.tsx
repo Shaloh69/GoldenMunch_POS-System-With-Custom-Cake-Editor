@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useRef } from "react";
 import { Card, CardBody, Chip } from "@/components/primitives";
 import Image from "next/image";
 import type { MenuItem } from "@/types/api";
@@ -20,24 +20,73 @@ export const MenuCard: React.FC<MenuCardProps> = ({
   const isAvailable =
     item.status === "available" &&
     (item.is_infinite_stock || item.stock_quantity > 0);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleClick = () => {
+    if (!isAvailable) return;
+
+    // Trigger animation
+    setIsAnimating(true);
+
+    // Call the onClick handler after a short delay
+    setTimeout(() => {
+      onClick(item);
+      setIsAnimating(false);
+    }, 800); // Match animation duration
+  };
 
   return (
-    <div
-      onClick={() => isAvailable && onClick(item)}
-      className={`
-        group relative overflow-hidden rounded-3xl h-[450px]
-        touch-manipulation
-        ${
-          isAvailable
-            ? "cursor-pointer active:scale-[0.98]"
-            : "opacity-60 cursor-not-allowed grayscale"
-        }
-      `}
-    >
+    <>
+      {/* Animated Clone - Shows during animation */}
+      {isAnimating && (
+        <div
+          className="fixed animate-fly-to-cart rounded-3xl h-[550px] w-auto"
+          style={{
+            left: cardRef.current?.getBoundingClientRect().left,
+            top: cardRef.current?.getBoundingClientRect().top,
+            width: cardRef.current?.getBoundingClientRect().width,
+            zIndex: 10000,
+          }}
+        >
+          <div className="modern-card h-full flex flex-col">
+            <div className="relative h-[380px] w-full overflow-hidden bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10">
+              {getImageUrl(item.image_url) ? (
+                <Image
+                  src={getImageUrl(item.image_url) || ""}
+                  alt={item.name}
+                  fill
+                  className="object-cover"
+                  sizes="50vw"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20">
+                  <span className="text-8xl drop-shadow-lg">🍰</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Actual Card */}
+      <div
+        ref={cardRef}
+        onClick={handleClick}
+        className={`
+          group relative overflow-hidden rounded-3xl h-[550px]
+          touch-manipulation
+          ${
+            isAvailable
+              ? "cursor-pointer active:scale-[0.98]"
+              : "opacity-60 cursor-not-allowed grayscale"
+          }
+        `}
+      >
       {/* Modern Card */}
       <div className="modern-card h-full flex flex-col">
         {/* Image Section */}
-        <div className="relative h-[280px] w-full overflow-hidden bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10">
+        <div className="relative h-[380px] w-full overflow-hidden bg-gradient-to-br from-primary/10 via-secondary/10 to-accent/10">
           {getImageUrl(item.image_url) ? (
             <>
               <Image
@@ -141,6 +190,7 @@ export const MenuCard: React.FC<MenuCardProps> = ({
         <div className="absolute inset-0 rounded-3xl border-2 border-primary/20 pointer-events-none" />
       </div>
     </div>
+    </>
   );
 };
 
