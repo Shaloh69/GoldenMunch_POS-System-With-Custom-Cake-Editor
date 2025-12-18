@@ -746,10 +746,25 @@ export const getRequestDetails = async (req: AuthRequest, res: Response) => {
     throw new AppError('Request not found', 404);
   }
 
-  // Results contain 3 result sets: [0] main details, [1] layer details, [2] images
+  /**
+   * Results contain 3 result sets from sp_get_custom_cake_details:
+   * [0] main request details (with joined flavor/size names)
+   * [1] request images (from custom_cake_request_images table)
+   * [2] notifications (from custom_cake_notifications table)
+   */
   const mainDetails = getFirstRow(results[0]);
-  const layers = results[1] || [];
-  const images = results[2] || [];
+  const images = results[1] || [];
+  const notifications = results[2] || [];
+
+  // Build layers array from the flattened data in mainDetails
+  const layers = [];
+  for (let i = 1; i <= (mainDetails.num_layers || 0); i++) {
+    layers.push({
+      layer_number: i,
+      flavor_name: mainDetails[`layer_${i}_flavor`],
+      size_name: mainDetails[`layer_${i}_size`],
+    });
+  }
 
   res.json(
     successResponse('Request details retrieved', {
