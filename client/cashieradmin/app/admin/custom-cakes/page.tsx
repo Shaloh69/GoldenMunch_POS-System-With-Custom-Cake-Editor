@@ -51,6 +51,8 @@ export default function CustomCakesPage() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showApproveConfirmModal, setShowApproveConfirmModal] = useState(false);
+  const [showRejectConfirmModal, setShowRejectConfirmModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<CustomCakeRequest | null>(null);
   const [requestDetails, setRequestDetails] = useState<CustomCakeRequestDetails | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
@@ -137,15 +139,22 @@ export default function CustomCakesPage() {
 
   const handleOpenApproveModal = (request: CustomCakeRequest) => {
     setSelectedRequest(request);
+    setShowApproveConfirmModal(true);
+  };
+
+  const handleConfirmApprove = () => {
+    setShowApproveConfirmModal(false);
+
+    if (!selectedRequest) return;
 
     // Pre-fill form with estimated values
-    const estimatedPrice = parseFloat(String(request.estimated_price || 0));
+    const estimatedPrice = parseFloat(String(selectedRequest.estimated_price || 0));
     const today = new Date();
     const pickupDate = new Date(today);
     pickupDate.setDate(pickupDate.getDate() + 3);
 
     setApproveForm({
-      approved_price: estimatedPrice > 0 ? estimatedPrice : CustomCakeRequestService.calculateEstimatedPrice(request),
+      approved_price: estimatedPrice > 0 ? estimatedPrice : CustomCakeRequestService.calculateEstimatedPrice(selectedRequest),
       preparation_days: 3,
       scheduled_pickup_date: pickupDate.toISOString().split('T')[0],
       scheduled_pickup_time: '10:00',
@@ -157,6 +166,12 @@ export default function CustomCakesPage() {
 
   const handleOpenRejectModal = (request: CustomCakeRequest) => {
     setSelectedRequest(request);
+    setShowRejectConfirmModal(true);
+  };
+
+  const handleConfirmReject = () => {
+    setShowRejectConfirmModal(false);
+
     setRejectForm({
       rejection_reason: '',
       admin_notes: '',
@@ -609,7 +624,11 @@ export default function CustomCakesPage() {
                             <img
                               src={img.image_url}
                               alt={`${img.view_angle} view`}
-                              className="w-full h-32 object-cover rounded-lg"
+                              className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = '/placeholder-cake.png';
+                                (e.target as HTMLImageElement).alt = 'Image not available';
+                              }}
                             />
                             <div className="absolute bottom-2 left-2 right-2">
                               <Chip size="sm" variant="solid" className="bg-black/70 text-white">
@@ -625,15 +644,77 @@ export default function CustomCakesPage() {
 
                 {/* Pricing */}
                 <Divider />
-                <div className="bg-amber-50 p-4 rounded-lg">
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-semibold">Estimated Price</span>
-                    <span className="text-2xl font-bold text-amber-600">
-                      {CustomCakeRequestService.formatPrice(
-                        parseFloat(String(requestDetails.request.estimated_price || 0))
-                      )}
-                    </span>
+                <div className="space-y-3">
+                  <div className="bg-amber-50 p-4 rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-semibold">Estimated Price</span>
+                      <span className="text-2xl font-bold text-amber-600">
+                        {CustomCakeRequestService.formatPrice(
+                          parseFloat(String(requestDetails.request.estimated_price || 0))
+                        )}
+                      </span>
+                    </div>
                   </div>
+
+                  {/* Final Price (if approved) */}
+                  {requestDetails.request.approved_price && (
+                    <div className="bg-green-50 p-4 rounded-lg border-2 border-green-300">
+                      <div className="flex justify-between items-center">
+                        <span className="text-lg font-semibold text-green-800">Final Price (Approved)</span>
+                        <span className="text-2xl font-bold text-green-700">
+                          {CustomCakeRequestService.formatPrice(
+                            parseFloat(String(requestDetails.request.approved_price))
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Scheduled Pickup (if approved) */}
+                  {requestDetails.request.scheduled_pickup_date && (
+                    <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-300">
+                      <h4 className="font-semibold text-blue-800 mb-2">Scheduled Pickup</h4>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm text-gray-600">Date</p>
+                          <p className="font-medium text-blue-700">
+                            {new Date(requestDetails.request.scheduled_pickup_date).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </p>
+                        </div>
+                        {requestDetails.request.scheduled_pickup_time && (
+                          <div>
+                            <p className="text-sm text-gray-600">Time</p>
+                            <p className="font-medium text-blue-700">{requestDetails.request.scheduled_pickup_time}</p>
+                          </div>
+                        )}
+                      </div>
+                      {requestDetails.request.preparation_days && (
+                        <p className="text-sm text-gray-600 mt-2">
+                          Preparation time: {requestDetails.request.preparation_days} day(s)
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Admin Notes (if any) */}
+                  {requestDetails.request.admin_notes && (
+                    <div className="bg-purple-50 p-4 rounded-lg border-2 border-purple-300">
+                      <h4 className="font-semibold text-purple-800 mb-2">Admin Notes</h4>
+                      <p className="text-gray-700">{requestDetails.request.admin_notes}</p>
+                    </div>
+                  )}
+
+                  {/* Rejection Reason (if rejected) */}
+                  {requestDetails.request.rejection_reason && (
+                    <div className="bg-red-50 p-4 rounded-lg border-2 border-red-300">
+                      <h4 className="font-semibold text-red-800 mb-2">Rejection Reason</h4>
+                      <p className="text-gray-700">{requestDetails.request.rejection_reason}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (
@@ -663,14 +744,32 @@ export default function CustomCakesPage() {
           </ModalHeader>
           <ModalBody>
             <div className="space-y-4">
+              {/* Estimated vs Final Price Info */}
+              {selectedRequest && selectedRequest.estimated_price && (
+                <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                  <p className="text-sm text-amber-800">
+                    <span className="font-semibold">Estimated Price:</span> {CustomCakeRequestService.formatPrice(parseFloat(String(selectedRequest.estimated_price)))}
+                  </p>
+                  <p className="text-xs text-amber-700 mt-1">
+                    You can adjust the final price below. This is what the customer will pay.
+                  </p>
+                </div>
+              )}
+
               <div>
-                <label className="text-sm font-medium mb-2 block">Approved Price (₱)</label>
+                <label className="text-sm font-medium mb-2 block">
+                  Final Price (₱) <span className="text-red-500">*</span>
+                </label>
+                <p className="text-xs text-gray-500 mb-2">This is the final amount the customer will be charged</p>
                 <Input
                   type="number"
                   step="0.01"
+                  min="0"
                   value={approveForm.approved_price.toString()}
-                  onChange={(e) => setApproveForm({ ...approveForm, approved_price: parseFloat(e.target.value) })}
+                  onChange={(e) => setApproveForm({ ...approveForm, approved_price: parseFloat(e.target.value) || 0 })}
                   startContent={<CurrencyDollarIcon className="w-4 h-4 text-gray-400" />}
+                  isInvalid={approveForm.approved_price <= 0}
+                  errorMessage={approveForm.approved_price <= 0 ? "Price must be greater than 0" : ""}
                 />
               </div>
 
@@ -766,6 +865,106 @@ export default function CustomCakesPage() {
             </Button>
             <Button color="danger" onPress={handleReject}>
               Reject Request
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Approve Confirmation Modal */}
+      <Modal
+        isOpen={showApproveConfirmModal}
+        onClose={() => setShowApproveConfirmModal(false)}
+        size="md"
+      >
+        <ModalContent>
+          <ModalHeader>
+            <div className="flex items-center gap-2">
+              <CheckCircleIcon className="w-6 h-6 text-amber-500" />
+              <span>Customer Contact Confirmation</span>
+            </div>
+          </ModalHeader>
+          <ModalBody>
+            <div className="space-y-4">
+              <div className="bg-amber-50 p-4 rounded-lg border-2 border-amber-300">
+                <p className="text-amber-900 font-medium mb-2">
+                  ⚠️ Before approving this request:
+                </p>
+                <p className="text-amber-800 text-sm">
+                  Have you contacted the customer to discuss their custom cake design, confirm availability, and verify the final details?
+                </p>
+              </div>
+
+              {selectedRequest && (
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-sm text-gray-600 mb-2">Customer Contact Info:</p>
+                  <p className="text-sm"><span className="font-medium">Name:</span> {selectedRequest.customer_name}</p>
+                  <p className="text-sm"><span className="font-medium">Email:</span> {selectedRequest.customer_email}</p>
+                  {selectedRequest.customer_phone && (
+                    <p className="text-sm"><span className="font-medium">Phone:</span> {selectedRequest.customer_phone}</p>
+                  )}
+                </div>
+              )}
+
+              <p className="text-sm text-gray-600">
+                Clicking "Yes, Continue" will allow you to set the final price and schedule.
+              </p>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="flat" onPress={() => setShowApproveConfirmModal(false)}>
+              No, Go Back
+            </Button>
+            <Button color="success" onPress={handleConfirmApprove}>
+              Yes, Continue to Approve
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Reject Confirmation Modal */}
+      <Modal
+        isOpen={showRejectConfirmModal}
+        onClose={() => setShowRejectConfirmModal(false)}
+        size="md"
+      >
+        <ModalContent>
+          <ModalHeader>
+            <div className="flex items-center gap-2">
+              <XCircleIcon className="w-6 h-6 text-red-500" />
+              <span>Confirm Rejection</span>
+            </div>
+          </ModalHeader>
+          <ModalBody>
+            <div className="space-y-4">
+              <div className="bg-red-50 p-4 rounded-lg border-2 border-red-300">
+                <p className="text-red-900 font-medium mb-2">
+                  ⚠️ You are about to reject this custom cake request
+                </p>
+                <p className="text-red-800 text-sm">
+                  This action will notify the customer that their request cannot be fulfilled. Please make sure you have a clear reason for rejection.
+                </p>
+              </div>
+
+              {selectedRequest && (
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-sm text-gray-600 mb-2">Request Details:</p>
+                  <p className="text-sm"><span className="font-medium">Customer:</span> {selectedRequest.customer_name}</p>
+                  <p className="text-sm"><span className="font-medium">Layers:</span> {selectedRequest.num_layers}</p>
+                  <p className="text-sm"><span className="font-medium">Estimated Price:</span> {CustomCakeRequestService.formatPrice(parseFloat(String(selectedRequest.estimated_price || 0)))}</p>
+                </div>
+              )}
+
+              <p className="text-sm text-gray-600">
+                Clicking "Yes, Continue" will allow you to provide a rejection reason.
+              </p>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button variant="flat" onPress={() => setShowRejectConfirmModal(false)}>
+              No, Go Back
+            </Button>
+            <Button color="danger" onPress={handleConfirmReject}>
+              Yes, Continue to Reject
             </Button>
           </ModalFooter>
         </ModalContent>
