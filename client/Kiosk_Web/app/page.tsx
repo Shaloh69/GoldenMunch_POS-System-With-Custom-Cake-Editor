@@ -99,8 +99,8 @@ export default function HomePage() {
   const checkScrollPosition = () => {
     if (categoryScrollRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = categoryScrollRef.current;
-      setShowLeftArrow(scrollLeft > 0);
-      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10);
+      setShowLeftArrow(scrollLeft > 5);
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 5);
     }
   };
 
@@ -108,6 +108,8 @@ export default function HomePage() {
   const scrollLeft = () => {
     if (categoryScrollRef.current) {
       categoryScrollRef.current.scrollBy({ left: -300, behavior: "smooth" });
+      // Recheck after scroll animation
+      setTimeout(checkScrollPosition, 350);
     }
   };
 
@@ -115,21 +117,51 @@ export default function HomePage() {
   const scrollRight = () => {
     if (categoryScrollRef.current) {
       categoryScrollRef.current.scrollBy({ left: 300, behavior: "smooth" });
+      // Recheck after scroll animation
+      setTimeout(checkScrollPosition, 350);
     }
   };
 
   // Update arrow visibility when categories change
   useEffect(() => {
     checkScrollPosition();
+    // Also check after a short delay to ensure layout is complete
+    const timer = setTimeout(checkScrollPosition, 100);
+    return () => clearTimeout(timer);
   }, [categories]);
 
-  // Add scroll event listener
+  // Add scroll event listener and resize observer
   useEffect(() => {
     const scrollContainer = categoryScrollRef.current;
-    if (scrollContainer) {
-      scrollContainer.addEventListener("scroll", checkScrollPosition);
-      return () => scrollContainer.removeEventListener("scroll", checkScrollPosition);
-    }
+    if (!scrollContainer) return;
+
+    // Throttle scroll events for better performance
+    let scrollTimeout: NodeJS.Timeout;
+    const handleScroll = () => {
+      clearTimeout(scrollTimeout);
+      checkScrollPosition();
+      // Also check after scrolling settles
+      scrollTimeout = setTimeout(checkScrollPosition, 150);
+    };
+
+    // Add scroll event listener
+    scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
+
+    // Add scrollend event for better detection when scroll completes
+    scrollContainer.addEventListener("scrollend", checkScrollPosition);
+
+    // Add ResizeObserver to detect container size changes
+    const resizeObserver = new ResizeObserver(() => {
+      checkScrollPosition();
+    });
+    resizeObserver.observe(scrollContainer);
+
+    return () => {
+      clearTimeout(scrollTimeout);
+      scrollContainer.removeEventListener("scroll", handleScroll);
+      scrollContainer.removeEventListener("scrollend", checkScrollPosition);
+      resizeObserver.disconnect();
+    };
   }, []);
 
   return (
