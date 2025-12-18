@@ -590,13 +590,6 @@ export default function CartPage() {
                     </div>
                   </div>
                 </div>
-
-                {error && (
-                  <div className="mt-6 p-5 bg-red-500/20 border-3 border-red-500 rounded-2xl animate-scale-in shadow-lg">
-                    <p className="text-foreground font-bold text-lg">⚠️ {error}</p>
-                  </div>
-                )}
-
                 <Button
                   size="lg"
                   className="w-full mt-8 btn-gradient text-2xl py-10 shadow-2xl hover:scale-105 transition-all touch-target-lg"
