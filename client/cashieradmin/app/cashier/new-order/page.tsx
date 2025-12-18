@@ -436,7 +436,10 @@ export default function NewOrderPage() {
                   <Select
                     placeholder="Select discount type"
                     selectedKeys={selectedDiscount ? [selectedDiscount.discount_type_id.toString()] : []}
-                    onChange={(e) => handleDiscountChange(e.target.value)}
+                    onSelectionChange={(keys) => {
+                      const value = Array.from(keys)[0] as string;
+                      handleDiscountChange(value);
+                    }}
                   >
                     <SelectItem key="none">No Discount</SelectItem>
                     {(discounts.map((discount) => (
@@ -461,9 +464,10 @@ export default function NewOrderPage() {
                   </label>
                   <Select
                     selectedKeys={[orderForm.payment_method]}
-                    onChange={(e) =>
-                      setOrderForm({ ...orderForm, payment_method: e.target.value as any })
-                    }
+                    onSelectionChange={(keys) => {
+                      const value = Array.from(keys)[0] as 'cash' | 'gcash' | 'maya';
+                      setOrderForm({ ...orderForm, payment_method: value });
+                    }}
                   >
                     <SelectItem key="cash">Cash</SelectItem>
                     <SelectItem key="gcash">GCash</SelectItem>
