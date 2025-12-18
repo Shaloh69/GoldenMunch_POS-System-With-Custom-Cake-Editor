@@ -38,6 +38,7 @@ interface CartItem {
 interface OrderForm {
   customer_name: string;
   customer_phone: string;
+  order_type: 'dine_in' | 'takeout' | 'delivery';
   customer_discount_type_id: number | null;
   payment_method: 'cash' | 'gcash' | 'maya';
   amount_paid: number;
@@ -58,6 +59,7 @@ export default function NewOrderPage() {
   const [orderForm, setOrderForm] = useState<OrderForm>({
     customer_name: '',
     customer_phone: '',
+    order_type: 'takeout',
     customer_discount_type_id: null,
     payment_method: 'cash',
     amount_paid: 0,
@@ -139,6 +141,7 @@ export default function NewOrderPage() {
     setOrderForm({
       customer_name: '',
       customer_phone: '',
+      order_type: 'takeout',
       customer_discount_type_id: null,
       payment_method: 'cash',
       amount_paid: 0,
@@ -207,6 +210,7 @@ export default function NewOrderPage() {
       const orderData = {
         customer_name: orderForm.customer_name,
         customer_phone: orderForm.customer_phone || null,
+        order_type: orderForm.order_type,
         customer_discount_type_id: orderForm.customer_discount_type_id,
         items: cartItems.map(ci => ({
           menu_item_id: ci.menuItem.menu_item_id,
@@ -451,6 +455,25 @@ export default function NewOrderPage() {
                   onChange={(e) => setOrderForm({ ...orderForm, customer_phone: e.target.value })}
                   startContent={<PhoneIcon className="h-4 w-4 text-default-400" />}
                 />
+
+                {/* Order Type */}
+                <div>
+                  <label className="block text-sm font-medium text-rich-brown mb-2">
+                    Order Type
+                  </label>
+                  <Select
+                    selectedKeys={[orderForm.order_type]}
+                    onSelectionChange={(keys) => {
+                      const value = Array.from(keys)[0] as 'dine_in' | 'takeout' | 'delivery';
+                      setOrderForm({ ...orderForm, order_type: value });
+                    }}
+                    isRequired
+                  >
+                    <SelectItem key="takeout">🚗 Takeout</SelectItem>
+                    <SelectItem key="dine_in">🍽️ Dine In</SelectItem>
+                    <SelectItem key="delivery">🚚 Delivery</SelectItem>
+                  </Select>
+                </div>
 
                 {/* Discount Selection */}
                 <div>
