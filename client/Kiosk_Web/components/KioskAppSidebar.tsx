@@ -164,7 +164,7 @@ export function KioskAppSidebar({
                     Price
                   </span>
                   <span className="text-6xl font-black text-gradient">
-                    ${(Number(selectedItem.current_price) || 0).toFixed(2)}
+                    ₱{(Number(selectedItem.current_price) || 0).toFixed(2)}
                   </span>
                 </div>
 
@@ -314,7 +314,7 @@ export function KioskAppSidebar({
                             {cartItem.menuItem.name}
                           </h4>
                           <p className="text-base text-muted-foreground font-medium">
-                            {cartItem.quantity} × $
+                            {cartItem.quantity} × ₱
                             {(
                               Number(cartItem.menuItem.current_price) || 0
                             ).toFixed(2)}
@@ -323,7 +323,7 @@ export function KioskAppSidebar({
 
                         {/* Item Total */}
                         <div className="text-xl font-black text-gradient">
-                          $
+                          ₱
                           {(
                             (Number(cartItem.menuItem.current_price) || 0) *
                             cartItem.quantity
@@ -343,7 +343,7 @@ export function KioskAppSidebar({
                         Total:
                       </span>
                       <span className="text-4xl font-black text-gradient">
-                        ${total.toFixed(2)}
+                        ₱{total.toFixed(2)}
                       </span>
                     </div>
                   </div>

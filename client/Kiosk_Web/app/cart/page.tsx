@@ -469,6 +469,7 @@ export default function CartPage() {
                   onChange={(e) => setOrderType(e.target.value as OrderType)}
                   size="lg"
                   variant="bordered"
+                  isRequired
                   classNames={{
                     label: "!text-foreground font-semibold",
                     value: "!text-foreground !font-semibold",
@@ -508,6 +509,7 @@ export default function CartPage() {
                   }
                   size="lg"
                   variant="bordered"
+                  isRequired
                   classNames={{
                     label: "!text-foreground font-semibold",
                     value: "!text-foreground !font-semibold",
