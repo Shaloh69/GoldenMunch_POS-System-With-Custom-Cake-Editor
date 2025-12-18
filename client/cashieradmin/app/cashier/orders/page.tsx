@@ -419,10 +419,6 @@ export default function CashierOrdersPage() {
                         <span>Subtotal:</span>
                         <span>₱{Number(selectedOrder.total_amount || 0).toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between mb-2">
-                        <span>Tax:</span>
-                        <span>₱{Number(selectedOrder.tax_amount || 0).toFixed(2)}</span>
-                      </div>
                       {selectedOrder.discount_amount > 0 && (
                         <div className="flex justify-between mb-2 text-success">
                           <span>Discount:</span>

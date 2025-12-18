@@ -337,7 +337,7 @@ export const getOrderDetails = async (req: AuthRequest, res: Response) => {
   }
 
   const items = await query(
-    `SELECT oi.*, mi.name as item_name, mi.image_url
+    `SELECT oi.*, oi.subtotal as item_total, mi.name as item_name, mi.image_url
      FROM order_item oi
      JOIN menu_item mi ON oi.menu_item_id = mi.menu_item_id
      WHERE oi.order_id = ?`,
