@@ -291,6 +291,46 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
       changeAmount = tendered - finalAmount;
     }
 
+    // ✅ STOCK DEDUCTION: Get order items and deduct stock quantities
+    const orderItems = await conn.query(
+      'SELECT menu_item_id, quantity FROM order_item WHERE order_id = ?',
+      [order_id]
+    );
+
+    for (const item of orderItems as any[]) {
+      // Get menu item details including stock info
+      const menuItem = getFirstRow<any>(await conn.query(
+        'SELECT is_infinite_stock, stock_quantity, name FROM menu_item WHERE menu_item_id = ?',
+        [item.menu_item_id]
+      ));
+
+      if (!menuItem) {
+        throw new AppError(`Menu item ${item.menu_item_id} not found`, 404);
+      }
+
+      // Skip stock deduction for infinite stock items
+      if (menuItem.is_infinite_stock) {
+        continue;
+      }
+
+      // Validate sufficient stock
+      const currentStock = parseInt(menuItem.stock_quantity || 0);
+      const requestedQty = parseInt(item.quantity || 0);
+
+      if (currentStock < requestedQty) {
+        throw new AppError(
+          `Insufficient stock for ${menuItem.name}. Available: ${currentStock}, Required: ${requestedQty}`,
+          400
+        );
+      }
+
+      // Deduct stock quantity
+      await conn.query(
+        'UPDATE menu_item SET stock_quantity = stock_quantity - ? WHERE menu_item_id = ?',
+        [requestedQty, item.menu_item_id]
+      );
+    }
+
     await conn.query(
       `UPDATE customer_order
        SET payment_status = 'paid',
