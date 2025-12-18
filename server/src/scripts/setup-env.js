@@ -67,6 +67,23 @@ async function main() {
   const port = await question('Server Port [5000]: ') || '5000';
   const host = await question('Server Host [localhost]: ') || 'localhost';
 
+  // Email Configuration
+  console.log('\nEmail Configuration (for notifications):');
+  console.log('💡 TIP: For Gmail, use App Password (not your regular password)');
+  console.log('    Generate one at: https://myaccount.google.com/apppasswords\n');
+
+  const emailHost = await question('SMTP Host [smtp.gmail.com]: ') || 'smtp.gmail.com';
+  const emailPort = await question('SMTP Port [587]: ') || '587';
+  const emailSecure = await question('Use SSL/TLS? (true for port 465, false for 587) [false]: ') || 'false';
+  const emailUser = await question('Email Address: ');
+  const emailPassword = await question('Email Password (App Password for Gmail): ');
+  const emailFromName = await question('From Name [GoldenMunch POS]: ') || 'GoldenMunch POS';
+  const adminEmail = await question('Admin Email (for notifications): ') || emailUser;
+
+  console.log('\nBusiness Information (used in emails):');
+  const businessPhone = await question('Business Phone [+1234567890]: ') || '+1234567890';
+  const businessAddress = await question('Business Address: ') || '123 Main Street, City, State 12345';
+
   // Create .env content
   const envContent = `# Server Environment Configuration
 # Generated on ${new Date().toISOString()}
@@ -109,6 +126,19 @@ MAX_FILE_SIZE=10485760
 
 # Logging
 LOG_LEVEL=info
+
+# Email Configuration (SMTP)
+EMAIL_HOST=${emailHost}
+EMAIL_PORT=${emailPort}
+EMAIL_SECURE=${emailSecure}
+EMAIL_USER=${emailUser}
+EMAIL_PASSWORD=${emailPassword}
+EMAIL_FROM_NAME=${emailFromName}
+ADMIN_EMAIL=${adminEmail}
+
+# Business Information (used in email templates)
+BUSINESS_PHONE=${businessPhone}
+BUSINESS_ADDRESS=${businessAddress}
 `;
 
   // Write .env file
@@ -125,9 +155,10 @@ LOG_LEVEL=info
   console.log('  4. Use different secrets for development and production\n');
   console.log('Next steps:');
   console.log('  1. Review the .env file and adjust values if needed');
-  console.log('  2. Restart your server to load the new configuration');
-  console.log('  3. Clear any existing authentication tokens in your browser');
-  console.log('  4. Log in again with fresh credentials\n');
+  console.log('  2. For Gmail: Enable 2FA and create an App Password');
+  console.log('  3. Restart your server to load the new configuration');
+  console.log('  4. Clear any existing authentication tokens in your browser');
+  console.log('  5. Test email configuration by creating a custom cake request\n');
 
   rl.close();
 }

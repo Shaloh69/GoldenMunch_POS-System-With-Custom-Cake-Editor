@@ -107,7 +107,7 @@ export default function NewOrderPage() {
         {
           menuItem: item,
           quantity: 1,
-          subtotal: item.current_price || 0,
+          subtotal: Number(item.current_price),
         },
       ]);
     }
@@ -122,7 +122,7 @@ export default function NewOrderPage() {
     setCartItems(
       cartItems.map(ci =>
         ci.menuItem.menu_item_id === itemId
-          ? { ...ci, quantity: newQuantity, subtotal: (ci.menuItem.current_price || 0) * newQuantity }
+          ? { ...ci, quantity: newQuantity, subtotal: Number(ci.menuItem.current_price) * newQuantity }
           : ci
       )
     );
@@ -209,7 +209,7 @@ export default function NewOrderPage() {
         items: cartItems.map(ci => ({
           menu_item_id: ci.menuItem.menu_item_id,
           quantity: ci.quantity,
-          unit_price: ci.menuItem.current_price,
+          unit_price: Number(ci.menuItem.current_price),
         })),
         payment_method: orderForm.payment_method,
         amount_paid: orderForm.payment_method === 'cash' ? orderForm.amount_paid : calculateTotal(),
@@ -311,7 +311,7 @@ export default function NewOrderPage() {
                       <CardBody className="p-4">
                         <p className="font-bold text-rich-brown mb-2">{item.name}</p>
                         <p className="text-lg font-bold text-success">
-                          ₱{(item.current_price || 0).toFixed(2)}
+                          ₱{Number(item.current_price).toFixed(2)}
                         </p>
                         <Chip size="sm" color="primary" variant="flat" className="mt-2">
                           {item.item_type}
@@ -356,7 +356,7 @@ export default function NewOrderPage() {
                       <div className="flex-1">
                         <p className="font-medium text-rich-brown">{item.menuItem.name}</p>
                         <p className="text-sm text-warm-brown">
-                          ₱{(item.menuItem.current_price || 0).toFixed(2)} each
+                          ₱{Number(item.menuItem.current_price).toFixed(2)} each
                         </p>
                       </div>
 
@@ -438,7 +438,10 @@ export default function NewOrderPage() {
                   <Select
                     placeholder="Select discount type"
                     selectedKeys={selectedDiscount ? [selectedDiscount.discount_type_id.toString()] : []}
-                    onChange={(e) => handleDiscountChange(e.target.value)}
+                    onSelectionChange={(keys) => {
+                      const value = Array.from(keys)[0] as string;
+                      handleDiscountChange(value);
+                    }}
                   >
                     <SelectItem key="none">No Discount</SelectItem>
                     {(discounts.map((discount) => (
@@ -463,9 +466,10 @@ export default function NewOrderPage() {
                   </label>
                   <Select
                     selectedKeys={[orderForm.payment_method]}
-                    onChange={(e) =>
-                      setOrderForm({ ...orderForm, payment_method: e.target.value as any })
-                    }
+                    onSelectionChange={(keys) => {
+                      const value = Array.from(keys)[0] as 'cash' | 'gcash' | 'maya';
+                      setOrderForm({ ...orderForm, payment_method: value });
+                    }}
                   >
                     <SelectItem key="cash">Cash</SelectItem>
                     <SelectItem key="gcash">GCash</SelectItem>

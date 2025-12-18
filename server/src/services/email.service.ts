@@ -100,7 +100,7 @@ class EmailService {
       const [notifications] = await pool.query<RowDataPacket[]>(
         `SELECT * FROM custom_cake_notifications
          WHERE status = 'pending'
-         ORDER BY created_at ASC
+         ORDER BY sent_at ASC
          LIMIT 50`
       );
 
@@ -170,8 +170,8 @@ class EmailService {
       const [notifications] = await pool.query<RowDataPacket[]>(
         `SELECT * FROM custom_cake_notifications
          WHERE status = 'failed'
-         AND created_at > DATE_SUB(NOW(), INTERVAL 24 HOURS)
-         ORDER BY created_at ASC
+         AND sent_at > DATE_SUB(NOW(), INTERVAL 24 HOURS)
+         ORDER BY sent_at ASC
          LIMIT 20`
       );
 
@@ -229,7 +229,7 @@ class EmailService {
            SELECT 1 FROM custom_cake_notifications
            WHERE request_id = ccr.request_id
            AND notification_type = 'reminder'
-           AND DATE(created_at) = CURDATE()
+           AND DATE(sent_at) = CURDATE()
          )`
       );
 
