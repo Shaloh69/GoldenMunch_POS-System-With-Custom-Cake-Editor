@@ -1,5 +1,5 @@
 // ================================
-// main.js – FIXED & KIOSK-SAFE VERSION
+// main.js – FIXED, STABLE, NO RANDOM RELOADS (KIOSK SAFE)
 // ================================
 
 const { app, BrowserWindow, ipcMain } = require('electron');
@@ -10,18 +10,34 @@ const isDev = !app.isPackaged;
 let mainWindow;
 let settingsWindow;
 let settingsManager;
+let lastReloadTime = 0;
 
 // ================================
-// STABLE KIOSK FLAGS (NO WAYLAND / NO GPU)
+// STABLE KIOSK FLAGS (NO GPU / NO WAYLAND)
 // ================================
 app.commandLine.appendSwitch('disable-gpu');
 app.commandLine.appendSwitch('disable-gpu-compositing');
-app.commandLine.appendSwitch('disable-gpu-sandbox');
 app.commandLine.appendSwitch('disable-http-cache');
 
 if (process.getuid?.() === 0) {
-  // WARNING: Only acceptable in controlled kiosk environments
+  // Acceptable ONLY in controlled kiosk environments
   app.commandLine.appendSwitch('no-sandbox');
+}
+
+// ================================
+// SAFE RELOAD WITH COOLDOWN
+// ================================
+function safeReload() {
+  const now = Date.now();
+  if (now - lastReloadTime < 10000) {
+    console.warn('Reload suppressed (cooldown)');
+    return;
+  }
+  lastReloadTime = now;
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    console.log('Reloading main window');
+    mainWindow.reload();
+  }
 }
 
 // ================================
@@ -44,34 +60,37 @@ function createMainWindow() {
   const startUrl = settingsManager.getAppUrl(isDev);
 
   if (!startUrl) {
-    console.log('No app URL configured, opening settings...');
+    console.log('No app URL configured, opening settings');
     openSettingsWindow();
     return;
   }
 
-  // Clear cache explicitly (cache:false is NOT valid)
+  // Clear cache explicitly
   mainWindow.webContents.session.clearCache().then(() => {
     console.log('Cache cleared');
     mainWindow.loadURL(startUrl).catch(console.error);
   });
 
   // ================================
-  // AUTO-RECOVER FROM WHITE SCREEN
+  // CRASH HANDLING (REAL CRASHES ONLY)
   // ================================
-  mainWindow.webContents.on('render-process-gone', (event, details) => {
-    console.error('Renderer crashed:', details);
+  mainWindow.webContents.on('render-process-gone', (_event, details) => {
+    console.error('Renderer process gone:', details);
 
-    setTimeout(() => {
-      if (!mainWindow.isDestroyed()) {
-        console.log('Reloading after renderer crash...');
-        mainWindow.reload();
-      }
-    }, 1000);
+    if (details.reason === 'crashed' || details.reason === 'killed') {
+      setTimeout(safeReload, 1500);
+    }
   });
 
+  // ================================
+  // DO NOT RELOAD ON TEMP UNRESPONSIVE
+  // ================================
   mainWindow.webContents.on('unresponsive', () => {
-    console.warn('Renderer unresponsive – reloading');
-    mainWindow.reload();
+    console.warn('Renderer temporarily unresponsive');
+  });
+
+  mainWindow.webContents.on('responsive', () => {
+    console.log('Renderer responsive again');
   });
 }
 
@@ -111,7 +130,7 @@ ipcMain.handle('get-settings', () => {
   return settingsManager.getSettings();
 });
 
-ipcMain.handle('save-settings', async (event, newSettings) => {
+ipcMain.handle('save-settings', async (_event, newSettings) => {
   try {
     settingsManager.saveSettings(newSettings);
     return { success: true };
