@@ -48,30 +48,55 @@ export default function PaymentQRSettingsPage() {
     }
   };
 
-  const handleFileSelect = (file: File, method: PaymentMethod) => {
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        if (method === 'gcash') {
-          setGcashQR(file);
-          setGcashPreview(result);
-        } else {
-          setPaymayaQR(file);
-          setPaymayaPreview(result);
-        }
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setError('Please select a valid image file (PNG, JPG)');
+  const handleFileSelect = (file: File | undefined, method: PaymentMethod) => {
+    // Clear any previous errors
+    setError(null);
+
+    if (!file) {
+      setError('No file selected. Please choose an image file.');
+      return;
     }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Invalid file type. Please select an image file (PNG, JPG, JPEG, GIF, or WebP).');
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+    if (file.size > maxSize) {
+      setError(`File too large. Please select an image smaller than 10MB. Current size: ${(file.size / (1024 * 1024)).toFixed(2)}MB`);
+      return;
+    }
+
+    // Read and preview the file
+    const reader = new FileReader();
+
+    reader.onerror = () => {
+      setError('Failed to read the file. Please try again or choose a different file.');
+    };
+
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      if (method === 'gcash') {
+        setGcashQR(file);
+        setGcashPreview(result);
+      } else {
+        setPaymayaQR(file);
+        setPaymayaPreview(result);
+      }
+      console.log(`✅ File selected for ${method.toUpperCase()}: ${file.name} (${(file.size / 1024).toFixed(2)}KB)`);
+    };
+
+    reader.readAsDataURL(file);
   };
 
   const handleUpload = async (method: PaymentMethod) => {
     const qrFile = method === 'gcash' ? gcashQR : paymayaQR;
 
     if (!qrFile) {
-      setError(`Please select a ${method.toUpperCase()} QR code to upload`);
+      setError(`Please select a ${method.toUpperCase()} QR code image to upload.`);
       return;
     }
 
@@ -80,12 +105,23 @@ export default function PaymentQRSettingsPage() {
     setSuccess(null);
 
     try {
+      console.log(`📤 Uploading ${method.toUpperCase()} QR code...`, {
+        fileName: qrFile.name,
+        fileSize: `${(qrFile.size / 1024).toFixed(2)}KB`,
+        fileType: qrFile.type,
+      });
+
       const formData = new FormData();
       formData.append('qr_code', qrFile);
       formData.append('payment_method', method);
 
-      await SettingsService.uploadPaymentQR(formData);
+      const response = await SettingsService.uploadPaymentQR(formData);
 
+      if (!response.success) {
+        throw new Error(response.error || response.message || 'Upload failed');
+      }
+
+      console.log(`✅ ${method.toUpperCase()} QR code uploaded successfully`);
       setSuccess(`${method.toUpperCase()} payment QR code uploaded successfully!`);
 
       // Clear the file input after successful upload
@@ -101,8 +137,36 @@ export default function PaymentQRSettingsPage() {
         setSuccess(null);
       }, 2000);
     } catch (err: any) {
-      console.error('Upload error:', err);
-      setError(err.response?.data?.error || err.message || 'Failed to upload QR code');
+      console.error(`❌ Upload error for ${method.toUpperCase()}:`, err);
+
+      // Provide user-friendly error messages
+      let errorMessage = 'Failed to upload QR code. ';
+
+      if (err.response) {
+        // Server responded with an error
+        const serverError = err.response.data?.error || err.response.data?.message;
+        if (serverError) {
+          errorMessage += serverError;
+        } else if (err.response.status === 401) {
+          errorMessage += 'You are not authorized. Please log in again.';
+        } else if (err.response.status === 413) {
+          errorMessage += 'The file is too large. Please use a smaller image.';
+        } else if (err.response.status === 500) {
+          errorMessage += 'Server error. Please try again later or contact support.';
+        } else {
+          errorMessage += `Server returned error code ${err.response.status}.`;
+        }
+      } else if (err.request) {
+        // Request was made but no response received
+        errorMessage += 'No response from server. Please check your internet connection.';
+      } else if (err.message) {
+        // Something else went wrong
+        errorMessage += err.message;
+      } else {
+        errorMessage += 'An unknown error occurred. Please try again.';
+      }
+
+      setError(errorMessage);
     } finally {
       setUploading(false);
     }
@@ -120,7 +184,7 @@ export default function PaymentQRSettingsPage() {
   };
 
   const handleDeleteQR = async (method: PaymentMethod) => {
-    if (!confirm(`Are you sure you want to delete the ${method.toUpperCase()} QR code? This cannot be undone.`)) {
+    if (!confirm(`Are you sure you want to delete the ${method.toUpperCase()} QR code? This action cannot be undone.`)) {
       return;
     }
 
@@ -129,8 +193,15 @@ export default function PaymentQRSettingsPage() {
     setSuccess(null);
 
     try {
-      await SettingsService.deletePaymentQR(method);
+      console.log(`🗑️ Deleting ${method.toUpperCase()} QR code...`);
 
+      const response = await SettingsService.deletePaymentQR(method);
+
+      if (!response.success) {
+        throw new Error(response.error || response.message || 'Delete failed');
+      }
+
+      console.log(`✅ ${method.toUpperCase()} QR code deleted successfully`);
       setSuccess(`${method.toUpperCase()} QR code deleted successfully!`);
 
       // Clear both preview and file
@@ -146,8 +217,33 @@ export default function PaymentQRSettingsPage() {
         setSuccess(null);
       }, 2000);
     } catch (err: any) {
-      console.error('Delete error:', err);
-      setError(err.response?.data?.error || err.message || 'Failed to delete QR code');
+      console.error(`❌ Delete error for ${method.toUpperCase()}:`, err);
+
+      // Provide user-friendly error messages
+      let errorMessage = 'Failed to delete QR code. ';
+
+      if (err.response) {
+        const serverError = err.response.data?.error || err.response.data?.message;
+        if (serverError) {
+          errorMessage += serverError;
+        } else if (err.response.status === 401) {
+          errorMessage += 'You are not authorized. Please log in again.';
+        } else if (err.response.status === 404) {
+          errorMessage += 'QR code not found. It may have already been deleted.';
+        } else if (err.response.status === 500) {
+          errorMessage += 'Server error. Please try again later or contact support.';
+        } else {
+          errorMessage += `Server returned error code ${err.response.status}.`;
+        }
+      } else if (err.request) {
+        errorMessage += 'No response from server. Please check your internet connection.';
+      } else if (err.message) {
+        errorMessage += err.message;
+      } else {
+        errorMessage += 'An unknown error occurred. Please try again.';
+      }
+
+      setError(errorMessage);
     } finally {
       setUploading(false);
     }
@@ -203,42 +299,74 @@ export default function PaymentQRSettingsPage() {
               {/* Replace QR option - show file input when there's an existing QR */}
               {!qrFile && preview && (
                 <div className="border-2 border-dashed border-primary-300 rounded-lg p-6 text-center bg-primary-50">
-                  <p className="text-sm text-default-700 font-semibold mb-3">
+                  <p className="text-sm text-default-700 font-semibold mb-4">
                     Replace with a new QR code
                   </p>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleFileSelect(file, method);
-                    }}
-                    className="max-w-xs mx-auto"
-                    classNames={{
-                      input: "cursor-pointer"
-                    }}
-                  />
+                  <div className="max-w-xs mx-auto">
+                    <label className="block w-full">
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          handleFileSelect(file, method);
+                        }}
+                        className="hidden"
+                        id={`file-input-replace-${method}`}
+                      />
+                      <Button
+                        as="span"
+                        color="primary"
+                        variant="flat"
+                        size="md"
+                        className="w-full font-semibold cursor-pointer"
+                        startContent={<QrCodeIcon className="h-5 w-5" />}
+                      >
+                        Choose New QR Code
+                      </Button>
+                    </label>
+                    <p className="text-xs text-default-500 mt-2">
+                      PNG, JPG, GIF, or WebP (Max 10MB)
+                    </p>
+                  </div>
                 </div>
               )}
             </div>
           ) : (
-            <div className="border-2 border-dashed border-default-300 rounded-lg p-12 text-center">
+            <div className="border-2 border-dashed border-default-300 rounded-lg p-12 text-center bg-default-50">
               <QrCodeIcon className="h-20 w-20 mx-auto text-default-400 mb-4" />
-              <p className="text-default-600 font-semibold mb-2">
+              <p className="text-default-600 font-semibold mb-2 text-lg">
                 No {method.toUpperCase()} QR code uploaded yet
               </p>
               <p className="text-sm text-default-500 mb-6">
                 Upload a QR code image for {method.toUpperCase()} payments
               </p>
-              <Input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleFileSelect(file, method);
-                }}
-                className="max-w-xs mx-auto"
-              />
+              <div className="max-w-xs mx-auto">
+                <label className="block w-full">
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      handleFileSelect(file, method);
+                    }}
+                    className="hidden"
+                    id={`file-input-${method}`}
+                  />
+                  <Button
+                    as="span"
+                    color="primary"
+                    size="lg"
+                    className="w-full font-semibold cursor-pointer"
+                    startContent={<QrCodeIcon className="h-5 w-5" />}
+                  >
+                    Choose QR Code Image
+                  </Button>
+                </label>
+                <p className="text-xs text-default-400 mt-3">
+                  Supported formats: PNG, JPG, JPEG, GIF, WebP (Max 10MB)
+                </p>
+              </div>
             </div>
           )}
 
