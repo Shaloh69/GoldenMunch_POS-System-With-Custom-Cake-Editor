@@ -102,12 +102,12 @@ export default function UnifiedCashierPage() {
         const allOrders = (response.data as any).orders || [];
 
         // Separate orders by status
-        const pending = allOrders.filter((o: CustomerOrder) => o.order_status === "pending");
+        const pending = allOrders.filter((o: CustomerOrder) => o.order_status === OrderStatus.PENDING);
         const active = allOrders.filter((o: CustomerOrder) =>
-          ["confirmed", "preparing", "ready"].includes(o.order_status)
+          [OrderStatus.CONFIRMED, OrderStatus.PREPARING, OrderStatus.READY].includes(o.order_status as OrderStatus)
         );
         const completed = allOrders.filter((o: CustomerOrder) =>
-          ["completed", "cancelled"].includes(o.order_status)
+          [OrderStatus.COMPLETED, OrderStatus.CANCELLED].includes(o.order_status as OrderStatus)
         );
 
         setPendingOrders(pending);
@@ -217,7 +217,7 @@ export default function UnifiedCashierPage() {
 
       // Update order status to confirmed
       const statusResponse = await OrderService.updateOrderStatus(selectedOrder.order_id, {
-        order_status: "confirmed",
+        order_status: OrderStatus.CONFIRMED,
         notes: selectedDiscount
           ? `Payment verified with ${selectedDiscount.discount_name} (${selectedDiscount.discount_percentage}% off)`
           : "Payment verified",
@@ -293,7 +293,7 @@ export default function UnifiedCashierPage() {
       loadAllData();
 
       // Auto-switch to appropriate tab
-      if (newStatus === "completed") {
+      if (newStatus === OrderStatus.COMPLETED) {
         setSelectedTab("completed");
       }
     } catch (error: any) {
@@ -432,8 +432,8 @@ export default function UnifiedCashierPage() {
   const renderOrderDetailsModal = () => {
     if (!selectedOrder) return null;
 
-    const isPending = selectedOrder.order_status === "pending";
-    const isActive = ["confirmed", "preparing", "ready"].includes(selectedOrder.order_status);
+    const isPending = selectedOrder.order_status === OrderStatus.PENDING;
+    const isActive = [OrderStatus.CONFIRMED, OrderStatus.PREPARING, OrderStatus.READY].includes(selectedOrder.order_status as OrderStatus);
     const finalAmount = calculateFinalAmount(
       Number(selectedOrder.final_amount || 0),
       selectedDiscount
@@ -626,18 +626,18 @@ export default function UnifiedCashierPage() {
             {/* Active: Update Status */}
             {isActive && (
               <div className="flex gap-2">
-                {selectedOrder.order_status === "confirmed" && (
-                  <Button color="primary" onPress={() => handleUpdateStatus("preparing")}>
+                {selectedOrder.order_status === OrderStatus.CONFIRMED && (
+                  <Button color="primary" onPress={() => handleUpdateStatus(OrderStatus.PREPARING)}>
                     Mark as Preparing
                   </Button>
                 )}
-                {selectedOrder.order_status === "preparing" && (
-                  <Button color="success" onPress={() => handleUpdateStatus("ready")}>
+                {selectedOrder.order_status === OrderStatus.PREPARING && (
+                  <Button color="success" onPress={() => handleUpdateStatus(OrderStatus.READY)}>
                     Mark as Ready
                   </Button>
                 )}
-                {selectedOrder.order_status === "ready" && (
-                  <Button color="success" onPress={() => handleUpdateStatus("completed")}>
+                {selectedOrder.order_status === OrderStatus.READY && (
+                  <Button color="success" onPress={() => handleUpdateStatus(OrderStatus.COMPLETED)}>
                     Mark as Completed
                   </Button>
                 )}
