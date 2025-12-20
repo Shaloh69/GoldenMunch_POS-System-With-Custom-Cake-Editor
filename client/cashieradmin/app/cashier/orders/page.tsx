@@ -134,7 +134,7 @@ export default function UnifiedCashierPage() {
 
   const loadDiscounts = async () => {
     try {
-      const response = await DiscountService.getActiveDiscounts();
+      const response = await DiscountService.getActiveDiscountTypes();
       if (response.success && response.data) {
         setDiscounts(response.data);
       }
