@@ -220,7 +220,7 @@ export default function UnifiedCashierPage() {
       const statusResponse = await OrderService.updateOrderStatus(selectedOrder.order_id, {
         order_status: OrderStatus.CONFIRMED,
         notes: selectedDiscount
-          ? `Payment verified with ${selectedDiscount.discount_name} (${selectedDiscount.discount_percentage}% off)`
+          ? `Payment verified with ${selectedDiscount.name} (${selectedDiscount.discount_percentage}% off)`
           : "Payment verified",
       });
 
@@ -499,7 +499,7 @@ export default function UnifiedCashierPage() {
                       </div>
                       <div className="flex justify-between text-success-600">
                         <span>
-                          Discount ({selectedDiscount.discount_name} - {selectedDiscount.discount_percentage}%):
+                          Discount ({selectedDiscount.name} - {selectedDiscount.discount_percentage}%):
                         </span>
                         <span>
                           -₱
@@ -527,7 +527,7 @@ export default function UnifiedCashierPage() {
                   <Select
                     label="Apply Discount (Optional)"
                     placeholder="Select a discount"
-                    selectedKeys={selectedDiscount ? [selectedDiscount.discount_id.toString()] : []}
+                    selectedKeys={selectedDiscount ? [selectedDiscount.discount_type_id.toString()] : []}
                     onChange={(e) => {
                       const discount = discounts.find((d) => d.discount_id.toString() === e.target.value);
                       setSelectedDiscount(discount || null);
@@ -535,8 +535,8 @@ export default function UnifiedCashierPage() {
                     startContent={<PercentBadgeIcon className="h-4 w-4" />}
                   >
                     {discounts.map((discount) => (
-                      <SelectItem key={discount.discount_id.toString()} value={discount.discount_id.toString()}>
-                        {discount.discount_name} - {discount.discount_percentage}% off
+                      <SelectItem key={discount.discount_type_id.toString()} value={discount.discount_type_id.toString()}>
+                        {discount.name} - {discount.discount_percentage}% off
                       </SelectItem>
                     ))}
                   </Select>
