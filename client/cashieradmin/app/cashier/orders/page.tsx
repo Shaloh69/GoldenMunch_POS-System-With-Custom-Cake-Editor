@@ -349,7 +349,7 @@ export default function UnifiedCashierPage() {
     const query = searchQuery.toLowerCase();
     return orders.filter(
       (order) =>
-        order.order_number.toLowerCase().includes(query) ||
+        order.order_number?.toLowerCase().includes(query) ||
         order.name?.toLowerCase().includes(query) ||
         order.phone?.toLowerCase().includes(query)
     );
