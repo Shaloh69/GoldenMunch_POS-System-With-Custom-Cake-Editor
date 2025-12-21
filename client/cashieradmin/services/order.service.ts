@@ -35,6 +35,10 @@ export class OrderService {
     return apiClient.patch(`/cashier/orders/${id}/status`, data);
   }
 
+  static async deleteOrder(id: number) {
+    return apiClient.delete(`/cashier/orders/${id}`);
+  }
+
   static async createOrder(data: any) {
     return apiClient.post("/kiosk/orders", data);
   }

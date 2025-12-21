@@ -47,6 +47,7 @@ import {
   CalendarDaysIcon,
   PrinterIcon,
   ExclamationTriangleIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 
 import { OrderService } from "@/services/order.service";
@@ -125,6 +126,9 @@ export default function UnifiedCashierPage() {
     connected: false,
   });
   const [loadingPrinterStatus, setLoadingPrinterStatus] = useState(true);
+
+  // Delete order
+  const [deleting, setDeleting] = useState(false);
 
   // Track first load to prevent loading state on auto-refresh
   const isFirstLoad = useRef(true);
@@ -440,6 +444,46 @@ export default function UnifiedCashierPage() {
         color: "danger",
         timeout: 3000,
       });
+    }
+  };
+
+  const handleDeleteOrder = async () => {
+    if (!selectedOrder) return;
+
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete Order #${selectedOrder.order_number}? This action cannot be undone.`,
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      setDeleting(true);
+
+      const response = await OrderService.deleteOrder(selectedOrder.order_id);
+
+      if (!response.success) {
+        throw new Error(response.error || "Failed to delete order");
+      }
+
+      addToast({
+        title: "Order Deleted",
+        description: `Order #${selectedOrder.order_number} has been deleted successfully`,
+        color: "success",
+        timeout: 3000,
+      });
+
+      onClose();
+      loadAllData();
+    } catch (error: any) {
+      console.error("Delete order error:", error);
+      addToast({
+        title: "Error",
+        description: error.message || "Failed to delete order",
+        color: "danger",
+        timeout: 5000,
+      });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -1008,17 +1052,36 @@ export default function UnifiedCashierPage() {
               </div>
             </DrawerBody>
             <DrawerFooter className="bg-gradient-to-r from-default-50 to-default-100 border-t-2 border-default-200 gap-3 p-6">
-            <Button
-              color="default"
-              variant="bordered"
-              size="lg"
-              className="font-semibold"
-              onPress={onClose}
-            >
-              Close
-            </Button>
+            <div className="flex gap-3 flex-1 justify-between">
+              {/* Delete Button (left side, only for non-completed orders) */}
+              {selectedOrder.order_status !== OrderStatus.COMPLETED &&
+                selectedOrder.order_status !== OrderStatus.CANCELLED && (
+                  <Button
+                    color="danger"
+                    variant="light"
+                    size="lg"
+                    className="font-semibold"
+                    isLoading={deleting}
+                    startContent={!deleting && <TrashIcon className="h-5 w-5" />}
+                    onPress={handleDeleteOrder}
+                  >
+                    Delete Order
+                  </Button>
+                )}
 
-            {/* Pending: Verify Payment */}
+              {/* Right side buttons */}
+              <div className="flex gap-3">
+                <Button
+                  color="default"
+                  variant="bordered"
+                  size="lg"
+                  className="font-semibold"
+                  onPress={onClose}
+                >
+                  Close
+                </Button>
+
+                {/* Pending: Verify Payment */}
             {isPending && (
               <Button
                 color="success"
@@ -1071,7 +1134,9 @@ export default function UnifiedCashierPage() {
                   </Button>
                 )}
               </div>
-            )}
+                )}
+              </div>
+            </div>
           </DrawerFooter>
             </>
           )}
