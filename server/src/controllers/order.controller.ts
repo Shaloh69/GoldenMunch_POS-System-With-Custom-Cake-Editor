@@ -499,7 +499,7 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response) => {
 
   // Add timeline entry
   await query(
-    `INSERT INTO order_timeline (order_id, status, changed_by, notes, timestamp)
+    `INSERT INTO order_timeline (order_id, status, changed_by, notes, created_at)
      VALUES (?, ?, ?, ?, NOW())`,
     [id, order_status, user_id, notes || null]
   );
@@ -538,7 +538,7 @@ export const deleteOrder = async (req: AuthRequest, res: Response) => {
 
   // Add timeline entry
   await query(
-    `INSERT INTO order_timeline (order_id, status, changed_by, notes, timestamp)
+    `INSERT INTO order_timeline (order_id, status, changed_by, notes, created_at)
      VALUES (?, ?, ?, ?, NOW())`,
     [id, 'cancelled', user_id, `Order deleted by ${user_type}`]
   );

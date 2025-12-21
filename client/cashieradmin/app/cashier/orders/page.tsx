@@ -647,10 +647,12 @@ export default function UnifiedCashierPage() {
       OrderStatus.PREPARING,
       OrderStatus.READY,
     ].includes(selectedOrder.order_status as OrderStatus);
-    const finalAmount = calculateFinalAmount(
-      Number(selectedOrder.final_amount || 0),
-      selectedDiscount,
-    );
+
+    // Calculate final amount with proper null handling
+    const orderTotal = Number(selectedOrder.final_amount) || Number(selectedOrder.total_amount) || 0;
+    const finalAmount = selectedDiscount
+      ? calculateFinalAmount(orderTotal, selectedDiscount)
+      : orderTotal;
 
     return (
       <Drawer isOpen={isOpen} size="4xl" onClose={onClose}>
@@ -833,7 +835,7 @@ export default function UnifiedCashierPage() {
                       Total:
                     </span>
                     <span className="text-3xl font-black bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent">
-                      ₱{finalAmount.toFixed(2)}
+                      ₱{(finalAmount || 0).toFixed(2)}
                     </span>
                   </div>
                 </div>
