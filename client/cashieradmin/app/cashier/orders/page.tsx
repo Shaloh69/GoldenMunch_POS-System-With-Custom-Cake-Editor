@@ -535,7 +535,7 @@ export default function UnifiedCashierPage() {
                     startContent={<PercentBadgeIcon className="h-4 w-4" />}
                   >
                     {discounts.map((discount) => (
-                      <SelectItem key={discount.discount_type_id.toString()} value={discount.discount_type_id.toString()}>
+                      <SelectItem key={discount.discount_type_id.toString()}>
                         {discount.name} - {discount.discount_percentage}% off
                       </SelectItem>
                     ))}
@@ -595,11 +595,11 @@ export default function UnifiedCashierPage() {
                     {orderTimeline.map((entry, index) => (
                       <div key={index} className="flex items-start gap-3">
                         <div className="min-w-[100px] text-sm text-default-500">
-                          {new Date(entry.changed_at).toLocaleTimeString()}
+                          {new Date(entry.timestamp).toLocaleTimeString()}
                         </div>
                         <div>
                           <Chip size="sm" variant="flat">
-                            {entry.new_status}
+                            {entry.status}
                           </Chip>
                           {entry.notes && <p className="text-sm text-default-600 mt-1">{entry.notes}</p>}
                         </div>
