@@ -145,6 +145,18 @@ class PrinterService {
    */
   async getStatus(): Promise<PrinterStatus> {
     if (!this.isAvailable()) {
+      // Check if we're in a browser environment but Electron is not available
+      if (typeof window !== "undefined") {
+        return {
+          available: false,
+          connected: false,
+          config: {
+            printerName: "Web Browser Mode",
+            error: "Please run this application in Electron to enable printer features",
+          },
+        };
+      }
+
       return {
         available: false,
         connected: false,
@@ -162,7 +174,9 @@ class PrinterService {
       return {
         available: false,
         connected: false,
-        config: null,
+        config: {
+          error: "Failed to connect to printer",
+        },
       };
     }
   }
