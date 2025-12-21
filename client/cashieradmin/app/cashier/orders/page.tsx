@@ -15,7 +15,8 @@ import { addToast } from "@heroui/toast";
 import { OrderService } from "@/services/order.service";
 import { DiscountService } from "@/services/discount.service";
 import { printerService } from "@/services/printer.service";
-import type { CustomerOrder, OrderStatus, OrderTimelineEntry, CustomerDiscountType } from "@/types/api";
+import { OrderStatus } from "@/types/api";
+import type { CustomerOrder, OrderTimelineEntry, CustomerDiscountType } from "@/types/api";
 import {
   MagnifyingGlassIcon,
   ClockIcon,
