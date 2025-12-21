@@ -145,16 +145,18 @@ log "Kiosk started (PID: $KIOSK_PID)"
 # MONITOR PROCESS
 # ============================================================================
 
-# Monitor the kiosk process and restart if it crashes
-while true; do
-    if ! kill -0 $KIOSK_PID 2>/dev/null; then
-        log "ERROR: Kiosk process died! Restarting in 5 seconds..."
-        sleep 5
+# Let systemd handle restarts - no need for manual monitoring loop
+# This prevents double-restart issues that cause black screen flashing
 
-        log "Restarting kiosk..."
-        npm start > "$KIOSK_LOG" 2>&1 &
-        KIOSK_PID=$!
-        log "Kiosk restarted (PID: $KIOSK_PID)"
-    fi
-    sleep 10
-done
+log "Kiosk is running. Systemd will handle restarts if needed."
+log "To view logs: journalctl -u goldenmunch-kiosk -f"
+log "To view kiosk output: tail -f $KIOSK_LOG"
+
+# Wait for the kiosk process to exit naturally
+wait $KIOSK_PID
+EXIT_CODE=$?
+
+log "Kiosk exited with code: $EXIT_CODE"
+
+# Exit and let systemd decide whether to restart based on the service configuration
+exit $EXIT_CODE
