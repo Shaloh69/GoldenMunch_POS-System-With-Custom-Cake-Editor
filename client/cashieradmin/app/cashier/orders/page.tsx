@@ -6,7 +6,7 @@ import type {
   CustomerDiscountType,
 } from "@/types/api";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import {
   Table,
@@ -40,6 +40,11 @@ import {
   QrCodeIcon,
   CreditCardIcon,
   PercentBadgeIcon,
+  UserIcon,
+  PhoneIcon,
+  ShoppingBagIcon,
+  ReceiptPercentIcon,
+  CalendarDaysIcon,
 } from "@heroicons/react/24/outline";
 
 import { OrderService } from "@/services/order.service";
@@ -108,19 +113,26 @@ export default function UnifiedCashierPage() {
     completedToday: 0,
   });
 
+  // Track first load to prevent loading state on auto-refresh
+  const isFirstLoad = useRef(true);
+
   // Load data on mount and refresh every 10 seconds
   useEffect(() => {
     loadAllData();
     loadDiscounts();
 
-    const interval = setInterval(loadAllData, 10000);
+    const interval = setInterval(() => loadAllData(false), 10000);
 
     return () => clearInterval(interval);
   }, []);
 
-  const loadAllData = async () => {
+  const loadAllData = async (showLoading = true) => {
     try {
-      setLoading(true);
+      // Only show loading spinner on first load or manual refresh
+      if (showLoading && isFirstLoad.current) {
+        setLoading(true);
+        isFirstLoad.current = false;
+      }
 
       // Load all orders
       const response = await OrderService.getOrders();
@@ -532,87 +544,152 @@ export default function UnifiedCashierPage() {
       <Modal
         isOpen={isOpen}
         scrollBehavior="inside"
-        size="3xl"
+        size="4xl"
         onClose={onClose}
       >
         <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold">
-                  Order #{selectedOrder.order_number}
-                </h2>
-                <p className="text-sm text-default-500">
-                  {formatDate(selectedOrder.order_datetime)}
-                </p>
+          <ModalHeader className="flex flex-col gap-1 bg-gradient-to-br from-golden-orange/10 via-deep-amber/5 to-transparent border-b-2 border-golden-orange/20 pb-6">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-gradient-to-br from-golden-orange to-deep-amber rounded-xl shadow-lg">
+                  <ReceiptPercentIcon className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-black bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent">
+                    Order #{selectedOrder.order_number}
+                  </h2>
+                  <div className="flex items-center gap-2 mt-1">
+                    <CalendarDaysIcon className="h-4 w-4 text-default-400" />
+                    <p className="text-sm text-default-600 font-medium">
+                      {formatDate(selectedOrder.order_datetime)}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <Chip color={statusColors[selectedOrder.order_status]} size="lg">
+              <Chip
+                color={statusColors[selectedOrder.order_status]}
+                size="lg"
+                variant="shadow"
+                className="font-bold uppercase tracking-wide"
+              >
                 {selectedOrder.order_status}
               </Chip>
             </div>
           </ModalHeader>
-          <ModalBody>
+          <ModalBody className="gap-6 py-6">
             {/* Customer Info */}
-            <Card>
-              <CardHeader>
-                <h3 className="font-semibold">Customer Information</h3>
-              </CardHeader>
-              <CardBody className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-default-500">Name</p>
-                  <p className="font-semibold">
-                    {selectedOrder.name || "Guest"}
-                  </p>
+            <Card className="border-2 border-default-200 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 border-b-2 border-default-200">
+                <div className="flex items-center gap-2">
+                  <UserIcon className="h-5 w-5 text-blue-600" />
+                  <h3 className="font-bold text-lg">Customer Information</h3>
                 </div>
-                <div>
-                  <p className="text-sm text-default-500">Phone</p>
-                  <p className="font-semibold">{selectedOrder.phone}</p>
+              </CardHeader>
+              <CardBody className="grid grid-cols-2 gap-6 p-6">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <UserIcon className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-default-500 uppercase tracking-wide font-semibold mb-1">
+                      Name
+                    </p>
+                    <p className="font-bold text-lg text-default-900">
+                      {selectedOrder.name || "Guest"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <PhoneIcon className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-default-500 uppercase tracking-wide font-semibold mb-1">
+                      Phone
+                    </p>
+                    <p className="font-bold text-lg text-default-900">
+                      {selectedOrder.phone || "N/A"}
+                    </p>
+                  </div>
                 </div>
               </CardBody>
             </Card>
 
             {/* Order Items */}
-            <Card>
-              <CardHeader>
-                <h3 className="font-semibold">Order Items</h3>
+            <Card className="border-2 border-default-200 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b-2 border-default-200">
+                <div className="flex items-center gap-2">
+                  <ShoppingBagIcon className="h-5 w-5 text-green-600" />
+                  <h3 className="font-bold text-lg">Order Items</h3>
+                </div>
               </CardHeader>
-              <CardBody>
-                <div className="space-y-2">
-                  {(selectedOrder as any).items?.map(
-                    (item: any, index: number) => (
-                      <div
-                        key={index}
-                        className="flex justify-between items-center py-2 border-b last:border-0"
-                      >
-                        <div>
-                          <p className="font-semibold">{item.menu_item_name}</p>
-                          <p className="text-sm text-default-500">
-                            Quantity: {item.quantity}
+              <CardBody className="p-6">
+                <div className="space-y-3">
+                  {(selectedOrder as any).items &&
+                  (selectedOrder as any).items.length > 0 ? (
+                    (selectedOrder as any).items.map(
+                      (item: any, index: number) => (
+                        <div
+                          key={index}
+                          className="flex justify-between items-center p-4 bg-gradient-to-r from-default-50 to-default-100 rounded-xl hover:shadow-md transition-all duration-200 border border-default-200"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="p-3 bg-white rounded-lg shadow-sm">
+                              <ShoppingBagIcon className="h-6 w-6 text-green-600" />
+                            </div>
+                            <div>
+                              <p className="font-bold text-lg text-default-900">
+                                {item.menu_item_name || "Unknown Item"}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Chip
+                                  size="sm"
+                                  variant="flat"
+                                  color="primary"
+                                  className="font-semibold"
+                                >
+                                  Qty: {item.quantity || 0}
+                                </Chip>
+                                <span className="text-sm text-default-500">
+                                  @ ₱{Number(item.unit_price || 0).toFixed(2)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <p className="text-2xl font-black bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                            ₱{Number(item.item_total || 0).toFixed(2)}
                           </p>
                         </div>
-                        <p className="font-semibold">
-                          ₱{Number(item.item_total || 0).toFixed(2)}
-                        </p>
-                      </div>
-                    ),
+                      ),
+                    )
+                  ) : (
+                    <div className="text-center py-8">
+                      <ShoppingBagIcon className="h-16 w-16 text-default-300 mx-auto mb-3" />
+                      <p className="text-default-500 font-medium">
+                        No items found
+                      </p>
+                    </div>
                   )}
                 </div>
-                <Divider className="my-4" />
-                <div className="space-y-2">
+                <Divider className="my-6" />
+                <div className="space-y-3 bg-gradient-to-br from-default-50 to-default-100 p-6 rounded-xl border-2 border-default-200">
                   {selectedDiscount && (
                     <>
-                      <div className="flex justify-between">
-                        <span className="text-default-600">Subtotal:</span>
-                        <span>
+                      <div className="flex justify-between items-center text-default-700">
+                        <span className="font-medium">Subtotal:</span>
+                        <span className="font-semibold text-lg">
                           ₱{Number(selectedOrder.final_amount || 0).toFixed(2)}
                         </span>
                       </div>
-                      <div className="flex justify-between text-success-600">
-                        <span>
-                          Discount ({selectedDiscount.name} -{" "}
-                          {selectedDiscount.discount_percentage}%):
-                        </span>
-                        <span>
+                      <div className="flex justify-between items-center p-3 bg-success-50 rounded-lg border border-success-200">
+                        <div className="flex items-center gap-2">
+                          <PercentBadgeIcon className="h-5 w-5 text-success-600" />
+                          <span className="font-semibold text-success-700">
+                            Discount ({selectedDiscount.name} -{" "}
+                            {selectedDiscount.discount_percentage}%)
+                          </span>
+                        </div>
+                        <span className="font-bold text-lg text-success-700">
                           -₱
                           {calculateDiscount(
                             Number(selectedOrder.final_amount || 0),
@@ -622,9 +699,14 @@ export default function UnifiedCashierPage() {
                       </div>
                     </>
                   )}
-                  <div className="flex justify-between text-lg font-bold pt-2 border-t-2">
-                    <span>Total:</span>
-                    <span>₱{finalAmount.toFixed(2)}</span>
+                  <Divider />
+                  <div className="flex justify-between items-center pt-2">
+                    <span className="text-2xl font-black text-default-900">
+                      Total:
+                    </span>
+                    <span className="text-3xl font-black bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent">
+                      ₱{finalAmount.toFixed(2)}
+                    </span>
                   </div>
                 </div>
               </CardBody>
@@ -632,13 +714,23 @@ export default function UnifiedCashierPage() {
 
             {/* Payment Verification (for pending orders) */}
             {isPending && (
-              <Card className="border-2 border-warning-200 bg-warning-50">
-                <CardHeader>
-                  <h3 className="font-semibold text-warning-800">
-                    Payment Verification Required
-                  </h3>
+              <Card className="border-3 border-warning-400 bg-gradient-to-br from-warning-50 to-yellow-50 shadow-xl">
+                <CardHeader className="bg-gradient-to-r from-warning-100 to-yellow-100 border-b-3 border-warning-300">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-warning-500 rounded-xl shadow-lg animate-pulse">
+                      <BanknotesIcon className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-xl text-warning-900">
+                        Payment Verification Required
+                      </h3>
+                      <p className="text-sm text-warning-700 font-medium">
+                        Complete payment verification to confirm order
+                      </p>
+                    </div>
+                  </div>
                 </CardHeader>
-                <CardBody className="space-y-4">
+                <CardBody className="space-y-5 p-6">
                   {/* Discount Selection */}
                   <Select
                     label="Apply Discount (Optional)"
@@ -670,18 +762,34 @@ export default function UnifiedCashierPage() {
                       <Input
                         label="Amount Tendered"
                         placeholder="0.00"
+                        size="lg"
+                        variant="bordered"
+                        classNames={{
+                          input: "text-lg font-bold",
+                          inputWrapper:
+                            "border-2 border-default-300 hover:border-primary-500 focus-within:!border-primary-500",
+                        }}
                         startContent={
-                          <span className="text-default-400">₱</span>
+                          <span className="text-default-600 text-lg font-bold">
+                            ₱
+                          </span>
                         }
                         type="number"
                         value={amountTendered}
                         onValueChange={setAmountTendered}
                       />
                       {amountTendered && (
-                        <div className="bg-success-50 p-4 rounded-lg">
+                        <div className="bg-gradient-to-br from-success-50 to-green-100 p-6 rounded-2xl border-3 border-success-300 shadow-lg">
                           <div className="flex justify-between items-center">
-                            <span className="font-semibold">Change:</span>
-                            <span className="text-2xl font-bold text-success-700">
+                            <div className="flex items-center gap-3">
+                              <div className="p-3 bg-success-500 rounded-xl">
+                                <BanknotesIcon className="h-6 w-6 text-white" />
+                              </div>
+                              <span className="text-xl font-bold text-success-900">
+                                Change:
+                              </span>
+                            </div>
+                            <span className="text-4xl font-black bg-gradient-to-r from-success-600 to-green-600 bg-clip-text text-transparent">
                               ₱{calculatedChange.toFixed(2)}
                             </span>
                           </div>
@@ -697,14 +805,29 @@ export default function UnifiedCashierPage() {
                     <Input
                       label="Reference Number"
                       placeholder="Enter reference number"
+                      size="lg"
+                      variant="bordered"
+                      classNames={{
+                        input: "text-lg font-semibold",
+                        inputWrapper:
+                          "border-2 border-default-300 hover:border-primary-500 focus-within:!border-primary-500",
+                      }}
+                      startContent={<QrCodeIcon className="h-5 w-5" />}
                       value={referenceNumber}
                       onValueChange={setReferenceNumber}
                     />
                   )}
 
                   {verifyError && (
-                    <div className="bg-danger-50 p-3 rounded-lg text-danger-700 text-sm">
-                      {verifyError}
+                    <div className="bg-gradient-to-r from-danger-50 to-red-100 p-5 rounded-xl border-2 border-danger-300 shadow-md">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-danger-500 rounded-lg">
+                          <ClockIcon className="h-5 w-5 text-white" />
+                        </div>
+                        <p className="text-danger-800 font-semibold flex-1">
+                          {verifyError}
+                        </p>
+                      </div>
                     </div>
                   )}
                 </CardBody>
@@ -712,26 +835,51 @@ export default function UnifiedCashierPage() {
             )}
 
             {/* Order Timeline */}
-            <Card>
-              <CardHeader>
-                <h3 className="font-semibold">Order Timeline</h3>
+            <Card className="border-2 border-default-200 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 border-b-2 border-default-200">
+                <div className="flex items-center gap-2">
+                  <ClockIcon className="h-5 w-5 text-purple-600" />
+                  <h3 className="font-bold text-lg">Order Timeline</h3>
+                </div>
               </CardHeader>
-              <CardBody>
+              <CardBody className="p-6">
                 {loadingTimeline ? (
-                  <Spinner size="sm" />
+                  <div className="flex justify-center py-8">
+                    <Spinner size="lg" color="primary" />
+                  </div>
                 ) : orderTimeline.length > 0 ? (
-                  <div className="space-y-3">
+                  <div className="relative space-y-6">
+                    {/* Vertical line */}
+                    <div className="absolute left-[17px] top-4 bottom-4 w-0.5 bg-gradient-to-b from-purple-300 via-pink-300 to-purple-300" />
+
                     {orderTimeline.map((entry, index) => (
-                      <div key={index} className="flex items-start gap-3">
-                        <div className="min-w-[100px] text-sm text-default-500">
-                          {new Date(entry.timestamp).toLocaleTimeString()}
+                      <div key={index} className="flex items-start gap-5 relative">
+                        {/* Timeline dot */}
+                        <div className="relative z-10">
+                          <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full shadow-lg">
+                            <CheckCircleIcon className="h-5 w-5 text-white" />
+                          </div>
                         </div>
-                        <div>
-                          <Chip size="sm" variant="flat">
-                            {entry.status}
-                          </Chip>
+
+                        <div className="flex-1 bg-gradient-to-r from-default-50 to-default-100 p-4 rounded-xl border-2 border-default-200 shadow-sm">
+                          <div className="flex items-start justify-between mb-2">
+                            <Chip
+                              color={statusColors[entry.status]}
+                              size="md"
+                              variant="flat"
+                              className="font-bold uppercase"
+                            >
+                              {entry.status}
+                            </Chip>
+                            <div className="flex items-center gap-2 text-default-500">
+                              <ClockIcon className="h-4 w-4" />
+                              <span className="text-sm font-semibold">
+                                {new Date(entry.timestamp).toLocaleTimeString()}
+                              </span>
+                            </div>
+                          </div>
                           {entry.notes && (
-                            <p className="text-sm text-default-600 mt-1">
+                            <p className="text-sm text-default-700 font-medium mt-2 pl-2 border-l-3 border-purple-300">
                               {entry.notes}
                             </p>
                           )}
@@ -740,15 +888,24 @@ export default function UnifiedCashierPage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-default-500">
-                    No timeline available
-                  </p>
+                  <div className="text-center py-8">
+                    <ClockIcon className="h-16 w-16 text-default-300 mx-auto mb-3" />
+                    <p className="text-default-500 font-medium">
+                      No timeline available
+                    </p>
+                  </div>
                 )}
               </CardBody>
             </Card>
           </ModalBody>
-          <ModalFooter>
-            <Button color="default" variant="light" onPress={onClose}>
+          <ModalFooter className="bg-gradient-to-r from-default-50 to-default-100 border-t-2 border-default-200 gap-3 p-6">
+            <Button
+              color="default"
+              variant="bordered"
+              size="lg"
+              className="font-semibold"
+              onPress={onClose}
+            >
               Close
             </Button>
 
@@ -756,7 +913,12 @@ export default function UnifiedCashierPage() {
             {isPending && (
               <Button
                 color="success"
+                size="lg"
+                className="font-bold shadow-lg"
                 isLoading={verifying}
+                startContent={
+                  !verifying && <CheckCircleIcon className="h-5 w-5" />
+                }
                 onPress={handleVerifyPayment}
               >
                 Verify Payment & Confirm Order
@@ -765,10 +927,13 @@ export default function UnifiedCashierPage() {
 
             {/* Active: Update Status */}
             {isActive && (
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 {selectedOrder.order_status === OrderStatus.CONFIRMED && (
                   <Button
                     color="primary"
+                    size="lg"
+                    className="font-bold shadow-lg"
+                    startContent={<ClockIcon className="h-5 w-5" />}
                     onPress={() => handleUpdateStatus(OrderStatus.PREPARING)}
                   >
                     Mark as Preparing
@@ -777,6 +942,9 @@ export default function UnifiedCashierPage() {
                 {selectedOrder.order_status === OrderStatus.PREPARING && (
                   <Button
                     color="success"
+                    size="lg"
+                    className="font-bold shadow-lg"
+                    startContent={<CheckCircleIcon className="h-5 w-5" />}
                     onPress={() => handleUpdateStatus(OrderStatus.READY)}
                   >
                     Mark as Ready
@@ -785,6 +953,9 @@ export default function UnifiedCashierPage() {
                 {selectedOrder.order_status === OrderStatus.READY && (
                   <Button
                     color="success"
+                    size="lg"
+                    className="font-bold shadow-lg"
+                    startContent={<CheckCircleIcon className="h-5 w-5" />}
                     onPress={() => handleUpdateStatus(OrderStatus.COMPLETED)}
                   >
                     Mark as Completed
