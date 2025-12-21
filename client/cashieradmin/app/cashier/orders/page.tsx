@@ -21,13 +21,13 @@ import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
 import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  useDisclosure,
-} from "@heroui/modal";
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerBody,
+  DrawerFooter,
+} from "@heroui/drawer";
+import { useDisclosure } from "@heroui/modal";
 import { Spinner } from "@heroui/spinner";
 import { Divider } from "@heroui/divider";
 import { Tabs, Tab } from "@heroui/tabs";
@@ -45,6 +45,8 @@ import {
   ShoppingBagIcon,
   ReceiptPercentIcon,
   CalendarDaysIcon,
+  PrinterIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 
 import { OrderService } from "@/services/order.service";
@@ -113,6 +115,17 @@ export default function UnifiedCashierPage() {
     completedToday: 0,
   });
 
+  // Printer status
+  const [printerStatus, setPrinterStatus] = useState<{
+    available: boolean;
+    connected: boolean;
+    printerName?: string;
+  }>({
+    available: false,
+    connected: false,
+  });
+  const [loadingPrinterStatus, setLoadingPrinterStatus] = useState(true);
+
   // Track first load to prevent loading state on auto-refresh
   const isFirstLoad = useRef(true);
 
@@ -120,10 +133,15 @@ export default function UnifiedCashierPage() {
   useEffect(() => {
     loadAllData();
     loadDiscounts();
+    loadPrinterStatus();
 
     const interval = setInterval(() => loadAllData(false), 10000);
+    const printerInterval = setInterval(loadPrinterStatus, 30000); // Check printer every 30 seconds
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      clearInterval(printerInterval);
+    };
   }, []);
 
   const loadAllData = async (showLoading = true) => {
@@ -189,6 +207,56 @@ export default function UnifiedCashierPage() {
       }
     } catch (error) {
       console.error("Failed to load discounts:", error);
+    }
+  };
+
+  const loadPrinterStatus = async () => {
+    try {
+      const status = await printerService.getStatus();
+
+      setPrinterStatus({
+        available: status.available,
+        connected: status.connected,
+        printerName: status.config?.printerName || status.config?.name || "Default Printer",
+      });
+    } catch (error) {
+      console.error("Failed to load printer status:", error);
+      setPrinterStatus({
+        available: false,
+        connected: false,
+      });
+    } finally {
+      setLoadingPrinterStatus(false);
+    }
+  };
+
+  const handleTestPrint = async () => {
+    try {
+      const result = await printerService.printTest();
+
+      if (result.success) {
+        addToast({
+          title: "Test Print Sent",
+          description: "Test receipt has been sent to the printer",
+          color: "success",
+          timeout: 3000,
+        });
+      } else {
+        addToast({
+          title: "Print Failed",
+          description: result.error || "Failed to print test receipt",
+          color: "danger",
+          timeout: 5000,
+        });
+      }
+    } catch (error) {
+      console.error("Test print error:", error);
+      addToast({
+        title: "Print Error",
+        description: "An error occurred while testing the printer",
+        color: "danger",
+        timeout: 5000,
+      });
     }
   };
 
@@ -541,81 +609,97 @@ export default function UnifiedCashierPage() {
     );
 
     return (
-      <Modal
-        isOpen={isOpen}
-        scrollBehavior="inside"
-        size="4xl"
-        onClose={onClose}
-      >
-        <ModalContent>
-          <ModalHeader className="flex flex-col gap-1 bg-gradient-to-br from-golden-orange/10 via-deep-amber/5 to-transparent border-b-2 border-golden-orange/20 pb-6">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-gradient-to-br from-golden-orange to-deep-amber rounded-xl shadow-lg">
-                  <ReceiptPercentIcon className="h-8 w-8 text-white" />
+      <Drawer isOpen={isOpen} size="4xl" onClose={onClose}>
+        <DrawerContent>
+          {(onClose) => (
+            <>
+              <DrawerHeader className="flex flex-col gap-1 bg-gradient-to-br from-golden-orange/10 via-deep-amber/5 to-transparent border-b-2 border-golden-orange/20 pb-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-golden-orange to-deep-amber rounded-xl shadow-lg">
+                      <ReceiptPercentIcon className="h-8 w-8 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-black bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent">
+                        Order #{selectedOrder.order_number}
+                      </h2>
+                      <div className="flex items-center gap-2 mt-1">
+                        <CalendarDaysIcon className="h-4 w-4 text-default-400" />
+                        <p className="text-sm text-default-600 font-medium">
+                          {formatDate(selectedOrder.order_datetime)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <Chip
+                    color={statusColors[selectedOrder.order_status]}
+                    size="lg"
+                    variant="shadow"
+                    className="font-bold uppercase tracking-wide"
+                  >
+                    {selectedOrder.order_status}
+                  </Chip>
                 </div>
+              </DrawerHeader>
+              <DrawerBody className="gap-6 py-6">{/* Phase 1: Customer Information */}
                 <div>
-                  <h2 className="text-3xl font-black bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent">
-                    Order #{selectedOrder.order_number}
-                  </h2>
-                  <div className="flex items-center gap-2 mt-1">
-                    <CalendarDaysIcon className="h-4 w-4 text-default-400" />
-                    <p className="text-sm text-default-600 font-medium">
-                      {formatDate(selectedOrder.order_datetime)}
-                    </p>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="h-8 w-1 bg-gradient-to-b from-golden-orange to-deep-amber rounded-full" />
+                    <h3 className="text-xl font-black text-default-900 uppercase tracking-wide">
+                      Phase 1: Customer Details
+                    </h3>
                   </div>
+                  <Card className="border-2 border-default-200 shadow-lg">
+                    <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 border-b-2 border-default-200">
+                      <div className="flex items-center gap-2">
+                        <UserIcon className="h-5 w-5 text-blue-600" />
+                        <h3 className="font-bold text-lg">
+                          Customer Information
+                        </h3>
+                      </div>
+                    </CardHeader>
+                    <CardBody className="grid grid-cols-2 gap-6 p-6">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <UserIcon className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-default-500 uppercase tracking-wide font-semibold mb-1">
+                            Name
+                          </p>
+                          <p className="font-bold text-lg text-default-900">
+                            {selectedOrder.name || "Guest"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-purple-100 rounded-lg">
+                          <PhoneIcon className="h-5 w-5 text-purple-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-default-500 uppercase tracking-wide font-semibold mb-1">
+                            Phone
+                          </p>
+                          <p className="font-bold text-lg text-default-900">
+                            {selectedOrder.phone || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+                    </CardBody>
+                  </Card>
                 </div>
-              </div>
-              <Chip
-                color={statusColors[selectedOrder.order_status]}
-                size="lg"
-                variant="shadow"
-                className="font-bold uppercase tracking-wide"
-              >
-                {selectedOrder.order_status}
-              </Chip>
-            </div>
-          </ModalHeader>
-          <ModalBody className="gap-6 py-6">
-            {/* Customer Info */}
-            <Card className="border-2 border-default-200 shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 border-b-2 border-default-200">
-                <div className="flex items-center gap-2">
-                  <UserIcon className="h-5 w-5 text-blue-600" />
-                  <h3 className="font-bold text-lg">Customer Information</h3>
-                </div>
-              </CardHeader>
-              <CardBody className="grid grid-cols-2 gap-6 p-6">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <UserIcon className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-default-500 uppercase tracking-wide font-semibold mb-1">
-                      Name
-                    </p>
-                    <p className="font-bold text-lg text-default-900">
-                      {selectedOrder.name || "Guest"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <PhoneIcon className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-default-500 uppercase tracking-wide font-semibold mb-1">
-                      Phone
-                    </p>
-                    <p className="font-bold text-lg text-default-900">
-                      {selectedOrder.phone || "N/A"}
-                    </p>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
 
-            {/* Order Items */}
+                {/* Divider */}
+                <Divider className="my-4 bg-gradient-to-r from-transparent via-golden-orange/30 to-transparent h-0.5" />
+
+                {/* Phase 2: Order Items */}
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="h-8 w-1 bg-gradient-to-b from-golden-orange to-deep-amber rounded-full" />
+                    <h3 className="text-xl font-black text-default-900 uppercase tracking-wide">
+                      Phase 2: Order Items & Pricing
+                    </h3>
+                  </div>
             <Card className="border-2 border-default-200 shadow-lg">
               <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b-2 border-default-200">
                 <div className="flex items-center gap-2">
@@ -709,12 +793,23 @@ export default function UnifiedCashierPage() {
                     </span>
                   </div>
                 </div>
-              </CardBody>
-            </Card>
+                  </CardBody>
+                </Card>
+              </div>
 
-            {/* Payment Verification (for pending orders) */}
-            {isPending && (
-              <Card className="border-3 border-warning-400 bg-gradient-to-br from-warning-50 to-yellow-50 shadow-xl">
+              {/* Divider */}
+              <Divider className="my-4 bg-gradient-to-r from-transparent via-golden-orange/30 to-transparent h-0.5" />
+
+              {/* Phase 3: Payment Verification (for pending orders) */}
+              {isPending && (
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="h-8 w-1 bg-gradient-to-b from-golden-orange to-deep-amber rounded-full" />
+                    <h3 className="text-xl font-black text-default-900 uppercase tracking-wide">
+                      Phase 3: Payment Verification
+                    </h3>
+                  </div>
+                  <Card className="border-3 border-warning-400 bg-gradient-to-br from-warning-50 to-yellow-50 shadow-xl">
                 <CardHeader className="bg-gradient-to-r from-warning-100 to-yellow-100 border-b-3 border-warning-300">
                   <div className="flex items-center gap-3">
                     <div className="p-3 bg-warning-500 rounded-xl shadow-lg animate-pulse">
@@ -830,11 +925,24 @@ export default function UnifiedCashierPage() {
                       </div>
                     </div>
                   )}
-                </CardBody>
-              </Card>
-            )}
+                    </CardBody>
+                  </Card>
+                </div>
+              )}
 
-            {/* Order Timeline */}
+              {/* Divider */}
+              <Divider className="my-4 bg-gradient-to-r from-transparent via-golden-orange/30 to-transparent h-0.5" />
+
+              {/* Phase 4: Order Timeline */}
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="h-8 w-1 bg-gradient-to-b from-golden-orange to-deep-amber rounded-full" />
+                  <h3 className="text-xl font-black text-default-900 uppercase tracking-wide">
+                    {isPending
+                      ? "Phase 4: Order History"
+                      : "Order Processing Timeline"}
+                  </h3>
+                </div>
             <Card className="border-2 border-default-200 shadow-lg">
               <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 border-b-2 border-default-200">
                 <div className="flex items-center gap-2">
@@ -895,10 +1003,11 @@ export default function UnifiedCashierPage() {
                     </p>
                   </div>
                 )}
-              </CardBody>
-            </Card>
-          </ModalBody>
-          <ModalFooter className="bg-gradient-to-r from-default-50 to-default-100 border-t-2 border-default-200 gap-3 p-6">
+                  </CardBody>
+                </Card>
+              </div>
+            </DrawerBody>
+            <DrawerFooter className="bg-gradient-to-r from-default-50 to-default-100 border-t-2 border-default-200 gap-3 p-6">
             <Button
               color="default"
               variant="bordered"
@@ -963,22 +1072,107 @@ export default function UnifiedCashierPage() {
                 )}
               </div>
             )}
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+          </DrawerFooter>
+            </>
+          )}
+        </DrawerContent>
+      </Drawer>
     );
   };
 
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
-      <div>
-        <h1 className="text-4xl font-black bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent">
-          Cashier Orders
-        </h1>
-        <p className="text-default-600 mt-2">
-          Unified payment verification and order management
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-4xl font-black bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent">
+            Cashier Orders
+          </h1>
+          <p className="text-default-600 mt-2">
+            Unified payment verification and order management
+          </p>
+        </div>
+
+        {/* Printer Status */}
+        <Card className="border-2 border-default-200 shadow-lg min-w-[280px]">
+          <CardBody className="p-4">
+            <div className="flex items-center gap-3">
+              {loadingPrinterStatus ? (
+                <Spinner size="sm" />
+              ) : (
+                <div
+                  className={`p-2 rounded-lg ${
+                    printerStatus.connected
+                      ? "bg-success-100"
+                      : printerStatus.available
+                        ? "bg-warning-100"
+                        : "bg-danger-100"
+                  }`}
+                >
+                  <PrinterIcon
+                    className={`h-6 w-6 ${
+                      printerStatus.connected
+                        ? "text-success-600"
+                        : printerStatus.available
+                          ? "text-warning-600"
+                          : "text-danger-600"
+                    }`}
+                  />
+                </div>
+              )}
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-default-900">
+                    Printer Status
+                  </p>
+                  {!loadingPrinterStatus && (
+                    <Chip
+                      size="sm"
+                      variant="flat"
+                      color={
+                        printerStatus.connected
+                          ? "success"
+                          : printerStatus.available
+                            ? "warning"
+                            : "danger"
+                      }
+                      startContent={
+                        printerStatus.connected ? (
+                          <CheckCircleIcon className="h-3 w-3" />
+                        ) : (
+                          <ExclamationTriangleIcon className="h-3 w-3" />
+                        )
+                      }
+                      className="font-semibold"
+                    >
+                      {printerStatus.connected
+                        ? "Connected"
+                        : printerStatus.available
+                          ? "Available"
+                          : "Offline"}
+                    </Chip>
+                  )}
+                </div>
+                {!loadingPrinterStatus && printerStatus.printerName && (
+                  <p className="text-xs text-default-500 mt-1">
+                    {printerStatus.printerName}
+                  </p>
+                )}
+              </div>
+              {printerStatus.connected && (
+                <Button
+                  size="sm"
+                  variant="flat"
+                  color="primary"
+                  startContent={<PrinterIcon className="h-4 w-4" />}
+                  onPress={handleTestPrint}
+                >
+                  Test
+                </Button>
+              )}
+            </div>
+          </CardBody>
+        </Card>
       </div>
 
       {/* Stats */}
