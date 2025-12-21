@@ -41,7 +41,7 @@ export default function LoginPage() {
           <div className="text-6xl drop-shadow-lg">🥐</div>
           <div className="text-center">
             <h1 className="text-4xl font-bold bg-gradient-to-r from-light-caramel via-muted-clay to-light-caramel bg-clip-text text-transparent">
-              GoldenMunch POS
+              GoldenMunch
             </h1>
             <p className="text-sm text-warm-beige font-medium mt-2">
               Admin & Cashier Portal
