@@ -1,88 +1,17 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import QRCode from "qrcode";
-import { OrderService } from "@/services/order.service";
-import type { CustomerOrder } from "@/types/api";
 
 export default function OrderSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const orderId = searchParams.get("orderId");
   const orderNumber = searchParams.get("orderNumber");
 
-  const [qrCodeUrl, setQrCodeUrl] = useState("");
-  const [order, setOrder] = useState<CustomerOrder | null>(null);
-  const [qrScanned, setQrScanned] = useState(false);
-  const [redirectCountdown, setRedirectCountdown] = useState(5);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [redirectCountdown, setRedirectCountdown] = useState(15);
 
-  // Generate QR code
+  // Redirect to home after countdown
   useEffect(() => {
-    if (!orderId) {
-      router.push("/");
-      return;
-    }
-
-    const generateQR = async () => {
-      try {
-        const orderConfirmationUrl = `${window.location.origin}/order-confirmation?orderId=${orderId}`;
-
-        // Generate QR code as data URL
-        const url = await QRCode.toDataURL(orderConfirmationUrl, {
-          width: 400,
-          margin: 2,
-          color: {
-            dark: "#000000",
-            light: "#FFFFFF",
-          },
-        });
-
-        setQrCodeUrl(url);
-      } catch (error) {
-        console.error("Error generating QR code:", error);
-      }
-    };
-
-    generateQR();
-  }, [orderId, router]);
-
-  // Poll QR scan status to detect when customer scans QR code
-  useEffect(() => {
-    if (!orderId || qrScanned) return;
-
-    const checkQRStatus = async () => {
-      try {
-        // Check if QR code has been scanned
-        const isScanned = await OrderService.checkQRStatus(parseInt(orderId));
-
-        if (isScanned) {
-          console.log(`✅ QR code was scanned for order ${orderId}`);
-          setQrScanned(true);
-        }
-
-        // Also fetch order data to show live status updates
-        const orderData = await OrderService.getOrderById(parseInt(orderId));
-        setOrder(orderData);
-      } catch (error) {
-        console.error("Error checking QR status:", error);
-      }
-    };
-
-    // Initial check
-    checkQRStatus();
-
-    // Poll every 3 seconds
-    const pollInterval = setInterval(checkQRStatus, 3000);
-
-    return () => clearInterval(pollInterval);
-  }, [orderId, qrScanned]);
-
-  // Countdown to redirect after QR is scanned
-  useEffect(() => {
-    if (!qrScanned) return;
-
     if (redirectCountdown === 0) {
       router.push("/");
       return;
@@ -93,34 +22,22 @@ export default function OrderSuccessPage() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [qrScanned, redirectCountdown, router]);
+  }, [redirectCountdown, router]);
+
+  // Redirect immediately if no order number
+  useEffect(() => {
+    if (!orderNumber) {
+      router.push("/");
+    }
+  }, [orderNumber, router]);
+
+  if (!orderNumber) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-primary/10 flex items-center justify-center p-8">
       <div className="max-w-5xl w-full">
-        {/* QR Scanned Success Modal */}
-        {qrScanned && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
-            <div className="bg-gradient-to-br from-green-400 via-green-500 to-green-600 rounded-3xl p-12 max-w-2xl mx-4 shadow-2xl animate-scale-in">
-              <div className="text-center">
-                <div className="text-9xl mb-6 animate-bounce">✅</div>
-                <h2 className="text-6xl font-black text-white mb-6 drop-shadow-lg">
-                  QR Code Scanned!
-                </h2>
-                <p className="text-3xl text-white font-bold mb-8">
-                  Customer has received the receipt
-                </p>
-                <p className="text-2xl text-white font-semibold mb-4">
-                  Kiosk is ready for the next customer
-                </p>
-                <p className="text-xl text-white font-semibold bg-black/20 px-6 py-3 rounded-2xl inline-block">
-                  Returning to menu in {redirectCountdown} seconds...
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Success Message */}
         <div className="text-center mb-12 animate-fade-in-down">
           <div className="inline-block bg-green-500 rounded-full p-12 mb-8 animate-bounce-in shadow-2xl">
@@ -139,70 +56,68 @@ export default function OrderSuccessPage() {
             </svg>
           </div>
           <h1 className="text-8xl font-black text-gradient mb-6 drop-shadow-lg animate-scale-in">
-            Order Successful!
+            You Ordered Successfully!
           </h1>
-          <p className="text-4xl text-black font-bold mb-4">
-            Order #{orderNumber}
-          </p>
-          <p className="text-3xl text-black font-semibold">
-            Thank you for your order!
-          </p>
         </div>
 
-        {/* QR Code Card */}
+        {/* Order ID Card */}
         <div className="modern-card overflow-hidden shadow-2xl animate-fade-in-up animation-delay-200 bg-white">
           <div className="bg-gradient-to-r from-primary via-secondary to-accent p-8 text-center">
             <h2 className="text-5xl font-black text-black drop-shadow-md">
-              📱 Scan to View Your Receipt
+              📋 This is your Order ID
             </h2>
           </div>
 
           <div className="p-16 text-center">
-            {/* QR Code */}
-            {qrCodeUrl && (
-              <div className="inline-block bg-white p-8 rounded-3xl shadow-2xl mb-8 border-4 border-primary/30 animate-scale-in animation-delay-500">
-                <img
-                  src={qrCodeUrl}
-                  alt="Order Receipt QR Code"
-                  className="w-96 h-96"
-                />
+            {/* Order Number Display */}
+            <div className="mb-12">
+              <p className="text-3xl text-black font-bold mb-6">
+                Remember it or take a picture with your phone
+              </p>
+              <div className="inline-block bg-gradient-to-r from-primary/20 to-secondary/20 border-4 border-primary rounded-3xl px-16 py-12 shadow-2xl animate-scale-in animation-delay-500">
+                <p className="text-2xl text-black font-semibold mb-4">
+                  Order Number
+                </p>
+                <p className="text-9xl font-black text-gradient tracking-wider selectable">
+                  {orderNumber}
+                </p>
               </div>
-            )}
+            </div>
 
             {/* Instructions */}
             <div className="space-y-6 mb-12">
               <div className="flex items-center justify-center gap-6 text-left bg-primary/10 rounded-2xl p-8 max-w-3xl mx-auto">
-                <div className="text-7xl">📱</div>
+                <div className="text-7xl">📸</div>
                 <div>
                   <p className="text-3xl font-bold text-black mb-2">
-                    1. Scan the QR code with your phone
+                    1. Remember or photograph this Order ID
                   </p>
                   <p className="text-2xl text-black">
-                    Use your camera app to scan this code
+                    You'll need this to track your order
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center justify-center gap-6 text-left bg-secondary/10 rounded-2xl p-8 max-w-3xl mx-auto">
-                <div className="text-7xl">📋</div>
+                <div className="text-7xl">💰</div>
                 <div>
                   <p className="text-3xl font-bold text-black mb-2">
-                    2. View your digital receipt
+                    2. Proceed to the Cashier
                   </p>
                   <p className="text-2xl text-black">
-                    Your order details will open on your phone
+                    Show your Order ID to complete payment
                   </p>
                 </div>
               </div>
 
               <div className="flex items-center justify-center gap-6 text-left bg-accent/10 rounded-2xl p-8 max-w-3xl mx-auto">
-                <div className="text-7xl">💰</div>
+                <div className="text-7xl">🎉</div>
                 <div>
                   <p className="text-3xl font-bold text-black mb-2">
-                    3. Proceed to the cashier
+                    3. Wait for your order
                   </p>
                   <p className="text-2xl text-black">
-                    Complete your payment at the counter
+                    We'll call your order number when ready
                   </p>
                 </div>
               </div>
@@ -221,25 +136,18 @@ export default function OrderSuccessPage() {
               </p>
             </div>
 
-            {/* Status Message - Waiting for QR scan */}
+            {/* Auto-return countdown */}
             <div className="bg-blue-50 border-2 border-blue-500 rounded-2xl p-8 max-w-2xl mx-auto">
               <div className="flex items-center justify-center gap-4">
-                <div className="text-5xl animate-pulse-gentle">
-                  📱
+                <div className="text-5xl">
+                  🏠
                 </div>
                 <div className="text-left">
                   <p className="text-2xl font-bold text-black mb-2">
-                    Waiting for customer to scan QR code...
+                    Kiosk will return to menu automatically
                   </p>
-                  <p className="text-lg text-black">
-                    {order?.order_status === "pending" && "Order Status: Pending confirmation"}
-                    {order?.order_status === "confirmed" && "Order Status: Confirmed"}
-                    {order?.order_status === "preparing" && "Order Status: Being prepared"}
-                    {order?.order_status === "ready" && "Order Status: Ready for pickup"}
-                    {!order && "Loading order status..."}
-                  </p>
-                  <p className="text-lg text-black font-semibold mt-2">
-                    Kiosk will be ready for next customer after QR is scanned
+                  <p className="text-lg text-black font-semibold">
+                    Returning in {redirectCountdown} seconds...
                   </p>
                 </div>
               </div>
