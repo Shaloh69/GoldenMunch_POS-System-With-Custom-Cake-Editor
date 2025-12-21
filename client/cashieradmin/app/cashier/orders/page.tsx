@@ -6,7 +6,7 @@ import type {
   CustomerDiscountType,
 } from "@/types/api";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import {
   Table,
@@ -108,19 +108,26 @@ export default function UnifiedCashierPage() {
     completedToday: 0,
   });
 
+  // Track first load to prevent loading state on auto-refresh
+  const isFirstLoad = useRef(true);
+
   // Load data on mount and refresh every 10 seconds
   useEffect(() => {
     loadAllData();
     loadDiscounts();
 
-    const interval = setInterval(loadAllData, 10000);
+    const interval = setInterval(() => loadAllData(false), 10000);
 
     return () => clearInterval(interval);
   }, []);
 
-  const loadAllData = async () => {
+  const loadAllData = async (showLoading = true) => {
     try {
-      setLoading(true);
+      // Only show loading spinner on first load or manual refresh
+      if (showLoading && isFirstLoad.current) {
+        setLoading(true);
+        isFirstLoad.current = false;
+      }
 
       // Load all orders
       const response = await OrderService.getOrders();
@@ -566,7 +573,9 @@ export default function UnifiedCashierPage() {
                 </div>
                 <div>
                   <p className="text-sm text-default-500">Phone</p>
-                  <p className="font-semibold">{selectedOrder.phone}</p>
+                  <p className="font-semibold">
+                    {selectedOrder.phone || "N/A"}
+                  </p>
                 </div>
               </CardBody>
             </Card>
@@ -578,23 +587,32 @@ export default function UnifiedCashierPage() {
               </CardHeader>
               <CardBody>
                 <div className="space-y-2">
-                  {(selectedOrder as any).items?.map(
-                    (item: any, index: number) => (
-                      <div
-                        key={index}
-                        className="flex justify-between items-center py-2 border-b last:border-0"
-                      >
-                        <div>
-                          <p className="font-semibold">{item.menu_item_name}</p>
-                          <p className="text-sm text-default-500">
-                            Quantity: {item.quantity}
+                  {(selectedOrder as any).items &&
+                  (selectedOrder as any).items.length > 0 ? (
+                    (selectedOrder as any).items.map(
+                      (item: any, index: number) => (
+                        <div
+                          key={index}
+                          className="flex justify-between items-center py-2 border-b last:border-0"
+                        >
+                          <div>
+                            <p className="font-semibold">
+                              {item.menu_item_name || "Unknown Item"}
+                            </p>
+                            <p className="text-sm text-default-500">
+                              Quantity: {item.quantity || 0}
+                            </p>
+                          </div>
+                          <p className="font-semibold">
+                            ₱{Number(item.item_total || 0).toFixed(2)}
                           </p>
                         </div>
-                        <p className="font-semibold">
-                          ₱{Number(item.item_total || 0).toFixed(2)}
-                        </p>
-                      </div>
-                    ),
+                      ),
+                    )
+                  ) : (
+                    <p className="text-sm text-default-500 text-center py-4">
+                      No items found
+                    </p>
                   )}
                 </div>
                 <Divider className="my-4" />
