@@ -1,9 +1,10 @@
-import { apiClient } from '@/lib/api-client';
-import type { PromotionRule, CreatePromotionRequest } from '@/types/api';
+import type { PromotionRule, CreatePromotionRequest } from "@/types/api";
+
+import { apiClient } from "@/lib/api-client";
 
 export class PromotionService {
   static async getPromotions(params?: any) {
-    return apiClient.get<PromotionRule[]>('/admin/promotions', { params });
+    return apiClient.get<PromotionRule[]>("/admin/promotions", { params });
   }
 
   static async getPromotionById(id: number) {
@@ -11,10 +12,13 @@ export class PromotionService {
   }
 
   static async createPromotion(data: CreatePromotionRequest) {
-    return apiClient.post<PromotionRule>('/admin/promotions', data);
+    return apiClient.post<PromotionRule>("/admin/promotions", data);
   }
 
-  static async updatePromotion(id: number, data: Partial<CreatePromotionRequest>) {
+  static async updatePromotion(
+    id: number,
+    data: Partial<CreatePromotionRequest>,
+  ) {
     return apiClient.put<PromotionRule>(`/admin/promotions/${id}`, data);
   }
 
@@ -27,7 +31,9 @@ export class PromotionService {
   }
 
   static async assignCategories(id: number, category_ids: number[]) {
-    return apiClient.post(`/admin/promotions/${id}/categories`, { category_ids });
+    return apiClient.post(`/admin/promotions/${id}/categories`, {
+      category_ids,
+    });
   }
 
   static async getAssignments(id: number) {
@@ -40,6 +46,6 @@ export class PromotionService {
 
   // Public endpoint
   static async getActivePromotions() {
-    return apiClient.get<PromotionRule[]>('/kiosk/promotions');
+    return apiClient.get<PromotionRule[]>("/kiosk/promotions");
   }
 }

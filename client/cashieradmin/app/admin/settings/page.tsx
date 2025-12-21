@@ -1,34 +1,35 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Card, CardBody, CardHeader } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { Input } from '@heroui/input';
-import { Divider } from '@heroui/divider';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState } from "react";
+import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
+import { Divider } from "@heroui/divider";
 import {
   UserIcon,
   LockClosedIcon,
   CheckCircleIcon,
   XCircleIcon,
   Cog6ToothIcon,
-} from '@heroicons/react/24/outline';
-import { AuthService } from '@/services/auth.service';
+} from "@heroicons/react/24/outline";
+
+import { useAuth } from "@/contexts/AuthContext";
+import { AuthService } from "@/services/auth.service";
 
 export default function SettingsPage() {
   const { user } = useAuth();
 
   // Username change state
-  const [newUsername, setNewUsername] = useState('');
-  const [usernamePassword, setUsernamePassword] = useState('');
+  const [newUsername, setNewUsername] = useState("");
+  const [usernamePassword, setUsernamePassword] = useState("");
   const [usernameLoading, setUsernameLoading] = useState(false);
   const [usernameSuccess, setUsernameSuccess] = useState<string | null>(null);
   const [usernameError, setUsernameError] = useState<string | null>(null);
 
   // Password change state
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
@@ -38,12 +39,14 @@ export default function SettingsPage() {
     setUsernameSuccess(null);
 
     if (!newUsername.trim()) {
-      setUsernameError('Please enter a new username');
+      setUsernameError("Please enter a new username");
+
       return;
     }
 
     if (!usernamePassword) {
-      setUsernameError('Please enter your current password to confirm');
+      setUsernameError("Please enter your current password to confirm");
+
       return;
     }
 
@@ -51,16 +54,18 @@ export default function SettingsPage() {
       setUsernameLoading(true);
       await AuthService.updateUsername(newUsername, usernamePassword);
 
-      setUsernameSuccess('Username updated successfully! Please login again with your new username.');
-      setNewUsername('');
-      setUsernamePassword('');
+      setUsernameSuccess(
+        "Username updated successfully! Please login again with your new username.",
+      );
+      setNewUsername("");
+      setUsernamePassword("");
 
       // Logout after 3 seconds
       setTimeout(() => {
         AuthService.logout();
       }, 3000);
     } catch (error: any) {
-      setUsernameError(error.message || 'Failed to update username');
+      setUsernameError(error.message || "Failed to update username");
     } finally {
       setUsernameLoading(false);
     }
@@ -71,17 +76,20 @@ export default function SettingsPage() {
     setPasswordSuccess(null);
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-      setPasswordError('Please fill in all password fields');
+      setPasswordError("Please fill in all password fields");
+
       return;
     }
 
     if (newPassword.length < 6) {
-      setPasswordError('New password must be at least 6 characters long');
+      setPasswordError("New password must be at least 6 characters long");
+
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setPasswordError('New passwords do not match');
+      setPasswordError("New passwords do not match");
+
       return;
     }
 
@@ -89,17 +97,17 @@ export default function SettingsPage() {
       setPasswordLoading(true);
       await AuthService.updatePassword(currentPassword, newPassword);
 
-      setPasswordSuccess('Password updated successfully! Please login again.');
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
+      setPasswordSuccess("Password updated successfully! Please login again.");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
 
       // Logout after 3 seconds
       setTimeout(() => {
         AuthService.logout();
       }, 3000);
     } catch (error: any) {
-      setPasswordError(error.message || 'Failed to update password');
+      setPasswordError(error.message || "Failed to update password");
     } finally {
       setPasswordLoading(false);
     }
@@ -127,7 +135,12 @@ export default function SettingsPage() {
             <div>
               <p className="text-sm text-default-500">Currently logged in as</p>
               <p className="text-xl font-bold">{user?.name}</p>
-              <p className="text-sm text-default-600">Username: <span className="font-mono font-semibold">{user?.username}</span></p>
+              <p className="text-sm text-default-600">
+                Username:{" "}
+                <span className="font-mono font-semibold">
+                  {user?.username}
+                </span>
+              </p>
             </div>
           </div>
         </CardBody>
@@ -143,7 +156,9 @@ export default function SettingsPage() {
               </div>
               <div>
                 <h2 className="text-xl font-bold">Change Username</h2>
-                <p className="text-sm text-default-500">Update your login username</p>
+                <p className="text-sm text-default-500">
+                  Update your login username
+                </p>
               </div>
             </div>
           </CardHeader>
@@ -154,7 +169,9 @@ export default function SettingsPage() {
                 <CardBody>
                   <div className="flex items-center gap-3">
                     <CheckCircleIcon className="h-5 w-5 text-success-600" />
-                    <p className="text-sm text-success-700 font-semibold">{usernameSuccess}</p>
+                    <p className="text-sm text-success-700 font-semibold">
+                      {usernameSuccess}
+                    </p>
                   </div>
                 </CardBody>
               </Card>
@@ -165,45 +182,52 @@ export default function SettingsPage() {
                 <CardBody>
                   <div className="flex items-center gap-3">
                     <XCircleIcon className="h-5 w-5 text-danger-600" />
-                    <p className="text-sm text-danger-700 font-semibold">{usernameError}</p>
+                    <p className="text-sm text-danger-700 font-semibold">
+                      {usernameError}
+                    </p>
                   </div>
                 </CardBody>
               </Card>
             )}
 
             <Input
+              isDisabled={usernameLoading || !!usernameSuccess}
               label="New Username"
               placeholder="Enter new username"
+              startContent={<UserIcon className="h-4 w-4 text-default-400" />}
               value={newUsername}
               onValueChange={setNewUsername}
-              startContent={<UserIcon className="h-4 w-4 text-default-400" />}
-              isDisabled={usernameLoading || !!usernameSuccess}
             />
 
             <Input
-              label="Current Password"
-              type="password"
-              placeholder="Enter your current password"
-              value={usernamePassword}
-              onValueChange={setUsernamePassword}
-              startContent={<LockClosedIcon className="h-4 w-4 text-default-400" />}
               description="Required to confirm changes"
               isDisabled={usernameLoading || !!usernameSuccess}
+              label="Current Password"
+              placeholder="Enter your current password"
+              startContent={
+                <LockClosedIcon className="h-4 w-4 text-default-400" />
+              }
+              type="password"
+              value={usernamePassword}
+              onValueChange={setUsernamePassword}
             />
 
             <Button
-              color="primary"
               fullWidth
-              onPress={handleUsernameChange}
-              isLoading={usernameLoading}
+              color="primary"
               isDisabled={!!usernameSuccess}
-              startContent={!usernameLoading && <UserIcon className="h-5 w-5" />}
+              isLoading={usernameLoading}
+              startContent={
+                !usernameLoading && <UserIcon className="h-5 w-5" />
+              }
+              onPress={handleUsernameChange}
             >
-              {usernameLoading ? 'Updating...' : 'Update Username'}
+              {usernameLoading ? "Updating..." : "Update Username"}
             </Button>
 
             <p className="text-xs text-warning-600 bg-warning-50 p-3 rounded-lg">
-              <strong>Note:</strong> Changing your username will log you out. You'll need to login again with your new username.
+              <strong>Note:</strong> Changing your username will log you out.
+              You'll need to login again with your new username.
             </p>
           </CardBody>
         </Card>
@@ -217,7 +241,9 @@ export default function SettingsPage() {
               </div>
               <div>
                 <h2 className="text-xl font-bold">Change Password</h2>
-                <p className="text-sm text-default-500">Update your login password</p>
+                <p className="text-sm text-default-500">
+                  Update your login password
+                </p>
               </div>
             </div>
           </CardHeader>
@@ -228,7 +254,9 @@ export default function SettingsPage() {
                 <CardBody>
                   <div className="flex items-center gap-3">
                     <CheckCircleIcon className="h-5 w-5 text-success-600" />
-                    <p className="text-sm text-success-700 font-semibold">{passwordSuccess}</p>
+                    <p className="text-sm text-success-700 font-semibold">
+                      {passwordSuccess}
+                    </p>
                   </div>
                 </CardBody>
               </Card>
@@ -239,56 +267,67 @@ export default function SettingsPage() {
                 <CardBody>
                   <div className="flex items-center gap-3">
                     <XCircleIcon className="h-5 w-5 text-danger-600" />
-                    <p className="text-sm text-danger-700 font-semibold">{passwordError}</p>
+                    <p className="text-sm text-danger-700 font-semibold">
+                      {passwordError}
+                    </p>
                   </div>
                 </CardBody>
               </Card>
             )}
 
             <Input
+              isDisabled={passwordLoading || !!passwordSuccess}
               label="Current Password"
-              type="password"
               placeholder="Enter current password"
+              startContent={
+                <LockClosedIcon className="h-4 w-4 text-default-400" />
+              }
+              type="password"
               value={currentPassword}
               onValueChange={setCurrentPassword}
-              startContent={<LockClosedIcon className="h-4 w-4 text-default-400" />}
-              isDisabled={passwordLoading || !!passwordSuccess}
             />
 
             <Input
-              label="New Password"
-              type="password"
-              placeholder="Enter new password"
-              value={newPassword}
-              onValueChange={setNewPassword}
-              startContent={<LockClosedIcon className="h-4 w-4 text-default-400" />}
               description="Must be at least 6 characters"
               isDisabled={passwordLoading || !!passwordSuccess}
+              label="New Password"
+              placeholder="Enter new password"
+              startContent={
+                <LockClosedIcon className="h-4 w-4 text-default-400" />
+              }
+              type="password"
+              value={newPassword}
+              onValueChange={setNewPassword}
             />
 
             <Input
+              isDisabled={passwordLoading || !!passwordSuccess}
               label="Confirm New Password"
-              type="password"
               placeholder="Confirm new password"
+              startContent={
+                <LockClosedIcon className="h-4 w-4 text-default-400" />
+              }
+              type="password"
               value={confirmPassword}
               onValueChange={setConfirmPassword}
-              startContent={<LockClosedIcon className="h-4 w-4 text-default-400" />}
-              isDisabled={passwordLoading || !!passwordSuccess}
             />
 
             <Button
-              color="primary"
               fullWidth
-              onPress={handlePasswordChange}
-              isLoading={passwordLoading}
+              color="primary"
               isDisabled={!!passwordSuccess}
-              startContent={!passwordLoading && <LockClosedIcon className="h-5 w-5" />}
+              isLoading={passwordLoading}
+              startContent={
+                !passwordLoading && <LockClosedIcon className="h-5 w-5" />
+              }
+              onPress={handlePasswordChange}
             >
-              {passwordLoading ? 'Updating...' : 'Update Password'}
+              {passwordLoading ? "Updating..." : "Update Password"}
             </Button>
 
             <p className="text-xs text-warning-600 bg-warning-50 p-3 rounded-lg">
-              <strong>Note:</strong> Changing your password will log you out. You'll need to login again with your new password.
+              <strong>Note:</strong> Changing your password will log you out.
+              You'll need to login again with your new password.
             </p>
           </CardBody>
         </Card>
@@ -303,7 +342,10 @@ export default function SettingsPage() {
           <ul className="space-y-2 text-sm text-default-600">
             <li className="flex items-start gap-2">
               <span className="text-primary">•</span>
-              <span>Use a strong password with a mix of letters, numbers, and special characters</span>
+              <span>
+                Use a strong password with a mix of letters, numbers, and
+                special characters
+              </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary">•</span>
@@ -311,11 +353,15 @@ export default function SettingsPage() {
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary">•</span>
-              <span>Change your password regularly (recommended every 90 days)</span>
+              <span>
+                Change your password regularly (recommended every 90 days)
+              </span>
             </li>
             <li className="flex items-start gap-2">
               <span className="text-primary">•</span>
-              <span>Use a unique password that you don't use for other accounts</span>
+              <span>
+                Use a unique password that you don't use for other accounts
+              </span>
             </li>
           </ul>
         </CardBody>

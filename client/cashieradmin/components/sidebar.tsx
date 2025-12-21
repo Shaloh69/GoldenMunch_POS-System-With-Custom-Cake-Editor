@@ -1,19 +1,14 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Button } from '@heroui/button';
-import { Divider } from '@heroui/divider';
-import { Avatar } from '@heroui/avatar';
-import { Tooltip } from '@heroui/tooltip';
-import { useAuth } from '@/contexts/AuthContext';
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Button } from "@heroui/button";
+import { Avatar } from "@heroui/avatar";
+import { Tooltip } from "@heroui/tooltip";
 import {
   HomeIcon,
   ShoppingCartIcon,
-  CreditCardIcon,
-  TrashIcon,
-  ReceiptRefundIcon,
   ChartBarIcon,
   Square3Stack3DIcon,
   TagIcon,
@@ -27,7 +22,9 @@ import {
   QrCodeIcon,
   PlusCircleIcon,
   PercentBadgeIcon,
-} from '@heroicons/react/24/outline';
+} from "@heroicons/react/24/outline";
+
+import { useAuth } from "@/contexts/AuthContext";
 
 interface NavItem {
   name: string;
@@ -38,23 +35,72 @@ interface NavItem {
 }
 
 const cashierNav: NavItem[] = [
-  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-  { name: 'New Order', href: '/cashier/new-order', icon: PlusCircleIcon },
-  { name: 'Orders & Payments', href: '/cashier/orders', icon: ShoppingCartIcon },
-  { name: 'Custom Cakes', href: '/cashier/custom-cakes', icon: CakeIcon },
+  { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
+  { name: "New Order", href: "/cashier/new-order", icon: PlusCircleIcon },
+  {
+    name: "Orders & Payments",
+    href: "/cashier/orders",
+    icon: ShoppingCartIcon,
+  },
+  { name: "Custom Cakes", href: "/cashier/custom-cakes", icon: CakeIcon },
 ];
 
 const adminNav: NavItem[] = [
-  { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
-  { name: 'Analytics', href: '/admin/analytics', icon: ChartBarIcon, adminOnly: true },
-  { name: 'Transactions', href: '/admin/transactions', icon: BanknotesIcon, adminOnly: true },
-  { name: 'Menu Management', href: '/admin/menu', icon: Square3Stack3DIcon, adminOnly: true },
-  { name: 'Categories', href: '/admin/categories', icon: TagIcon, adminOnly: true },
-  { name: 'Discounts', href: '/admin/discounts', icon: PercentBadgeIcon, adminOnly: true },
-  { name: 'Cashiers', href: '/admin/cashiers', icon: UserGroupIcon, adminOnly: true },
-  { name: 'Custom Cakes', href: '/admin/custom-cakes', icon: CakeIcon, adminOnly: true },
-  { name: 'Payment QR', href: '/admin/settings/payment-qr', icon: QrCodeIcon, adminOnly: true },
-  { name: 'Settings', href: '/admin/settings', icon: Cog6ToothIcon, adminOnly: true },
+  { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
+  {
+    name: "Analytics",
+    href: "/admin/analytics",
+    icon: ChartBarIcon,
+    adminOnly: true,
+  },
+  {
+    name: "Transactions",
+    href: "/admin/transactions",
+    icon: BanknotesIcon,
+    adminOnly: true,
+  },
+  {
+    name: "Menu Management",
+    href: "/admin/menu",
+    icon: Square3Stack3DIcon,
+    adminOnly: true,
+  },
+  {
+    name: "Categories",
+    href: "/admin/categories",
+    icon: TagIcon,
+    adminOnly: true,
+  },
+  {
+    name: "Discounts",
+    href: "/admin/discounts",
+    icon: PercentBadgeIcon,
+    adminOnly: true,
+  },
+  {
+    name: "Cashiers",
+    href: "/admin/cashiers",
+    icon: UserGroupIcon,
+    adminOnly: true,
+  },
+  {
+    name: "Custom Cakes",
+    href: "/admin/custom-cakes",
+    icon: CakeIcon,
+    adminOnly: true,
+  },
+  {
+    name: "Payment QR",
+    href: "/admin/settings/payment-qr",
+    icon: QrCodeIcon,
+    adminOnly: true,
+  },
+  {
+    name: "Settings",
+    href: "/admin/settings",
+    icon: Cog6ToothIcon,
+    adminOnly: true,
+  },
 ];
 
 export function Sidebar() {
@@ -65,9 +111,10 @@ export function Sidebar() {
   const navItems = isAdmin() ? adminNav : cashierNav;
 
   const isActive = (href: string) => {
-    if (href === '/dashboard') {
+    if (href === "/dashboard") {
       return pathname === href;
     }
+
     return pathname?.startsWith(href);
   };
 
@@ -75,10 +122,14 @@ export function Sidebar() {
     <>
       {/* Mobile Toggle Button */}
       <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
         className="lg:hidden fixed top-4 left-4 z-50 p-3 rounded-xl bg-gradient-to-r from-light-caramel to-muted-clay text-white shadow-caramel hover:shadow-xl transition-all duration-300 hover:scale-105"
+        onClick={() => setIsCollapsed(!isCollapsed)}
       >
-        {isCollapsed ? <Bars3Icon className="h-6 w-6" /> : <XMarkIcon className="h-6 w-6" />}
+        {isCollapsed ? (
+          <Bars3Icon className="h-6 w-6" />
+        ) : (
+          <XMarkIcon className="h-6 w-6" />
+        )}
       </button>
 
       {/* Sidebar */}
@@ -88,7 +139,7 @@ export function Sidebar() {
           bg-gradient-to-b from-cream-white via-soft-sand to-warm-beige
           border-r border-light-caramel/30
           transition-all duration-300 z-40 shadow-soft
-          ${isCollapsed ? '-translate-x-full lg:w-20' : 'w-72'}
+          ${isCollapsed ? "-translate-x-full lg:w-20" : "w-72"}
           lg:translate-x-0
           flex flex-col
         `}
@@ -103,7 +154,7 @@ export function Sidebar() {
                   GoldenMunch
                 </h2>
                 <p className="text-xs font-medium text-warm-beige">
-                  {isAdmin() ? 'Admin Portal' : 'Cashier Portal'}
+                  {isAdmin() ? "Admin Portal" : "Cashier Portal"}
                 </p>
               </div>
             )}
@@ -114,14 +165,18 @@ export function Sidebar() {
         <div className="p-5 border-b border-light-caramel/20 bg-gradient-to-r from-soft-sand/30 to-transparent">
           <div className="flex items-center gap-3">
             <Avatar
+              className="bg-gradient-to-r from-light-caramel to-muted-clay ring-2 ring-light-caramel/30"
               name={user?.name}
               size="sm"
-              className="bg-gradient-to-r from-light-caramel to-muted-clay ring-2 ring-light-caramel/30"
             />
             {!isCollapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold truncate text-muted-clay">{user?.name}</p>
-                <p className="text-xs text-warm-beige capitalize font-medium">{user?.type}</p>
+                <p className="text-sm font-semibold truncate text-muted-clay">
+                  {user?.name}
+                </p>
+                <p className="text-xs text-warm-beige capitalize font-medium">
+                  {user?.type}
+                </p>
               </div>
             )}
           </div>
@@ -136,19 +191,24 @@ export function Sidebar() {
             const navButton = (
               <Link
                 key={item.name}
-                href={item.href}
                 className={`
                   flex items-center gap-3 px-4 py-3 rounded-xl
                   transition-all duration-300 transform hover:scale-105
-                  ${active
-                    ? 'bg-gradient-to-r from-light-caramel to-muted-clay text-white shadow-caramel border border-light-caramel/30'
-                    : 'hover:bg-soft-sand/50 text-muted-clay hover:text-muted-clay border border-transparent hover:border-light-caramel/20'
+                  ${
+                    active
+                      ? "bg-gradient-to-r from-light-caramel to-muted-clay text-white shadow-caramel border border-light-caramel/30"
+                      : "hover:bg-soft-sand/50 text-muted-clay hover:text-muted-clay border border-transparent hover:border-light-caramel/20"
                   }
-                  ${isCollapsed ? 'justify-center' : ''}
+                  ${isCollapsed ? "justify-center" : ""}
                 `}
+                href={item.href}
               >
-                <Icon className={`h-5 w-5 flex-shrink-0 ${active ? 'animate-pulse-slow' : ''}`} />
-                {!isCollapsed && <span className="text-sm font-semibold">{item.name}</span>}
+                <Icon
+                  className={`h-5 w-5 flex-shrink-0 ${active ? "animate-pulse-slow" : ""}`}
+                />
+                {!isCollapsed && (
+                  <span className="text-sm font-semibold">{item.name}</span>
+                )}
               </Link>
             );
 
@@ -167,23 +227,25 @@ export function Sidebar() {
         {/* Footer */}
         <div className="p-4 border-t border-light-caramel/20 bg-gradient-to-r from-soft-sand/30 to-transparent">
           <Button
+            className={`w-full bg-gradient-to-r from-red-400 to-red-500 text-white hover:from-red-500 hover:to-red-600 shadow-md hover:shadow-lg transition-all duration-300 ${isCollapsed ? "px-2" : ""}`}
+            startContent={
+              !isCollapsed && <ArrowRightOnRectangleIcon className="h-5 w-5" />
+            }
             onClick={logout}
-            className={`w-full bg-gradient-to-r from-red-400 to-red-500 text-white hover:from-red-500 hover:to-red-600 shadow-md hover:shadow-lg transition-all duration-300 ${isCollapsed ? 'px-2' : ''}`}
-            startContent={!isCollapsed && <ArrowRightOnRectangleIcon className="h-5 w-5" />}
           >
             {isCollapsed ? (
               <ArrowRightOnRectangleIcon className="h-5 w-5" />
             ) : (
-              'Logout'
+              "Logout"
             )}
           </Button>
 
           {!isCollapsed && (
             <Button
-              onClick={() => setIsCollapsed(true)}
-              variant="light"
-              size="sm"
               className="w-full mt-2 hidden lg:flex text-warm-beige hover:text-muted-clay hover:bg-soft-sand/30"
+              size="sm"
+              variant="light"
+              onClick={() => setIsCollapsed(true)}
             >
               Collapse
             </Button>
@@ -191,10 +253,10 @@ export function Sidebar() {
 
           {isCollapsed && (
             <Button
-              onClick={() => setIsCollapsed(false)}
-              variant="light"
-              size="sm"
               className="w-full mt-2 hidden lg:flex px-2 text-warm-beige hover:text-muted-clay"
+              size="sm"
+              variant="light"
+              onClick={() => setIsCollapsed(false)}
             >
               <Bars3Icon className="h-5 w-5" />
             </Button>

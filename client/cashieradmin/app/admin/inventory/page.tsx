@@ -1,25 +1,39 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Card, CardBody, CardHeader } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { Input } from '@heroui/input';
-import { Table, TableHeader, TableBody, TableColumn, TableRow, TableCell } from '@heroui/table';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/modal';
-import { Select, SelectItem } from '@heroui/select';
-import { InventoryService } from '@/services/inventory.service';
+import { useEffect, useState } from "react";
+import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableColumn,
+  TableRow,
+  TableCell,
+} from "@heroui/table";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@heroui/modal";
+import { Select, SelectItem } from "@heroui/select";
 import {
   ExclamationTriangleIcon,
   CheckIcon,
   PlusIcon,
-  MagnifyingGlassIcon
-} from '@heroicons/react/24/outline';
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
+
+import { InventoryService } from "@/services/inventory.service";
 
 export default function InventoryPage() {
   const [alerts, setAlerts] = useState<any[]>([]);
   const [reasons, setReasons] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [showReasonModal, setShowReasonModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -28,11 +42,11 @@ export default function InventoryPage() {
     menu_item_id: 0,
     quantity: 0,
     reason_id: 0,
-    notes: '',
+    notes: "",
   });
 
   const [reasonForm, setReasonForm] = useState({
-    reason_name: '',
+    reason_name: "",
     requires_approval: false,
   });
 
@@ -56,7 +70,7 @@ export default function InventoryPage() {
         setReasons(reasonsRes.data || []);
       }
     } catch (error) {
-      console.error('Failed to fetch inventory data:', error);
+      console.error("Failed to fetch inventory data:", error);
     } finally {
       setLoading(false);
     }
@@ -67,7 +81,7 @@ export default function InventoryPage() {
       await InventoryService.acknowledgeAlert(alertId);
       fetchData(); // Refresh
     } catch (error) {
-      console.error('Failed to acknowledge alert:', error);
+      console.error("Failed to acknowledge alert:", error);
     }
   };
 
@@ -79,11 +93,11 @@ export default function InventoryPage() {
         menu_item_id: 0,
         quantity: 0,
         reason_id: 0,
-        notes: '',
+        notes: "",
       });
       fetchData();
     } catch (error) {
-      console.error('Failed to adjust stock:', error);
+      console.error("Failed to adjust stock:", error);
     }
   };
 
@@ -91,10 +105,10 @@ export default function InventoryPage() {
     try {
       await InventoryService.createAdjustmentReason(reasonForm);
       setShowReasonModal(false);
-      setReasonForm({ reason_name: '', requires_approval: false });
+      setReasonForm({ reason_name: "", requires_approval: false });
       fetchData();
     } catch (error) {
-      console.error('Failed to create reason:', error);
+      console.error("Failed to create reason:", error);
     }
   };
 
@@ -107,8 +121,8 @@ export default function InventoryPage() {
     setShowAdjustModal(true);
   };
 
-  const filteredAlerts = alerts.filter(alert =>
-    alert.item_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredAlerts = alerts.filter((alert) =>
+    alert.item_name?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -117,7 +131,9 @@ export default function InventoryPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Inventory Management</h1>
-          <p className="text-default-500 mt-1">Monitor stock levels and adjust inventory</p>
+          <p className="text-default-500 mt-1">
+            Monitor stock levels and adjust inventory
+          </p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -147,7 +163,9 @@ export default function InventoryPage() {
               </div>
               <div>
                 <p className="text-sm text-default-500">Low Stock Alerts</p>
-                <p className="text-2xl font-bold">{alerts.filter(a => !a.acknowledged_at).length}</p>
+                <p className="text-2xl font-bold">
+                  {alerts.filter((a) => !a.acknowledged_at).length}
+                </p>
               </div>
             </div>
           </CardBody>
@@ -161,7 +179,9 @@ export default function InventoryPage() {
               </div>
               <div>
                 <p className="text-sm text-default-500">Acknowledged</p>
-                <p className="text-2xl font-bold">{alerts.filter(a => a.acknowledged_at).length}</p>
+                <p className="text-2xl font-bold">
+                  {alerts.filter((a) => a.acknowledged_at).length}
+                </p>
               </div>
             </div>
           </CardBody>
@@ -184,11 +204,12 @@ export default function InventoryPage() {
 
       {/* Search */}
       <Input
-        placeholder="Search items..."
-       
-        onValueChange={setSearchTerm}
-        startContent={<MagnifyingGlassIcon className="h-5 w-5 text-default-400" />}
         className="max-w-md"
+        placeholder="Search items..."
+        startContent={
+          <MagnifyingGlassIcon className="h-5 w-5 text-default-400" />
+        }
+        onValueChange={setSearchTerm}
       />
 
       {/* Low Stock Alerts Table */}
@@ -214,23 +235,35 @@ export default function InventoryPage() {
                   <TableRow key={alert.alert_id}>
                     <TableCell>{alert.item_name}</TableCell>
                     <TableCell>
-                      <span className={alert.current_stock < alert.minimum_stock_level ? 'text-danger font-semibold' : ''}>
+                      <span
+                        className={
+                          alert.current_stock < alert.minimum_stock_level
+                            ? "text-danger font-semibold"
+                            : ""
+                        }
+                      >
                         {alert.current_stock}
                       </span>
                     </TableCell>
                     <TableCell>{alert.minimum_stock_level}</TableCell>
                     <TableCell>
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        alert.alert_type === 'critical' ? 'bg-danger text-white' :
-                        alert.alert_type === 'low' ? 'bg-warning text-white' :
-                        'bg-default-200'
-                      }`}>
+                      <span
+                        className={`px-2 py-1 rounded text-xs ${
+                          alert.alert_type === "critical"
+                            ? "bg-danger text-white"
+                            : alert.alert_type === "low"
+                              ? "bg-warning text-white"
+                              : "bg-default-200"
+                        }`}
+                      >
                         {alert.alert_type}
                       </span>
                     </TableCell>
                     <TableCell>
                       {alert.acknowledged_at ? (
-                        <span className="text-success text-sm">Acknowledged</span>
+                        <span className="text-success text-sm">
+                          Acknowledged
+                        </span>
                       ) : (
                         <span className="text-danger text-sm">Pending</span>
                       )}
@@ -238,17 +271,19 @@ export default function InventoryPage() {
                     <TableCell>
                       <div className="flex gap-2">
                         <Button
-                          size="sm"
                           color="primary"
+                          size="sm"
                           onPress={() => openAdjustModal(alert)}
                         >
                           Adjust
                         </Button>
                         {!alert.acknowledged_at && (
                           <Button
-                            size="sm"
                             color="success"
-                            onPress={() => handleAcknowledgeAlert(alert.alert_id)}
+                            size="sm"
+                            onPress={() =>
+                              handleAcknowledgeAlert(alert.alert_id)
+                            }
                           >
                             Acknowledge
                           </Button>
@@ -264,7 +299,11 @@ export default function InventoryPage() {
       </Card>
 
       {/* Adjust Stock Modal */}
-      <Modal isOpen={showAdjustModal} onClose={() => setShowAdjustModal(false)} size="lg">
+      <Modal
+        isOpen={showAdjustModal}
+        size="lg"
+        onClose={() => setShowAdjustModal(false)}
+      >
         <ModalContent>
           <ModalHeader>Adjust Stock</ModalHeader>
           <ModalBody>
@@ -272,22 +311,38 @@ export default function InventoryPage() {
               <Input
                 label="Menu Item ID"
                 type="number"
-               
-                onValueChange={(v) => setAdjustmentForm({ ...adjustmentForm, menu_item_id: parseInt(v) || 0 })}
+                onValueChange={(v) =>
+                  setAdjustmentForm({
+                    ...adjustmentForm,
+                    menu_item_id: parseInt(v) || 0,
+                  })
+                }
               />
               <Input
                 label="Quantity Change (use negative for decrease)"
                 type="number"
-
-                onValueChange={(v) => setAdjustmentForm({ ...adjustmentForm, quantity: parseInt(v) || 0 })}
+                onValueChange={(v) =>
+                  setAdjustmentForm({
+                    ...adjustmentForm,
+                    quantity: parseInt(v) || 0,
+                  })
+                }
               />
               <Select
                 label="Reason"
                 placeholder="Select a reason"
-                selectedKeys={adjustmentForm.reason_id ? [adjustmentForm.reason_id.toString()] : []}
+                selectedKeys={
+                  adjustmentForm.reason_id
+                    ? [adjustmentForm.reason_id.toString()]
+                    : []
+                }
                 onSelectionChange={(keys) => {
                   const selected = Array.from(keys)[0];
-                  setAdjustmentForm({ ...adjustmentForm, reason_id: parseInt(selected as string) || 0 });
+
+                  setAdjustmentForm({
+                    ...adjustmentForm,
+                    reason_id: parseInt(selected as string) || 0,
+                  });
                 }}
               >
                 {reasons.map((reason) => (
@@ -298,8 +353,9 @@ export default function InventoryPage() {
               </Select>
               <Input
                 label="Notes (optional)"
-               
-                onValueChange={(v) => setAdjustmentForm({ ...adjustmentForm, notes: v })}
+                onValueChange={(v) =>
+                  setAdjustmentForm({ ...adjustmentForm, notes: v })
+                }
               />
             </div>
           </ModalBody>
@@ -322,14 +378,20 @@ export default function InventoryPage() {
             <div className="space-y-4">
               <Input
                 label="Reason Name"
-               
-                onValueChange={(v) => setReasonForm({ ...reasonForm, reason_name: v })}
+                onValueChange={(v) =>
+                  setReasonForm({ ...reasonForm, reason_name: v })
+                }
               />
               <label className="flex items-center gap-2">
                 <input
-                  type="checkbox"
                   checked={reasonForm.requires_approval}
-                  onChange={(e) => setReasonForm({ ...reasonForm, requires_approval: e.target.checked })}
+                  type="checkbox"
+                  onChange={(e) =>
+                    setReasonForm({
+                      ...reasonForm,
+                      requires_approval: e.target.checked,
+                    })
+                  }
                 />
                 <span>Requires Approval</span>
               </label>

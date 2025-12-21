@@ -1,17 +1,18 @@
-import { apiClient } from '@/lib/api-client';
 import type {
   MenuItem,
   Category,
   MenuItemPrice,
   CreateMenuItemRequest,
   UpdateMenuItemRequest,
-  CreateCategoryRequest
-} from '@/types/api';
+  CreateCategoryRequest,
+} from "@/types/api";
+
+import { apiClient } from "@/lib/api-client";
 
 export class MenuService {
   // Public/Kiosk endpoints
   static async getMenuItems(params?: any) {
-    return apiClient.get<MenuItem[]>('/kiosk/menu', { params });
+    return apiClient.get<MenuItem[]>("/kiosk/menu", { params });
   }
 
   static async getMenuItemById(id: number) {
@@ -19,49 +20,59 @@ export class MenuService {
   }
 
   static async getCategories() {
-    return apiClient.get<Category[]>('/kiosk/categories');
+    return apiClient.get<Category[]>("/kiosk/categories");
   }
 
   // Admin endpoints
   static async createMenuItem(data: CreateMenuItemRequest, imageFile?: File) {
     if (imageFile) {
       const formData = new FormData();
+
       Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           // Handle booleans and numbers properly
-          if (typeof value === 'boolean') {
-            formData.append(key, value ? '1' : '0');
-          } else if (typeof value === 'number') {
+          if (typeof value === "boolean") {
+            formData.append(key, value ? "1" : "0");
+          } else if (typeof value === "number") {
             formData.append(key, value.toString());
           } else {
             formData.append(key, String(value));
           }
         }
       });
-      formData.append('image', imageFile);
-      return apiClient.postFormData<MenuItem>('/admin/menu', formData);
+      formData.append("image", imageFile);
+
+      return apiClient.postFormData<MenuItem>("/admin/menu", formData);
     }
-    return apiClient.post<MenuItem>('/admin/menu', data);
+
+    return apiClient.post<MenuItem>("/admin/menu", data);
   }
 
-  static async updateMenuItem(id: number, data: UpdateMenuItemRequest, imageFile?: File) {
+  static async updateMenuItem(
+    id: number,
+    data: UpdateMenuItemRequest,
+    imageFile?: File,
+  ) {
     if (imageFile) {
       const formData = new FormData();
+
       Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
           // Handle booleans and numbers properly
-          if (typeof value === 'boolean') {
-            formData.append(key, value ? '1' : '0');
-          } else if (typeof value === 'number') {
+          if (typeof value === "boolean") {
+            formData.append(key, value ? "1" : "0");
+          } else if (typeof value === "number") {
             formData.append(key, value.toString());
           } else {
             formData.append(key, String(value));
           }
         }
       });
-      formData.append('image', imageFile);
+      formData.append("image", imageFile);
+
       return apiClient.putFormData<MenuItem>(`/admin/menu/${id}`, formData);
     }
+
     return apiClient.put<MenuItem>(`/admin/menu/${id}`, data);
   }
 
@@ -77,46 +88,59 @@ export class MenuService {
     price_type: string;
     is_active?: boolean;
   }) {
-    return apiClient.post<MenuItemPrice>('/admin/menu/prices', data);
+    return apiClient.post<MenuItemPrice>("/admin/menu/prices", data);
   }
 
   static async createCategory(data: CreateCategoryRequest, imageFile?: File) {
     if (imageFile) {
       const formData = new FormData();
+
       Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          if (typeof value === 'boolean') {
-            formData.append(key, value ? '1' : '0');
-          } else if (typeof value === 'number') {
+          if (typeof value === "boolean") {
+            formData.append(key, value ? "1" : "0");
+          } else if (typeof value === "number") {
             formData.append(key, value.toString());
           } else {
             formData.append(key, String(value));
           }
         }
       });
-      formData.append('image', imageFile);
-      return apiClient.postFormData<Category>('/admin/categories', formData);
+      formData.append("image", imageFile);
+
+      return apiClient.postFormData<Category>("/admin/categories", formData);
     }
-    return apiClient.post<Category>('/admin/categories', data);
+
+    return apiClient.post<Category>("/admin/categories", data);
   }
 
-  static async updateCategory(id: number, data: Partial<CreateCategoryRequest>, imageFile?: File) {
+  static async updateCategory(
+    id: number,
+    data: Partial<CreateCategoryRequest>,
+    imageFile?: File,
+  ) {
     if (imageFile) {
       const formData = new FormData();
+
       Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          if (typeof value === 'boolean') {
-            formData.append(key, value ? '1' : '0');
-          } else if (typeof value === 'number') {
+          if (typeof value === "boolean") {
+            formData.append(key, value ? "1" : "0");
+          } else if (typeof value === "number") {
             formData.append(key, value.toString());
           } else {
             formData.append(key, String(value));
           }
         }
       });
-      formData.append('image', imageFile);
-      return apiClient.putFormData<Category>(`/admin/categories/${id}`, formData);
+      formData.append("image", imageFile);
+
+      return apiClient.putFormData<Category>(
+        `/admin/categories/${id}`,
+        formData,
+      );
     }
+
     return apiClient.put<Category>(`/admin/categories/${id}`, data);
   }
 
@@ -125,14 +149,14 @@ export class MenuService {
     category_id: number;
     display_order?: number;
   }) {
-    return apiClient.post('/admin/categories/assign', data);
+    return apiClient.post("/admin/categories/assign", data);
   }
 
   static async unassignItemFromCategory(data: {
     menu_item_id: number;
     category_id: number;
   }) {
-    return apiClient.post('/admin/categories/unassign', data);
+    return apiClient.post("/admin/categories/unassign", data);
   }
 
   static async deleteCategory(id: number) {

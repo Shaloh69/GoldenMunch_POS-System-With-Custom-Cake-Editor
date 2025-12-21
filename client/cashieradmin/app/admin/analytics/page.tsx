@@ -1,17 +1,25 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Card, CardBody, CardHeader } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { Input } from '@heroui/input';
-import { Table, TableHeader, TableBody, TableColumn, TableRow, TableCell } from '@heroui/table';
-import { AnalyticsService } from '@/services/analytics.service';
+import { useEffect, useState } from "react";
+import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableColumn,
+  TableRow,
+  TableCell,
+} from "@heroui/table";
 import {
   ChartBarIcon,
   ArrowTrendingUpIcon,
   CurrencyDollarIcon,
   ShoppingCartIcon,
-} from '@heroicons/react/24/outline';
+} from "@heroicons/react/24/outline";
+
+import { AnalyticsService } from "@/services/analytics.service";
 
 export default function AnalyticsPage() {
   const [salesData, setSalesData] = useState<any>(null);
@@ -19,8 +27,10 @@ export default function AnalyticsPage() {
   const [wasteData, setWasteData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [dateRange, setDateRange] = useState({
-    start_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    end_date: new Date().toISOString().split('T')[0],
+    start_date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0],
+    end_date: new Date().toISOString().split("T")[0],
   });
 
   useEffect(() => {
@@ -38,18 +48,25 @@ export default function AnalyticsPage() {
 
       if (salesRes.success) {
         // Server returns array of daily stats, aggregate them
-        const dailyStats = Array.isArray(salesRes.data) ? salesRes.data : [salesRes.data];
+        const dailyStats = Array.isArray(salesRes.data)
+          ? salesRes.data
+          : [salesRes.data];
 
-        const aggregated = dailyStats.reduce((acc, day: any) => ({
-          total_orders: acc.total_orders + (Number(day.total_orders) || 0),
-          unique_customers: acc.unique_customers + (Number(day.unique_customers) || 0),
-          total_revenue: acc.total_revenue + (Number(day.total_revenue) || 0),
-        }), { total_orders: 0, unique_customers: 0, total_revenue: 0 });
+        const aggregated = dailyStats.reduce(
+          (acc, day: any) => ({
+            total_orders: acc.total_orders + (Number(day.total_orders) || 0),
+            unique_customers:
+              acc.unique_customers + (Number(day.unique_customers) || 0),
+            total_revenue: acc.total_revenue + (Number(day.total_revenue) || 0),
+          }),
+          { total_orders: 0, unique_customers: 0, total_revenue: 0 },
+        );
 
         // Calculate average order value
-        const avg_order_value = aggregated.total_orders > 0
-          ? aggregated.total_revenue / aggregated.total_orders
-          : 0;
+        const avg_order_value =
+          aggregated.total_orders > 0
+            ? aggregated.total_revenue / aggregated.total_orders
+            : 0;
 
         setSalesData({
           ...aggregated,
@@ -58,14 +75,16 @@ export default function AnalyticsPage() {
       }
 
       if (trendingRes.success) {
-        setTrendingItems(Array.isArray(trendingRes.data) ? trendingRes.data : []);
+        setTrendingItems(
+          Array.isArray(trendingRes.data) ? trendingRes.data : [],
+        );
       }
 
       if (wasteRes.success) {
         setWasteData(wasteRes.data);
       }
     } catch (error) {
-      console.error('Failed to fetch analytics:', error);
+      console.error("Failed to fetch analytics:", error);
     } finally {
       setLoading(false);
     }
@@ -76,7 +95,7 @@ export default function AnalyticsPage() {
       await AnalyticsService.recalculatePopularity();
       fetchAnalytics();
     } catch (error) {
-      console.error('Failed to recalculate popularity:', error);
+      console.error("Failed to recalculate popularity:", error);
     }
   };
 
@@ -86,7 +105,9 @@ export default function AnalyticsPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Sales Analytics</h1>
-          <p className="text-default-500 mt-1">View sales performance and trends</p>
+          <p className="text-default-500 mt-1">
+            View sales performance and trends
+          </p>
         </div>
         <Button color="primary" onPress={handleRecalculatePopularity}>
           Recalculate Popularity
@@ -98,14 +119,16 @@ export default function AnalyticsPage() {
         <CardBody>
           <div className="flex gap-4 items-center">
             <Input
-              type="date"
               label="Start Date"
+              type="date"
               value={dateRange.start_date}
-              onValueChange={(v) => setDateRange({ ...dateRange, start_date: v })}
+              onValueChange={(v) =>
+                setDateRange({ ...dateRange, start_date: v })
+              }
             />
             <Input
-              type="date"
               label="End Date"
+              type="date"
               value={dateRange.end_date}
               onValueChange={(v) => setDateRange({ ...dateRange, end_date: v })}
             />
@@ -128,7 +151,11 @@ export default function AnalyticsPage() {
                 <div>
                   <p className="text-sm text-default-500">Total Revenue</p>
                   <p className="text-2xl font-bold">
-                    ₱{parseFloat(salesData.total_revenue || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                    ₱
+                    {parseFloat(salesData.total_revenue || 0).toLocaleString(
+                      "en-PH",
+                      { minimumFractionDigits: 2 },
+                    )}
                   </p>
                 </div>
               </div>
@@ -143,7 +170,9 @@ export default function AnalyticsPage() {
                 </div>
                 <div>
                   <p className="text-sm text-default-500">Total Orders</p>
-                  <p className="text-2xl font-bold">{salesData.total_orders || 0}</p>
+                  <p className="text-2xl font-bold">
+                    {salesData.total_orders || 0}
+                  </p>
                 </div>
               </div>
             </CardBody>
@@ -158,7 +187,11 @@ export default function AnalyticsPage() {
                 <div>
                   <p className="text-sm text-default-500">Avg Order Value</p>
                   <p className="text-2xl font-bold">
-                    ₱{parseFloat(salesData.avg_order_value || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                    ₱
+                    {parseFloat(salesData.avg_order_value || 0).toLocaleString(
+                      "en-PH",
+                      { minimumFractionDigits: 2 },
+                    )}
                   </p>
                 </div>
               </div>
@@ -173,7 +206,9 @@ export default function AnalyticsPage() {
                 </div>
                 <div>
                   <p className="text-sm text-default-500">Unique Customers</p>
-                  <p className="text-2xl font-bold">{salesData.unique_customers || 0}</p>
+                  <p className="text-2xl font-bold">
+                    {salesData.unique_customers || 0}
+                  </p>
                 </div>
               </div>
             </CardBody>
@@ -215,7 +250,11 @@ export default function AnalyticsPage() {
                     <TableCell>{item.recent_orders || 0}</TableCell>
                     <TableCell>{item.recent_quantity || 0}</TableCell>
                     <TableCell>
-                      ₱{parseFloat(item.recent_revenue || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                      ₱
+                      {parseFloat(item.recent_revenue || 0).toLocaleString(
+                        "en-PH",
+                        { minimumFractionDigits: 2 },
+                      )}
                     </TableCell>
                     <TableCell>
                       <span className="font-semibold">
@@ -241,7 +280,11 @@ export default function AnalyticsPage() {
               <div className="p-4 bg-danger/5 rounded-lg">
                 <p className="text-sm text-default-500">Total Waste Cost</p>
                 <p className="text-2xl font-bold text-danger">
-                  ₱{parseFloat(wasteData.total_waste_cost || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}
+                  ₱
+                  {parseFloat(wasteData.total_waste_cost || 0).toLocaleString(
+                    "en-PH",
+                    { minimumFractionDigits: 2 },
+                  )}
                 </p>
               </div>
               <div className="p-4 bg-warning/5 rounded-lg">

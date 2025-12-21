@@ -8,142 +8,142 @@ export interface ApiResponse<T = any> {
 
 // Enums matching backend
 export enum ItemType {
-  CAKE = 'cake',
-  PASTRY = 'pastry',
-  BEVERAGE = 'beverage',
-  COFFEE = 'coffee',
-  SANDWICH = 'sandwich',
-  BREAD = 'bread',
-  DESSERT = 'dessert',
-  SNACK = 'snack',
-  OTHER = 'other'
+  CAKE = "cake",
+  PASTRY = "pastry",
+  BEVERAGE = "beverage",
+  COFFEE = "coffee",
+  SANDWICH = "sandwich",
+  BREAD = "bread",
+  DESSERT = "dessert",
+  SNACK = "snack",
+  OTHER = "other",
 }
 
 export enum OrderType {
-  WALK_IN = 'walk_in',
-  PICKUP = 'pickup',
-  PRE_ORDER = 'pre_order',
-  CUSTOM_ORDER = 'custom_order'
+  WALK_IN = "walk_in",
+  PICKUP = "pickup",
+  PRE_ORDER = "pre_order",
+  CUSTOM_ORDER = "custom_order",
 }
 
 export enum OrderStatus {
-  PENDING = 'pending',
-  CONFIRMED = 'confirmed',
-  PREPARING = 'preparing',
-  READY = 'ready',
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled'
+  PENDING = "pending",
+  CONFIRMED = "confirmed",
+  PREPARING = "preparing",
+  READY = "ready",
+  COMPLETED = "completed",
+  CANCELLED = "cancelled",
 }
 
 export enum PaymentMethod {
-  CASH = 'cash',
-  CASHLESS = 'cashless',
-  CREDIT_CARD = 'credit_card',
-  DEBIT_CARD = 'debit_card',
-  GCASH = 'gcash',
-  PAYMAYA = 'paymaya',
-  BANK_TRANSFER = 'bank_transfer',
-  LOYALTY_POINTS = 'loyalty_points',
-  OTHER = 'other'
+  CASH = "cash",
+  CASHLESS = "cashless",
+  CREDIT_CARD = "credit_card",
+  DEBIT_CARD = "debit_card",
+  GCASH = "gcash",
+  PAYMAYA = "paymaya",
+  BANK_TRANSFER = "bank_transfer",
+  LOYALTY_POINTS = "loyalty_points",
+  OTHER = "other",
 }
 
 export enum PaymentStatus {
-  UNPAID = 'unpaid',
-  PENDING = 'pending',
-  PARTIAL = 'partial',
-  PARTIAL_PAID = 'partial_paid',
-  PAID = 'paid',
-  FAILED = 'failed',
-  REFUNDED = 'refunded'
+  UNPAID = "unpaid",
+  PENDING = "pending",
+  PARTIAL = "partial",
+  PARTIAL_PAID = "partial_paid",
+  PAID = "paid",
+  FAILED = "failed",
+  REFUNDED = "refunded",
 }
 
 export enum PromotionType {
-  PERCENTAGE = 'percentage',
-  FIXED_AMOUNT = 'fixed_amount',
-  BUY_X_GET_Y = 'buy_x_get_y',
-  BUNDLE = 'bundle',
-  SEASONAL = 'seasonal'
+  PERCENTAGE = "percentage",
+  FIXED_AMOUNT = "fixed_amount",
+  BUY_X_GET_Y = "buy_x_get_y",
+  BUNDLE = "bundle",
+  SEASONAL = "seasonal",
 }
 
 export enum RefundType {
-  FULL = 'full',
-  PARTIAL = 'partial',
-  ITEM = 'item'
+  FULL = "full",
+  PARTIAL = "partial",
+  ITEM = "item",
 }
 
 export enum RefundReason {
-  CUSTOMER_REQUEST = 'customer_request',
-  WRONG_ITEM = 'wrong_item',
-  QUALITY_ISSUE = 'quality_issue',
-  DELAY = 'delay',
-  CANCELLATION = 'cancellation'
+  CUSTOMER_REQUEST = "customer_request",
+  WRONG_ITEM = "wrong_item",
+  QUALITY_ISSUE = "quality_issue",
+  DELAY = "delay",
+  CANCELLATION = "cancellation",
 }
 
 export enum RefundStatus {
-  PENDING = 'pending',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
-  COMPLETED = 'completed'
+  PENDING = "pending",
+  APPROVED = "approved",
+  REJECTED = "rejected",
+  COMPLETED = "completed",
 }
 
 export enum RefundMethod {
-  CASH = 'cash',
-  GCASH = 'gcash',
-  PAYMAYA = 'paymaya',
-  CARD = 'card',
-  BANK_TRANSFER = 'bank_transfer',
-  STORE_CREDIT = 'store_credit'
+  CASH = "cash",
+  GCASH = "gcash",
+  PAYMAYA = "paymaya",
+  CARD = "card",
+  BANK_TRANSFER = "bank_transfer",
+  STORE_CREDIT = "store_credit",
 }
 
 export enum WasteReason {
-  EXPIRED = 'expired',
-  DAMAGED = 'damaged',
-  OVERPRODUCTION = 'overproduction',
-  QUALITY_ISSUE = 'quality_issue',
-  CUSTOMER_RETURN = 'customer_return'
+  EXPIRED = "expired",
+  DAMAGED = "damaged",
+  OVERPRODUCTION = "overproduction",
+  QUALITY_ISSUE = "quality_issue",
+  CUSTOMER_RETURN = "customer_return",
 }
 
 export enum FrostingType {
-  BUTTERCREAM = 'buttercream',
-  FONDANT = 'fondant',
-  WHIPPED_CREAM = 'whipped_cream',
-  GANACHE = 'ganache',
-  CREAM_CHEESE = 'cream_cheese'
+  BUTTERCREAM = "buttercream",
+  FONDANT = "fondant",
+  WHIPPED_CREAM = "whipped_cream",
+  GANACHE = "ganache",
+  CREAM_CHEESE = "cream_cheese",
 }
 
 export enum DesignComplexity {
-  SIMPLE = 'simple',
-  MODERATE = 'moderate',
-  COMPLEX = 'complex',
-  INTRICATE = 'intricate'
+  SIMPLE = "simple",
+  MODERATE = "moderate",
+  COMPLEX = "complex",
+  INTRICATE = "intricate",
 }
 
 export enum InventoryTransactionType {
-  IN = 'in',
-  OUT = 'out',
-  ADJUSTMENT = 'adjustment',
-  RETURN = 'return',
-  WASTE = 'waste',
-  TRANSFER = 'transfer'
+  IN = "in",
+  OUT = "out",
+  ADJUSTMENT = "adjustment",
+  RETURN = "return",
+  WASTE = "waste",
+  TRANSFER = "transfer",
 }
 
 export enum InventoryAlertType {
-  LOW_STOCK = 'low_stock',
-  OUT_OF_STOCK = 'out_of_stock',
-  EXPIRING_SOON = 'expiring_soon',
-  OVERSTOCKED = 'overstocked'
+  LOW_STOCK = "low_stock",
+  OUT_OF_STOCK = "out_of_stock",
+  EXPIRING_SOON = "expiring_soon",
+  OVERSTOCKED = "overstocked",
 }
 
 export enum TaxType {
-  PERCENTAGE = 'percentage',
-  FIXED = 'fixed'
+  PERCENTAGE = "percentage",
+  FIXED = "fixed",
 }
 
 export enum PriceType {
-  REGULAR = 'regular',
-  PROMOTION = 'promotion',
-  SEASONAL = 'seasonal',
-  BULK = 'bulk'
+  REGULAR = "regular",
+  PROMOTION = "promotion",
+  SEASONAL = "seasonal",
+  BULK = "bulk",
 }
 
 // Entity Types
@@ -168,7 +168,7 @@ export interface MenuItem {
   allergen_info?: string;
   nutritional_info?: string;
   is_deleted: boolean;
-  status: 'available' | 'unavailable' | 'out_of_stock';
+  status: "available" | "unavailable" | "out_of_stock";
   created_at: string;
   updated_at: string;
   current_price?: number;
@@ -200,12 +200,12 @@ export interface MenuItemPrice {
 
 export interface CustomerOrder {
   order_id: number;
-  order_number?: string;  // Generated by backend, might not be in DB
-  verification_code?: string;  // Generated by backend, might not be in DB
+  order_number?: string; // Generated by backend, might not be in DB
+  verification_code?: string; // Generated by backend, might not be in DB
   customer_id?: number;
   cashier_id?: number;
   order_type: OrderType;
-  order_source?: 'kiosk' | 'cashier' | 'admin';  // Might not be in DB
+  order_source?: "kiosk" | "cashier" | "admin"; // Might not be in DB
   is_preorder: boolean;
   order_datetime: string;
   scheduled_pickup_datetime?: string;
@@ -234,8 +234,8 @@ export interface CustomerOrder {
   created_at: string;
   updated_at: string;
   // Fields from customer JOIN (from backend queries)
-  name?: string;  // Customer name from customer table JOIN
-  phone?: string;  // Customer phone from customer table JOIN
+  name?: string; // Customer name from customer table JOIN
+  phone?: string; // Customer phone from customer table JOIN
   items?: OrderItem[];
   customer?: Customer;
   cashier?: Cashier;
@@ -416,7 +416,7 @@ export interface CustomerFeedback {
   food_rating?: number;
   cleanliness_rating?: number;
   feedback_text?: string;
-  feedback_type: 'positive' | 'neutral' | 'negative';
+  feedback_type: "positive" | "neutral" | "negative";
   is_anonymous: boolean;
   admin_response?: string;
   responded_by?: number;
@@ -481,7 +481,7 @@ export interface InventoryTransaction {
   reason_id?: number;
   reference_number?: string;
   performed_by: number;
-  performed_by_role: 'admin' | 'cashier';
+  performed_by_role: "admin" | "cashier";
   notes?: string;
   transaction_date: string;
   created_at: string;
@@ -491,7 +491,7 @@ export interface KioskSetting {
   setting_id: number;
   setting_key: string;
   setting_value: string;
-  setting_type: 'string' | 'number' | 'boolean' | 'json';
+  setting_type: "string" | "number" | "boolean" | "json";
   description?: string;
   updated_by: number;
   updated_at: string;
@@ -567,7 +567,7 @@ export interface CreateMenuItemRequest {
 }
 
 export interface UpdateMenuItemRequest extends Partial<CreateMenuItemRequest> {
-  status?: 'available' | 'unavailable' | 'out_of_stock';
+  status?: "available" | "unavailable" | "out_of_stock";
 }
 
 export interface CreateCategoryRequest {
@@ -685,7 +685,7 @@ export interface AuthUser {
   username?: string;
   name: string;
   email?: string;
-  type: 'admin' | 'cashier';
+  type: "admin" | "cashier";
   role_id?: number;
   cashier_code?: string;
 }
@@ -700,55 +700,55 @@ export interface AuthResponse {
 // ============================================================================
 
 export enum CustomCakeRequestStatus {
-  DRAFT = 'draft',
-  PENDING_REVIEW = 'pending_review',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
-  CANCELLED = 'cancelled',
-  COMPLETED = 'completed'
+  DRAFT = "draft",
+  PENDING_REVIEW = "pending_review",
+  APPROVED = "approved",
+  REJECTED = "rejected",
+  CANCELLED = "cancelled",
+  COMPLETED = "completed",
 }
 
 export enum CandleType {
-  NUMBER = 'number',
-  REGULAR = 'regular',
-  SPARKLER = 'sparkler',
-  NONE = 'none'
+  NUMBER = "number",
+  REGULAR = "regular",
+  SPARKLER = "sparkler",
+  NONE = "none",
 }
 
 export enum TextFont {
-  SCRIPT = 'script',
-  BOLD = 'bold',
-  ELEGANT = 'elegant',
-  PLAYFUL = 'playful',
-  MODERN = 'modern'
+  SCRIPT = "script",
+  BOLD = "bold",
+  ELEGANT = "elegant",
+  PLAYFUL = "playful",
+  MODERN = "modern",
 }
 
 export enum TextPosition {
-  TOP = 'top',
-  CENTER = 'center',
-  BOTTOM = 'bottom'
+  TOP = "top",
+  CENTER = "center",
+  BOTTOM = "bottom",
 }
 
 export enum QRSessionStatus {
-  ACTIVE = 'active',
-  USED = 'used',
-  EXPIRED = 'expired',
-  CANCELLED = 'cancelled'
+  ACTIVE = "active",
+  USED = "used",
+  EXPIRED = "expired",
+  CANCELLED = "cancelled",
 }
 
 export enum ImageType {
-  RENDER_3D = '3d_render',
-  REFERENCE = 'reference',
-  SKETCH = 'sketch',
-  FINAL_PRODUCT = 'final_product'
+  RENDER_3D = "3d_render",
+  REFERENCE = "reference",
+  SKETCH = "sketch",
+  FINAL_PRODUCT = "final_product",
 }
 
 export enum ViewAngle {
-  FRONT = 'front',
-  SIDE = 'side',
-  TOP = 'top',
-  PERSPECTIVE_3D = '3d_perspective',
-  ALL_ANGLES = 'all_angles'
+  FRONT = "front",
+  SIDE = "side",
+  TOP = "top",
+  PERSPECTIVE_3D = "3d_perspective",
+  ALL_ANGLES = "all_angles",
 }
 
 // 3D Decoration Object

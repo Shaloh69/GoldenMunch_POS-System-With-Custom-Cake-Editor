@@ -1,28 +1,37 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardBody, CardHeader } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { Input } from '@heroui/input';
-import { Textarea } from '@heroui/input';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/modal';
-import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from '@heroui/table';
-import { Chip } from '@heroui/chip';
-import { Select, SelectItem } from '@heroui/select';
-import { useDisclosure } from '@heroui/modal';
-import { MenuService } from '@/services/menu.service';
-import type { Category, MenuItem } from '@/types/api';
-import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
+import type { Category, MenuItem } from "@/types/api";
+
+import { useState, useEffect } from "react";
+import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
+import { Textarea } from "@heroui/input";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@heroui/modal";
+import { Chip } from "@heroui/chip";
+import { useDisclosure } from "@heroui/modal";
+import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
+
+import { MenuService } from "@/services/menu.service";
 
 // Utility function to safely format prices
 const formatPrice = (price: any): string => {
-  if (price === null || price === undefined || price === '') {
-    return '0.00';
+  if (price === null || price === undefined || price === "") {
+    return "0.00";
   }
-  const numPrice = typeof price === 'string' ? parseFloat(price) : Number(price);
+  const numPrice =
+    typeof price === "string" ? parseFloat(price) : Number(price);
+
   if (isNaN(numPrice)) {
-    return '0.00';
+    return "0.00";
   }
+
   return numPrice.toFixed(2);
 };
 
@@ -33,20 +42,36 @@ export default function CategoriesPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
-  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(new Set());
+  const [expandedCategories, setExpandedCategories] = useState<Set<number>>(
+    new Set(),
+  );
 
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { isOpen: isAssignOpen, onOpen: onAssignOpen, onClose: onAssignClose } = useDisclosure();
-  const { isOpen: isDeleteOpen, onOpen: onDeleteOpen, onClose: onDeleteClose } = useDisclosure();
+  const {
+    isOpen: isAssignOpen,
+    onOpen: onAssignOpen,
+    onClose: onAssignClose,
+  } = useDisclosure();
+  const {
+    isOpen: isDeleteOpen,
+    onOpen: onDeleteOpen,
+    onClose: onDeleteClose,
+  } = useDisclosure();
 
-  const [selectedCategoryForAssign, setSelectedCategoryForAssign] = useState<Category | null>(null);
-  const [selectedCategoryForDelete, setSelectedCategoryForDelete] = useState<Category | null>(null);
-  const [selectedMenuItems, setSelectedMenuItems] = useState<Set<number>>(new Set());
-  const [originallyAssignedItems, setOriginallyAssignedItems] = useState<Set<number>>(new Set());
+  const [selectedCategoryForAssign, setSelectedCategoryForAssign] =
+    useState<Category | null>(null);
+  const [selectedCategoryForDelete, setSelectedCategoryForDelete] =
+    useState<Category | null>(null);
+  const [selectedMenuItems, setSelectedMenuItems] = useState<Set<number>>(
+    new Set(),
+  );
+  const [originallyAssignedItems, setOriginallyAssignedItems] = useState<
+    Set<number>
+  >(new Set());
 
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
+    name: "",
+    description: "",
     display_order: 0,
     is_active: true,
   });
@@ -72,8 +97,8 @@ export default function CategoriesPage() {
         setMenuItems(itemsResponse.data);
       }
     } catch (error: any) {
-      console.error('Failed to load data:', error);
-      setError(error?.message || 'Failed to load data');
+      console.error("Failed to load data:", error);
+      setError(error?.message || "Failed to load data");
     } finally {
       setLoading(false);
     }
@@ -81,8 +106,8 @@ export default function CategoriesPage() {
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      description: '',
+      name: "",
+      description: "",
       display_order: 0,
       is_active: true,
     });
@@ -99,7 +124,7 @@ export default function CategoriesPage() {
     setEditingCategory(category);
     setFormData({
       name: category.name,
-      description: category.description || '',
+      description: category.description || "",
       display_order: category.display_order || 0,
       is_active: category.is_active !== false,
     });
@@ -109,7 +134,8 @@ export default function CategoriesPage() {
   const handleSubmit = async () => {
     try {
       if (!formData.name) {
-        setError('Category name is required');
+        setError("Category name is required");
+
         return;
       }
 
@@ -125,10 +151,11 @@ export default function CategoriesPage() {
       };
 
       let response;
+
       if (editingCategory) {
         response = await MenuService.updateCategory(
           editingCategory.category_id,
-          apiData
+          apiData,
         );
       } else {
         response = await MenuService.createCategory(apiData);
@@ -139,11 +166,14 @@ export default function CategoriesPage() {
         loadData();
         resetForm();
       } else {
-        setError(response.message || `Failed to ${editingCategory ? 'update' : 'create'} category`);
+        setError(
+          response.message ||
+            `Failed to ${editingCategory ? "update" : "create"} category`,
+        );
       }
     } catch (error: any) {
-      console.error('Failed to save category:', error);
-      setError(error?.message || 'An error occurred while saving');
+      console.error("Failed to save category:", error);
+      setError(error?.message || "An error occurred while saving");
     } finally {
       setSaving(false);
     }
@@ -154,10 +184,15 @@ export default function CategoriesPage() {
 
     // Get currently assigned items
     const assignedItems = menuItems
-      .filter(item => item.categories?.some(cat => cat.category_id === category.category_id))
-      .map(item => item.menu_item_id);
+      .filter((item) =>
+        item.categories?.some(
+          (cat) => cat.category_id === category.category_id,
+        ),
+      )
+      .map((item) => item.menu_item_id);
 
     const assignedSet = new Set(assignedItems);
+
     setSelectedMenuItems(assignedSet);
     setOriginallyAssignedItems(assignedSet);
     onAssignOpen();
@@ -171,13 +206,13 @@ export default function CategoriesPage() {
       setError(null);
 
       // Find items to unassign (were in original but not in new selection)
-      const itemsToUnassign = (Array.from(originallyAssignedItems) as number[]).filter(
-        id => !selectedMenuItems.has(id)
-      );
+      const itemsToUnassign = (
+        Array.from(originallyAssignedItems) as number[]
+      ).filter((id) => !selectedMenuItems.has(id));
 
       // Find items to assign (are in new selection but not in original)
       const itemsToAssign = (Array.from(selectedMenuItems) as number[]).filter(
-        id => !originallyAssignedItems.has(id)
+        (id) => !originallyAssignedItems.has(id),
       );
 
       // Unassign removed items
@@ -200,8 +235,8 @@ export default function CategoriesPage() {
       onAssignClose();
       loadData();
     } catch (error: any) {
-      console.error('Failed to update category assignments:', error);
-      setError(error?.message || 'Failed to update category assignments');
+      console.error("Failed to update category assignments:", error);
+      setError(error?.message || "Failed to update category assignments");
     } finally {
       setSaving(false);
     }
@@ -209,6 +244,7 @@ export default function CategoriesPage() {
 
   const toggleItemSelection = (itemId: number) => {
     const newSelection = new Set(selectedMenuItems);
+
     if (newSelection.has(itemId)) {
       newSelection.delete(itemId);
     } else {
@@ -219,6 +255,7 @@ export default function CategoriesPage() {
 
   const toggleCategoryExpansion = (categoryId: number) => {
     const newExpanded = new Set(expandedCategories);
+
     if (newExpanded.has(categoryId)) {
       newExpanded.delete(categoryId);
     } else {
@@ -228,8 +265,8 @@ export default function CategoriesPage() {
   };
 
   const getCategoryItems = (categoryId: number) => {
-    return menuItems.filter(item =>
-      item.categories?.some(cat => cat.category_id === categoryId)
+    return menuItems.filter((item) =>
+      item.categories?.some((cat) => cat.category_id === categoryId),
     );
   };
 
@@ -245,7 +282,9 @@ export default function CategoriesPage() {
       setSaving(true);
       setError(null);
 
-      const response = await MenuService.deleteCategory(selectedCategoryForDelete.category_id);
+      const response = await MenuService.deleteCategory(
+        selectedCategoryForDelete.category_id,
+      );
 
       if (response.success) {
         // Close modal and reload data
@@ -253,11 +292,11 @@ export default function CategoriesPage() {
         setSelectedCategoryForDelete(null);
         await loadData();
       } else {
-        setError(response.message || 'Failed to delete category');
+        setError(response.message || "Failed to delete category");
       }
     } catch (error: any) {
-      console.error('Failed to delete category:', error);
-      setError(error?.message || 'Failed to delete category');
+      console.error("Failed to delete category:", error);
+      setError(error?.message || "Failed to delete category");
     } finally {
       setSaving(false);
     }
@@ -273,15 +312,17 @@ export default function CategoriesPage() {
       <div className="bg-gradient-to-r from-light-caramel via-muted-clay to-light-caramel p-8 rounded-2xl shadow-caramel border-2 border-light-caramel/30">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-white drop-shadow-lg">Category Management</h1>
+            <h1 className="text-3xl font-bold text-white drop-shadow-lg">
+              Category Management
+            </h1>
             <p className="text-white/90 mt-2">
               Create and manage categories for organizing menu items
             </p>
           </div>
           <Button
-            onPress={onOpen}
-            size="lg"
             className="bg-white text-muted-clay font-bold hover:bg-cream-white shadow-md hover:shadow-lg transition-all"
+            size="lg"
+            onPress={onOpen}
           >
             Add Category
           </Button>
@@ -296,7 +337,9 @@ export default function CategoriesPage() {
 
       <Card className="shadow-caramel border-2 border-light-caramel/20">
         <CardHeader className="bg-gradient-to-r from-soft-sand/30 to-transparent border-b border-light-caramel/20 p-6">
-          <h2 className="text-2xl font-bold text-muted-clay">All Categories ({categories.length})</h2>
+          <h2 className="text-2xl font-bold text-muted-clay">
+            All Categories ({categories.length})
+          </h2>
         </CardHeader>
         <CardBody>
           {loading ? (
@@ -306,7 +349,9 @@ export default function CategoriesPage() {
           ) : categories.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-default-400 text-lg">No categories found</p>
-              <p className="text-default-300 text-sm mt-2">Create your first category to get started</p>
+              <p className="text-default-300 text-sm mt-2">
+                Create your first category to get started
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -315,67 +360,89 @@ export default function CategoriesPage() {
                 const isExpanded = expandedCategories.has(category.category_id);
 
                 return (
-                  <div key={category.category_id} className="border border-light-caramel/20 rounded-xl overflow-hidden shadow-sm hover:shadow-caramel transition-all">
+                  <div
+                    key={category.category_id}
+                    className="border border-light-caramel/20 rounded-xl overflow-hidden shadow-sm hover:shadow-caramel transition-all"
+                  >
                     {/* Category Header */}
                     <div className="bg-gradient-to-r from-cream-white to-soft-sand/50 p-4">
                       <div className="flex items-center gap-4">
                         {/* Category Info */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-3 mb-1">
-                            <h3 className="text-lg font-bold text-muted-clay">{category.name}</h3>
+                            <h3 className="text-lg font-bold text-muted-clay">
+                              {category.name}
+                            </h3>
                             <Chip
+                              color={
+                                category.is_active !== false
+                                  ? "success"
+                                  : "default"
+                              }
                               size="sm"
-                              color={category.is_active !== false ? 'success' : 'default'}
                               variant="flat"
                             >
-                              {category.is_active !== false ? 'Active' : 'Inactive'}
+                              {category.is_active !== false
+                                ? "Active"
+                                : "Inactive"}
                             </Chip>
-                            <Chip size="sm" variant="flat" className="bg-light-caramel/20 text-muted-clay">
+                            <Chip
+                              className="bg-light-caramel/20 text-muted-clay"
+                              size="sm"
+                              variant="flat"
+                            >
                               Order: {category.display_order || 0}
                             </Chip>
                           </div>
                           <p className="text-sm text-warm-beige truncate">
-                            {category.description || 'No description'}
+                            {category.description || "No description"}
                           </p>
                         </div>
 
                         {/* Actions */}
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <Chip size="sm" variant="flat" className="bg-muted-clay/20 text-muted-clay font-semibold">
-                            {categoryItems.length} {categoryItems.length === 1 ? 'item' : 'items'}
+                          <Chip
+                            className="bg-muted-clay/20 text-muted-clay font-semibold"
+                            size="sm"
+                            variant="flat"
+                          >
+                            {categoryItems.length}{" "}
+                            {categoryItems.length === 1 ? "item" : "items"}
                           </Chip>
                           <Button
+                            className="bg-light-caramel/20 hover:bg-light-caramel/30 text-muted-clay"
                             size="sm"
                             variant="flat"
                             onPress={() => handleEdit(category)}
-                            className="bg-light-caramel/20 hover:bg-light-caramel/30 text-muted-clay"
                           >
                             Edit
                           </Button>
                           <Button
+                            className="bg-muted-clay/20 hover:bg-muted-clay/30"
+                            color="secondary"
                             size="sm"
                             variant="flat"
-                            color="secondary"
                             onPress={() => handleAssignOpen(category)}
-                            className="bg-muted-clay/20 hover:bg-muted-clay/30"
                           >
                             Assign Items
                           </Button>
                           <Button
+                            className="bg-danger/10 hover:bg-danger/20 text-danger"
+                            color="danger"
                             size="sm"
                             variant="flat"
-                            color="danger"
                             onPress={() => handleDeleteClick(category)}
-                            className="bg-danger/10 hover:bg-danger/20 text-danger"
                           >
                             Delete
                           </Button>
                           <Button
-                            size="sm"
                             isIconOnly
-                            variant="flat"
-                            onPress={() => toggleCategoryExpansion(category.category_id)}
                             className="bg-soft-sand/50 hover:bg-soft-sand"
+                            size="sm"
+                            variant="flat"
+                            onPress={() =>
+                              toggleCategoryExpansion(category.category_id)
+                            }
                           >
                             {isExpanded ? (
                               <ChevronUpIcon className="h-5 w-5 text-muted-clay" />
@@ -403,19 +470,27 @@ export default function CategoriesPage() {
                                 {item.image_url && (
                                   <div className="w-12 h-12 rounded-lg overflow-hidden border border-light-caramel/30 flex-shrink-0">
                                     <img
-                                      src={item.image_url}
                                       alt={item.name}
                                       className="w-full h-full object-cover"
+                                      src={item.image_url}
                                     />
                                   </div>
                                 )}
                                 <div className="flex-1 min-w-0">
-                                  <p className="font-semibold text-muted-clay text-sm truncate">{item.name}</p>
+                                  <p className="font-semibold text-muted-clay text-sm truncate">
+                                    {item.name}
+                                  </p>
                                   <div className="flex items-center gap-2 mt-1">
-                                    <Chip size="sm" variant="flat" className="bg-muted-clay/20 text-muted-clay text-xs">
+                                    <Chip
+                                      className="bg-muted-clay/20 text-muted-clay text-xs"
+                                      size="sm"
+                                      variant="flat"
+                                    >
                                       ₱{formatPrice(item.current_price)}
                                     </Chip>
-                                    <span className="text-xs text-warm-beige capitalize">{item.item_type}</span>
+                                    <span className="text-xs text-warm-beige capitalize">
+                                      {item.item_type}
+                                    </span>
                                   </div>
                                 </div>
                               </div>
@@ -428,13 +503,15 @@ export default function CategoriesPage() {
                     {/* Empty State for Expanded Category */}
                     {isExpanded && categoryItems.length === 0 && (
                       <div className="bg-white border-t border-light-caramel/20 p-6 text-center">
-                        <p className="text-warm-beige text-sm">No items assigned to this category yet.</p>
+                        <p className="text-warm-beige text-sm">
+                          No items assigned to this category yet.
+                        </p>
                         <Button
-                          size="sm"
+                          className="mt-3"
                           color="secondary"
+                          size="sm"
                           variant="flat"
                           onPress={() => handleAssignOpen(category)}
-                          className="mt-3"
                         >
                           Assign Items Now
                         </Button>
@@ -449,10 +526,10 @@ export default function CategoriesPage() {
       </Card>
 
       {/* Add/Edit Category Modal */}
-      <Modal isOpen={isOpen} onClose={handleModalClose} size="lg">
+      <Modal isOpen={isOpen} size="lg" onClose={handleModalClose}>
         <ModalContent>
           <ModalHeader>
-            {editingCategory ? 'Edit Category' : 'Add New Category'}
+            {editingCategory ? "Edit Category" : "Add New Category"}
           </ModalHeader>
           <ModalBody>
             {error && (
@@ -462,62 +539,89 @@ export default function CategoriesPage() {
             )}
             <div className="space-y-4">
               <Input
+                isRequired
+                required
                 label="Category Name"
                 placeholder="e.g., Cakes, Pastries, Beverages"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-                isRequired
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
               />
               <Textarea
                 label="Description"
+                minRows={3}
                 placeholder="Describe this category"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                minRows={3}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
               />
               <Input
-                label="Display Order"
-                type="number"
-                placeholder="0"
-                value={formData.display_order.toString()}
-                onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) || 0 })}
                 description="Lower numbers appear first"
+                label="Display Order"
                 min="0"
+                placeholder="0"
+                type="number"
+                value={formData.display_order.toString()}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    display_order: parseInt(e.target.value) || 0,
+                  })
+                }
               />
-              <label htmlFor="category-active" className="flex items-center gap-3 cursor-pointer p-3 bg-default-50 rounded-lg">
+              <label
+                className="flex items-center gap-3 cursor-pointer p-3 bg-default-50 rounded-lg"
+                htmlFor="category-active"
+              >
                 <input
+                  checked={formData.is_active}
+                  className="w-4 h-4 rounded border-default-300 text-primary focus:ring-2 focus:ring-primary"
                   id="category-active"
                   type="checkbox"
-                  checked={formData.is_active}
-                  onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                  className="w-4 h-4 rounded border-default-300 text-primary focus:ring-2 focus:ring-primary"
+                  onChange={(e) =>
+                    setFormData({ ...formData, is_active: e.target.checked })
+                  }
                 />
                 <div>
-                  <span className="text-sm font-medium text-default-700">Active</span>
-                  <p className="text-xs text-default-500">Show this category in the kiosk</p>
+                  <span className="text-sm font-medium text-default-700">
+                    Active
+                  </span>
+                  <p className="text-xs text-default-500">
+                    Show this category in the kiosk
+                  </p>
                 </div>
               </label>
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button variant="light" onPress={handleModalClose} isDisabled={saving}>
+            <Button
+              isDisabled={saving}
+              variant="light"
+              onPress={handleModalClose}
+            >
               Cancel
             </Button>
             <Button
               color="primary"
-              onPress={handleSubmit}
-              isLoading={saving}
               isDisabled={!formData.name}
+              isLoading={saving}
+              onPress={handleSubmit}
             >
-              {editingCategory ? 'Update' : 'Create'}
+              {editingCategory ? "Update" : "Create"}
             </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
 
       {/* Assign Items Modal */}
-      <Modal isOpen={isAssignOpen} onClose={onAssignClose} size="2xl" scrollBehavior="inside">
+      <Modal
+        isOpen={isAssignOpen}
+        scrollBehavior="inside"
+        size="2xl"
+        onClose={onAssignClose}
+      >
         <ModalContent>
           <ModalHeader>
             Assign Items to {selectedCategoryForAssign?.name}
@@ -529,7 +633,8 @@ export default function CategoriesPage() {
               </div>
             )}
             <p className="text-sm text-default-500 mb-4">
-              Select menu items to assign to this category. Items can belong to multiple categories.
+              Select menu items to assign to this category. Items can belong to
+              multiple categories.
             </p>
             <div className="space-y-2">
               {menuItems.map((item) => (
@@ -538,24 +643,26 @@ export default function CategoriesPage() {
                   className="flex items-center gap-3 p-3 border border-default-200 rounded-lg cursor-pointer hover:bg-default-50 transition-colors"
                 >
                   <input
-                    type="checkbox"
                     checked={selectedMenuItems.has(item.menu_item_id)}
-                    onChange={() => toggleItemSelection(item.menu_item_id)}
                     className="w-4 h-4 rounded border-default-300 text-primary focus:ring-2 focus:ring-primary"
+                    type="checkbox"
+                    onChange={() => toggleItemSelection(item.menu_item_id)}
                   />
                   <div className="flex-1 flex items-center gap-3">
                     {item.image_url && (
                       <div className="w-10 h-10 rounded overflow-hidden border border-default-200">
                         <img
-                          src={item.image_url}
                           alt={item.name}
                           className="w-full h-full object-cover"
+                          src={item.image_url}
                         />
                       </div>
                     )}
                     <div>
                       <p className="font-medium">{item.name}</p>
-                      <p className="text-xs text-default-400">{item.item_type}</p>
+                      <p className="text-xs text-default-400">
+                        {item.item_type}
+                      </p>
                     </div>
                   </div>
                   <Chip size="sm" variant="flat">
@@ -566,13 +673,13 @@ export default function CategoriesPage() {
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button variant="light" onPress={onAssignClose} isDisabled={saving}>
+            <Button isDisabled={saving} variant="light" onPress={onAssignClose}>
               Cancel
             </Button>
             <Button
               color="primary"
-              onPress={handleAssignSubmit}
               isLoading={saving}
+              onPress={handleAssignSubmit}
             >
               Assign {selectedMenuItems.size} Items
             </Button>
@@ -595,35 +702,49 @@ export default function CategoriesPage() {
             {selectedCategoryForDelete && (
               <div className="space-y-4">
                 <p className="text-default-600">
-                  Are you sure you want to delete the category <span className="font-bold text-danger">"{selectedCategoryForDelete.name}"</span>?
+                  Are you sure you want to delete the category{" "}
+                  <span className="font-bold text-danger">
+                    "{selectedCategoryForDelete.name}"
+                  </span>
+                  ?
                 </p>
                 <div className="p-4 bg-warning-50 border border-warning-200 rounded-lg">
-                  <p className="text-warning-800 text-sm font-medium mb-2">⚠️ Warning:</p>
+                  <p className="text-warning-800 text-sm font-medium mb-2">
+                    ⚠️ Warning:
+                  </p>
                   <ul className="text-warning-700 text-sm space-y-1 list-disc list-inside">
                     <li>This action cannot be undone</li>
                     <li>The category will be permanently removed</li>
-                    <li>All menu items will be unassigned from this category</li>
+                    <li>
+                      All menu items will be unassigned from this category
+                    </li>
                   </ul>
                 </div>
                 <div className="p-4 bg-success-50 border border-success-200 rounded-lg">
-                  <p className="text-success-800 text-sm font-medium mb-1">✓ Menu Items Are Safe:</p>
-                  <p className="text-success-700 text-sm">Menu items assigned to this category will NOT be deleted. They will remain available and can be assigned to other categories.</p>
+                  <p className="text-success-800 text-sm font-medium mb-1">
+                    ✓ Menu Items Are Safe:
+                  </p>
+                  <p className="text-success-700 text-sm">
+                    Menu items assigned to this category will NOT be deleted.
+                    They will remain available and can be assigned to other
+                    categories.
+                  </p>
                 </div>
               </div>
             )}
           </ModalBody>
           <ModalFooter>
             <Button
+              isDisabled={saving}
               variant="light"
               onPress={handleDeleteCancel}
-              isDisabled={saving}
             >
               Cancel
             </Button>
             <Button
               color="danger"
-              onPress={handleDeleteConfirm}
               isLoading={saving}
+              onPress={handleDeleteConfirm}
             >
               Delete Category
             </Button>

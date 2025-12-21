@@ -4,8 +4,8 @@ import { Metadata, Viewport } from "next";
 import clsx from "clsx";
 
 import { Providers } from "./providers";
-import AnimatedBackground from "@/components/AnimatedBackground";
 
+import AnimatedBackground from "@/components/AnimatedBackground";
 import { fontSans } from "@/config/fonts";
 
 export const metadata: Metadata = {
@@ -13,7 +13,8 @@ export const metadata: Metadata = {
     default: "GoldenMunch POS - Admin & Cashier Portal",
     template: `%s - GoldenMunch POS`,
   },
-  description: "GoldenMunch Point of Sale System - Admin and Cashier Management Portal",
+  description:
+    "GoldenMunch Point of Sale System - Admin and Cashier Management Portal",
   icons: {
     icon: "/favicon.ico",
   },

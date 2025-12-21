@@ -1,13 +1,26 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Card, CardBody, CardHeader } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { Input } from '@heroui/input';
-import { Table, TableHeader, TableBody, TableColumn, TableRow, TableCell } from '@heroui/table';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/modal';
-import { CashierService } from '@/services/cashier.service';
-import type { Cashier, CreateCashierRequest } from '@/types/api';
+import type { Cashier, CreateCashierRequest } from "@/types/api";
+
+import { useEffect, useState } from "react";
+import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableColumn,
+  TableRow,
+  TableCell,
+} from "@heroui/table";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@heroui/modal";
 import {
   PlusIcon,
   MagnifyingGlassIcon,
@@ -16,7 +29,9 @@ import {
   UserIcon,
   CheckCircleIcon,
   XCircleIcon,
-} from '@heroicons/react/24/outline';
+} from "@heroicons/react/24/outline";
+
+import { CashierService } from "@/services/cashier.service";
 
 // Types
 interface CashierFormState extends CreateCashierRequest {
@@ -33,7 +48,7 @@ export default function CashiersPage() {
   // State Management
   const [cashiers, setCashiers] = useState<Cashier[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [stats, setStats] = useState<CashierStats>({
     totalCashiers: 0,
     activeCashiers: 0,
@@ -48,12 +63,12 @@ export default function CashiersPage() {
 
   // Form State
   const [formState, setFormState] = useState<CashierFormState>({
-    name: '',
-    cashier_code: '',
-    pin: '',
-    phone: '',
-    email: '',
-    hire_date: new Date().toISOString().split('T')[0],
+    name: "",
+    cashier_code: "",
+    pin: "",
+    phone: "",
+    email: "",
+    hire_date: new Date().toISOString().split("T")[0],
     hourly_rate: 0,
     is_active: true,
   });
@@ -65,8 +80,8 @@ export default function CashiersPage() {
 
   // Calculate Stats
   useEffect(() => {
-    const active = cashiers.filter(c => c.is_active).length;
-    const inactive = cashiers.filter(c => !c.is_active).length;
+    const active = cashiers.filter((c) => c.is_active).length;
+    const inactive = cashiers.filter((c) => !c.is_active).length;
 
     setStats({
       totalCashiers: cashiers.length,
@@ -80,13 +95,14 @@ export default function CashiersPage() {
     try {
       setLoading(true);
       const response = await CashierService.getCashiers();
+
       if (response.success) {
         setCashiers(response.data || []);
       } else {
-        console.error('Failed to fetch cashiers:', response.message);
+        console.error("Failed to fetch cashiers:", response.message);
       }
     } catch (error) {
-      console.error('Failed to fetch cashiers:', error);
+      console.error("Failed to fetch cashiers:", error);
     } finally {
       setLoading(false);
     }
@@ -95,15 +111,16 @@ export default function CashiersPage() {
   const handleCreateCashier = async () => {
     try {
       const response = await CashierService.createCashier(formState);
+
       if (response.success) {
         setShowCreateModal(false);
         resetForm();
         fetchCashiers();
       } else {
-        console.error('Failed to create cashier:', response.message);
+        console.error("Failed to create cashier:", response.message);
       }
     } catch (error) {
-      console.error('Failed to create cashier:', error);
+      console.error("Failed to create cashier:", error);
     }
   };
 
@@ -112,21 +129,23 @@ export default function CashiersPage() {
 
     try {
       const updateData: Partial<CreateCashierRequest> = { ...formState };
+
       delete (updateData as any).cashier_id;
 
       const response = await CashierService.updateCashier(
         selectedCashier.cashier_id,
-        updateData
+        updateData,
       );
+
       if (response.success) {
         setShowEditModal(false);
         resetForm();
         fetchCashiers();
       } else {
-        console.error('Failed to update cashier:', response.message);
+        console.error("Failed to update cashier:", response.message);
       }
     } catch (error) {
-      console.error('Failed to update cashier:', error);
+      console.error("Failed to update cashier:", error);
     }
   };
 
@@ -134,28 +153,31 @@ export default function CashiersPage() {
     if (!selectedCashier) return;
 
     try {
-      const response = await CashierService.deleteCashier(selectedCashier.cashier_id);
+      const response = await CashierService.deleteCashier(
+        selectedCashier.cashier_id,
+      );
+
       if (response.success) {
         setShowDeleteModal(false);
         setSelectedCashier(null);
         fetchCashiers();
       } else {
-        console.error('Failed to delete cashier:', response.message);
+        console.error("Failed to delete cashier:", response.message);
       }
     } catch (error) {
-      console.error('Failed to delete cashier:', error);
+      console.error("Failed to delete cashier:", error);
     }
   };
 
   // Form Handlers
   const resetForm = () => {
     setFormState({
-      name: '',
-      cashier_code: '',
-      pin: '',
-      phone: '',
-      email: '',
-      hire_date: new Date().toISOString().split('T')[0],
+      name: "",
+      cashier_code: "",
+      pin: "",
+      phone: "",
+      email: "",
+      hire_date: new Date().toISOString().split("T")[0],
       hourly_rate: 0,
       is_active: true,
     });
@@ -172,9 +194,9 @@ export default function CashiersPage() {
       cashier_id: cashier.cashier_id,
       name: cashier.name,
       cashier_code: cashier.cashier_code,
-      pin: '',
-      phone: cashier.phone || '',
-      email: cashier.email || '',
+      pin: "",
+      phone: cashier.phone || "",
+      email: cashier.email || "",
       hire_date: cashier.hire_date,
       hourly_rate: cashier.hourly_rate,
       is_active: cashier.is_active,
@@ -188,19 +210,20 @@ export default function CashiersPage() {
   };
 
   // Filtering
-  const filteredCashiers = cashiers.filter(cashier =>
-    cashier.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cashier.cashier_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cashier.email?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredCashiers = cashiers.filter(
+    (cashier) =>
+      cashier.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cashier.cashier_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cashier.email?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // Helper Functions
   const formatCurrency = (value: number) => {
-    return `₱${parseFloat(value.toString()).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+    return `₱${parseFloat(value.toString()).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`;
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-PH');
+    return new Date(date).toLocaleDateString("en-PH");
   };
 
   return (
@@ -209,7 +232,9 @@ export default function CashiersPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Cashiers Management</h1>
-          <p className="text-default-500 mt-1">Manage cashier accounts and access</p>
+          <p className="text-default-500 mt-1">
+            Manage cashier accounts and access
+          </p>
         </div>
         <Button
           color="primary"
@@ -267,11 +292,13 @@ export default function CashiersPage() {
 
       {/* Search */}
       <Input
+        className="max-w-md"
         placeholder="Search cashiers by name, code, or email..."
+        startContent={
+          <MagnifyingGlassIcon className="h-5 w-5 text-default-400" />
+        }
         value={searchTerm}
         onValueChange={setSearchTerm}
-        startContent={<MagnifyingGlassIcon className="h-5 w-5 text-default-400" />}
-        className="max-w-md"
       />
 
       {/* Cashiers Table */}
@@ -300,45 +327,53 @@ export default function CashiersPage() {
                       <div className="flex flex-col">
                         <span className="font-semibold">{cashier.name}</span>
                         {cashier.email && (
-                          <span className="text-xs text-default-400">{cashier.email}</span>
+                          <span className="text-xs text-default-400">
+                            {cashier.email}
+                          </span>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="font-mono text-sm">{cashier.cashier_code}</span>
+                      <span className="font-mono text-sm">
+                        {cashier.cashier_code}
+                      </span>
                     </TableCell>
                     <TableCell>
-                      {cashier.phone || <span className="text-default-400">N/A</span>}
+                      {cashier.phone || (
+                        <span className="text-default-400">N/A</span>
+                      )}
                     </TableCell>
                     <TableCell>{formatDate(cashier.hire_date)}</TableCell>
-                    <TableCell>{formatCurrency(cashier.hourly_rate)}/hr</TableCell>
+                    <TableCell>
+                      {formatCurrency(cashier.hourly_rate)}/hr
+                    </TableCell>
                     <TableCell>
                       <span
                         className={`px-2 py-1 rounded text-xs font-semibold ${
                           cashier.is_active
-                            ? 'bg-success/10 text-success'
-                            : 'bg-danger/10 text-danger'
+                            ? "bg-success/10 text-success"
+                            : "bg-danger/10 text-danger"
                         }`}
                       >
-                        {cashier.is_active ? 'Active' : 'Inactive'}
+                        {cashier.is_active ? "Active" : "Inactive"}
                       </span>
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <Button
                           isIconOnly
+                          color="primary"
                           size="sm"
                           variant="light"
-                          color="primary"
                           onPress={() => openEditModal(cashier)}
                         >
                           <PencilIcon className="h-4 w-4" />
                         </Button>
                         <Button
                           isIconOnly
+                          color="danger"
                           size="sm"
                           variant="light"
-                          color="danger"
                           onPress={() => openDeleteModal(cashier)}
                         >
                           <TrashIcon className="h-4 w-4" />
@@ -354,34 +389,40 @@ export default function CashiersPage() {
       </Card>
 
       {/* Create Cashier Modal */}
-      <Modal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} size="lg">
+      <Modal
+        isOpen={showCreateModal}
+        size="lg"
+        onClose={() => setShowCreateModal(false)}
+      >
         <ModalContent>
           <ModalHeader>Create New Cashier</ModalHeader>
           <ModalBody>
             <div className="space-y-4">
               <Input
+                isRequired
                 label="Name"
                 placeholder="e.g., John Doe"
                 value={formState.name}
                 onValueChange={(v) => setFormState({ ...formState, name: v })}
-                isRequired
               />
 
               <Input
+                isRequired
                 label="Cashier Code"
                 placeholder="e.g., CASH001"
                 value={formState.cashier_code}
-                onValueChange={(v) => setFormState({ ...formState, cashier_code: v })}
-                isRequired
+                onValueChange={(v) =>
+                  setFormState({ ...formState, cashier_code: v })
+                }
               />
 
               <Input
+                isRequired
                 label="PIN (4-6 digits)"
-                type="password"
                 placeholder="Enter PIN"
+                type="password"
                 value={formState.pin}
                 onValueChange={(v) => setFormState({ ...formState, pin: v })}
-                isRequired
               />
 
               <Input
@@ -393,36 +434,48 @@ export default function CashiersPage() {
 
               <Input
                 label="Email (optional)"
-                type="email"
                 placeholder="e.g., cashier@goldenmunch.com"
+                type="email"
                 value={formState.email}
                 onValueChange={(v) => setFormState({ ...formState, email: v })}
               />
 
               <Input
+                isRequired
                 label="Hire Date"
                 type="date"
                 value={formState.hire_date}
-                onValueChange={(v) => setFormState({ ...formState, hire_date: v })}
-                isRequired
+                onValueChange={(v) =>
+                  setFormState({ ...formState, hire_date: v })
+                }
               />
 
               <Input
-                label="Hourly Rate"
-                type="number"
-                placeholder="0.00"
-                value={formState.hourly_rate.toString()}
-                onValueChange={(v) => setFormState({ ...formState, hourly_rate: parseFloat(v) || 0 })}
                 isRequired
+                label="Hourly Rate"
+                placeholder="0.00"
+                type="number"
+                value={formState.hourly_rate.toString()}
+                onValueChange={(v) =>
+                  setFormState({
+                    ...formState,
+                    hourly_rate: parseFloat(v) || 0,
+                  })
+                }
               />
 
               <div className="space-y-2">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
-                    type="checkbox"
                     checked={formState.is_active ?? true}
-                    onChange={(e) => setFormState({ ...formState, is_active: e.target.checked })}
                     className="rounded"
+                    type="checkbox"
+                    onChange={(e) =>
+                      setFormState({
+                        ...formState,
+                        is_active: e.target.checked,
+                      })
+                    }
                   />
                   <span className="text-sm">Is Active</span>
                 </label>
@@ -441,31 +494,37 @@ export default function CashiersPage() {
       </Modal>
 
       {/* Edit Cashier Modal */}
-      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} size="lg">
+      <Modal
+        isOpen={showEditModal}
+        size="lg"
+        onClose={() => setShowEditModal(false)}
+      >
         <ModalContent>
           <ModalHeader>Edit Cashier</ModalHeader>
           <ModalBody>
             <div className="space-y-4">
               <Input
+                isRequired
                 label="Name"
                 placeholder="e.g., John Doe"
                 value={formState.name}
                 onValueChange={(v) => setFormState({ ...formState, name: v })}
-                isRequired
               />
 
               <Input
+                isRequired
                 label="Cashier Code"
                 placeholder="e.g., CASH001"
                 value={formState.cashier_code}
-                onValueChange={(v) => setFormState({ ...formState, cashier_code: v })}
-                isRequired
+                onValueChange={(v) =>
+                  setFormState({ ...formState, cashier_code: v })
+                }
               />
 
               <Input
                 label="New PIN (leave empty to keep current)"
-                type="password"
                 placeholder="Enter new PIN"
+                type="password"
                 value={formState.pin}
                 onValueChange={(v) => setFormState({ ...formState, pin: v })}
               />
@@ -479,36 +538,48 @@ export default function CashiersPage() {
 
               <Input
                 label="Email (optional)"
-                type="email"
                 placeholder="e.g., cashier@goldenmunch.com"
+                type="email"
                 value={formState.email}
                 onValueChange={(v) => setFormState({ ...formState, email: v })}
               />
 
               <Input
+                isRequired
                 label="Hire Date"
                 type="date"
                 value={formState.hire_date}
-                onValueChange={(v) => setFormState({ ...formState, hire_date: v })}
-                isRequired
+                onValueChange={(v) =>
+                  setFormState({ ...formState, hire_date: v })
+                }
               />
 
               <Input
-                label="Hourly Rate"
-                type="number"
-                placeholder="0.00"
-                value={formState.hourly_rate.toString()}
-                onValueChange={(v) => setFormState({ ...formState, hourly_rate: parseFloat(v) || 0 })}
                 isRequired
+                label="Hourly Rate"
+                placeholder="0.00"
+                type="number"
+                value={formState.hourly_rate.toString()}
+                onValueChange={(v) =>
+                  setFormState({
+                    ...formState,
+                    hourly_rate: parseFloat(v) || 0,
+                  })
+                }
               />
 
               <div className="space-y-2">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
-                    type="checkbox"
                     checked={formState.is_active ?? true}
-                    onChange={(e) => setFormState({ ...formState, is_active: e.target.checked })}
                     className="rounded"
+                    type="checkbox"
+                    onChange={(e) =>
+                      setFormState({
+                        ...formState,
+                        is_active: e.target.checked,
+                      })
+                    }
                   />
                   <span className="text-sm">Is Active</span>
                 </label>
@@ -532,9 +603,12 @@ export default function CashiersPage() {
           <ModalHeader>Delete Cashier</ModalHeader>
           <ModalBody>
             <p>
-              Are you sure you want to delete cashier <span className="font-bold">{selectedCashier?.name}</span>?
+              Are you sure you want to delete cashier{" "}
+              <span className="font-bold">{selectedCashier?.name}</span>?
             </p>
-            <p className="text-sm text-default-500">This action cannot be undone.</p>
+            <p className="text-sm text-default-500">
+              This action cannot be undone.
+            </p>
           </ModalBody>
           <ModalFooter>
             <Button variant="light" onPress={() => setShowDeleteModal(false)}>

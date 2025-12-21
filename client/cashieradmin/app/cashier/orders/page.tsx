@@ -1,35 +1,56 @@
 "use client";
 
+import type {
+  CustomerOrder,
+  OrderTimelineEntry,
+  CustomerDiscountType,
+} from "@/types/api";
+
 import { useEffect, useState } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
-import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from "@heroui/table";
+import {
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@heroui/table";
 import { Chip } from "@heroui/chip";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from "@heroui/modal";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+} from "@heroui/modal";
 import { Spinner } from "@heroui/spinner";
 import { Divider } from "@heroui/divider";
 import { Tabs, Tab } from "@heroui/tabs";
 import { addToast } from "@heroui/toast";
-import { OrderService } from "@/services/order.service";
-import { DiscountService } from "@/services/discount.service";
-import { printerService } from "@/services/printer.service";
-import { OrderStatus } from "@/types/api";
-import type { CustomerOrder, OrderTimelineEntry, CustomerDiscountType } from "@/types/api";
 import {
   MagnifyingGlassIcon,
   ClockIcon,
   CheckCircleIcon,
-  XCircleIcon,
   BanknotesIcon,
   QrCodeIcon,
   CreditCardIcon,
   PercentBadgeIcon,
-  PrinterIcon,
 } from "@heroicons/react/24/outline";
 
-const statusColors: Record<string, "default" | "primary" | "secondary" | "success" | "warning" | "danger"> = {
+import { OrderService } from "@/services/order.service";
+import { DiscountService } from "@/services/discount.service";
+import { printerService } from "@/services/printer.service";
+import { OrderStatus } from "@/types/api";
+
+const statusColors: Record<
+  string,
+  "default" | "primary" | "secondary" | "success" | "warning" | "danger"
+> = {
   pending: "warning",
   confirmed: "primary",
   preparing: "secondary",
@@ -56,7 +77,9 @@ export default function UnifiedCashierPage() {
   const [loading, setLoading] = useState(true);
 
   // Selected order and modals
-  const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(
+    null,
+  );
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   // Order timeline
@@ -72,7 +95,8 @@ export default function UnifiedCashierPage() {
 
   // Discounts
   const [discounts, setDiscounts] = useState<CustomerDiscountType[]>([]);
-  const [selectedDiscount, setSelectedDiscount] = useState<CustomerDiscountType | null>(null);
+  const [selectedDiscount, setSelectedDiscount] =
+    useState<CustomerDiscountType | null>(null);
 
   // Search
   const [searchQuery, setSearchQuery] = useState("");
@@ -90,6 +114,7 @@ export default function UnifiedCashierPage() {
     loadDiscounts();
 
     const interval = setInterval(loadAllData, 10000);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -99,16 +124,25 @@ export default function UnifiedCashierPage() {
 
       // Load all orders
       const response = await OrderService.getOrders();
+
       if (response.success && response.data) {
         const allOrders = (response.data as any).orders || [];
 
         // Separate orders by status
-        const pending = allOrders.filter((o: CustomerOrder) => o.order_status === OrderStatus.PENDING);
+        const pending = allOrders.filter(
+          (o: CustomerOrder) => o.order_status === OrderStatus.PENDING,
+        );
         const active = allOrders.filter((o: CustomerOrder) =>
-          [OrderStatus.CONFIRMED, OrderStatus.PREPARING, OrderStatus.READY].includes(o.order_status as OrderStatus)
+          [
+            OrderStatus.CONFIRMED,
+            OrderStatus.PREPARING,
+            OrderStatus.READY,
+          ].includes(o.order_status as OrderStatus),
         );
         const completed = allOrders.filter((o: CustomerOrder) =>
-          [OrderStatus.COMPLETED, OrderStatus.CANCELLED].includes(o.order_status as OrderStatus)
+          [OrderStatus.COMPLETED, OrderStatus.CANCELLED].includes(
+            o.order_status as OrderStatus,
+          ),
         );
 
         setPendingOrders(pending);
@@ -122,6 +156,7 @@ export default function UnifiedCashierPage() {
           completedToday: completed.filter((o: CustomerOrder) => {
             const orderDate = new Date(o.order_datetime);
             const today = new Date();
+
             return orderDate.toDateString() === today.toDateString();
           }).length,
         });
@@ -136,6 +171,7 @@ export default function UnifiedCashierPage() {
   const loadDiscounts = async () => {
     try {
       const response = await DiscountService.getActiveDiscountTypes();
+
       if (response.success && response.data) {
         setDiscounts(response.data);
       }
@@ -148,6 +184,7 @@ export default function UnifiedCashierPage() {
     try {
       setLoadingTimeline(true);
       const response = await OrderService.getOrderTimeline(orderId);
+
       if (response.success && response.data) {
         setOrderTimeline(response.data);
       }
@@ -162,6 +199,7 @@ export default function UnifiedCashierPage() {
   const handleViewOrder = async (order: CustomerOrder) => {
     try {
       const response = await OrderService.getOrderById(order.order_id);
+
       if (response.success && response.data) {
         setSelectedOrder(response.data);
         loadOrderTimeline(order.order_id);
@@ -182,22 +220,27 @@ export default function UnifiedCashierPage() {
     const finalAmount = selectedDiscount
       ? calculateFinalAmount(
           Number(selectedOrder.final_amount || 0),
-          selectedDiscount
+          selectedDiscount,
         )
       : Number(selectedOrder.final_amount || 0);
 
     // Validate payment based on method
     if (selectedOrder.payment_method === "cash") {
       const tendered = Number(amountTendered);
+
       if (!tendered || tendered < finalAmount) {
         setVerifyError(
-          `Insufficient amount. Required: ₱${finalAmount.toFixed(2)}, Tendered: ₱${tendered.toFixed(2)}`
+          `Insufficient amount. Required: ₱${finalAmount.toFixed(2)}, Tendered: ₱${tendered.toFixed(2)}`,
         );
+
         return;
       }
     } else if (["gcash", "paymaya"].includes(selectedOrder.payment_method)) {
       if (!referenceNumber || referenceNumber.trim().length < 5) {
-        setVerifyError("Please enter a valid reference number (minimum 5 characters)");
+        setVerifyError(
+          "Please enter a valid reference number (minimum 5 characters)",
+        );
+
         return;
       }
     }
@@ -217,12 +260,15 @@ export default function UnifiedCashierPage() {
       }
 
       // Update order status to confirmed
-      const statusResponse = await OrderService.updateOrderStatus(selectedOrder.order_id, {
-        order_status: OrderStatus.CONFIRMED,
-        notes: selectedDiscount
-          ? `Payment verified with ${selectedDiscount.name} (${selectedDiscount.discount_percentage}% off)`
-          : "Payment verified",
-      });
+      const statusResponse = await OrderService.updateOrderStatus(
+        selectedOrder.order_id,
+        {
+          order_status: OrderStatus.CONFIRMED,
+          notes: selectedDiscount
+            ? `Payment verified with ${selectedDiscount.name} (${selectedDiscount.discount_percentage}% off)`
+            : "Payment verified",
+        },
+      );
 
       if (!statusResponse.success) {
         throw new Error("Failed to update order status");
@@ -235,11 +281,15 @@ export default function UnifiedCashierPage() {
           ...selectedOrder,
           final_amount: finalAmount,
           discount_amount: selectedDiscount
-            ? calculateDiscount(Number(selectedOrder.final_amount || 0), selectedDiscount)
+            ? calculateDiscount(
+                Number(selectedOrder.final_amount || 0),
+                selectedDiscount,
+              )
             : 0,
         });
 
         const printResult = await printerService.printReceipt(receiptData);
+
         if (printResult.success) {
           addToast({
             title: "Receipt Printed",
@@ -264,7 +314,9 @@ export default function UnifiedCashierPage() {
       setSelectedTab("active"); // Switch to active orders tab
     } catch (error: any) {
       console.error("Payment verification error:", error);
-      setVerifyError(error.message || "Failed to verify payment. Please try again.");
+      setVerifyError(
+        error.message || "Failed to verify payment. Please try again.",
+      );
     } finally {
       setVerifying(false);
     }
@@ -274,10 +326,13 @@ export default function UnifiedCashierPage() {
     if (!selectedOrder) return;
 
     try {
-      const response = await OrderService.updateOrderStatus(selectedOrder.order_id, {
-        order_status: newStatus,
-        notes: `Status updated to ${newStatus}`,
-      });
+      const response = await OrderService.updateOrderStatus(
+        selectedOrder.order_id,
+        {
+          order_status: newStatus,
+          notes: `Status updated to ${newStatus}`,
+        },
+      );
 
       if (!response.success) {
         throw new Error(response.error || "Failed to update status");
@@ -308,12 +363,19 @@ export default function UnifiedCashierPage() {
     }
   };
 
-  const calculateDiscount = (amount: number, discount: CustomerDiscountType): number => {
+  const calculateDiscount = (
+    amount: number,
+    discount: CustomerDiscountType,
+  ): number => {
     return (amount * discount.discount_percentage) / 100;
   };
 
-  const calculateFinalAmount = (amount: number, discount: CustomerDiscountType | null): number => {
+  const calculateFinalAmount = (
+    amount: number,
+    discount: CustomerDiscountType | null,
+  ): number => {
     if (!discount) return amount;
+
     return amount - calculateDiscount(amount, discount);
   };
 
@@ -326,8 +388,9 @@ export default function UnifiedCashierPage() {
     if (selectedOrder && amountTendered) {
       const finalAmount = calculateFinalAmount(
         Number(selectedOrder.final_amount || 0),
-        selectedDiscount
+        selectedDiscount,
       );
+
       setCalculatedChange(calculateChange(Number(amountTendered), finalAmount));
     } else {
       setCalculatedChange(0);
@@ -347,15 +410,19 @@ export default function UnifiedCashierPage() {
     if (!searchQuery) return orders;
 
     const query = searchQuery.toLowerCase();
+
     return orders.filter(
       (order) =>
         order.order_number?.toLowerCase().includes(query) ||
         order.name?.toLowerCase().includes(query) ||
-        order.phone?.toLowerCase().includes(query)
+        order.phone?.toLowerCase().includes(query),
     );
   };
 
-  const renderOrdersTable = (orders: CustomerOrder[], showPaymentAction: boolean = false) => {
+  const renderOrdersTable = (
+    orders: CustomerOrder[],
+    showPaymentAction: boolean = false,
+  ) => {
     const filteredOrders = filterOrders(orders);
 
     if (loading) {
@@ -372,7 +439,9 @@ export default function UnifiedCashierPage() {
           <ClockIcon className="h-16 w-16 mx-auto mb-4 opacity-40" />
           <p className="text-lg font-semibold">No orders found</p>
           <p className="text-sm">
-            {searchQuery ? "Try a different search term" : "Orders will appear here once placed"}
+            {searchQuery
+              ? "Try a different search term"
+              : "Orders will appear here once placed"}
           </p>
         </div>
       );
@@ -393,7 +462,9 @@ export default function UnifiedCashierPage() {
           {filteredOrders.map((order) => (
             <TableRow key={order.order_id}>
               <TableCell>
-                <span className="font-mono font-bold">{order.order_number}</span>
+                <span className="font-mono font-bold">
+                  {order.order_number}
+                </span>
               </TableCell>
               <TableCell>
                 <div>
@@ -402,7 +473,9 @@ export default function UnifiedCashierPage() {
                 </div>
               </TableCell>
               <TableCell>
-                <span className="font-semibold">₱{Number(order.final_amount || 0).toFixed(2)}</span>
+                <span className="font-semibold">
+                  ₱{Number(order.final_amount || 0).toFixed(2)}
+                </span>
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
@@ -411,15 +484,26 @@ export default function UnifiedCashierPage() {
                 </div>
               </TableCell>
               <TableCell>
-                <Chip color={statusColors[order.order_status]} variant="flat" size="sm">
+                <Chip
+                  color={statusColors[order.order_status]}
+                  size="sm"
+                  variant="flat"
+                >
                   {order.order_status}
                 </Chip>
               </TableCell>
               <TableCell>
-                <span className="text-sm text-default-600">{formatDate(order.order_datetime)}</span>
+                <span className="text-sm text-default-600">
+                  {formatDate(order.order_datetime)}
+                </span>
               </TableCell>
               <TableCell>
-                <Button size="sm" color="primary" variant="flat" onPress={() => handleViewOrder(order)}>
+                <Button
+                  color="primary"
+                  size="sm"
+                  variant="flat"
+                  onPress={() => handleViewOrder(order)}
+                >
                   {showPaymentAction ? "Verify Payment" : "View Details"}
                 </Button>
               </TableCell>
@@ -434,20 +518,33 @@ export default function UnifiedCashierPage() {
     if (!selectedOrder) return null;
 
     const isPending = selectedOrder.order_status === OrderStatus.PENDING;
-    const isActive = [OrderStatus.CONFIRMED, OrderStatus.PREPARING, OrderStatus.READY].includes(selectedOrder.order_status as OrderStatus);
+    const isActive = [
+      OrderStatus.CONFIRMED,
+      OrderStatus.PREPARING,
+      OrderStatus.READY,
+    ].includes(selectedOrder.order_status as OrderStatus);
     const finalAmount = calculateFinalAmount(
       Number(selectedOrder.final_amount || 0),
-      selectedDiscount
+      selectedDiscount,
     );
 
     return (
-      <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside">
+      <Modal
+        isOpen={isOpen}
+        scrollBehavior="inside"
+        size="3xl"
+        onClose={onClose}
+      >
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold">Order #{selectedOrder.order_number}</h2>
-                <p className="text-sm text-default-500">{formatDate(selectedOrder.order_datetime)}</p>
+                <h2 className="text-2xl font-bold">
+                  Order #{selectedOrder.order_number}
+                </h2>
+                <p className="text-sm text-default-500">
+                  {formatDate(selectedOrder.order_datetime)}
+                </p>
               </div>
               <Chip color={statusColors[selectedOrder.order_status]} size="lg">
                 {selectedOrder.order_status}
@@ -463,7 +560,9 @@ export default function UnifiedCashierPage() {
               <CardBody className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-default-500">Name</p>
-                  <p className="font-semibold">{selectedOrder.name || "Guest"}</p>
+                  <p className="font-semibold">
+                    {selectedOrder.name || "Guest"}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-default-500">Phone</p>
@@ -479,15 +578,24 @@ export default function UnifiedCashierPage() {
               </CardHeader>
               <CardBody>
                 <div className="space-y-2">
-                  {(selectedOrder as any).items?.map((item: any, index: number) => (
-                    <div key={index} className="flex justify-between items-center py-2 border-b last:border-0">
-                      <div>
-                        <p className="font-semibold">{item.menu_item_name}</p>
-                        <p className="text-sm text-default-500">Quantity: {item.quantity}</p>
+                  {(selectedOrder as any).items?.map(
+                    (item: any, index: number) => (
+                      <div
+                        key={index}
+                        className="flex justify-between items-center py-2 border-b last:border-0"
+                      >
+                        <div>
+                          <p className="font-semibold">{item.menu_item_name}</p>
+                          <p className="text-sm text-default-500">
+                            Quantity: {item.quantity}
+                          </p>
+                        </div>
+                        <p className="font-semibold">
+                          ₱{Number(item.item_total || 0).toFixed(2)}
+                        </p>
                       </div>
-                      <p className="font-semibold">₱{Number(item.item_total || 0).toFixed(2)}</p>
-                    </div>
-                  ))}
+                    ),
+                  )}
                 </div>
                 <Divider className="my-4" />
                 <div className="space-y-2">
@@ -495,15 +603,21 @@ export default function UnifiedCashierPage() {
                     <>
                       <div className="flex justify-between">
                         <span className="text-default-600">Subtotal:</span>
-                        <span>₱{Number(selectedOrder.final_amount || 0).toFixed(2)}</span>
+                        <span>
+                          ₱{Number(selectedOrder.final_amount || 0).toFixed(2)}
+                        </span>
                       </div>
                       <div className="flex justify-between text-success-600">
                         <span>
-                          Discount ({selectedDiscount.name} - {selectedDiscount.discount_percentage}%):
+                          Discount ({selectedDiscount.name} -{" "}
+                          {selectedDiscount.discount_percentage}%):
                         </span>
                         <span>
                           -₱
-                          {calculateDiscount(Number(selectedOrder.final_amount || 0), selectedDiscount).toFixed(2)}
+                          {calculateDiscount(
+                            Number(selectedOrder.final_amount || 0),
+                            selectedDiscount,
+                          ).toFixed(2)}
                         </span>
                       </div>
                     </>
@@ -520,19 +634,28 @@ export default function UnifiedCashierPage() {
             {isPending && (
               <Card className="border-2 border-warning-200 bg-warning-50">
                 <CardHeader>
-                  <h3 className="font-semibold text-warning-800">Payment Verification Required</h3>
+                  <h3 className="font-semibold text-warning-800">
+                    Payment Verification Required
+                  </h3>
                 </CardHeader>
                 <CardBody className="space-y-4">
                   {/* Discount Selection */}
                   <Select
                     label="Apply Discount (Optional)"
                     placeholder="Select a discount"
-                    selectedKeys={selectedDiscount ? [selectedDiscount.discount_type_id.toString()] : []}
+                    selectedKeys={
+                      selectedDiscount
+                        ? [selectedDiscount.discount_type_id.toString()]
+                        : []
+                    }
+                    startContent={<PercentBadgeIcon className="h-4 w-4" />}
                     onChange={(e) => {
-                      const discount = discounts.find((d) => d.discount_type_id.toString() === e.target.value);
+                      const discount = discounts.find(
+                        (d) => d.discount_type_id.toString() === e.target.value,
+                      );
+
                       setSelectedDiscount(discount || null);
                     }}
-                    startContent={<PercentBadgeIcon className="h-4 w-4" />}
                   >
                     {discounts.map((discount) => (
                       <SelectItem key={discount.discount_type_id.toString()}>
@@ -545,12 +668,14 @@ export default function UnifiedCashierPage() {
                   {selectedOrder.payment_method === "cash" && (
                     <>
                       <Input
-                        type="number"
                         label="Amount Tendered"
                         placeholder="0.00"
+                        startContent={
+                          <span className="text-default-400">₱</span>
+                        }
+                        type="number"
                         value={amountTendered}
                         onValueChange={setAmountTendered}
-                        startContent={<span className="text-default-400">₱</span>}
                       />
                       {amountTendered && (
                         <div className="bg-success-50 p-4 rounded-lg">
@@ -566,7 +691,9 @@ export default function UnifiedCashierPage() {
                   )}
 
                   {/* Digital Payment */}
-                  {["gcash", "paymaya"].includes(selectedOrder.payment_method) && (
+                  {["gcash", "paymaya"].includes(
+                    selectedOrder.payment_method,
+                  ) && (
                     <Input
                       label="Reference Number"
                       placeholder="Enter reference number"
@@ -576,7 +703,9 @@ export default function UnifiedCashierPage() {
                   )}
 
                   {verifyError && (
-                    <div className="bg-danger-50 p-3 rounded-lg text-danger-700 text-sm">{verifyError}</div>
+                    <div className="bg-danger-50 p-3 rounded-lg text-danger-700 text-sm">
+                      {verifyError}
+                    </div>
                   )}
                 </CardBody>
               </Card>
@@ -601,13 +730,19 @@ export default function UnifiedCashierPage() {
                           <Chip size="sm" variant="flat">
                             {entry.status}
                           </Chip>
-                          {entry.notes && <p className="text-sm text-default-600 mt-1">{entry.notes}</p>}
+                          {entry.notes && (
+                            <p className="text-sm text-default-600 mt-1">
+                              {entry.notes}
+                            </p>
+                          )}
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-default-500">No timeline available</p>
+                  <p className="text-sm text-default-500">
+                    No timeline available
+                  </p>
                 )}
               </CardBody>
             </Card>
@@ -619,7 +754,11 @@ export default function UnifiedCashierPage() {
 
             {/* Pending: Verify Payment */}
             {isPending && (
-              <Button color="success" onPress={handleVerifyPayment} isLoading={verifying}>
+              <Button
+                color="success"
+                isLoading={verifying}
+                onPress={handleVerifyPayment}
+              >
                 Verify Payment & Confirm Order
               </Button>
             )}
@@ -628,17 +767,26 @@ export default function UnifiedCashierPage() {
             {isActive && (
               <div className="flex gap-2">
                 {selectedOrder.order_status === OrderStatus.CONFIRMED && (
-                  <Button color="primary" onPress={() => handleUpdateStatus(OrderStatus.PREPARING)}>
+                  <Button
+                    color="primary"
+                    onPress={() => handleUpdateStatus(OrderStatus.PREPARING)}
+                  >
                     Mark as Preparing
                   </Button>
                 )}
                 {selectedOrder.order_status === OrderStatus.PREPARING && (
-                  <Button color="success" onPress={() => handleUpdateStatus(OrderStatus.READY)}>
+                  <Button
+                    color="success"
+                    onPress={() => handleUpdateStatus(OrderStatus.READY)}
+                  >
                     Mark as Ready
                   </Button>
                 )}
                 {selectedOrder.order_status === OrderStatus.READY && (
-                  <Button color="success" onPress={() => handleUpdateStatus(OrderStatus.COMPLETED)}>
+                  <Button
+                    color="success"
+                    onPress={() => handleUpdateStatus(OrderStatus.COMPLETED)}
+                  >
                     Mark as Completed
                   </Button>
                 )}
@@ -657,7 +805,9 @@ export default function UnifiedCashierPage() {
         <h1 className="text-4xl font-black bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent">
           Cashier Orders
         </h1>
-        <p className="text-default-600 mt-2">Unified payment verification and order management</p>
+        <p className="text-default-600 mt-2">
+          Unified payment verification and order management
+        </p>
       </div>
 
       {/* Stats */}
@@ -668,8 +818,12 @@ export default function UnifiedCashierPage() {
               <ClockIcon className="h-8 w-8 text-warning-700" />
             </div>
             <div>
-              <p className="text-sm text-warning-700 font-semibold">Pending Payments</p>
-              <p className="text-3xl font-bold text-warning-900">{stats.pendingPayments}</p>
+              <p className="text-sm text-warning-700 font-semibold">
+                Pending Payments
+              </p>
+              <p className="text-3xl font-bold text-warning-900">
+                {stats.pendingPayments}
+              </p>
             </div>
           </CardBody>
         </Card>
@@ -680,8 +834,12 @@ export default function UnifiedCashierPage() {
               <CheckCircleIcon className="h-8 w-8 text-primary-700" />
             </div>
             <div>
-              <p className="text-sm text-primary-700 font-semibold">Active Orders</p>
-              <p className="text-3xl font-bold text-primary-900">{stats.activeOrders}</p>
+              <p className="text-sm text-primary-700 font-semibold">
+                Active Orders
+              </p>
+              <p className="text-3xl font-bold text-primary-900">
+                {stats.activeOrders}
+              </p>
             </div>
           </CardBody>
         </Card>
@@ -692,8 +850,12 @@ export default function UnifiedCashierPage() {
               <CheckCircleIcon className="h-8 w-8 text-success-700" />
             </div>
             <div>
-              <p className="text-sm text-success-700 font-semibold">Completed Today</p>
-              <p className="text-3xl font-bold text-success-900">{stats.completedToday}</p>
+              <p className="text-sm text-success-700 font-semibold">
+                Completed Today
+              </p>
+              <p className="text-3xl font-bold text-success-900">
+                {stats.completedToday}
+              </p>
             </div>
           </CardBody>
         </Card>
@@ -703,13 +865,15 @@ export default function UnifiedCashierPage() {
       <Card>
         <CardBody>
           <Input
-            placeholder="Search by order number, name, or phone..."
-            value={searchQuery}
-            onValueChange={setSearchQuery}
-            startContent={<MagnifyingGlassIcon className="h-5 w-5 text-default-400" />}
             isClearable
-            onClear={() => setSearchQuery("")}
+            placeholder="Search by order number, name, or phone..."
             size="lg"
+            startContent={
+              <MagnifyingGlassIcon className="h-5 w-5 text-default-400" />
+            }
+            value={searchQuery}
+            onClear={() => setSearchQuery("")}
+            onValueChange={setSearchQuery}
           />
         </CardBody>
       </Card>
@@ -718,15 +882,15 @@ export default function UnifiedCashierPage() {
       <Card>
         <CardBody className="p-0">
           <Tabs
-            selectedKey={selectedTab}
-            onSelectionChange={(key) => setSelectedTab(key as string)}
             aria-label="Order tabs"
-            size="lg"
-            color="primary"
             classNames={{
               tabList: "w-full",
               tab: "h-14 text-base font-semibold",
             }}
+            color="primary"
+            selectedKey={selectedTab}
+            size="lg"
+            onSelectionChange={(key) => setSelectedTab(key as string)}
           >
             <Tab
               key="pending"
@@ -737,7 +901,9 @@ export default function UnifiedCashierPage() {
                 </div>
               }
             >
-              <div className="p-4">{renderOrdersTable(pendingOrders, true)}</div>
+              <div className="p-4">
+                {renderOrdersTable(pendingOrders, true)}
+              </div>
             </Tab>
 
             <Tab

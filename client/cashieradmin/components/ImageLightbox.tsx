@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Modal, ModalContent, ModalBody } from '@heroui/modal';
-import { Button } from '@heroui/button';
-import Image from 'next/image';
+import { useState } from "react";
+import { Modal, ModalContent, ModalBody } from "@heroui/modal";
+import { Button } from "@heroui/button";
+import Image from "next/image";
 
 interface ImageLightboxProps {
   src?: string;
@@ -12,7 +12,12 @@ interface ImageLightboxProps {
   className?: string;
 }
 
-export default function ImageLightbox({ src, alt, children, className = '' }: ImageLightboxProps) {
+export default function ImageLightbox({
+  src,
+  alt,
+  children,
+  className = "",
+}: ImageLightboxProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   // Don't render lightbox if no src provided
@@ -24,11 +29,11 @@ export default function ImageLightbox({ src, alt, children, className = '' }: Im
     <>
       <div
         className={`cursor-pointer hover:opacity-90 transition-opacity ${className}`}
-        onClick={() => setIsOpen(true)}
         role="button"
         tabIndex={0}
+        onClick={() => setIsOpen(true)}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === "Enter" || e.key === " ") {
             setIsOpen(true);
           }
         }}
@@ -37,13 +42,13 @@ export default function ImageLightbox({ src, alt, children, className = '' }: Im
       </div>
 
       <Modal
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        size="full"
         classNames={{
-          base: 'bg-black/95',
-          backdrop: 'bg-black/80',
+          base: "bg-black/95",
+          backdrop: "bg-black/80",
         }}
+        isOpen={isOpen}
+        size="full"
+        onClose={() => setIsOpen(false)}
       >
         <ModalContent>
           <ModalBody className="flex items-center justify-center p-0 relative">
@@ -51,8 +56,8 @@ export default function ImageLightbox({ src, alt, children, className = '' }: Im
             <Button
               isIconOnly
               className="absolute top-4 right-4 z-50 bg-white/10 hover:bg-white/20 backdrop-blur-lg text-white text-2xl"
-              onClick={() => setIsOpen(false)}
               size="lg"
+              onClick={() => setIsOpen(false)}
             >
               ✕
             </Button>
@@ -61,12 +66,12 @@ export default function ImageLightbox({ src, alt, children, className = '' }: Im
             <div className="w-full h-full flex items-center justify-center p-8">
               <div className="relative max-w-7xl max-h-full w-full h-full">
                 <Image
-                  src={src}
-                  alt={alt}
                   fill
+                  priority
+                  alt={alt}
                   className="object-contain"
                   sizes="100vw"
-                  priority
+                  src={src}
                 />
               </div>
             </div>

@@ -1,9 +1,10 @@
-import { apiClient } from '@/lib/api-client';
-import type { TaxRule, CreateTaxRuleRequest } from '@/types/api';
+import type { TaxRule, CreateTaxRuleRequest } from "@/types/api";
+
+import { apiClient } from "@/lib/api-client";
 
 export class TaxService {
   static async getTaxRules(params?: any) {
-    return apiClient.get<TaxRule[]>('/admin/tax-rules', { params });
+    return apiClient.get<TaxRule[]>("/admin/tax-rules", { params });
   }
 
   static async getTaxRuleById(id: number) {
@@ -11,7 +12,7 @@ export class TaxService {
   }
 
   static async createTaxRule(data: CreateTaxRuleRequest) {
-    return apiClient.post<TaxRule>('/admin/tax-rules', data);
+    return apiClient.post<TaxRule>("/admin/tax-rules", data);
   }
 
   static async updateTaxRule(id: number, data: Partial<CreateTaxRuleRequest>) {

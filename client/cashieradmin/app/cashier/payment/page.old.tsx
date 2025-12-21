@@ -1,7 +1,6 @@
 "use client";
 
 import type { CustomerOrder, CustomerDiscountType } from "@/types/api";
-import { OrderStatus } from "@/types/api";
 
 import { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
@@ -40,6 +39,7 @@ import {
   PercentBadgeIcon,
 } from "@heroicons/react/24/outline";
 
+import { OrderStatus } from "@/types/api";
 import { OrderService } from "@/services/order.service";
 import { DiscountService } from "@/services/discount.service";
 import { printerService } from "@/services/printer.service";
@@ -80,7 +80,8 @@ export default function PaymentPage() {
 
   // Discount handling
   const [discounts, setDiscounts] = useState<CustomerDiscountType[]>([]);
-  const [selectedDiscount, setSelectedDiscount] = useState<CustomerDiscountType | null>(null);
+  const [selectedDiscount, setSelectedDiscount] =
+    useState<CustomerDiscountType | null>(null);
   const [discountLoading, setDiscountLoading] = useState(false);
 
   // Stats
@@ -106,24 +107,29 @@ export default function PaymentPage() {
 
       // Load pending payments (orders with payment_status = 'unpaid')
       const pendingResponse = await OrderService.getOrders();
-      console.log('📥 Full API Response:', pendingResponse);
+
+      console.log("📥 Full API Response:", pendingResponse);
 
       if (pendingResponse.success && pendingResponse.data) {
         // Server returns { orders: [...], pagination: {...} }
         const orders = (pendingResponse.data as any).orders || [];
-        console.log('📦 Total orders received:', orders.length);
-        console.log('📋 Orders data:', orders);
+
+        console.log("📦 Total orders received:", orders.length);
+        console.log("📋 Orders data:", orders);
 
         // Log payment status of each order
         orders.forEach((order: CustomerOrder, index: number) => {
-          console.log(`Order ${index + 1}: ID=${order.order_id}, Number=${order.order_number}, Payment Status="${order.payment_status}"`);
+          console.log(
+            `Order ${index + 1}: ID=${order.order_id}, Number=${order.order_number}, Payment Status="${order.payment_status}"`,
+          );
         });
 
         const pending = orders.filter(
-          (order: CustomerOrder) => order.payment_status === 'unpaid'
+          (order: CustomerOrder) => order.payment_status === "unpaid",
         );
-        console.log('💰 Filtered unpaid orders:', pending.length);
-        console.log('💳 Unpaid orders:', pending);
+
+        console.log("💰 Filtered unpaid orders:", pending.length);
+        console.log("💳 Unpaid orders:", pending);
         setPendingOrders(pending);
 
         // Calculate pending stats
@@ -145,18 +151,26 @@ export default function PaymentPage() {
       if (allResponse.success && allResponse.data) {
         // Server returns { orders: [...], pagination: {...} }
         const orders = (allResponse.data as any).orders || [];
-        const today = new Date().toISOString().split('T')[0];
-        console.log('📅 Today\'s date for filtering:', today);
+        const today = new Date().toISOString().split("T")[0];
+
+        console.log("📅 Today's date for filtering:", today);
 
         const recentPaid = orders.filter((order: CustomerOrder) => {
-          const orderDate = new Date(order.order_datetime).toISOString().split('T')[0];
-          const isPaid = order.payment_status === 'paid';
+          const orderDate = new Date(order.order_datetime)
+            .toISOString()
+            .split("T")[0];
+          const isPaid = order.payment_status === "paid";
           const isToday = orderDate === today;
-          console.log(`Order ${order.order_number}: payment_status="${order.payment_status}", date=${orderDate}, isPaid=${isPaid}, isToday=${isToday}`);
+
+          console.log(
+            `Order ${order.order_number}: payment_status="${order.payment_status}", date=${orderDate}, isPaid=${isPaid}, isToday=${isToday}`,
+          );
+
           return isPaid && isToday;
         });
-        console.log('✅ Recent paid orders today:', recentPaid.length);
-        setRecentPayments(recentPaid.slice(0, 10));  // Show last 10
+
+        console.log("✅ Recent paid orders today:", recentPaid.length);
+        setRecentPayments(recentPaid.slice(0, 10)); // Show last 10
 
         // Calculate verified stats
         const verifiedAmount = recentPaid.reduce(
@@ -177,10 +191,10 @@ export default function PaymentPage() {
         description: "Failed to load payment data",
         color: "danger",
       });
-      console.error('Failed to load payment data:', error);
+      console.error("Failed to load payment data:", error);
       addToast({
-        title: 'Failed to load payment data',
-        icon: <XCircleIcon className="h-5 w-5 text-danger" />
+        title: "Failed to load payment data",
+        icon: <XCircleIcon className="h-5 w-5 text-danger" />,
       });
     } finally {
       setLoading(false);
@@ -196,7 +210,7 @@ export default function PaymentPage() {
         setDiscounts(response.data);
       }
     } catch (error) {
-      console.error('Failed to load discounts:', error);
+      console.error("Failed to load discounts:", error);
       // Don't show error toast for discount loading - not critical
     } finally {
       setDiscountLoading(false);
@@ -204,8 +218,12 @@ export default function PaymentPage() {
   };
 
   // Discount calculation functions
-  const calculateDiscount = (amount: number, discount: CustomerDiscountType | null): number => {
+  const calculateDiscount = (
+    amount: number,
+    discount: CustomerDiscountType | null,
+  ): number => {
     if (!discount) return 0;
+
     return (amount * discount.discount_percentage) / 100;
   };
 
@@ -213,22 +231,30 @@ export default function PaymentPage() {
     if (!selectedOrder) return 0;
     const originalAmount = Number(selectedOrder.final_amount || 0);
     const discountAmount = calculateDiscount(originalAmount, selectedDiscount);
+
     return originalAmount - discountAmount;
   };
 
   const handleDiscountChange = (discountId: string) => {
-    if (!discountId || discountId === 'none') {
+    if (!discountId || discountId === "none") {
       setSelectedDiscount(null);
+
       return;
     }
 
-    const discount = discounts.find(d => d.discount_type_id === parseInt(discountId));
+    const discount = discounts.find(
+      (d) => d.discount_type_id === parseInt(discountId),
+    );
+
     if (discount) {
       setSelectedDiscount(discount);
       // Recalculate change if cash payment
-      if (selectedOrder?.payment_method === 'cash' && amountTendered) {
-        const finalAmount = Number(selectedOrder.final_amount || 0) - calculateDiscount(Number(selectedOrder.final_amount || 0), discount);
+      if (selectedOrder?.payment_method === "cash" && amountTendered) {
+        const finalAmount =
+          Number(selectedOrder.final_amount || 0) -
+          calculateDiscount(Number(selectedOrder.final_amount || 0), discount);
         const change = Number(amountTendered) - finalAmount;
+
         setCalculatedChange(Math.max(0, change));
       }
     }
@@ -268,10 +294,10 @@ export default function PaymentPage() {
             title: "Error",
             description: "Order is not found",
           });
-          setSearchError('Order not found');
+          setSearchError("Order not found");
           addToast({
-            title: 'Order not found',
-            icon: <XCircleIcon className="h-5 w-5 text-danger" />
+            title: "Order not found",
+            icon: <XCircleIcon className="h-5 w-5 text-danger" />,
           });
         }
       }
@@ -284,11 +310,11 @@ export default function PaymentPage() {
         color: "danger",
         timeout: 5000,
       });
-      console.error('Search error:', error);
-      setSearchError('Failed to search order');
+      console.error("Search error:", error);
+      setSearchError("Failed to search order");
       addToast({
-        title: 'Failed to search order',
-        icon: <XCircleIcon className="h-5 w-5 text-danger" />
+        title: "Failed to search order",
+        icon: <XCircleIcon className="h-5 w-5 text-danger" />,
       });
     } finally {
       setSearchLoading(false);
@@ -338,7 +364,8 @@ export default function PaymentPage() {
           selectedOrder.payment_method === "cash"
             ? Number(amountTendered)
             : undefined,
-        customer_discount_type_id: selectedDiscount?.discount_type_id || undefined,
+        customer_discount_type_id:
+          selectedDiscount?.discount_type_id || undefined,
       });
 
       if (response.success) {
@@ -370,10 +397,16 @@ export default function PaymentPage() {
           const receiptData = printerService.formatOrderForPrint({
             ...selectedOrder,
             final_amount: finalAmount, // Use discounted amount
-            discount_amount: selectedDiscount ? calculateDiscount(Number(selectedOrder.final_amount || 0), selectedDiscount) : 0,
+            discount_amount: selectedDiscount
+              ? calculateDiscount(
+                  Number(selectedOrder.final_amount || 0),
+                  selectedDiscount,
+                )
+              : 0,
           });
 
           const printResult = await printerService.printReceipt(receiptData);
+
           if (printResult.success) {
             console.log("✅ Receipt printed successfully");
             addToast({
@@ -386,7 +419,9 @@ export default function PaymentPage() {
             console.warn("⚠️ Receipt printing failed:", printResult.error);
             addToast({
               title: "Printing Warning",
-              description: printResult.error || "Receipt printing failed, but payment was successful",
+              description:
+                printResult.error ||
+                "Receipt printing failed, but payment was successful",
               color: "warning",
               timeout: 5000,
             });
@@ -406,11 +441,11 @@ export default function PaymentPage() {
           color: "danger",
           timeout: 5000,
         });
-        setVerifyError(response.error || 'Payment verification failed');
+        setVerifyError(response.error || "Payment verification failed");
         addToast({
-          title: 'Payment verification failed',
+          title: "Payment verification failed",
           description: response.error,
-          icon: <XCircleIcon className="h-5 w-5 text-danger" />
+          icon: <XCircleIcon className="h-5 w-5 text-danger" />,
         });
       }
     } catch (error: any) {
@@ -426,9 +461,9 @@ export default function PaymentPage() {
         timeout: 5000,
       });
       addToast({
-        title: 'Failed to verify payment',
+        title: "Failed to verify payment",
         description: errorMsg,
-        icon: <XCircleIcon className="h-5 w-5 text-danger" />
+        icon: <XCircleIcon className="h-5 w-5 text-danger" />,
       });
     } finally {
       setVerifying(false);
@@ -443,9 +478,12 @@ export default function PaymentPage() {
 
       // Update order status to cancelled or pending based on business logic
       // We'll set it to 'cancelled' to indicate rejected payment
-      const response = await OrderService.updateOrderStatus(selectedOrder.order_id, {
-        order_status: OrderStatus.CANCELLED
-      });
+      const response = await OrderService.updateOrderStatus(
+        selectedOrder.order_id,
+        {
+          order_status: OrderStatus.CANCELLED,
+        },
+      );
 
       if (response.success) {
         addToast({
@@ -911,25 +949,32 @@ export default function PaymentPage() {
                     Apply Discount
                   </label>
                   <Select
-                    placeholder="Select discount type (optional)"
-                    selectedKeys={selectedDiscount ? [selectedDiscount.discount_type_id.toString()] : []}
-                    onChange={(e) => handleDiscountChange(e.target.value)}
                     classNames={{
                       trigger: "border-2 border-primary-200",
                     }}
+                    placeholder="Select discount type (optional)"
+                    selectedKeys={
+                      selectedDiscount
+                        ? [selectedDiscount.discount_type_id.toString()]
+                        : []
+                    }
+                    onChange={(e) => handleDiscountChange(e.target.value)}
                   >
                     <SelectItem key="none">No Discount</SelectItem>
-                    {(discounts.map((discount) => (
-                      <SelectItem key={discount.discount_type_id.toString()}>
-                        {discount.name} - {discount.discount_percentage}%
-                        {discount.requires_id && ' (Requires ID)'}
-                      </SelectItem>
-                    )) as any)}
+                    {
+                      discounts.map((discount) => (
+                        <SelectItem key={discount.discount_type_id.toString()}>
+                          {discount.name} - {discount.discount_percentage}%
+                          {discount.requires_id && " (Requires ID)"}
+                        </SelectItem>
+                      )) as any
+                    }
                   </Select>
 
                   {selectedDiscount && selectedDiscount.requires_id && (
                     <p className="text-xs text-warning flex items-center gap-1">
-                      <span>⚠️</span> Please verify customer ID before applying this discount
+                      <span>⚠️</span> Please verify customer ID before applying
+                      this discount
                     </p>
                   )}
                 </div>
@@ -940,7 +985,9 @@ export default function PaymentPage() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <p className="text-sm text-default-500">Original Amount</p>
-                    <p className={`text-lg font-semibold ${selectedDiscount ? 'line-through text-default-400' : 'text-primary'}`}>
+                    <p
+                      className={`text-lg font-semibold ${selectedDiscount ? "line-through text-default-400" : "text-primary"}`}
+                    >
                       {formatCurrency(selectedOrder.final_amount)}
                     </p>
                   </div>
@@ -953,7 +1000,13 @@ export default function PaymentPage() {
                           Discount ({selectedDiscount.discount_percentage}%)
                         </p>
                         <p className="text-lg font-semibold">
-                          -{formatCurrency(calculateDiscount(Number(selectedOrder.final_amount), selectedDiscount))}
+                          -
+                          {formatCurrency(
+                            calculateDiscount(
+                              Number(selectedOrder.final_amount),
+                              selectedDiscount,
+                            ),
+                          )}
                         </p>
                       </div>
                       <Divider className="my-2" />
@@ -962,7 +1015,9 @@ export default function PaymentPage() {
 
                   <div className="flex justify-between items-center">
                     <p className="text-sm font-medium text-default-700">
-                      {selectedDiscount ? 'Final Amount to Pay' : 'Amount to Verify'}
+                      {selectedDiscount
+                        ? "Final Amount to Pay"
+                        : "Amount to Verify"}
                     </p>
                     <p className="text-4xl font-bold text-primary">
                       {formatCurrency(calculateFinalAmount())}
@@ -990,22 +1045,27 @@ export default function PaymentPage() {
                 </div>
 
                 {/* Display customer's inputted reference number */}
-                {(selectedOrder.payment_method === "gcash" || selectedOrder.payment_method === "paymaya" || selectedOrder.payment_method === "cashless") &&
-                 (selectedOrder.gcash_reference_number || selectedOrder.paymaya_reference_number) && (
-                  <div className="bg-primary-50 border-2 border-primary-200 p-4 rounded-lg">
-                    <p className="text-sm text-default-500 mb-2 font-medium">
-                      Customer Provided Reference Number
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <code className="text-lg font-bold bg-white px-3 py-2 rounded border-2 border-primary-300 flex-1">
-                        {selectedOrder.gcash_reference_number || selectedOrder.paymaya_reference_number}
-                      </code>
+                {(selectedOrder.payment_method === "gcash" ||
+                  selectedOrder.payment_method === "paymaya" ||
+                  selectedOrder.payment_method === "cashless") &&
+                  (selectedOrder.gcash_reference_number ||
+                    selectedOrder.paymaya_reference_number) && (
+                    <div className="bg-primary-50 border-2 border-primary-200 p-4 rounded-lg">
+                      <p className="text-sm text-default-500 mb-2 font-medium">
+                        Customer Provided Reference Number
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <code className="text-lg font-bold bg-white px-3 py-2 rounded border-2 border-primary-300 flex-1">
+                          {selectedOrder.gcash_reference_number ||
+                            selectedOrder.paymaya_reference_number}
+                        </code>
+                      </div>
+                      <p className="text-xs text-default-400 mt-2">
+                        This is the reference number the customer entered at the
+                        kiosk
+                      </p>
                     </div>
-                    <p className="text-xs text-default-400 mt-2">
-                      This is the reference number the customer entered at the kiosk
-                    </p>
-                  </div>
-                )}
+                  )}
 
                 {selectedOrder.payment_method === "cashless" && (
                   <Input
@@ -1143,8 +1203,8 @@ export default function PaymentPage() {
             <div>
               <Button
                 color="danger"
-                variant="flat"
                 startContent={<XCircleIcon className="h-5 w-5" />}
+                variant="flat"
                 onPress={() => setRejectConfirmOpen(true)}
               >
                 Reject Payment
@@ -1191,14 +1251,17 @@ export default function PaymentPage() {
                     Are you sure you want to reject this payment?
                   </p>
                   <p className="text-sm text-warning-700">
-                    This action will cancel the order due to an incorrect or invalid reference number.
+                    This action will cancel the order due to an incorrect or
+                    invalid reference number.
                   </p>
                 </div>
               </div>
 
               {selectedOrder && (
                 <div className="bg-default-100 p-3 rounded-lg">
-                  <p className="text-sm text-default-500 mb-1">Order to Cancel</p>
+                  <p className="text-sm text-default-500 mb-1">
+                    Order to Cancel
+                  </p>
                   <p className="font-bold text-lg">
                     {selectedOrder.order_number || `#${selectedOrder.order_id}`}
                   </p>
@@ -1210,16 +1273,14 @@ export default function PaymentPage() {
 
               <div className="bg-danger-50 border border-danger-200 p-3 rounded-lg">
                 <p className="text-sm text-danger-700 font-medium">
-                  ⚠️ Before rejecting, please confirm with the customer that the reference number is incorrect.
+                  ⚠️ Before rejecting, please confirm with the customer that the
+                  reference number is incorrect.
                 </p>
               </div>
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button
-              variant="light"
-              onPress={() => setRejectConfirmOpen(false)}
-            >
+            <Button variant="light" onPress={() => setRejectConfirmOpen(false)}>
               No, Go Back
             </Button>
             <Button

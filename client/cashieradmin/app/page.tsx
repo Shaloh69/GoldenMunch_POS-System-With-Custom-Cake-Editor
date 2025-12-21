@@ -1,9 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import { Spinner } from '@heroui/spinner';
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Spinner } from "@heroui/spinner";
+
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function HomePage() {
   const router = useRouter();
@@ -12,16 +13,16 @@ export default function HomePage() {
   useEffect(() => {
     if (!isLoading) {
       if (user) {
-        router.push('/dashboard');
+        router.push("/dashboard");
       } else {
-        router.push('/login');
+        router.push("/login");
       }
     }
   }, [user, isLoading, router]);
 
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <Spinner size="lg" color="primary" />
+      <Spinner color="primary" size="lg" />
     </div>
   );
 }
