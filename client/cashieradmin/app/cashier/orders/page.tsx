@@ -529,7 +529,7 @@ export default function UnifiedCashierPage() {
                     placeholder="Select a discount"
                     selectedKeys={selectedDiscount ? [selectedDiscount.discount_type_id.toString()] : []}
                     onChange={(e) => {
-                      const discount = discounts.find((d) => d.discount_id.toString() === e.target.value);
+                      const discount = discounts.find((d) => d.discount_type_id.toString() === e.target.value);
                       setSelectedDiscount(discount || null);
                     }}
                     startContent={<PercentBadgeIcon className="h-4 w-4" />}
