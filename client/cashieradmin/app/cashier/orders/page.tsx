@@ -45,6 +45,8 @@ import {
   ShoppingBagIcon,
   ReceiptPercentIcon,
   CalendarDaysIcon,
+  PrinterIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 
 import { OrderService } from "@/services/order.service";
@@ -113,6 +115,17 @@ export default function UnifiedCashierPage() {
     completedToday: 0,
   });
 
+  // Printer status
+  const [printerStatus, setPrinterStatus] = useState<{
+    available: boolean;
+    connected: boolean;
+    printerName?: string;
+  }>({
+    available: false,
+    connected: false,
+  });
+  const [loadingPrinterStatus, setLoadingPrinterStatus] = useState(true);
+
   // Track first load to prevent loading state on auto-refresh
   const isFirstLoad = useRef(true);
 
@@ -120,10 +133,15 @@ export default function UnifiedCashierPage() {
   useEffect(() => {
     loadAllData();
     loadDiscounts();
+    loadPrinterStatus();
 
     const interval = setInterval(() => loadAllData(false), 10000);
+    const printerInterval = setInterval(loadPrinterStatus, 30000); // Check printer every 30 seconds
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      clearInterval(printerInterval);
+    };
   }, []);
 
   const loadAllData = async (showLoading = true) => {
@@ -189,6 +207,56 @@ export default function UnifiedCashierPage() {
       }
     } catch (error) {
       console.error("Failed to load discounts:", error);
+    }
+  };
+
+  const loadPrinterStatus = async () => {
+    try {
+      const status = await printerService.getStatus();
+
+      setPrinterStatus({
+        available: status.available,
+        connected: status.connected,
+        printerName: status.config?.printerName || status.config?.name || "Default Printer",
+      });
+    } catch (error) {
+      console.error("Failed to load printer status:", error);
+      setPrinterStatus({
+        available: false,
+        connected: false,
+      });
+    } finally {
+      setLoadingPrinterStatus(false);
+    }
+  };
+
+  const handleTestPrint = async () => {
+    try {
+      const result = await printerService.printTest();
+
+      if (result.success) {
+        addToast({
+          title: "Test Print Sent",
+          description: "Test receipt has been sent to the printer",
+          color: "success",
+          timeout: 3000,
+        });
+      } else {
+        addToast({
+          title: "Print Failed",
+          description: result.error || "Failed to print test receipt",
+          color: "danger",
+          timeout: 5000,
+        });
+      }
+    } catch (error) {
+      console.error("Test print error:", error);
+      addToast({
+        title: "Print Error",
+        description: "An error occurred while testing the printer",
+        color: "danger",
+        timeout: 5000,
+      });
     }
   };
 
@@ -972,13 +1040,96 @@ export default function UnifiedCashierPage() {
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
-      <div>
-        <h1 className="text-4xl font-black bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent">
-          Cashier Orders
-        </h1>
-        <p className="text-default-600 mt-2">
-          Unified payment verification and order management
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-4xl font-black bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent">
+            Cashier Orders
+          </h1>
+          <p className="text-default-600 mt-2">
+            Unified payment verification and order management
+          </p>
+        </div>
+
+        {/* Printer Status */}
+        <Card className="border-2 border-default-200 shadow-lg min-w-[280px]">
+          <CardBody className="p-4">
+            <div className="flex items-center gap-3">
+              {loadingPrinterStatus ? (
+                <Spinner size="sm" />
+              ) : (
+                <div
+                  className={`p-2 rounded-lg ${
+                    printerStatus.connected
+                      ? "bg-success-100"
+                      : printerStatus.available
+                        ? "bg-warning-100"
+                        : "bg-danger-100"
+                  }`}
+                >
+                  <PrinterIcon
+                    className={`h-6 w-6 ${
+                      printerStatus.connected
+                        ? "text-success-600"
+                        : printerStatus.available
+                          ? "text-warning-600"
+                          : "text-danger-600"
+                    }`}
+                  />
+                </div>
+              )}
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-default-900">
+                    Printer Status
+                  </p>
+                  {!loadingPrinterStatus && (
+                    <Chip
+                      size="sm"
+                      variant="flat"
+                      color={
+                        printerStatus.connected
+                          ? "success"
+                          : printerStatus.available
+                            ? "warning"
+                            : "danger"
+                      }
+                      startContent={
+                        printerStatus.connected ? (
+                          <CheckCircleIcon className="h-3 w-3" />
+                        ) : (
+                          <ExclamationTriangleIcon className="h-3 w-3" />
+                        )
+                      }
+                      className="font-semibold"
+                    >
+                      {printerStatus.connected
+                        ? "Connected"
+                        : printerStatus.available
+                          ? "Available"
+                          : "Offline"}
+                    </Chip>
+                  )}
+                </div>
+                {!loadingPrinterStatus && printerStatus.printerName && (
+                  <p className="text-xs text-default-500 mt-1">
+                    {printerStatus.printerName}
+                  </p>
+                )}
+              </div>
+              {printerStatus.connected && (
+                <Button
+                  size="sm"
+                  variant="flat"
+                  color="primary"
+                  startContent={<PrinterIcon className="h-4 w-4" />}
+                  onPress={handleTestPrint}
+                >
+                  Test
+                </Button>
+              )}
+            </div>
+          </CardBody>
+        </Card>
       </div>
 
       {/* Stats */}
