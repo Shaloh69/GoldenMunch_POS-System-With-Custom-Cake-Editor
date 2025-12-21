@@ -1,27 +1,43 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Card, CardBody, CardHeader } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { Input } from '@heroui/input';
-import { Table, TableHeader, TableBody, TableColumn, TableRow, TableCell } from '@heroui/table';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from '@heroui/modal';
-import { Chip } from '@heroui/chip';
-import { Select, SelectItem } from '@heroui/select';
-import { Textarea } from '@heroui/input';
-import { Spinner } from '@heroui/spinner';
+import type { CustomerFeedback } from "@/types/api";
+
+import { useEffect, useState } from "react";
+import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableColumn,
+  TableRow,
+  TableCell,
+} from "@heroui/table";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+} from "@heroui/modal";
+import { Chip } from "@heroui/chip";
+import { Select, SelectItem } from "@heroui/select";
+import { Textarea } from "@heroui/input";
+import { Spinner } from "@heroui/spinner";
 import {
   StarIcon,
   ChatBubbleLeftIcon,
   CheckCircleIcon,
   ClockIcon,
-} from '@heroicons/react/24/outline';
-import { FeedbackService } from '@/services/feedback.service';
-import type { CustomerFeedback } from '@/types/api';
+} from "@heroicons/react/24/outline";
+
+import { FeedbackService } from "@/services/feedback.service";
 
 // TypeScript Types for Feedback Management
 interface FeedbackFilter {
-  feedbackType: 'all' | 'positive' | 'neutral' | 'negative';
+  feedbackType: "all" | "positive" | "neutral" | "negative";
   startDate: string;
   endDate: string;
   searchTerm: string;
@@ -42,16 +58,19 @@ export default function AdminFeedbackPage() {
   const [stats, setStats] = useState<FeedbackStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [responding, setResponding] = useState(false);
-  const [selectedFeedback, setSelectedFeedback] = useState<CustomerFeedback | null>(null);
-  const [responseText, setResponseText] = useState('');
+  const [selectedFeedback, setSelectedFeedback] =
+    useState<CustomerFeedback | null>(null);
+  const [responseText, setResponseText] = useState("");
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const [filters, setFilters] = useState<FeedbackFilter>({
-    feedbackType: 'all',
-    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    endDate: new Date().toISOString().split('T')[0],
-    searchTerm: '',
+    feedbackType: "all",
+    startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0],
+    endDate: new Date().toISOString().split("T")[0],
+    searchTerm: "",
   });
 
   useEffect(() => {
@@ -63,18 +82,20 @@ export default function AdminFeedbackPage() {
     try {
       setLoading(true);
       const params = {
-        feedback_type: filters.feedbackType !== 'all' ? filters.feedbackType : undefined,
+        feedback_type:
+          filters.feedbackType !== "all" ? filters.feedbackType : undefined,
         start_date: filters.startDate,
         end_date: filters.endDate,
         search: filters.searchTerm || undefined,
       };
 
       const response = await FeedbackService.getAllFeedback(params);
+
       if (response.success) {
         setFeedbackList(Array.isArray(response.data) ? response.data : []);
       }
     } catch (error) {
-      console.error('Failed to load feedback:', error);
+      console.error("Failed to load feedback:", error);
     } finally {
       setLoading(false);
     }
@@ -83,8 +104,10 @@ export default function AdminFeedbackPage() {
   const loadStats = async () => {
     try {
       const response = await FeedbackService.getFeedbackStats();
+
       if (response.success && response.data) {
         const data = response.data as any;
+
         setStats({
           totalFeedback: data.total_feedback || 0,
           averageRating: data.average_rating || 0,
@@ -96,13 +119,13 @@ export default function AdminFeedbackPage() {
         });
       }
     } catch (error) {
-      console.error('Failed to load stats:', error);
+      console.error("Failed to load stats:", error);
     }
   };
 
   const handleOpenResponse = (feedback: CustomerFeedback) => {
     setSelectedFeedback(feedback);
-    setResponseText(feedback.admin_response || '');
+    setResponseText(feedback.admin_response || "");
     onOpen();
   };
 
@@ -113,46 +136,50 @@ export default function AdminFeedbackPage() {
 
     try {
       setResponding(true);
-      await FeedbackService.respondToFeedback(selectedFeedback.feedback_id, responseText);
+      await FeedbackService.respondToFeedback(
+        selectedFeedback.feedback_id,
+        responseText,
+      );
       onClose();
-      setResponseText('');
+      setResponseText("");
       setSelectedFeedback(null);
       loadFeedback();
       loadStats();
     } catch (error) {
-      console.error('Failed to submit response:', error);
+      console.error("Failed to submit response:", error);
     } finally {
       setResponding(false);
     }
   };
 
   const getRatingColor = (rating: number) => {
-    if (rating >= 4) return 'success';
-    if (rating >= 3) return 'warning';
-    return 'danger';
+    if (rating >= 4) return "success";
+    if (rating >= 3) return "warning";
+
+    return "danger";
   };
 
   const getFeedbackTypeColor = (type: string) => {
     switch (type) {
-      case 'positive':
-        return 'success';
-      case 'neutral':
-        return 'default';
-      case 'negative':
-        return 'danger';
+      case "positive":
+        return "success";
+      case "neutral":
+        return "default";
+      case "negative":
+        return "danger";
       default:
-        return 'default';
+        return "default";
     }
   };
 
   const formatDate = (dateString: string) => {
     try {
-      return new Date(dateString).toLocaleDateString('en-PH', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
+      return new Date(dateString).toLocaleDateString("en-PH", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       });
     } catch {
       return dateString;
@@ -198,7 +225,9 @@ export default function AdminFeedbackPage() {
                 </div>
                 <div>
                   <p className="text-sm text-default-500">Average Rating</p>
-                  <p className="text-2xl font-bold">{Number(stats.averageRating || 0).toFixed(1)}/5</p>
+                  <p className="text-2xl font-bold">
+                    {Number(stats.averageRating || 0).toFixed(1)}/5
+                  </p>
                 </div>
               </div>
             </CardBody>
@@ -228,7 +257,9 @@ export default function AdminFeedbackPage() {
                 </div>
                 <div>
                   <p className="text-sm text-default-500">Pending Response</p>
-                  <p className="text-2xl font-bold">{stats.pendingResponseCount}</p>
+                  <p className="text-2xl font-bold">
+                    {stats.pendingResponseCount}
+                  </p>
                 </div>
               </div>
             </CardBody>
@@ -247,10 +278,20 @@ export default function AdminFeedbackPage() {
               <div className="p-4 bg-success/5 rounded-lg border border-success/20">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-default-500">Positive Feedback</p>
-                    <p className="text-2xl font-bold text-success">{stats.positiveCount}</p>
+                    <p className="text-sm text-default-500">
+                      Positive Feedback
+                    </p>
+                    <p className="text-2xl font-bold text-success">
+                      {stats.positiveCount}
+                    </p>
                     <p className="text-xs text-default-400 mt-1">
-                      {stats.totalFeedback > 0 ? ((stats.positiveCount / stats.totalFeedback) * 100).toFixed(1) : 0}%
+                      {stats.totalFeedback > 0
+                        ? (
+                            (stats.positiveCount / stats.totalFeedback) *
+                            100
+                          ).toFixed(1)
+                        : 0}
+                      %
                     </p>
                   </div>
                 </div>
@@ -260,9 +301,17 @@ export default function AdminFeedbackPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-default-500">Neutral Feedback</p>
-                    <p className="text-2xl font-bold text-warning">{stats.neutralCount}</p>
+                    <p className="text-2xl font-bold text-warning">
+                      {stats.neutralCount}
+                    </p>
                     <p className="text-xs text-default-400 mt-1">
-                      {stats.totalFeedback > 0 ? ((stats.neutralCount / stats.totalFeedback) * 100).toFixed(1) : 0}%
+                      {stats.totalFeedback > 0
+                        ? (
+                            (stats.neutralCount / stats.totalFeedback) *
+                            100
+                          ).toFixed(1)
+                        : 0}
+                      %
                     </p>
                   </div>
                 </div>
@@ -271,10 +320,20 @@ export default function AdminFeedbackPage() {
               <div className="p-4 bg-danger/5 rounded-lg border border-danger/20">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-default-500">Negative Feedback</p>
-                    <p className="text-2xl font-bold text-danger">{stats.negativeCount}</p>
+                    <p className="text-sm text-default-500">
+                      Negative Feedback
+                    </p>
+                    <p className="text-2xl font-bold text-danger">
+                      {stats.negativeCount}
+                    </p>
                     <p className="text-xs text-default-400 mt-1">
-                      {stats.totalFeedback > 0 ? ((stats.negativeCount / stats.totalFeedback) * 100).toFixed(1) : 0}%
+                      {stats.totalFeedback > 0
+                        ? (
+                            (stats.negativeCount / stats.totalFeedback) *
+                            100
+                          ).toFixed(1)
+                        : 0}
+                      %
                     </p>
                   </div>
                 </div>
@@ -290,48 +349,32 @@ export default function AdminFeedbackPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Input
-                type="date"
                 label="Start Date"
-               
-                onValueChange={(v) =>
-                  setFilters({ ...filters, startDate: v })
-                }
+                type="date"
+                onValueChange={(v) => setFilters({ ...filters, startDate: v })}
               />
               <Input
-                type="date"
                 label="End Date"
-               
-                onValueChange={(v) =>
-                  setFilters({ ...filters, endDate: v })
-                }
+                type="date"
+                onValueChange={(v) => setFilters({ ...filters, endDate: v })}
               />
               <Select
                 label="Feedback Type"
                 selectedKeys={[filters.feedbackType]}
                 onSelectionChange={(keys) => {
                   const selected = Array.from(keys)[0] as string;
+
                   setFilters({ ...filters, feedbackType: selected as any });
                 }}
               >
-                <SelectItem key="all">
-                  All Types
-                </SelectItem>
-                <SelectItem key="positive">
-                  Positive
-                </SelectItem>
-                <SelectItem key="neutral">
-                  Neutral
-                </SelectItem>
-                <SelectItem key="negative">
-                  Negative
-                </SelectItem>
+                <SelectItem key="all">All Types</SelectItem>
+                <SelectItem key="positive">Positive</SelectItem>
+                <SelectItem key="neutral">Neutral</SelectItem>
+                <SelectItem key="negative">Negative</SelectItem>
               </Select>
               <Input
                 placeholder="Search feedback..."
-               
-                onValueChange={(v) =>
-                  setFilters({ ...filters, searchTerm: v })
-                }
+                onValueChange={(v) => setFilters({ ...filters, searchTerm: v })}
               />
             </div>
           </div>
@@ -346,7 +389,7 @@ export default function AdminFeedbackPage() {
         <CardBody>
           {loading ? (
             <div className="flex justify-center p-8">
-              <Spinner size="lg" color="primary" />
+              <Spinner color="primary" size="lg" />
             </div>
           ) : (
             <Table aria-label="Customer feedback table">
@@ -365,9 +408,9 @@ export default function AdminFeedbackPage() {
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Chip
-                          size="sm"
-                          color={getRatingColor(feedback.rating)}
                           className="text-white"
+                          color={getRatingColor(feedback.rating)}
+                          size="sm"
                         >
                           {Number(feedback.rating || 0).toFixed(1)}★
                         </Chip>
@@ -375,24 +418,26 @@ export default function AdminFeedbackPage() {
                     </TableCell>
                     <TableCell>
                       <Chip
-                        size="sm"
-                        color={getFeedbackTypeColor(feedback.feedback_type)}
                         className="capitalize"
+                        color={getFeedbackTypeColor(feedback.feedback_type)}
+                        size="sm"
                       >
                         {feedback.feedback_type}
                       </Chip>
                     </TableCell>
                     <TableCell>
                       <div className="max-w-xs truncate">
-                        {feedback.feedback_text || '(No comment)'}
+                        {feedback.feedback_text || "(No comment)"}
                       </div>
                     </TableCell>
                     <TableCell>
                       {feedback.is_anonymous ? (
-                        <span className="text-sm text-default-400">Anonymous</span>
+                        <span className="text-sm text-default-400">
+                          Anonymous
+                        </span>
                       ) : (
                         <span className="text-sm">
-                          Customer #{feedback.customer_id || 'N/A'}
+                          Customer #{feedback.customer_id || "N/A"}
                         </span>
                       )}
                     </TableCell>
@@ -403,19 +448,11 @@ export default function AdminFeedbackPage() {
                     </TableCell>
                     <TableCell>
                       {feedback.admin_response ? (
-                        <Chip
-                          size="sm"
-                          color="success"
-                          variant="flat"
-                        >
+                        <Chip color="success" size="sm" variant="flat">
                           Responded
                         </Chip>
                       ) : (
-                        <Chip
-                          size="sm"
-                          color="warning"
-                          variant="flat"
-                        >
+                        <Chip color="warning" size="sm" variant="flat">
                           Pending
                         </Chip>
                       )}
@@ -423,11 +460,11 @@ export default function AdminFeedbackPage() {
                     <TableCell>
                       <div className="flex gap-2">
                         <Button
-                          size="sm"
                           color="primary"
+                          size="sm"
                           onPress={() => handleOpenResponse(feedback)}
                         >
-                          {feedback.admin_response ? 'Edit' : 'Respond'}
+                          {feedback.admin_response ? "Edit" : "Respond"}
                         </Button>
                       </div>
                     </TableCell>
@@ -440,10 +477,17 @@ export default function AdminFeedbackPage() {
       </Card>
 
       {/* Response Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="2xl" scrollBehavior="inside">
+      <Modal
+        isOpen={isOpen}
+        scrollBehavior="inside"
+        size="2xl"
+        onClose={onClose}
+      >
         <ModalContent>
           <ModalHeader>
-            {selectedFeedback?.admin_response ? 'Edit Response' : 'Respond to Feedback'}
+            {selectedFeedback?.admin_response
+              ? "Edit Response"
+              : "Respond to Feedback"}
           </ModalHeader>
           <ModalBody>
             {selectedFeedback && (
@@ -455,34 +499,41 @@ export default function AdminFeedbackPage() {
                       <p className="text-sm text-default-500">Rating</p>
                       <div className="flex items-center gap-2 mt-1">
                         <Chip
-                          size="sm"
-                          color={getRatingColor(selectedFeedback.rating)}
                           className="text-white"
+                          color={getRatingColor(selectedFeedback.rating)}
+                          size="sm"
                         >
                           {Number(selectedFeedback.rating || 0).toFixed(1)}★
                         </Chip>
                         <span className="text-sm">
-                          {selectedFeedback.service_rating && `Service: ${selectedFeedback.service_rating}★`}
+                          {selectedFeedback.service_rating &&
+                            `Service: ${selectedFeedback.service_rating}★`}
                         </span>
                         <span className="text-sm">
-                          {selectedFeedback.food_rating && `Food: ${selectedFeedback.food_rating}★`}
+                          {selectedFeedback.food_rating &&
+                            `Food: ${selectedFeedback.food_rating}★`}
                         </span>
                       </div>
                     </div>
                     <div>
                       <p className="text-sm text-default-500">Type</p>
                       <Chip
-                        size="sm"
-                        color={getFeedbackTypeColor(selectedFeedback.feedback_type)}
                         className="capitalize mt-1"
+                        color={getFeedbackTypeColor(
+                          selectedFeedback.feedback_type,
+                        )}
+                        size="sm"
                       >
                         {selectedFeedback.feedback_type}
                       </Chip>
                     </div>
                     <div>
-                      <p className="text-sm text-default-500">Customer Comment</p>
+                      <p className="text-sm text-default-500">
+                        Customer Comment
+                      </p>
                       <p className="text-sm mt-1">
-                        {selectedFeedback.feedback_text || '(No comment provided)'}
+                        {selectedFeedback.feedback_text ||
+                          "(No comment provided)"}
                       </p>
                     </div>
                     <div>
@@ -500,22 +551,22 @@ export default function AdminFeedbackPage() {
                     Admin Response *
                   </label>
                   <Textarea
-                    placeholder="Type your response here..."
-                   
-                    onValueChange={setResponseText}
-                    minRows={4}
                     maxRows={8}
+                    minRows={4}
+                    placeholder="Type your response here..."
+                    onValueChange={setResponseText}
                   />
                   <p className="text-xs text-default-400 mt-2">
-                    Provide a thoughtful response to address the customer's feedback
+                    Provide a thoughtful response to address the customer's
+                    feedback
                   </p>
                 </div>
 
                 {selectedFeedback.admin_response && (
                   <div className="p-3 bg-success/5 border border-success/20 rounded-lg">
                     <p className="text-xs text-success font-semibold mb-2">
-                      Previously Responded on{' '}
-                      {formatDate(selectedFeedback.responded_at || '')}
+                      Previously Responded on{" "}
+                      {formatDate(selectedFeedback.responded_at || "")}
                     </p>
                   </div>
                 )}
@@ -528,11 +579,13 @@ export default function AdminFeedbackPage() {
             </Button>
             <Button
               color="primary"
-              onPress={handleSubmitResponse}
-              isLoading={responding}
               isDisabled={!responseText.trim()}
+              isLoading={responding}
+              onPress={handleSubmitResponse}
             >
-              {selectedFeedback?.admin_response ? 'Update Response' : 'Send Response'}
+              {selectedFeedback?.admin_response
+                ? "Update Response"
+                : "Send Response"}
             </Button>
           </ModalFooter>
         </ModalContent>

@@ -1,15 +1,17 @@
-'use client';
+"use client";
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef } from "react";
 
 export default function AnimatedBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
+
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
+
     if (!ctx) return;
 
     // Set canvas size
@@ -17,8 +19,9 @@ export default function AnimatedBackground() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     };
+
     setCanvasSize();
-    window.addEventListener('resize', setCanvasSize);
+    window.addEventListener("resize", setCanvasSize);
 
     // Enhanced particle system with more variety
     class Particle {
@@ -52,12 +55,13 @@ export default function AnimatedBackground() {
 
         // Light Caramel & Cream color palette
         const colors = [
-          'rgba(217, 179, 140, ', // Light Caramel
-          'rgba(255, 249, 242, ', // Cream White
-          'rgba(232, 220, 200, ', // Soft Sand
-          'rgba(201, 184, 165, ', // Warm Beige
-          'rgba(198, 123, 87, ',  // Muted Clay
+          "rgba(217, 179, 140, ", // Light Caramel
+          "rgba(255, 249, 242, ", // Cream White
+          "rgba(232, 220, 200, ", // Soft Sand
+          "rgba(201, 184, 165, ", // Warm Beige
+          "rgba(198, 123, 87, ", // Muted Clay
         ];
+
         this.color = colors[Math.floor(Math.random() * colors.length)];
       }
 
@@ -85,9 +89,9 @@ export default function AnimatedBackground() {
 
         // Draw glowing effect
         ctx.shadowBlur = 15;
-        ctx.shadowColor = this.color + (this.opacity + pulseOpacity) + ')';
+        ctx.shadowColor = this.color + (this.opacity + pulseOpacity) + ")";
 
-        ctx.fillStyle = this.color + (this.opacity + pulseOpacity) + ')';
+        ctx.fillStyle = this.color + (this.opacity + pulseOpacity) + ")";
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
         ctx.fill();
@@ -99,6 +103,7 @@ export default function AnimatedBackground() {
     // Create more particles for a fuller effect
     const particles: Particle[] = [];
     const particleCount = 80;
+
     for (let i = 0; i < particleCount; i++) {
       particles.push(new Particle(canvas.width, canvas.height));
     }
@@ -114,14 +119,20 @@ export default function AnimatedBackground() {
       gradientOffset += 0.0008;
 
       // Create multi-layered animated gradient background
-      const gradient1 = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      const gradient1 = ctx.createLinearGradient(
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+      );
 
       // Light Caramel & Cream gradient with subtle animation
       const offset = Math.sin(gradientOffset * Math.PI * 2) * 0.1;
-      gradient1.addColorStop(0, '#FFF9F2');       // Cream White
-      gradient1.addColorStop(0.3 + offset, '#F5EFE6');
-      gradient1.addColorStop(0.6 + offset, '#E8DCC8'); // Soft Sand
-      gradient1.addColorStop(1, '#D9B38C');       // Light Caramel
+
+      gradient1.addColorStop(0, "#FFF9F2"); // Cream White
+      gradient1.addColorStop(0.3 + offset, "#F5EFE6");
+      gradient1.addColorStop(0.6 + offset, "#E8DCC8"); // Soft Sand
+      gradient1.addColorStop(1, "#D9B38C"); // Light Caramel
 
       ctx.fillStyle = gradient1;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -133,46 +144,62 @@ export default function AnimatedBackground() {
         0,
         canvas.width / 2,
         canvas.height / 2,
-        Math.max(canvas.width, canvas.height) / 1.5
+        Math.max(canvas.width, canvas.height) / 1.5,
       );
-      radialGradient.addColorStop(0, 'rgba(255, 249, 242, 0.4)');
-      radialGradient.addColorStop(0.5, 'rgba(232, 220, 200, 0.2)');
-      radialGradient.addColorStop(1, 'rgba(217, 179, 140, 0.1)');
+
+      radialGradient.addColorStop(0, "rgba(255, 249, 242, 0.4)");
+      radialGradient.addColorStop(0.5, "rgba(232, 220, 200, 0.2)");
+      radialGradient.addColorStop(1, "rgba(217, 179, 140, 0.1)");
       ctx.fillStyle = radialGradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Add warm glow overlay at corners
-      const cornerGlow1 = ctx.createRadialGradient(0, 0, 0, 0, 0, canvas.width * 0.6);
-      cornerGlow1.addColorStop(0, 'rgba(198, 123, 87, 0.15)');
-      cornerGlow1.addColorStop(1, 'rgba(198, 123, 87, 0)');
+      const cornerGlow1 = ctx.createRadialGradient(
+        0,
+        0,
+        0,
+        0,
+        0,
+        canvas.width * 0.6,
+      );
+
+      cornerGlow1.addColorStop(0, "rgba(198, 123, 87, 0.15)");
+      cornerGlow1.addColorStop(1, "rgba(198, 123, 87, 0)");
       ctx.fillStyle = cornerGlow1;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       const cornerGlow2 = ctx.createRadialGradient(
-        canvas.width, canvas.height, 0,
-        canvas.width, canvas.height, canvas.width * 0.6
+        canvas.width,
+        canvas.height,
+        0,
+        canvas.width,
+        canvas.height,
+        canvas.width * 0.6,
       );
-      cornerGlow2.addColorStop(0, 'rgba(217, 179, 140, 0.15)');
-      cornerGlow2.addColorStop(1, 'rgba(217, 179, 140, 0)');
+
+      cornerGlow2.addColorStop(0, "rgba(217, 179, 140, 0.15)");
+      cornerGlow2.addColorStop(1, "rgba(217, 179, 140, 0)");
       ctx.fillStyle = cornerGlow2;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // Update and draw particles
-      particles.forEach(particle => {
+      particles.forEach((particle) => {
         const pulseOpacity = particle.update();
+
         particle.draw(pulseOpacity);
       });
 
       // Draw enhanced connecting lines between nearby particles
       ctx.lineWidth = 1;
       particles.forEach((p1, i) => {
-        particles.slice(i + 1).forEach(p2 => {
+        particles.slice(i + 1).forEach((p2) => {
           const dx = p1.x - p2.x;
           const dy = p1.y - p2.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
 
           if (distance < 180) {
             const opacity = 0.25 * (1 - distance / 180);
+
             ctx.strokeStyle = `rgba(217, 179, 140, ${opacity})`;
             ctx.beginPath();
             ctx.moveTo(p1.x, p1.y);
@@ -188,7 +215,7 @@ export default function AnimatedBackground() {
     animate();
 
     return () => {
-      window.removeEventListener('resize', setCanvasSize);
+      window.removeEventListener("resize", setCanvasSize);
     };
   }, []);
 
@@ -196,7 +223,10 @@ export default function AnimatedBackground() {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 -z-10 pointer-events-none"
-      style={{ background: 'linear-gradient(135deg, #FFF9F2 0%, #E8DCC8 50%, #D9B38C 100%)' }}
+      style={{
+        background:
+          "linear-gradient(135deg, #FFF9F2 0%, #E8DCC8 50%, #D9B38C 100%)",
+      }}
     />
   );
 }

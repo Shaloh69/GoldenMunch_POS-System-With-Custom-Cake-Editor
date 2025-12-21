@@ -1,34 +1,43 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Card, CardBody, CardHeader } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { Input } from '@heroui/input';
-import { Table, TableHeader, TableBody, TableColumn, TableRow, TableCell } from '@heroui/table';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/modal';
-import { Tabs, Tab } from '@heroui/tabs';
-import { CakeService } from '@/services/cake.service';
-import type { CakeFlavor, CakeSize, CustomCakeTheme } from '@/types/api';
+import type { CakeFlavor, CakeSize, CustomCakeTheme } from "@/types/api";
+
+import { useEffect, useState } from "react";
+import { Card, CardBody } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
 import {
-  PlusIcon,
-  PencilIcon,
-  CakeIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-} from '@heroicons/react/24/outline';
+  Table,
+  TableHeader,
+  TableBody,
+  TableColumn,
+  TableRow,
+  TableCell,
+} from "@heroui/table";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@heroui/modal";
+import { Tabs, Tab } from "@heroui/tabs";
+import { PlusIcon, PencilIcon, CakeIcon } from "@heroicons/react/24/outline";
 
-type TabKey = 'flavors' | 'sizes' | 'themes';
+import { CakeService } from "@/services/cake.service";
+
+type TabKey = "flavors" | "sizes" | "themes";
 
 export default function CakePage() {
-  const [selectedTab, setSelectedTab] = useState<TabKey>('flavors');
+  const [selectedTab, setSelectedTab] = useState<TabKey>("flavors");
 
   // Flavors State
   const [flavors, setFlavors] = useState<CakeFlavor[]>([]);
   const [showFlavorModal, setShowFlavorModal] = useState(false);
   const [editingFlavor, setEditingFlavor] = useState<CakeFlavor | null>(null);
   const [flavorForm, setFlavorForm] = useState({
-    flavor_name: '',
-    description: '',
+    flavor_name: "",
+    description: "",
     additional_cost: 0,
     display_order: 0,
     is_available: true,
@@ -39,7 +48,7 @@ export default function CakePage() {
   const [showSizeModal, setShowSizeModal] = useState(false);
   const [editingSize, setEditingSize] = useState<CakeSize | null>(null);
   const [sizeForm, setSizeForm] = useState({
-    size_name: '',
+    size_name: "",
     serves_people: 0,
     diameter_inches: 0,
     size_multiplier: 1,
@@ -50,10 +59,12 @@ export default function CakePage() {
   // Themes State
   const [themes, setThemes] = useState<CustomCakeTheme[]>([]);
   const [showThemeModal, setShowThemeModal] = useState(false);
-  const [editingTheme, setEditingTheme] = useState<CustomCakeTheme | null>(null);
+  const [editingTheme, setEditingTheme] = useState<CustomCakeTheme | null>(
+    null,
+  );
   const [themeForm, setThemeForm] = useState({
-    theme_name: '',
-    description: '',
+    theme_name: "",
+    description: "",
     base_additional_cost: 0,
     preparation_days: 1,
     display_order: 0,
@@ -68,11 +79,7 @@ export default function CakePage() {
 
   const fetchAllData = async () => {
     setLoading(true);
-    await Promise.all([
-      fetchFlavors(),
-      fetchSizes(),
-      fetchThemes(),
-    ]);
+    await Promise.all([fetchFlavors(), fetchSizes(), fetchThemes()]);
     setLoading(false);
   };
 
@@ -80,11 +87,12 @@ export default function CakePage() {
   const fetchFlavors = async () => {
     try {
       const response = await CakeService.getFlavors();
+
       if (response.success) {
         setFlavors(Array.isArray(response.data) ? response.data : []);
       }
     } catch (error) {
-      console.error('Failed to fetch flavors:', error);
+      console.error("Failed to fetch flavors:", error);
     }
   };
 
@@ -99,7 +107,7 @@ export default function CakePage() {
       resetFlavorForm();
       fetchFlavors();
     } catch (error) {
-      console.error('Failed to save flavor:', error);
+      console.error("Failed to save flavor:", error);
     }
   };
 
@@ -108,7 +116,7 @@ export default function CakePage() {
       setEditingFlavor(flavor);
       setFlavorForm({
         flavor_name: flavor.flavor_name,
-        description: flavor.description || '',
+        description: flavor.description || "",
         additional_cost: flavor.additional_cost,
         display_order: flavor.display_order,
         is_available: flavor.is_available,
@@ -122,8 +130,8 @@ export default function CakePage() {
   const resetFlavorForm = () => {
     setEditingFlavor(null);
     setFlavorForm({
-      flavor_name: '',
-      description: '',
+      flavor_name: "",
+      description: "",
       additional_cost: 0,
       display_order: 0,
       is_available: true,
@@ -134,11 +142,12 @@ export default function CakePage() {
   const fetchSizes = async () => {
     try {
       const response = await CakeService.getSizes();
+
       if (response.success) {
         setSizes(Array.isArray(response.data) ? response.data : []);
       }
     } catch (error) {
-      console.error('Failed to fetch sizes:', error);
+      console.error("Failed to fetch sizes:", error);
     }
   };
 
@@ -153,7 +162,7 @@ export default function CakePage() {
       resetSizeForm();
       fetchSizes();
     } catch (error) {
-      console.error('Failed to save size:', error);
+      console.error("Failed to save size:", error);
     }
   };
 
@@ -177,7 +186,7 @@ export default function CakePage() {
   const resetSizeForm = () => {
     setEditingSize(null);
     setSizeForm({
-      size_name: '',
+      size_name: "",
       serves_people: 0,
       diameter_inches: 0,
       size_multiplier: 1,
@@ -190,11 +199,12 @@ export default function CakePage() {
   const fetchThemes = async () => {
     try {
       const response = await CakeService.getThemes();
+
       if (response.success) {
         setThemes(Array.isArray(response.data) ? response.data : []);
       }
     } catch (error) {
-      console.error('Failed to fetch themes:', error);
+      console.error("Failed to fetch themes:", error);
     }
   };
 
@@ -209,7 +219,7 @@ export default function CakePage() {
       resetThemeForm();
       fetchThemes();
     } catch (error) {
-      console.error('Failed to save theme:', error);
+      console.error("Failed to save theme:", error);
     }
   };
 
@@ -218,7 +228,7 @@ export default function CakePage() {
       setEditingTheme(theme);
       setThemeForm({
         theme_name: theme.theme_name,
-        description: theme.description || '',
+        description: theme.description || "",
         base_additional_cost: theme.base_additional_cost,
         preparation_days: theme.preparation_days,
         display_order: theme.display_order,
@@ -233,8 +243,8 @@ export default function CakePage() {
   const resetThemeForm = () => {
     setEditingTheme(null);
     setThemeForm({
-      theme_name: '',
-      description: '',
+      theme_name: "",
+      description: "",
       base_additional_cost: 0,
       preparation_days: 1,
       display_order: 0,
@@ -244,7 +254,7 @@ export default function CakePage() {
 
   // Helper Functions
   const formatCurrency = (value: number) => {
-    return `₱${parseFloat(value.toString()).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+    return `₱${parseFloat(value.toString()).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`;
   };
 
   return (
@@ -253,7 +263,9 @@ export default function CakePage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Cake Customization</h1>
-          <p className="text-default-500 mt-1">Manage cake flavors, sizes, and themes</p>
+          <p className="text-default-500 mt-1">
+            Manage cake flavors, sizes, and themes
+          </p>
         </div>
       </div>
 
@@ -269,7 +281,7 @@ export default function CakePage() {
                 <p className="text-sm text-default-500">Flavors</p>
                 <p className="text-2xl font-bold">{flavors.length}</p>
                 <p className="text-xs text-default-400">
-                  {flavors.filter(f => f.is_available).length} available
+                  {flavors.filter((f) => f.is_available).length} available
                 </p>
               </div>
             </div>
@@ -286,7 +298,7 @@ export default function CakePage() {
                 <p className="text-sm text-default-500">Sizes</p>
                 <p className="text-2xl font-bold">{sizes.length}</p>
                 <p className="text-xs text-default-400">
-                  {sizes.filter(s => s.is_available).length} available
+                  {sizes.filter((s) => s.is_available).length} available
                 </p>
               </div>
             </div>
@@ -303,7 +315,7 @@ export default function CakePage() {
                 <p className="text-sm text-default-500">Themes</p>
                 <p className="text-2xl font-bold">{themes.length}</p>
                 <p className="text-xs text-default-400">
-                  {themes.filter(t => t.is_available).length} available
+                  {themes.filter((t) => t.is_available).length} available
                 </p>
               </div>
             </div>
@@ -315,9 +327,9 @@ export default function CakePage() {
       <Card>
         <CardBody>
           <Tabs
+            aria-label="Cake customization options"
             selectedKey={selectedTab}
             onSelectionChange={(key) => setSelectedTab(key as TabKey)}
-            aria-label="Cake customization options"
           >
             {/* Flavors Tab */}
             <Tab key="flavors" title="Flavors">
@@ -349,30 +361,38 @@ export default function CakePage() {
                       {flavors.map((flavor) => (
                         <TableRow key={flavor.flavor_id}>
                           <TableCell>
-                            <span className="font-semibold">{flavor.flavor_name}</span>
+                            <span className="font-semibold">
+                              {flavor.flavor_name}
+                            </span>
                           </TableCell>
                           <TableCell>
-                            <span className="text-sm">{flavor.description || 'N/A'}</span>
+                            <span className="text-sm">
+                              {flavor.description || "N/A"}
+                            </span>
                           </TableCell>
-                          <TableCell>{formatCurrency(flavor.additional_cost)}</TableCell>
+                          <TableCell>
+                            {formatCurrency(flavor.additional_cost)}
+                          </TableCell>
                           <TableCell>{flavor.display_order}</TableCell>
                           <TableCell>
                             <span
                               className={`px-2 py-1 rounded text-xs font-semibold ${
                                 flavor.is_available
-                                  ? 'bg-success/10 text-success'
-                                  : 'bg-danger/10 text-danger'
+                                  ? "bg-success/10 text-success"
+                                  : "bg-danger/10 text-danger"
                               }`}
                             >
-                              {flavor.is_available ? 'Available' : 'Unavailable'}
+                              {flavor.is_available
+                                ? "Available"
+                                : "Unavailable"}
                             </span>
                           </TableCell>
                           <TableCell>
                             <Button
                               isIconOnly
+                              color="primary"
                               size="sm"
                               variant="light"
-                              color="primary"
                               onPress={() => openFlavorModal(flavor)}
                             >
                               <PencilIcon className="h-4 w-4" />
@@ -417,7 +437,9 @@ export default function CakePage() {
                       {sizes.map((size) => (
                         <TableRow key={size.size_id}>
                           <TableCell>
-                            <span className="font-semibold">{size.size_name}</span>
+                            <span className="font-semibold">
+                              {size.size_name}
+                            </span>
                           </TableCell>
                           <TableCell>{size.serves_people} people</TableCell>
                           <TableCell>{size.diameter_inches}&quot;</TableCell>
@@ -427,19 +449,19 @@ export default function CakePage() {
                             <span
                               className={`px-2 py-1 rounded text-xs font-semibold ${
                                 size.is_available
-                                  ? 'bg-success/10 text-success'
-                                  : 'bg-danger/10 text-danger'
+                                  ? "bg-success/10 text-success"
+                                  : "bg-danger/10 text-danger"
                               }`}
                             >
-                              {size.is_available ? 'Available' : 'Unavailable'}
+                              {size.is_available ? "Available" : "Unavailable"}
                             </span>
                           </TableCell>
                           <TableCell>
                             <Button
                               isIconOnly
+                              color="primary"
                               size="sm"
                               variant="light"
-                              color="primary"
                               onPress={() => openSizeModal(size)}
                             >
                               <PencilIcon className="h-4 w-4" />
@@ -484,31 +506,37 @@ export default function CakePage() {
                       {themes.map((theme) => (
                         <TableRow key={theme.theme_id}>
                           <TableCell>
-                            <span className="font-semibold">{theme.theme_name}</span>
+                            <span className="font-semibold">
+                              {theme.theme_name}
+                            </span>
                           </TableCell>
                           <TableCell>
-                            <span className="text-sm">{theme.description || 'N/A'}</span>
+                            <span className="text-sm">
+                              {theme.description || "N/A"}
+                            </span>
                           </TableCell>
-                          <TableCell>{formatCurrency(theme.base_additional_cost)}</TableCell>
+                          <TableCell>
+                            {formatCurrency(theme.base_additional_cost)}
+                          </TableCell>
                           <TableCell>{theme.preparation_days} days</TableCell>
                           <TableCell>{theme.display_order}</TableCell>
                           <TableCell>
                             <span
                               className={`px-2 py-1 rounded text-xs font-semibold ${
                                 theme.is_available
-                                  ? 'bg-success/10 text-success'
-                                  : 'bg-danger/10 text-danger'
+                                  ? "bg-success/10 text-success"
+                                  : "bg-danger/10 text-danger"
                               }`}
                             >
-                              {theme.is_available ? 'Available' : 'Unavailable'}
+                              {theme.is_available ? "Available" : "Unavailable"}
                             </span>
                           </TableCell>
                           <TableCell>
                             <Button
                               isIconOnly
+                              color="primary"
                               size="sm"
                               variant="light"
-                              color="primary"
                               onPress={() => openThemeModal(theme)}
                             >
                               <PencilIcon className="h-4 w-4" />
@@ -526,45 +554,68 @@ export default function CakePage() {
       </Card>
 
       {/* Flavor Modal */}
-      <Modal isOpen={showFlavorModal} onClose={() => setShowFlavorModal(false)} size="lg">
+      <Modal
+        isOpen={showFlavorModal}
+        size="lg"
+        onClose={() => setShowFlavorModal(false)}
+      >
         <ModalContent>
-          <ModalHeader>{editingFlavor ? 'Edit' : 'Add'} Flavor</ModalHeader>
+          <ModalHeader>{editingFlavor ? "Edit" : "Add"} Flavor</ModalHeader>
           <ModalBody>
             <div className="space-y-4">
               <Input
+                isRequired
                 label="Flavor Name"
                 placeholder="e.g., Chocolate, Vanilla"
                 value={flavorForm.flavor_name}
-                onValueChange={(v) => setFlavorForm({ ...flavorForm, flavor_name: v })}
-                isRequired
+                onValueChange={(v) =>
+                  setFlavorForm({ ...flavorForm, flavor_name: v })
+                }
               />
               <Input
                 label="Description (optional)"
                 placeholder="Brief description"
                 value={flavorForm.description}
-                onValueChange={(v) => setFlavorForm({ ...flavorForm, description: v })}
+                onValueChange={(v) =>
+                  setFlavorForm({ ...flavorForm, description: v })
+                }
               />
               <Input
-                label="Additional Cost"
-                type="number"
-                placeholder="0.00"
-                value={flavorForm.additional_cost.toString()}
-                onValueChange={(v) => setFlavorForm({ ...flavorForm, additional_cost: parseFloat(v) || 0 })}
                 isRequired
+                label="Additional Cost"
+                placeholder="0.00"
+                type="number"
+                value={flavorForm.additional_cost.toString()}
+                onValueChange={(v) =>
+                  setFlavorForm({
+                    ...flavorForm,
+                    additional_cost: parseFloat(v) || 0,
+                  })
+                }
               />
               <Input
                 label="Display Order"
-                type="number"
                 placeholder="0"
+                type="number"
                 value={flavorForm.display_order.toString()}
-                onValueChange={(v) => setFlavorForm({ ...flavorForm, display_order: parseInt(v) || 0 })}
+                onValueChange={(v) =>
+                  setFlavorForm({
+                    ...flavorForm,
+                    display_order: parseInt(v) || 0,
+                  })
+                }
               />
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
-                  type="checkbox"
                   checked={flavorForm.is_available}
-                  onChange={(e) => setFlavorForm({ ...flavorForm, is_available: e.target.checked })}
                   className="rounded"
+                  type="checkbox"
+                  onChange={(e) =>
+                    setFlavorForm({
+                      ...flavorForm,
+                      is_available: e.target.checked,
+                    })
+                  }
                 />
                 <span className="text-sm">Is Available</span>
               </label>
@@ -575,62 +626,84 @@ export default function CakePage() {
               Cancel
             </Button>
             <Button color="primary" onPress={handleSaveFlavor}>
-              {editingFlavor ? 'Update' : 'Create'}
+              {editingFlavor ? "Update" : "Create"}
             </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
 
       {/* Size Modal */}
-      <Modal isOpen={showSizeModal} onClose={() => setShowSizeModal(false)} size="lg">
+      <Modal
+        isOpen={showSizeModal}
+        size="lg"
+        onClose={() => setShowSizeModal(false)}
+      >
         <ModalContent>
-          <ModalHeader>{editingSize ? 'Edit' : 'Add'} Size</ModalHeader>
+          <ModalHeader>{editingSize ? "Edit" : "Add"} Size</ModalHeader>
           <ModalBody>
             <div className="space-y-4">
               <Input
+                isRequired
                 label="Size Name"
                 placeholder="e.g., Small, Medium, Large"
                 value={sizeForm.size_name}
-                onValueChange={(v) => setSizeForm({ ...sizeForm, size_name: v })}
-                isRequired
+                onValueChange={(v) =>
+                  setSizeForm({ ...sizeForm, size_name: v })
+                }
               />
               <Input
+                isRequired
                 label="Serves People"
-                type="number"
                 placeholder="0"
+                type="number"
                 value={sizeForm.serves_people.toString()}
-                onValueChange={(v) => setSizeForm({ ...sizeForm, serves_people: parseInt(v) || 0 })}
-                isRequired
+                onValueChange={(v) =>
+                  setSizeForm({ ...sizeForm, serves_people: parseInt(v) || 0 })
+                }
               />
               <Input
+                isRequired
                 label="Diameter (inches)"
-                type="number"
                 placeholder="0"
+                type="number"
                 value={sizeForm.diameter_inches.toString()}
-                onValueChange={(v) => setSizeForm({ ...sizeForm, diameter_inches: parseFloat(v) || 0 })}
-                isRequired
+                onValueChange={(v) =>
+                  setSizeForm({
+                    ...sizeForm,
+                    diameter_inches: parseFloat(v) || 0,
+                  })
+                }
               />
               <Input
-                label="Size Multiplier"
-                type="number"
-                placeholder="1.0"
-                value={sizeForm.size_multiplier.toString()}
-                onValueChange={(v) => setSizeForm({ ...sizeForm, size_multiplier: parseFloat(v) || 1 })}
                 isRequired
+                label="Size Multiplier"
+                placeholder="1.0"
+                type="number"
+                value={sizeForm.size_multiplier.toString()}
+                onValueChange={(v) =>
+                  setSizeForm({
+                    ...sizeForm,
+                    size_multiplier: parseFloat(v) || 1,
+                  })
+                }
               />
               <Input
                 label="Display Order"
-                type="number"
                 placeholder="0"
+                type="number"
                 value={sizeForm.display_order.toString()}
-                onValueChange={(v) => setSizeForm({ ...sizeForm, display_order: parseInt(v) || 0 })}
+                onValueChange={(v) =>
+                  setSizeForm({ ...sizeForm, display_order: parseInt(v) || 0 })
+                }
               />
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
-                  type="checkbox"
                   checked={sizeForm.is_available}
-                  onChange={(e) => setSizeForm({ ...sizeForm, is_available: e.target.checked })}
                   className="rounded"
+                  type="checkbox"
+                  onChange={(e) =>
+                    setSizeForm({ ...sizeForm, is_available: e.target.checked })
+                  }
                 />
                 <span className="text-sm">Is Available</span>
               </label>
@@ -641,60 +714,88 @@ export default function CakePage() {
               Cancel
             </Button>
             <Button color="primary" onPress={handleSaveSize}>
-              {editingSize ? 'Update' : 'Create'}
+              {editingSize ? "Update" : "Create"}
             </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
 
       {/* Theme Modal */}
-      <Modal isOpen={showThemeModal} onClose={() => setShowThemeModal(false)} size="lg">
+      <Modal
+        isOpen={showThemeModal}
+        size="lg"
+        onClose={() => setShowThemeModal(false)}
+      >
         <ModalContent>
-          <ModalHeader>{editingTheme ? 'Edit' : 'Add'} Theme</ModalHeader>
+          <ModalHeader>{editingTheme ? "Edit" : "Add"} Theme</ModalHeader>
           <ModalBody>
             <div className="space-y-4">
               <Input
+                isRequired
                 label="Theme Name"
                 placeholder="e.g., Birthday, Wedding"
                 value={themeForm.theme_name}
-                onValueChange={(v) => setThemeForm({ ...themeForm, theme_name: v })}
-                isRequired
+                onValueChange={(v) =>
+                  setThemeForm({ ...themeForm, theme_name: v })
+                }
               />
               <Input
                 label="Description (optional)"
                 placeholder="Brief description"
                 value={themeForm.description}
-                onValueChange={(v) => setThemeForm({ ...themeForm, description: v })}
+                onValueChange={(v) =>
+                  setThemeForm({ ...themeForm, description: v })
+                }
               />
               <Input
+                isRequired
                 label="Base Additional Cost"
-                type="number"
                 placeholder="0.00"
+                type="number"
                 value={themeForm.base_additional_cost.toString()}
-                onValueChange={(v) => setThemeForm({ ...themeForm, base_additional_cost: parseFloat(v) || 0 })}
-                isRequired
+                onValueChange={(v) =>
+                  setThemeForm({
+                    ...themeForm,
+                    base_additional_cost: parseFloat(v) || 0,
+                  })
+                }
               />
               <Input
-                label="Preparation Days"
-                type="number"
-                placeholder="1"
-                value={themeForm.preparation_days.toString()}
-                onValueChange={(v) => setThemeForm({ ...themeForm, preparation_days: parseInt(v) || 1 })}
                 isRequired
+                label="Preparation Days"
+                placeholder="1"
+                type="number"
+                value={themeForm.preparation_days.toString()}
+                onValueChange={(v) =>
+                  setThemeForm({
+                    ...themeForm,
+                    preparation_days: parseInt(v) || 1,
+                  })
+                }
               />
               <Input
                 label="Display Order"
-                type="number"
                 placeholder="0"
+                type="number"
                 value={themeForm.display_order.toString()}
-                onValueChange={(v) => setThemeForm({ ...themeForm, display_order: parseInt(v) || 0 })}
+                onValueChange={(v) =>
+                  setThemeForm({
+                    ...themeForm,
+                    display_order: parseInt(v) || 0,
+                  })
+                }
               />
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
-                  type="checkbox"
                   checked={themeForm.is_available}
-                  onChange={(e) => setThemeForm({ ...themeForm, is_available: e.target.checked })}
                   className="rounded"
+                  type="checkbox"
+                  onChange={(e) =>
+                    setThemeForm({
+                      ...themeForm,
+                      is_available: e.target.checked,
+                    })
+                  }
                 />
                 <span className="text-sm">Is Available</span>
               </label>
@@ -705,7 +806,7 @@ export default function CakePage() {
               Cancel
             </Button>
             <Button color="primary" onPress={handleSaveTheme}>
-              {editingTheme ? 'Update' : 'Create'}
+              {editingTheme ? "Update" : "Create"}
             </Button>
           </ModalFooter>
         </ModalContent>

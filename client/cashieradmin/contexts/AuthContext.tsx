@@ -1,14 +1,20 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { AuthService } from '@/services/auth.service';
-import type { AuthUser } from '@/types/api';
+import type { AuthUser } from "@/types/api";
+
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+
+import { AuthService } from "@/services/auth.service";
 
 interface AuthContextType {
   user: AuthUser | null;
   isLoading: boolean;
-  login: (username: string, password: string, isCashier?: boolean) => Promise<void>;
+  login: (
+    username: string,
+    password: string,
+    isCashier?: boolean,
+  ) => Promise<void>;
   logout: () => void;
   isAdmin: () => boolean;
   isCashier: () => boolean;
@@ -24,13 +30,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Check if user is already logged in
     const storedUser = AuthService.getUser();
+
     if (storedUser) {
       setUser(storedUser);
     }
     setIsLoading(false);
   }, []);
 
-  const login = async (username: string, password: string, isCashier: boolean = false) => {
+  const login = async (
+    username: string,
+    password: string,
+    isCashier: boolean = false,
+  ) => {
     try {
       let authResponse;
 
@@ -41,28 +52,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       setUser(authResponse.user);
-      router.push('/dashboard');
+      router.push("/dashboard");
     } catch (error: any) {
-      throw new Error(error.message || 'Login failed');
+      throw new Error(error.message || "Login failed");
     }
   };
 
   const logout = () => {
     AuthService.logout();
     setUser(null);
-    router.push('/login');
+    router.push("/login");
   };
 
   const isAdmin = () => {
-    return user?.type === 'admin';
+    return user?.type === "admin";
   };
 
   const isCashier = () => {
-    return user?.type === 'cashier';
+    return user?.type === "cashier";
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, isAdmin, isCashier }}>
+    <AuthContext.Provider
+      value={{ user, isLoading, login, logout, isAdmin, isCashier }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -70,8 +83,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
+
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
+
   return context;
 }

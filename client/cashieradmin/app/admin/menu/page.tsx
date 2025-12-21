@@ -1,54 +1,84 @@
-'use client';
+"use client";
 
-import { useEffect, useState, useMemo } from 'react';
-import { Card, CardBody } from '@heroui/card';
-import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from '@heroui/table';
-import { Button } from '@heroui/button';
-import { Input } from '@heroui/input';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from '@heroui/modal';
-import { Chip } from '@heroui/chip';
-import { Spinner } from '@heroui/spinner';
-import { Select, SelectItem } from '@heroui/select';
-import { Textarea } from '@heroui/input';
-import { MenuService } from '@/services/menu.service';
-import type { MenuItem, CreateMenuItemRequest, Category } from '@/types/api';
-import { PlusIcon, MagnifyingGlassIcon, FunnelIcon, TrashIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
-import { Checkbox } from '@heroui/checkbox';
-import { getImageUrl } from '@/utils/imageUtils';
+import type { MenuItem, CreateMenuItemRequest, Category } from "@/types/api";
+
+import { useEffect, useState, useMemo } from "react";
+import { Card, CardBody } from "@heroui/card";
+import {
+  Table,
+  TableHeader,
+  TableColumn,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "@heroui/table";
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+} from "@heroui/modal";
+import { Chip } from "@heroui/chip";
+import { Spinner } from "@heroui/spinner";
+import { Select, SelectItem } from "@heroui/select";
+import { Textarea } from "@heroui/input";
+import {
+  PlusIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon,
+  TrashIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/outline";
+import { Checkbox } from "@heroui/checkbox";
+
+import { MenuService } from "@/services/menu.service";
+import { getImageUrl } from "@/utils/imageUtils";
 
 // Utility function to safely format price
 const formatPrice = (price: any): string => {
-  if (price === null || price === undefined || price === '') {
-    return '0.00';
+  if (price === null || price === undefined || price === "") {
+    return "0.00";
   }
-  const numPrice = typeof price === 'string' ? parseFloat(price) : Number(price);
+  const numPrice =
+    typeof price === "string" ? parseFloat(price) : Number(price);
+
   if (isNaN(numPrice)) {
-    return '0.00';
+    return "0.00";
   }
+
   return numPrice.toFixed(2);
 };
 
 // Utility function to safely convert to number
 const toNumber = (value: any, defaultValue: number = 0): number => {
-  if (value === null || value === undefined || value === '') {
+  if (value === null || value === undefined || value === "") {
     return defaultValue;
   }
-  const num = typeof value === 'string' ? parseFloat(value) : Number(value);
+  const num = typeof value === "string" ? parseFloat(value) : Number(value);
+
   return isNaN(num) ? defaultValue : num;
 };
 
 // Utility function to safely get display value for stock
 const formatStock = (item: MenuItem): string => {
   if (item.is_infinite_stock) {
-    return '∞';
+    return "∞";
   }
+
   return toNumber(item.stock_quantity, 0).toString();
 };
 
 export default function AdminMenuPage() {
   const [items, setItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<number>>(new Set());
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<number>>(
+    new Set(),
+  );
   const [loading, setLoading] = useState(true);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [formData, setFormData] = useState<Partial<CreateMenuItemRequest>>({});
@@ -57,20 +87,27 @@ export default function AdminMenuPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
-  const [deleteConfirmModal, setDeleteConfirmModal] = useState<{isOpen: boolean; item: MenuItem | null}>({isOpen: false, item: null});
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState<{
+    isOpen: boolean;
+    item: MenuItem | null;
+  }>({ isOpen: false, item: null });
   const [bulkDeleteConfirmModal, setBulkDeleteConfirmModal] = useState(false);
-  const [stockAdjusting, setStockAdjusting] = useState<Record<number, boolean>>({});
+  const [stockAdjusting, setStockAdjusting] = useState<Record<number, boolean>>(
+    {},
+  );
   const [priceModalItem, setPriceModalItem] = useState<MenuItem | null>(null);
-  const [newPrice, setNewPrice] = useState('');
+  const [newPrice, setNewPrice] = useState("");
   const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
-  const [initialPrice, setInitialPrice] = useState<string>('');
+  const [initialPrice, setInitialPrice] = useState<string>("");
 
   // Search, Filter, and Pagination state
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState<string>('all');
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'name' | 'price' | 'stock' | 'popularity'>('name');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<
+    "name" | "price" | "stock" | "popularity"
+  >("name");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
 
@@ -82,16 +119,27 @@ export default function AdminMenuPage() {
   // Analytics stats
   const analytics = useMemo(() => {
     const totalItems = items.length;
-    const lowStockItems = items.filter(item =>
-      !item.is_infinite_stock && toNumber(item.stock_quantity, 0) <= item.min_stock_level
+    const lowStockItems = items.filter(
+      (item) =>
+        !item.is_infinite_stock &&
+        toNumber(item.stock_quantity, 0) <= item.min_stock_level,
     ).length;
-    const totalValue = items.reduce((sum, item) =>
-      sum + (toNumber(item.current_price, 0) * toNumber(item.stock_quantity, 0)), 0
+    const totalValue = items.reduce(
+      (sum, item) =>
+        sum +
+        toNumber(item.current_price, 0) * toNumber(item.stock_quantity, 0),
+      0,
     );
-    const avgPrice = items.length > 0
-      ? items.reduce((sum, item) => sum + toNumber(item.current_price, 0), 0) / items.length
-      : 0;
-    const outOfStock = items.filter(item => item.status === 'out_of_stock').length;
+    const avgPrice =
+      items.length > 0
+        ? items.reduce(
+            (sum, item) => sum + toNumber(item.current_price, 0),
+            0,
+          ) / items.length
+        : 0;
+    const outOfStock = items.filter(
+      (item) => item.status === "out_of_stock",
+    ).length;
 
     return {
       totalItems,
@@ -107,15 +155,17 @@ export default function AdminMenuPage() {
     // Filter
     let filtered = items.filter((item) => {
       // Search filter
-      const matchesSearch = searchQuery === '' ||
+      const matchesSearch =
+        searchQuery === "" ||
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
       // Type filter
-      const matchesType = filterType === 'all' || item.item_type === filterType;
+      const matchesType = filterType === "all" || item.item_type === filterType;
 
       // Status filter
-      const matchesStatus = filterStatus === 'all' || item.status === filterStatus;
+      const matchesStatus =
+        filterStatus === "all" || item.status === filterStatus;
 
       return matchesSearch && matchesType && matchesStatus;
     });
@@ -123,21 +173,25 @@ export default function AdminMenuPage() {
     // Sort
     filtered.sort((a, b) => {
       let comparison = 0;
+
       switch (sortBy) {
-        case 'name':
+        case "name":
           comparison = a.name.localeCompare(b.name);
           break;
-        case 'price':
-          comparison = toNumber(a.current_price, 0) - toNumber(b.current_price, 0);
+        case "price":
+          comparison =
+            toNumber(a.current_price, 0) - toNumber(b.current_price, 0);
           break;
-        case 'stock':
-          comparison = toNumber(a.stock_quantity, 0) - toNumber(b.stock_quantity, 0);
+        case "stock":
+          comparison =
+            toNumber(a.stock_quantity, 0) - toNumber(b.stock_quantity, 0);
           break;
-        case 'popularity':
+        case "popularity":
           comparison = (a.popularity_score || 0) - (b.popularity_score || 0);
           break;
       }
-      return sortOrder === 'asc' ? comparison : -comparison;
+
+      return sortOrder === "asc" ? comparison : -comparison;
     });
 
     // Paginate
@@ -149,21 +203,31 @@ export default function AdminMenuPage() {
       total: filtered.length,
       totalPages: Math.ceil(filtered.length / itemsPerPage),
     };
-  }, [items, searchQuery, filterType, filterStatus, sortBy, sortOrder, currentPage, itemsPerPage]);
+  }, [
+    items,
+    searchQuery,
+    filterType,
+    filterStatus,
+    sortBy,
+    sortOrder,
+    currentPage,
+    itemsPerPage,
+  ]);
 
   const loadMenuItems = async () => {
     try {
       setLoading(true);
       setError(null);
       const response = await MenuService.getMenuItems();
+
       if (response.success && response.data) {
         setItems(response.data);
       } else {
-        setError(response.message || 'Failed to load menu items');
+        setError(response.message || "Failed to load menu items");
       }
     } catch (error: any) {
-      console.error('Failed to load menu items:', error);
-      setError(error?.message || 'An error occurred while loading menu items');
+      console.error("Failed to load menu items:", error);
+      setError(error?.message || "An error occurred while loading menu items");
     } finally {
       setLoading(false);
     }
@@ -172,11 +236,12 @@ export default function AdminMenuPage() {
   const loadCategories = async () => {
     try {
       const response = await MenuService.getCategories();
+
       if (response.success && response.data) {
         setCategories(response.data);
       }
     } catch (error: any) {
-      console.error('Failed to load categories:', error);
+      console.error("Failed to load categories:", error);
     }
   };
 
@@ -184,7 +249,8 @@ export default function AdminMenuPage() {
     try {
       // Validate required fields
       if (!formData.name || !formData.item_type) {
-        setError('Name and Item Type are required');
+        setError("Name and Item Type are required");
+
         return;
       }
 
@@ -194,28 +260,39 @@ export default function AdminMenuPage() {
       // Ensure numeric fields are properly typed
       const sanitizedData: any = {
         name: formData.name.trim(),
-        description: formData.description?.trim() || '',
+        description: formData.description?.trim() || "",
         item_type: formData.item_type,
-        unit_of_measure: formData.unit_of_measure?.trim() || 'piece',
+        unit_of_measure: formData.unit_of_measure?.trim() || "piece",
         stock_quantity: toNumber(formData.stock_quantity, 0),
         min_stock_level: toNumber(formData.min_stock_level, 0),
         is_infinite_stock: Boolean(formData.is_infinite_stock),
         can_customize: false, // Always false - feature disabled
         can_preorder: false, // Always false - feature disabled
         is_featured: Boolean(formData.is_featured),
-        preparation_time_minutes: toNumber(formData.preparation_time_minutes, 0),
+        preparation_time_minutes: toNumber(
+          formData.preparation_time_minutes,
+          0,
+        ),
         // Send null for empty strings to avoid JSON parsing errors in database
         allergen_info: formData.allergen_info?.trim() || null,
         nutritional_info: formData.nutritional_info?.trim() || null,
       };
 
       let response;
+
       if (editingItem) {
         // Update existing item
-        response = await MenuService.updateMenuItem(editingItem.menu_item_id, sanitizedData, imageFile || undefined);
+        response = await MenuService.updateMenuItem(
+          editingItem.menu_item_id,
+          sanitizedData,
+          imageFile || undefined,
+        );
       } else {
         // Create new item
-        response = await MenuService.createMenuItem(sanitizedData, imageFile || undefined);
+        response = await MenuService.createMenuItem(
+          sanitizedData,
+          imageFile || undefined,
+        );
       }
 
       if (response.success) {
@@ -230,10 +307,10 @@ export default function AdminMenuPage() {
                 try {
                   await MenuService.unassignItemFromCategory({
                     menu_item_id: itemId,
-                    category_id: category.category_id
+                    category_id: category.category_id,
                   });
                 } catch (err) {
-                  console.error('Failed to unassign category:', err);
+                  console.error("Failed to unassign category:", err);
                 }
               }
             }
@@ -243,37 +320,50 @@ export default function AdminMenuPage() {
               try {
                 await MenuService.assignItemToCategory({
                   menu_item_id: itemId,
-                  category_id: categoryId
+                  category_id: categoryId,
                 });
               } catch (err: any) {
-                console.error('Failed to assign category:', err);
+                console.error("Failed to assign category:", err);
               }
             }
           } catch (categoryError: any) {
-            console.error('Failed to assign categories:', categoryError);
-            setError('Item saved but failed to assign categories: ' + (categoryError?.message || 'Unknown error'));
+            console.error("Failed to assign categories:", categoryError);
+            setError(
+              "Item saved but failed to assign categories: " +
+                (categoryError?.message || "Unknown error"),
+            );
           }
         }
 
-        setSuccessMessage(editingItem ? 'Menu item updated successfully!' : 'Menu item created successfully!');
+        setSuccessMessage(
+          editingItem
+            ? "Menu item updated successfully!"
+            : "Menu item created successfully!",
+        );
         setTimeout(() => setSuccessMessage(null), 5000);
 
         // If creating a new item with an initial price, set the price
-        if (!editingItem && initialPrice && parseFloat(initialPrice) > 0 && response.data?.menu_item_id) {
+        if (
+          !editingItem &&
+          initialPrice &&
+          parseFloat(initialPrice) > 0 &&
+          response.data?.menu_item_id
+        ) {
           try {
             const menuItemId = (response.data as any).menu_item_id;
-            const today = new Date().toISOString().split('T')[0];
+            const today = new Date().toISOString().split("T")[0];
             const nextYear = new Date();
-            nextYear.setFullYear(nextYear.getFullYear() + 1);
-            const validUntil = nextYear.toISOString().split('T')[0];
 
-            console.log('Creating initial price:', {
+            nextYear.setFullYear(nextYear.getFullYear() + 1);
+            const validUntil = nextYear.toISOString().split("T")[0];
+
+            console.log("Creating initial price:", {
               menu_item_id: menuItemId,
               unit_price: parseFloat(initialPrice),
               valid_from: today,
               valid_until: validUntil,
-              price_type: 'base',
-              is_active: true
+              price_type: "base",
+              is_active: true,
             });
 
             const priceResponse = await MenuService.addMenuItemPrice({
@@ -281,18 +371,23 @@ export default function AdminMenuPage() {
               unit_price: parseFloat(initialPrice),
               valid_from: today,
               valid_until: validUntil,
-              price_type: 'base',
-              is_active: true
+              price_type: "base",
+              is_active: true,
             });
 
-            console.log('Price creation response:', priceResponse);
+            console.log("Price creation response:", priceResponse);
 
             if (!priceResponse.success) {
-              throw new Error(priceResponse.message || 'Failed to create price');
+              throw new Error(
+                priceResponse.message || "Failed to create price",
+              );
             }
           } catch (priceError: any) {
-            console.error('Failed to set initial price:', priceError);
-            setError('Item created but failed to set price: ' + (priceError?.message || 'Unknown error'));
+            console.error("Failed to set initial price:", priceError);
+            setError(
+              "Item created but failed to set price: " +
+                (priceError?.message || "Unknown error"),
+            );
             // Don't return early - still close modal and refresh
           }
         }
@@ -301,11 +396,20 @@ export default function AdminMenuPage() {
         loadMenuItems();
         resetForm();
       } else {
-        setError(response.message || `Failed to ${editingItem ? 'update' : 'create'} menu item`);
+        setError(
+          response.message ||
+            `Failed to ${editingItem ? "update" : "create"} menu item`,
+        );
       }
     } catch (error: any) {
-      console.error(`Failed to ${editingItem ? 'update' : 'create'} menu item:`, error);
-      setError(error?.message || `An error occurred while ${editingItem ? 'updating' : 'creating'} the menu item`);
+      console.error(
+        `Failed to ${editingItem ? "update" : "create"} menu item:`,
+        error,
+      );
+      setError(
+        error?.message ||
+          `An error occurred while ${editingItem ? "updating" : "creating"} the menu item`,
+      );
     } finally {
       setSaving(false);
     }
@@ -330,7 +434,9 @@ export default function AdminMenuPage() {
     });
     // Set selected categories
     if (item.categories && item.categories.length > 0) {
-      setSelectedCategoryIds(new Set(item.categories.map(cat => cat.category_id)));
+      setSelectedCategoryIds(
+        new Set(item.categories.map((cat) => cat.category_id)),
+      );
     } else {
       setSelectedCategoryIds(new Set());
     }
@@ -338,7 +444,7 @@ export default function AdminMenuPage() {
   };
 
   const handleDelete = async (item: MenuItem) => {
-    setDeleteConfirmModal({isOpen: true, item});
+    setDeleteConfirmModal({ isOpen: true, item });
   };
 
   const confirmDelete = async () => {
@@ -346,19 +452,22 @@ export default function AdminMenuPage() {
 
     try {
       setError(null);
-      const response = await MenuService.deleteMenuItem(deleteConfirmModal.item.menu_item_id);
+      const response = await MenuService.deleteMenuItem(
+        deleteConfirmModal.item.menu_item_id,
+      );
+
       if (response.success) {
-        setSuccessMessage('Menu item deleted successfully!');
+        setSuccessMessage("Menu item deleted successfully!");
         setTimeout(() => setSuccessMessage(null), 5000);
         loadMenuItems();
       } else {
-        setError(response.message || 'Failed to delete item');
+        setError(response.message || "Failed to delete item");
       }
     } catch (error: any) {
-      console.error('Failed to delete item:', error);
-      setError(error?.message || 'An error occurred while deleting the item');
+      console.error("Failed to delete item:", error);
+      setError(error?.message || "An error occurred while deleting the item");
     } finally {
-      setDeleteConfirmModal({isOpen: false, item: null});
+      setDeleteConfirmModal({ isOpen: false, item: null });
     }
   };
 
@@ -366,9 +475,13 @@ export default function AdminMenuPage() {
     setStockAdjusting((prev) => ({ ...prev, [itemId]: true }));
     try {
       const item = items.find((i) => i.menu_item_id === itemId);
+
       if (!item) return;
 
-      const newStock = Math.max(0, toNumber(item.stock_quantity, 0) + adjustment);
+      const newStock = Math.max(
+        0,
+        toNumber(item.stock_quantity, 0) + adjustment,
+      );
       const response = await MenuService.updateMenuItem(itemId, {
         stock_quantity: newStock,
       });
@@ -378,18 +491,20 @@ export default function AdminMenuPage() {
         setTimeout(() => setSuccessMessage(null), 3000);
         loadMenuItems();
       } else {
-        setError(response.message || 'Failed to update stock');
+        setError(response.message || "Failed to update stock");
       }
     } catch (error: any) {
-      console.error('Failed to update stock:', error);
-      setError(error?.message || 'An error occurred while updating stock');
+      console.error("Failed to update stock:", error);
+      setError(error?.message || "An error occurred while updating stock");
     } finally {
       setStockAdjusting((prev) => ({ ...prev, [itemId]: false }));
     }
   };
 
   const handleStatusToggle = async (itemId: number, currentStatus: string) => {
-    const newStatus = currentStatus === 'available' ? 'unavailable' : 'available';
+    const newStatus =
+      currentStatus === "available" ? "unavailable" : "available";
+
     try {
       const response = await MenuService.updateMenuItem(itemId, {
         status: newStatus,
@@ -400,11 +515,11 @@ export default function AdminMenuPage() {
         setTimeout(() => setSuccessMessage(null), 3000);
         loadMenuItems();
       } else {
-        setError(response.message || 'Failed to update status');
+        setError(response.message || "Failed to update status");
       }
     } catch (error: any) {
-      console.error('Failed to update status:', error);
-      setError(error?.message || 'An error occurred while updating status');
+      console.error("Failed to update status:", error);
+      setError(error?.message || "An error occurred while updating status");
     }
   };
 
@@ -412,8 +527,10 @@ export default function AdminMenuPage() {
     if (!priceModalItem || !newPrice) return;
 
     const priceValue = parseFloat(newPrice);
+
     if (isNaN(priceValue) || priceValue < 0) {
-      setError('Please enter a valid price');
+      setError("Please enter a valid price");
+
       return;
     }
 
@@ -422,32 +539,33 @@ export default function AdminMenuPage() {
       setError(null);
 
       // Add new price to price history
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split("T")[0];
       const nextYear = new Date();
+
       nextYear.setFullYear(nextYear.getFullYear() + 1);
-      const validUntil = nextYear.toISOString().split('T')[0];
+      const validUntil = nextYear.toISOString().split("T")[0];
 
       const response = await MenuService.addMenuItemPrice({
         menu_item_id: priceModalItem.menu_item_id,
         unit_price: priceValue,
         valid_from: today,
         valid_until: validUntil,
-        price_type: 'base',
-        is_active: true
+        price_type: "base",
+        is_active: true,
       });
 
       if (!response.success) {
-        throw new Error(response.message || 'Failed to update price');
+        throw new Error(response.message || "Failed to update price");
       }
 
-      setSuccessMessage('Price updated successfully!');
+      setSuccessMessage("Price updated successfully!");
       setTimeout(() => setSuccessMessage(null), 5000);
       setPriceModalItem(null);
-      setNewPrice('');
+      setNewPrice("");
       loadMenuItems();
     } catch (error: any) {
-      console.error('Failed to update price:', error);
-      setError(error?.message || 'An error occurred while updating price');
+      console.error("Failed to update price:", error);
+      setError(error?.message || "An error occurred while updating price");
     } finally {
       setSaving(false);
     }
@@ -455,7 +573,10 @@ export default function AdminMenuPage() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      const allIds = new Set(filteredAndPaginatedItems.items.map(item => item.menu_item_id));
+      const allIds = new Set(
+        filteredAndPaginatedItems.items.map((item) => item.menu_item_id),
+      );
+
       setSelectedItems(allIds);
     } else {
       setSelectedItems(new Set());
@@ -464,6 +585,7 @@ export default function AdminMenuPage() {
 
   const handleSelectItem = (id: number, checked: boolean) => {
     const newSelected = new Set(selectedItems);
+
     if (checked) {
       newSelected.add(id);
     } else {
@@ -480,17 +602,18 @@ export default function AdminMenuPage() {
   const confirmBulkDelete = async () => {
     try {
       setError(null);
-      const promises = (Array.from(selectedItems) as number[]).map(id =>
-        MenuService.deleteMenuItem(id)
+      const promises = (Array.from(selectedItems) as number[]).map((id) =>
+        MenuService.deleteMenuItem(id),
       );
+
       await Promise.all(promises);
       setSuccessMessage(`Successfully deleted ${selectedItems.size} items`);
       setTimeout(() => setSuccessMessage(null), 5000);
       setSelectedItems(new Set());
       loadMenuItems();
     } catch (error: any) {
-      console.error('Failed to delete items:', error);
-      setError(error?.message || 'An error occurred while deleting items');
+      console.error("Failed to delete items:", error);
+      setError(error?.message || "An error occurred while deleting items");
     } finally {
       setBulkDeleteConfirmModal(false);
     }
@@ -501,17 +624,20 @@ export default function AdminMenuPage() {
 
     try {
       setError(null);
-      const promises = (Array.from(selectedItems) as number[]).map(id =>
-        MenuService.updateMenuItem(id, { status: status as any })
+      const promises = (Array.from(selectedItems) as number[]).map((id) =>
+        MenuService.updateMenuItem(id, { status: status as any }),
       );
+
       await Promise.all(promises);
-      setSuccessMessage(`Successfully updated ${selectedItems.size} items to ${status}`);
+      setSuccessMessage(
+        `Successfully updated ${selectedItems.size} items to ${status}`,
+      );
       setTimeout(() => setSuccessMessage(null), 5000);
       setSelectedItems(new Set());
       loadMenuItems();
     } catch (error: any) {
-      console.error('Failed to update status:', error);
-      setError(error?.message || 'An error occurred while updating status');
+      console.error("Failed to update status:", error);
+      setError(error?.message || "An error occurred while updating status");
     }
   };
 
@@ -521,7 +647,7 @@ export default function AdminMenuPage() {
     setError(null);
     setSuccessMessage(null);
     setEditingItem(null);
-    setInitialPrice('');
+    setInitialPrice("");
     setSelectedCategoryIds(new Set());
   };
 
@@ -552,11 +678,23 @@ export default function AdminMenuPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-default-500">Total Items</p>
-                <p className="text-2xl font-bold text-primary">{analytics.totalItems}</p>
+                <p className="text-2xl font-bold text-primary">
+                  {analytics.totalItems}
+                </p>
               </div>
               <div className="p-3 bg-primary-100 rounded-full">
-                <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <svg
+                  className="h-6 w-6 text-primary"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                  />
                 </svg>
               </div>
             </div>
@@ -568,11 +706,23 @@ export default function AdminMenuPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-default-500">Inventory Value</p>
-                <p className="text-2xl font-bold text-success">₱{formatPrice(analytics.totalValue)}</p>
+                <p className="text-2xl font-bold text-success">
+                  ₱{formatPrice(analytics.totalValue)}
+                </p>
               </div>
               <div className="p-3 bg-success-100 rounded-full">
-                <svg className="h-6 w-6 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="h-6 w-6 text-success"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                  />
                 </svg>
               </div>
             </div>
@@ -584,11 +734,23 @@ export default function AdminMenuPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-default-500">Low Stock</p>
-                <p className="text-2xl font-bold text-warning">{analytics.lowStockItems}</p>
+                <p className="text-2xl font-bold text-warning">
+                  {analytics.lowStockItems}
+                </p>
               </div>
               <div className="p-3 bg-warning-100 rounded-full">
-                <svg className="h-6 w-6 text-warning" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <svg
+                  className="h-6 w-6 text-warning"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                  />
                 </svg>
               </div>
             </div>
@@ -600,11 +762,23 @@ export default function AdminMenuPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-default-500">Avg Price</p>
-                <p className="text-2xl font-bold text-secondary">₱{formatPrice(analytics.avgPrice)}</p>
+                <p className="text-2xl font-bold text-secondary">
+                  ₱{formatPrice(analytics.avgPrice)}
+                </p>
               </div>
               <div className="p-3 bg-secondary-100 rounded-full">
-                <svg className="h-6 w-6 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                <svg
+                  className="h-6 w-6 text-secondary"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                  />
                 </svg>
               </div>
             </div>
@@ -635,25 +809,26 @@ export default function AdminMenuPage() {
             {/* Search Bar */}
             <div className="flex gap-4 items-end">
               <Input
+                isClearable
                 className="flex-1"
                 placeholder="Search by name or description..."
-               
+                startContent={
+                  <MagnifyingGlassIcon className="h-5 w-5 text-default-400" />
+                }
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
                   setCurrentPage(1); // Reset to first page on search
                 }}
-                startContent={<MagnifyingGlassIcon className="h-5 w-5 text-default-400" />}
-                isClearable
-                onClear={() => setSearchQuery('')}
+                onClear={() => setSearchQuery("")}
               />
               <Select
+                className="w-32"
                 label="Items per page"
                 selectedKeys={[itemsPerPage.toString()]}
                 onChange={(e) => {
                   setItemsPerPage(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className="w-32"
               >
                 <SelectItem key="10">10</SelectItem>
                 <SelectItem key="25">25</SelectItem>
@@ -666,16 +841,18 @@ export default function AdminMenuPage() {
             <div className="flex gap-4 items-center flex-wrap">
               <div className="flex items-center gap-2">
                 <FunnelIcon className="h-5 w-5 text-default-500" />
-                <span className="text-sm font-medium text-default-600">Filters:</span>
+                <span className="text-sm font-medium text-default-600">
+                  Filters:
+                </span>
               </div>
               <Select
+                className="w-40"
                 label="Type"
                 selectedKeys={[filterType]}
                 onChange={(e) => {
                   setFilterType(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-40"
               >
                 <SelectItem key="all">All Types</SelectItem>
                 <SelectItem key="cake">Cake</SelectItem>
@@ -689,13 +866,13 @@ export default function AdminMenuPage() {
                 <SelectItem key="other">Other</SelectItem>
               </Select>
               <Select
+                className="w-40"
                 label="Status"
                 selectedKeys={[filterStatus]}
                 onChange={(e) => {
                   setFilterStatus(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-40"
               >
                 <SelectItem key="all">All Status</SelectItem>
                 <SelectItem key="available">Available</SelectItem>
@@ -703,10 +880,10 @@ export default function AdminMenuPage() {
                 <SelectItem key="out_of_stock">Out of Stock</SelectItem>
               </Select>
               <Select
+                className="w-40"
                 label="Sort By"
                 selectedKeys={[sortBy]}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="w-40"
               >
                 <SelectItem key="name">Name</SelectItem>
                 <SelectItem key="price">Price</SelectItem>
@@ -716,24 +893,29 @@ export default function AdminMenuPage() {
               <Button
                 size="sm"
                 variant="flat"
-                onPress={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                onPress={() =>
+                  setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+                }
               >
-                {sortOrder === 'asc' ? '↑ Ascending' : '↓ Descending'}
+                {sortOrder === "asc" ? "↑ Ascending" : "↓ Descending"}
               </Button>
             </div>
 
             {/* Results Summary */}
             <div className="text-sm text-default-500">
-              Showing {filteredAndPaginatedItems.items.length} of {filteredAndPaginatedItems.total} items
-              {(searchQuery || filterType !== 'all' || filterStatus !== 'all') && (
+              Showing {filteredAndPaginatedItems.items.length} of{" "}
+              {filteredAndPaginatedItems.total} items
+              {(searchQuery ||
+                filterType !== "all" ||
+                filterStatus !== "all") && (
                 <Button
+                  className="ml-2"
                   size="sm"
                   variant="light"
-                  className="ml-2"
                   onPress={() => {
-                    setSearchQuery('');
-                    setFilterType('all');
-                    setFilterStatus('all');
+                    setSearchQuery("");
+                    setFilterType("all");
+                    setFilterStatus("all");
                     setCurrentPage(1);
                   }}
                 >
@@ -749,23 +931,25 @@ export default function AdminMenuPage() {
         <CardBody>
           {loading ? (
             <div className="flex justify-center p-8">
-              <Spinner size="lg" color="primary" />
+              <Spinner color="primary" size="lg" />
             </div>
           ) : filteredAndPaginatedItems.total === 0 ? (
             <div className="text-center p-8 text-default-500">
               <p>No menu items found</p>
               {items.length === 0 ? (
                 <Button
+                  className="mt-4"
                   color="primary"
                   size="sm"
-                  className="mt-4"
                   startContent={<PlusIcon className="h-4 w-4" />}
                   onPress={onOpen}
                 >
                   Add Your First Item
                 </Button>
               ) : (
-                <p className="mt-2 text-sm">Try adjusting your search or filters</p>
+                <p className="mt-2 text-sm">
+                  Try adjusting your search or filters
+                </p>
               )}
             </div>
           ) : (
@@ -779,33 +963,34 @@ export default function AdminMenuPage() {
                       onChange={() => setSelectedItems(new Set())}
                     />
                     <span className="font-medium">
-                      {selectedItems.size} item{selectedItems.size > 1 ? 's' : ''} selected
+                      {selectedItems.size} item
+                      {selectedItems.size > 1 ? "s" : ""} selected
                     </span>
                   </div>
                   <div className="flex gap-2">
                     <Button
-                      size="sm"
                       color="success"
-                      variant="flat"
+                      size="sm"
                       startContent={<CheckCircleIcon className="h-4 w-4" />}
-                      onPress={() => handleBulkStatusChange('available')}
+                      variant="flat"
+                      onPress={() => handleBulkStatusChange("available")}
                     >
                       Set Available
                     </Button>
                     <Button
-                      size="sm"
                       color="warning"
-                      variant="flat"
+                      size="sm"
                       startContent={<XCircleIcon className="h-4 w-4" />}
-                      onPress={() => handleBulkStatusChange('unavailable')}
+                      variant="flat"
+                      onPress={() => handleBulkStatusChange("unavailable")}
                     >
                       Set Unavailable
                     </Button>
                     <Button
-                      size="sm"
                       color="danger"
-                      variant="flat"
+                      size="sm"
                       startContent={<TrashIcon className="h-4 w-4" />}
+                      variant="flat"
                       onPress={handleBulkDelete}
                     >
                       Delete
@@ -818,7 +1003,11 @@ export default function AdminMenuPage() {
                 <TableHeader>
                   <TableColumn>
                     <Checkbox
-                      isSelected={selectedItems.size === filteredAndPaginatedItems.items.length && filteredAndPaginatedItems.items.length > 0}
+                      isSelected={
+                        selectedItems.size ===
+                          filteredAndPaginatedItems.items.length &&
+                        filteredAndPaginatedItems.items.length > 0
+                      }
                       onChange={(e) => handleSelectAll(e.target.checked)}
                     />
                   </TableColumn>
@@ -831,168 +1020,206 @@ export default function AdminMenuPage() {
                 </TableHeader>
                 <TableBody>
                   {filteredAndPaginatedItems.items.map((item) => (
-                  <TableRow key={item.menu_item_id}>
-                    <TableCell>
-                      <Checkbox
-                        isSelected={selectedItems.has(item.menu_item_id)}
-                        onChange={(e) => handleSelectItem(item.menu_item_id, e.target.checked)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-semibold">{item.name || 'N/A'}</span>
-                        {item.description && (
-                          <span className="text-xs text-default-500 line-clamp-1">
-                            {item.description}
+                    <TableRow key={item.menu_item_id}>
+                      <TableCell>
+                        <Checkbox
+                          isSelected={selectedItems.has(item.menu_item_id)}
+                          onChange={(e) =>
+                            handleSelectItem(
+                              item.menu_item_id,
+                              e.target.checked,
+                            )
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-semibold">
+                            {item.name || "N/A"}
                           </span>
+                          {item.description && (
+                            <span className="text-xs text-default-500 line-clamp-1">
+                              {item.description}
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="capitalize">
+                          {item.item_type || "N/A"}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="font-semibold">
+                          ₱{formatPrice(item.current_price)}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        {item.is_infinite_stock ? (
+                          <span className="font-medium text-primary">∞</span>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <Button
+                              isIconOnly
+                              className="min-w-6 h-6"
+                              color="danger"
+                              isDisabled={
+                                stockAdjusting[item.menu_item_id] ||
+                                toNumber(item.stock_quantity, 0) <= 0
+                              }
+                              size="sm"
+                              variant="flat"
+                              onPress={() =>
+                                handleStockAdjust(item.menu_item_id, -1)
+                              }
+                            >
+                              −
+                            </Button>
+                            <span
+                              className={`font-medium min-w-10 text-center ${
+                                toNumber(item.stock_quantity, 0) <=
+                                item.min_stock_level
+                                  ? "text-danger"
+                                  : ""
+                              }`}
+                            >
+                              {formatStock(item)}
+                            </span>
+                            <Button
+                              isIconOnly
+                              className="min-w-6 h-6"
+                              color="success"
+                              isDisabled={stockAdjusting[item.menu_item_id]}
+                              size="sm"
+                              variant="flat"
+                              onPress={() =>
+                                handleStockAdjust(item.menu_item_id, 1)
+                              }
+                            >
+                              +
+                            </Button>
+                          </div>
                         )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="capitalize">{item.item_type || 'N/A'}</span>
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-semibold">₱{formatPrice(item.current_price)}</span>
-                    </TableCell>
-                    <TableCell>
-                      {item.is_infinite_stock ? (
-                        <span className="font-medium text-primary">∞</span>
-                      ) : (
-                        <div className="flex items-center gap-1">
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          className="capitalize cursor-pointer"
+                          color={
+                            item.status === "available"
+                              ? "success"
+                              : item.status === "unavailable"
+                                ? "warning"
+                                : "danger"
+                          }
+                          size="sm"
+                          variant="flat"
+                          onClick={() =>
+                            handleStatusToggle(item.menu_item_id, item.status)
+                          }
+                        >
+                          {item.status || "unknown"}
+                        </Chip>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2 flex-wrap">
                           <Button
+                            color="primary"
                             size="sm"
-                            isIconOnly
                             variant="flat"
-                            color="danger"
-                            onPress={() => handleStockAdjust(item.menu_item_id, -1)}
-                            isDisabled={stockAdjusting[item.menu_item_id] || toNumber(item.stock_quantity, 0) <= 0}
-                            className="min-w-6 h-6"
+                            onPress={() => handleEdit(item)}
                           >
-                            −
+                            Edit
                           </Button>
-                          <span className={`font-medium min-w-10 text-center ${
-                            toNumber(item.stock_quantity, 0) <= item.min_stock_level ? 'text-danger' : ''
-                          }`}>
-                            {formatStock(item)}
-                          </span>
                           <Button
+                            color="secondary"
                             size="sm"
-                            isIconOnly
                             variant="flat"
-                            color="success"
-                            onPress={() => handleStockAdjust(item.menu_item_id, 1)}
-                            isDisabled={stockAdjusting[item.menu_item_id]}
-                            className="min-w-6 h-6"
+                            onPress={() => {
+                              setPriceModalItem(item);
+                              setNewPrice(formatPrice(item.current_price));
+                            }}
                           >
-                            +
+                            Price
+                          </Button>
+                          <Button
+                            color="danger"
+                            size="sm"
+                            variant="flat"
+                            onPress={() => handleDelete(item)}
+                          >
+                            Delete
                           </Button>
                         </div>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        color={
-                          item.status === 'available'
-                            ? 'success'
-                            : item.status === 'unavailable'
-                            ? 'warning'
-                            : 'danger'
-                        }
-                        size="sm"
-                        variant="flat"
-                        className="capitalize cursor-pointer"
-                        onClick={() => handleStatusToggle(item.menu_item_id, item.status)}
-                      >
-                        {item.status || 'unknown'}
-                      </Chip>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2 flex-wrap">
-                        <Button
-                          size="sm"
-                          color="primary"
-                          variant="flat"
-                          onPress={() => handleEdit(item)}
-                        >
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          color="secondary"
-                          variant="flat"
-                          onPress={() => {
-                            setPriceModalItem(item);
-                            setNewPrice(formatPrice(item.current_price));
-                          }}
-                        >
-                          Price
-                        </Button>
-                        <Button
-                          size="sm"
-                          color="danger"
-                          variant="flat"
-                          onPress={() => handleDelete(item)}
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
 
-            {/* Pagination */}
-            {filteredAndPaginatedItems.totalPages > 1 && (
-              <div className="flex justify-between items-center mt-4 px-2">
-                <div className="text-sm text-default-500">
-                  Page {currentPage} of {filteredAndPaginatedItems.totalPages}
+              {/* Pagination */}
+              {filteredAndPaginatedItems.totalPages > 1 && (
+                <div className="flex justify-between items-center mt-4 px-2">
+                  <div className="text-sm text-default-500">
+                    Page {currentPage} of {filteredAndPaginatedItems.totalPages}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      isDisabled={currentPage === 1}
+                      size="sm"
+                      variant="flat"
+                      onPress={() => setCurrentPage(1)}
+                    >
+                      First
+                    </Button>
+                    <Button
+                      isDisabled={currentPage === 1}
+                      size="sm"
+                      variant="flat"
+                      onPress={() => setCurrentPage(currentPage - 1)}
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      isDisabled={
+                        currentPage === filteredAndPaginatedItems.totalPages
+                      }
+                      size="sm"
+                      variant="flat"
+                      onPress={() => setCurrentPage(currentPage + 1)}
+                    >
+                      Next
+                    </Button>
+                    <Button
+                      isDisabled={
+                        currentPage === filteredAndPaginatedItems.totalPages
+                      }
+                      size="sm"
+                      variant="flat"
+                      onPress={() =>
+                        setCurrentPage(filteredAndPaginatedItems.totalPages)
+                      }
+                    >
+                      Last
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="flat"
-                    onPress={() => setCurrentPage(1)}
-                    isDisabled={currentPage === 1}
-                  >
-                    First
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="flat"
-                    onPress={() => setCurrentPage(currentPage - 1)}
-                    isDisabled={currentPage === 1}
-                  >
-                    Previous
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="flat"
-                    onPress={() => setCurrentPage(currentPage + 1)}
-                    isDisabled={currentPage === filteredAndPaginatedItems.totalPages}
-                  >
-                    Next
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="flat"
-                    onPress={() => setCurrentPage(filteredAndPaginatedItems.totalPages)}
-                    isDisabled={currentPage === filteredAndPaginatedItems.totalPages}
-                  >
-                    Last
-                  </Button>
-                </div>
-              </div>
-            )}
-          </>
+              )}
+            </>
           )}
         </CardBody>
       </Card>
 
       {/* Add/Edit Item Modal */}
-      <Modal isOpen={isOpen} onClose={handleModalClose} size="2xl" scrollBehavior="inside">
+      <Modal
+        isOpen={isOpen}
+        scrollBehavior="inside"
+        size="2xl"
+        onClose={handleModalClose}
+      >
         <ModalContent>
-          <ModalHeader>{editingItem ? 'Edit Menu Item' : 'Add New Menu Item'}</ModalHeader>
+          <ModalHeader>
+            {editingItem ? "Edit Menu Item" : "Add New Menu Item"}
+          </ModalHeader>
           <ModalBody>
             {error && (
               <div className="p-3 bg-danger-50 border border-danger rounded-lg mb-4">
@@ -1001,28 +1228,32 @@ export default function AdminMenuPage() {
             )}
             <div className="space-y-4">
               <Input
+                isRequired
+                required
+                errorMessage={!formData.name && "Name is required"}
                 label="Name"
                 placeholder="Enter item name"
-               
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-                isRequired
-                errorMessage={!formData.name && 'Name is required'}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
               />
               <Textarea
                 label="Description"
-                placeholder="Enter item description"
-               
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 minRows={3}
+                placeholder="Enter item description"
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
               />
               <Select
+                isRequired
+                errorMessage={!formData.item_type && "Item type is required"}
                 label="Item Type"
                 placeholder="Select item type"
                 selectedKeys={formData.item_type ? [formData.item_type] : []}
-                onChange={(e) => setFormData({ ...formData, item_type: e.target.value as any })}
-                isRequired
-                errorMessage={!formData.item_type && 'Item type is required'}
+                onChange={(e) =>
+                  setFormData({ ...formData, item_type: e.target.value as any })
+                }
               >
                 <SelectItem key="cake">Cake</SelectItem>
                 <SelectItem key="pastry">Pastry</SelectItem>
@@ -1035,11 +1266,17 @@ export default function AdminMenuPage() {
                 <SelectItem key="other">Other</SelectItem>
               </Select>
               <Select
+                defaultSelectedKeys={["piece"]}
                 label="Unit of Measure"
                 placeholder="Select unit of measure"
-                selectedKeys={formData.unit_of_measure ? [formData.unit_of_measure] : ['piece']}
-                onChange={(e) => setFormData({ ...formData, unit_of_measure: e.target.value })}
-                defaultSelectedKeys={['piece']}
+                selectedKeys={
+                  formData.unit_of_measure
+                    ? [formData.unit_of_measure]
+                    : ["piece"]
+                }
+                onChange={(e) =>
+                  setFormData({ ...formData, unit_of_measure: e.target.value })
+                }
               >
                 <SelectItem key="piece">Piece</SelectItem>
                 <SelectItem key="dozen">Dozen</SelectItem>
@@ -1055,19 +1292,32 @@ export default function AdminMenuPage() {
 
               {/* Categories Selection */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-default-700">Categories</label>
-                <p className="text-xs text-default-500 mb-2">Select which categories this item belongs to</p>
+                <label className="text-sm font-medium text-default-700">
+                  Categories
+                </label>
+                <p className="text-xs text-default-500 mb-2">
+                  Select which categories this item belongs to
+                </p>
                 <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-3 bg-default-50 rounded-lg border border-default-200">
                   {categories.length === 0 ? (
-                    <p className="text-sm text-default-400 col-span-2">No categories available. Create categories first.</p>
+                    <p className="text-sm text-default-400 col-span-2">
+                      No categories available. Create categories first.
+                    </p>
                   ) : (
                     categories.map((category) => (
-                      <label key={category.category_id} className="flex items-center gap-2 cursor-pointer">
+                      <label
+                        key={category.category_id}
+                        className="flex items-center gap-2 cursor-pointer"
+                      >
                         <input
+                          checked={selectedCategoryIds.has(
+                            category.category_id,
+                          )}
+                          className="w-4 h-4 rounded border-default-300 text-primary focus:ring-2 focus:ring-primary"
                           type="checkbox"
-                          checked={selectedCategoryIds.has(category.category_id)}
                           onChange={(e) => {
                             const newSet = new Set(selectedCategoryIds);
+
                             if (e.target.checked) {
                               newSet.add(category.category_id);
                             } else {
@@ -1075,122 +1325,159 @@ export default function AdminMenuPage() {
                             }
                             setSelectedCategoryIds(newSet);
                           }}
-                          className="w-4 h-4 rounded border-default-300 text-primary focus:ring-2 focus:ring-primary"
                         />
-                        <span className="text-sm text-default-700">{category.name}</span>
+                        <span className="text-sm text-default-700">
+                          {category.name}
+                        </span>
                       </label>
                     ))
                   )}
                 </div>
                 {selectedCategoryIds.size > 0 && (
                   <p className="text-xs text-primary">
-                    {selectedCategoryIds.size} {selectedCategoryIds.size === 1 ? 'category' : 'categories'} selected
+                    {selectedCategoryIds.size}{" "}
+                    {selectedCategoryIds.size === 1 ? "category" : "categories"}{" "}
+                    selected
                   </p>
                 )}
               </div>
 
               {!editingItem && (
                 <Input
-                  label="Initial Price (₱)"
-                  type="number"
-                  placeholder="Enter price (e.g., 99.00)"
-                 
-                  onChange={(e) => setInitialPrice(e.target.value)}
-                  startContent={<span className="text-default-400 text-sm">₱</span>}
                   description="Set the base price for this item. You can adjust it later."
+                  label="Initial Price (₱)"
                   min="0"
+                  placeholder="Enter price (e.g., 99.00)"
+                  startContent={
+                    <span className="text-default-400 text-sm">₱</span>
+                  }
                   step="0.01"
+                  type="number"
+                  onChange={(e) => setInitialPrice(e.target.value)}
                 />
               )}
               {!formData.is_infinite_stock && (
                 <>
                   <Input
                     label="Stock Quantity"
-                    type="number"
+                    min="0"
                     placeholder="Enter stock quantity"
-                    value={formData.stock_quantity?.toString() || '0'}
+                    step="1"
+                    type="number"
+                    value={formData.stock_quantity?.toString() || "0"}
                     onChange={(e) => {
                       const value = e.target.value;
+
                       setFormData({
                         ...formData,
-                        stock_quantity: value === '' ? 0 : parseInt(value, 10) || 0
+                        stock_quantity:
+                          value === "" ? 0 : parseInt(value, 10) || 0,
                       });
                     }}
-                    min="0"
-                    step="1"
                   />
                   <Input
+                    description="Alert threshold for low stock notifications"
                     label="Minimum Stock Level"
-                    type="number"
+                    min="0"
                     placeholder="Enter minimum stock level for alerts"
-                    value={formData.min_stock_level?.toString() || '0'}
+                    step="1"
+                    type="number"
+                    value={formData.min_stock_level?.toString() || "0"}
                     onChange={(e) => {
                       const value = e.target.value;
+
                       setFormData({
                         ...formData,
-                        min_stock_level: value === '' ? 0 : parseInt(value, 10) || 0
+                        min_stock_level:
+                          value === "" ? 0 : parseInt(value, 10) || 0,
                       });
                     }}
-                    min="0"
-                    step="1"
-                    description="Alert threshold for low stock notifications"
                   />
                 </>
               )}
 
               {/* Feature Toggles */}
               <div className="space-y-3 p-4 bg-default-50 rounded-lg border border-default-200">
-                <p className="text-sm font-semibold text-default-700">Item Features</p>
+                <p className="text-sm font-semibold text-default-700">
+                  Item Features
+                </p>
                 <div className="space-y-2">
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
-                      type="checkbox"
                       checked={formData.is_infinite_stock || false}
-                      onChange={(e) => setFormData({ ...formData, is_infinite_stock: e.target.checked })}
                       className="w-4 h-4 rounded border-default-300 text-primary focus:ring-2 focus:ring-primary"
+                      type="checkbox"
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          is_infinite_stock: e.target.checked,
+                        })
+                      }
                     />
                     <div>
-                      <span className="text-sm font-medium text-default-700">Infinite Stock</span>
-                      <p className="text-xs text-default-500">Item is always available regardless of stock quantity</p>
+                      <span className="text-sm font-medium text-default-700">
+                        Infinite Stock
+                      </span>
+                      <p className="text-xs text-default-500">
+                        Item is always available regardless of stock quantity
+                      </p>
                     </div>
                   </label>
 
                   <label className="flex items-center gap-3 cursor-not-allowed opacity-50">
                     <input
-                      type="checkbox"
-                      checked={false}
                       disabled
+                      checked={false}
                       className="w-4 h-4 rounded border-default-300 text-primary focus:ring-2 focus:ring-primary cursor-not-allowed"
+                      type="checkbox"
                     />
                     <div>
-                      <span className="text-sm font-medium text-default-500">Customizable</span>
-                      <p className="text-xs text-default-400">Feature disabled - Allow customers to customize this item</p>
+                      <span className="text-sm font-medium text-default-500">
+                        Customizable
+                      </span>
+                      <p className="text-xs text-default-400">
+                        Feature disabled - Allow customers to customize this
+                        item
+                      </p>
                     </div>
                   </label>
 
                   <label className="flex items-center gap-3 cursor-not-allowed opacity-50">
                     <input
-                      type="checkbox"
-                      checked={false}
                       disabled
+                      checked={false}
                       className="w-4 h-4 rounded border-default-300 text-primary focus:ring-2 focus:ring-primary cursor-not-allowed"
+                      type="checkbox"
                     />
                     <div>
-                      <span className="text-sm font-medium text-default-500">Pre-order Available</span>
-                      <p className="text-xs text-default-400">Feature disabled - Enable pre-ordering for this item</p>
+                      <span className="text-sm font-medium text-default-500">
+                        Pre-order Available
+                      </span>
+                      <p className="text-xs text-default-400">
+                        Feature disabled - Enable pre-ordering for this item
+                      </p>
                     </div>
                   </label>
 
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
-                      type="checkbox"
                       checked={formData.is_featured || false}
-                      onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
                       className="w-4 h-4 rounded border-default-300 text-primary focus:ring-2 focus:ring-primary"
+                      type="checkbox"
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          is_featured: e.target.checked,
+                        })
+                      }
                     />
                     <div>
-                      <span className="text-sm font-medium text-default-700">Featured Item</span>
-                      <p className="text-xs text-default-500">Display prominently on the kiosk home screen</p>
+                      <span className="text-sm font-medium text-default-700">
+                        Featured Item
+                      </span>
+                      <p className="text-xs text-default-500">
+                        Display prominently on the kiosk home screen
+                      </p>
                     </div>
                   </label>
                 </div>
@@ -1198,73 +1485,84 @@ export default function AdminMenuPage() {
 
               <Input
                 label="Preparation Time (minutes)"
-                type="number"
+                min="0"
                 placeholder="Enter preparation time in minutes"
-               
+                step="1"
+                type="number"
                 onChange={(e) => {
                   const value = e.target.value;
+
                   setFormData({
                     ...formData,
-                    preparation_time_minutes: value === '' ? 0 : parseInt(value, 10) || 0
+                    preparation_time_minutes:
+                      value === "" ? 0 : parseInt(value, 10) || 0,
                   });
                 }}
-                min="0"
-                step="1"
               />
               <Textarea
                 label="Allergen Information"
-                placeholder="e.g., Contains nuts, eggs, dairy"
-               
-                onChange={(e) => setFormData({ ...formData, allergen_info: e.target.value })}
                 minRows={2}
+                placeholder="e.g., Contains nuts, eggs, dairy"
+                onChange={(e) =>
+                  setFormData({ ...formData, allergen_info: e.target.value })
+                }
               />
               <Textarea
                 label="Nutritional Information"
-                placeholder="e.g., Calories: 250, Protein: 5g, Carbs: 30g"
-               
-                onChange={(e) => setFormData({ ...formData, nutritional_info: e.target.value })}
                 minRows={2}
+                placeholder="e.g., Calories: 250, Protein: 5g, Carbs: 30g"
+                onChange={(e) =>
+                  setFormData({ ...formData, nutritional_info: e.target.value })
+                }
               />
               {editingItem?.image_url && !imageFile && (
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Current Image</p>
                   <div className="relative w-32 h-32 border-2 border-default-200 rounded-lg overflow-hidden">
                     <img
-                      src={getImageUrl(editingItem.image_url) || ''}
                       alt={editingItem.name}
                       className="w-full h-full object-cover"
+                      src={getImageUrl(editingItem.image_url) || ""}
                     />
                   </div>
                 </div>
               )}
               <Input
-                type="file"
-                label={editingItem?.image_url ? 'Replace Image' : 'Item Image'}
                 accept="image/*"
-                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
                 description="Upload an image of the menu item (JPG, PNG, max 10MB)"
+                label={editingItem?.image_url ? "Replace Image" : "Item Image"}
+                type="file"
+                onChange={(e) => setImageFile(e.target.files?.[0] || null)}
               />
               {imageFile && (
                 <p className="text-sm text-success">
-                  Selected: {imageFile.name} ({(imageFile.size / 1024 / 1024).toFixed(2)} MB)
+                  Selected: {imageFile.name} (
+                  {(imageFile.size / 1024 / 1024).toFixed(2)} MB)
                 </p>
               )}
             </div>
           </ModalBody>
           <ModalFooter>
-            <Button variant="light" onPress={handleModalClose} isDisabled={saving}>
+            <Button
+              isDisabled={saving}
+              variant="light"
+              onPress={handleModalClose}
+            >
               Cancel
             </Button>
             <Button
               color="primary"
-              onPress={handleSubmit}
-              isLoading={saving}
               isDisabled={!formData.name || !formData.item_type}
+              isLoading={saving}
+              onPress={handleSubmit}
             >
               {saving
-                ? (editingItem ? 'Updating...' : 'Creating...')
-                : (editingItem ? 'Update Item' : 'Create Item')
-              }
+                ? editingItem
+                  ? "Updating..."
+                  : "Creating..."
+                : editingItem
+                  ? "Update Item"
+                  : "Create Item"}
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -1273,12 +1571,12 @@ export default function AdminMenuPage() {
       {/* Price Management Modal */}
       <Modal
         isOpen={!!priceModalItem}
+        size="md"
         onClose={() => {
           setPriceModalItem(null);
-          setNewPrice('');
+          setNewPrice("");
           setError(null);
         }}
-        size="md"
       >
         <ModalContent>
           <ModalHeader>Update Price - {priceModalItem?.name}</ModalHeader>
@@ -1296,41 +1594,41 @@ export default function AdminMenuPage() {
                 </p>
               </div>
               <Input
-                type="number"
                 label="New Price"
+                min="0"
                 placeholder="Enter new price"
-               
-                onChange={(e) => setNewPrice(e.target.value)}
                 startContent={
                   <span className="text-default-400 text-sm">₱</span>
                 }
-                min="0"
                 step="0.01"
+                type="number"
+                onChange={(e) => setNewPrice(e.target.value)}
               />
               <p className="text-xs text-default-500">
-                This will add a new price entry starting today and update the current price.
+                This will add a new price entry starting today and update the
+                current price.
               </p>
             </div>
           </ModalBody>
           <ModalFooter>
             <Button
+              isDisabled={saving}
               variant="light"
               onPress={() => {
                 setPriceModalItem(null);
-                setNewPrice('');
+                setNewPrice("");
                 setError(null);
               }}
-              isDisabled={saving}
             >
               Cancel
             </Button>
             <Button
               color="primary"
-              onPress={handlePriceUpdate}
-              isLoading={saving}
               isDisabled={!newPrice || parseFloat(newPrice) < 0}
+              isLoading={saving}
+              onPress={handlePriceUpdate}
             >
-              {saving ? 'Updating...' : 'Update Price'}
+              {saving ? "Updating..." : "Update Price"}
             </Button>
           </ModalFooter>
         </ModalContent>
@@ -1339,28 +1637,31 @@ export default function AdminMenuPage() {
       {/* Delete Confirmation Modal */}
       <Modal
         isOpen={deleteConfirmModal.isOpen}
-        onClose={() => setDeleteConfirmModal({isOpen: false, item: null})}
         size="md"
+        onClose={() => setDeleteConfirmModal({ isOpen: false, item: null })}
       >
         <ModalContent>
           <ModalHeader className="text-danger">Confirm Delete</ModalHeader>
           <ModalBody>
-            <p>Are you sure you want to delete <strong>{deleteConfirmModal.item?.name}</strong>?</p>
+            <p>
+              Are you sure you want to delete{" "}
+              <strong>{deleteConfirmModal.item?.name}</strong>?
+            </p>
             <p className="text-sm text-default-500 mt-2">
-              This action cannot be undone. The item will be marked as discontinued.
+              This action cannot be undone. The item will be marked as
+              discontinued.
             </p>
           </ModalBody>
           <ModalFooter>
             <Button
               variant="light"
-              onPress={() => setDeleteConfirmModal({isOpen: false, item: null})}
+              onPress={() =>
+                setDeleteConfirmModal({ isOpen: false, item: null })
+              }
             >
               Cancel
             </Button>
-            <Button
-              color="danger"
-              onPress={confirmDelete}
-            >
+            <Button color="danger" onPress={confirmDelete}>
               Delete
             </Button>
           </ModalFooter>
@@ -1370,15 +1671,19 @@ export default function AdminMenuPage() {
       {/* Bulk Delete Confirmation Modal */}
       <Modal
         isOpen={bulkDeleteConfirmModal}
-        onClose={() => setBulkDeleteConfirmModal(false)}
         size="md"
+        onClose={() => setBulkDeleteConfirmModal(false)}
       >
         <ModalContent>
           <ModalHeader className="text-danger">Confirm Bulk Delete</ModalHeader>
           <ModalBody>
-            <p>Are you sure you want to delete <strong>{selectedItems.size} items</strong>?</p>
+            <p>
+              Are you sure you want to delete{" "}
+              <strong>{selectedItems.size} items</strong>?
+            </p>
             <p className="text-sm text-default-500 mt-2">
-              This action cannot be undone. All selected items will be marked as discontinued.
+              This action cannot be undone. All selected items will be marked as
+              discontinued.
             </p>
           </ModalBody>
           <ModalFooter>
@@ -1388,10 +1693,7 @@ export default function AdminMenuPage() {
             >
               Cancel
             </Button>
-            <Button
-              color="danger"
-              onPress={confirmBulkDelete}
-            >
+            <Button color="danger" onPress={confirmBulkDelete}>
               Delete {selectedItems.size} Items
             </Button>
           </ModalFooter>

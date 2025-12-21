@@ -1,19 +1,23 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { Card, CardBody, CardHeader } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { Input } from '@heroui/input';
-import { Divider } from '@heroui/divider';
-import { Tabs, Tab } from '@heroui/tabs';
-import { SettingsService } from '@/services/settings.service';
-import { QrCodeIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
-import Image from 'next/image';
+import { useState, useEffect } from "react";
+import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { Divider } from "@heroui/divider";
+import { Tabs, Tab } from "@heroui/tabs";
+import {
+  QrCodeIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/outline";
+import Image from "next/image";
 
-type PaymentMethod = 'gcash' | 'paymaya';
+import { SettingsService } from "@/services/settings.service";
+
+type PaymentMethod = "gcash" | "paymaya";
 
 export default function PaymentQRSettingsPage() {
-  const [selectedTab, setSelectedTab] = useState<PaymentMethod>('gcash');
+  const [selectedTab, setSelectedTab] = useState<PaymentMethod>("gcash");
   const [gcashQR, setGcashQR] = useState<File | null>(null);
   const [paymayaQR, setPaymayaQR] = useState<File | null>(null);
   const [gcashPreview, setGcashPreview] = useState<string | null>(null);
@@ -30,11 +34,13 @@ export default function PaymentQRSettingsPage() {
   const loadExistingQRs = async () => {
     try {
       const response = await SettingsService.getAllPaymentQR();
+
       if (response.success && response.data) {
         const data = response.data as any;
         // Get base URL without /api suffix
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-        const baseUrl = apiUrl.replace('/api', '');
+        const apiUrl =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+        const baseUrl = apiUrl.replace("/api", "");
 
         if (data.gcash) {
           setGcashPreview(`${baseUrl}${data.gcash}`);
@@ -44,7 +50,7 @@ export default function PaymentQRSettingsPage() {
         }
       }
     } catch (err) {
-      console.error('Failed to load existing QR codes:', err);
+      console.error("Failed to load existing QR codes:", err);
     }
   };
 
@@ -53,20 +59,28 @@ export default function PaymentQRSettingsPage() {
     setError(null);
 
     if (!file) {
-      setError('No file selected. Please choose an image file.');
+      setError("No file selected. Please choose an image file.");
+
       return;
     }
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
-      setError('Invalid file type. Please select an image file (PNG, JPG, JPEG, GIF, or WebP).');
+    if (!file.type.startsWith("image/")) {
+      setError(
+        "Invalid file type. Please select an image file (PNG, JPG, JPEG, GIF, or WebP).",
+      );
+
       return;
     }
 
     // Validate file size (max 10MB)
     const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+
     if (file.size > maxSize) {
-      setError(`File too large. Please select an image smaller than 10MB. Current size: ${(file.size / (1024 * 1024)).toFixed(2)}MB`);
+      setError(
+        `File too large. Please select an image smaller than 10MB. Current size: ${(file.size / (1024 * 1024)).toFixed(2)}MB`,
+      );
+
       return;
     }
 
@@ -74,29 +88,37 @@ export default function PaymentQRSettingsPage() {
     const reader = new FileReader();
 
     reader.onerror = () => {
-      setError('Failed to read the file. Please try again or choose a different file.');
+      setError(
+        "Failed to read the file. Please try again or choose a different file.",
+      );
     };
 
     reader.onloadend = () => {
       const result = reader.result as string;
-      if (method === 'gcash') {
+
+      if (method === "gcash") {
         setGcashQR(file);
         setGcashPreview(result);
       } else {
         setPaymayaQR(file);
         setPaymayaPreview(result);
       }
-      console.log(`✅ File selected for ${method.toUpperCase()}: ${file.name} (${(file.size / 1024).toFixed(2)}KB)`);
+      console.log(
+        `✅ File selected for ${method.toUpperCase()}: ${file.name} (${(file.size / 1024).toFixed(2)}KB)`,
+      );
     };
 
     reader.readAsDataURL(file);
   };
 
   const handleUpload = async (method: PaymentMethod) => {
-    const qrFile = method === 'gcash' ? gcashQR : paymayaQR;
+    const qrFile = method === "gcash" ? gcashQR : paymayaQR;
 
     if (!qrFile) {
-      setError(`Please select a ${method.toUpperCase()} QR code image to upload.`);
+      setError(
+        `Please select a ${method.toUpperCase()} QR code image to upload.`,
+      );
+
       return;
     }
 
@@ -112,20 +134,23 @@ export default function PaymentQRSettingsPage() {
       });
 
       const formData = new FormData();
-      formData.append('qr_code', qrFile);
-      formData.append('payment_method', method);
+
+      formData.append("qr_code", qrFile);
+      formData.append("payment_method", method);
 
       const response = await SettingsService.uploadPaymentQR(formData);
 
       if (!response.success) {
-        throw new Error(response.error || response.message || 'Upload failed');
+        throw new Error(response.error || response.message || "Upload failed");
       }
 
       console.log(`✅ ${method.toUpperCase()} QR code uploaded successfully`);
-      setSuccess(`${method.toUpperCase()} payment QR code uploaded successfully!`);
+      setSuccess(
+        `${method.toUpperCase()} payment QR code uploaded successfully!`,
+      );
 
       // Clear the file input after successful upload
-      if (method === 'gcash') {
+      if (method === "gcash") {
         setGcashQR(null);
       } else {
         setPaymayaQR(null);
@@ -140,30 +165,34 @@ export default function PaymentQRSettingsPage() {
       console.error(`❌ Upload error for ${method.toUpperCase()}:`, err);
 
       // Provide user-friendly error messages
-      let errorMessage = 'Failed to upload QR code. ';
+      let errorMessage = "Failed to upload QR code. ";
 
       if (err.response) {
         // Server responded with an error
-        const serverError = err.response.data?.error || err.response.data?.message;
+        const serverError =
+          err.response.data?.error || err.response.data?.message;
+
         if (serverError) {
           errorMessage += serverError;
         } else if (err.response.status === 401) {
-          errorMessage += 'You are not authorized. Please log in again.';
+          errorMessage += "You are not authorized. Please log in again.";
         } else if (err.response.status === 413) {
-          errorMessage += 'The file is too large. Please use a smaller image.';
+          errorMessage += "The file is too large. Please use a smaller image.";
         } else if (err.response.status === 500) {
-          errorMessage += 'Server error. Please try again later or contact support.';
+          errorMessage +=
+            "Server error. Please try again later or contact support.";
         } else {
           errorMessage += `Server returned error code ${err.response.status}.`;
         }
       } else if (err.request) {
         // Request was made but no response received
-        errorMessage += 'No response from server. Please check your internet connection.';
+        errorMessage +=
+          "No response from server. Please check your internet connection.";
       } else if (err.message) {
         // Something else went wrong
         errorMessage += err.message;
       } else {
-        errorMessage += 'An unknown error occurred. Please try again.';
+        errorMessage += "An unknown error occurred. Please try again.";
       }
 
       setError(errorMessage);
@@ -173,7 +202,7 @@ export default function PaymentQRSettingsPage() {
   };
 
   const clearPreview = (method: PaymentMethod) => {
-    if (method === 'gcash') {
+    if (method === "gcash") {
       setGcashQR(null);
       setGcashPreview(null);
     } else {
@@ -184,7 +213,11 @@ export default function PaymentQRSettingsPage() {
   };
 
   const handleDeleteQR = async (method: PaymentMethod) => {
-    if (!confirm(`Are you sure you want to delete the ${method.toUpperCase()} QR code? This action cannot be undone.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete the ${method.toUpperCase()} QR code? This action cannot be undone.`,
+      )
+    ) {
       return;
     }
 
@@ -198,14 +231,14 @@ export default function PaymentQRSettingsPage() {
       const response = await SettingsService.deletePaymentQR(method);
 
       if (!response.success) {
-        throw new Error(response.error || response.message || 'Delete failed');
+        throw new Error(response.error || response.message || "Delete failed");
       }
 
       console.log(`✅ ${method.toUpperCase()} QR code deleted successfully`);
       setSuccess(`${method.toUpperCase()} QR code deleted successfully!`);
 
       // Clear both preview and file
-      if (method === 'gcash') {
+      if (method === "gcash") {
         setGcashQR(null);
         setGcashPreview(null);
       } else {
@@ -220,27 +253,32 @@ export default function PaymentQRSettingsPage() {
       console.error(`❌ Delete error for ${method.toUpperCase()}:`, err);
 
       // Provide user-friendly error messages
-      let errorMessage = 'Failed to delete QR code. ';
+      let errorMessage = "Failed to delete QR code. ";
 
       if (err.response) {
-        const serverError = err.response.data?.error || err.response.data?.message;
+        const serverError =
+          err.response.data?.error || err.response.data?.message;
+
         if (serverError) {
           errorMessage += serverError;
         } else if (err.response.status === 401) {
-          errorMessage += 'You are not authorized. Please log in again.';
+          errorMessage += "You are not authorized. Please log in again.";
         } else if (err.response.status === 404) {
-          errorMessage += 'QR code not found. It may have already been deleted.';
+          errorMessage +=
+            "QR code not found. It may have already been deleted.";
         } else if (err.response.status === 500) {
-          errorMessage += 'Server error. Please try again later or contact support.';
+          errorMessage +=
+            "Server error. Please try again later or contact support.";
         } else {
           errorMessage += `Server returned error code ${err.response.status}.`;
         }
       } else if (err.request) {
-        errorMessage += 'No response from server. Please check your internet connection.';
+        errorMessage +=
+          "No response from server. Please check your internet connection.";
       } else if (err.message) {
         errorMessage += err.message;
       } else {
-        errorMessage += 'An unknown error occurred. Please try again.';
+        errorMessage += "An unknown error occurred. Please try again.";
       }
 
       setError(errorMessage);
@@ -250,9 +288,9 @@ export default function PaymentQRSettingsPage() {
   };
 
   const renderQRUpload = (method: PaymentMethod) => {
-    const qrFile = method === 'gcash' ? gcashQR : paymayaQR;
-    const preview = method === 'gcash' ? gcashPreview : paymayaPreview;
-    const color = method === 'gcash' ? 'blue' : 'purple';
+    const qrFile = method === "gcash" ? gcashQR : paymayaQR;
+    const preview = method === "gcash" ? gcashPreview : paymayaPreview;
+    const color = method === "gcash" ? "blue" : "purple";
 
     return (
       <Card className="max-w-2xl mx-auto">
@@ -262,8 +300,12 @@ export default function PaymentQRSettingsPage() {
               <QrCodeIcon className={`h-6 w-6 text-${color}-600`} />
             </div>
             <div>
-              <h2 className="text-xl font-bold">{method.toUpperCase()} Payment QR Code</h2>
-              <p className="text-sm text-default-500">Upload your {method.toUpperCase()} merchant QR code</p>
+              <h2 className="text-xl font-bold">
+                {method.toUpperCase()} Payment QR Code
+              </h2>
+              <p className="text-sm text-default-500">
+                Upload your {method.toUpperCase()} merchant QR code
+              </p>
             </div>
           </div>
         </CardHeader>
@@ -275,20 +317,20 @@ export default function PaymentQRSettingsPage() {
               <div className="relative">
                 <div className="aspect-square bg-default-100 rounded-lg overflow-hidden flex items-center justify-center max-w-md mx-auto">
                   <Image
-                    src={preview}
-                    alt={`${method.toUpperCase()} Payment QR Preview`}
-                    width={400}
-                    height={400}
-                    className="object-contain"
                     unoptimized
+                    alt={`${method.toUpperCase()} Payment QR Preview`}
+                    className="object-contain"
+                    height={400}
+                    src={preview}
+                    width={400}
                   />
                 </div>
                 {qrFile && (
                   <Button
-                    size="sm"
-                    color="danger"
-                    variant="flat"
                     className="absolute top-2 right-2"
+                    color="danger"
+                    size="sm"
+                    variant="flat"
                     onPress={() => clearPreview(method)}
                   >
                     Remove
@@ -305,22 +347,23 @@ export default function PaymentQRSettingsPage() {
                   <div className="max-w-xs mx-auto">
                     <label className="block w-full">
                       <input
-                        type="file"
                         accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          handleFileSelect(file, method);
-                        }}
                         className="hidden"
                         id={`file-input-replace-${method}`}
+                        type="file"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+
+                          handleFileSelect(file, method);
+                        }}
                       />
                       <Button
                         as="span"
-                        color="primary"
-                        variant="flat"
-                        size="md"
                         className="w-full font-semibold cursor-pointer"
+                        color="primary"
+                        size="md"
                         startContent={<QrCodeIcon className="h-5 w-5" />}
+                        variant="flat"
                       >
                         Choose New QR Code
                       </Button>
@@ -344,20 +387,21 @@ export default function PaymentQRSettingsPage() {
               <div className="max-w-xs mx-auto">
                 <label className="block w-full">
                   <input
-                    type="file"
                     accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      handleFileSelect(file, method);
-                    }}
                     className="hidden"
                     id={`file-input-${method}`}
+                    type="file"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+
+                      handleFileSelect(file, method);
+                    }}
                   />
                   <Button
                     as="span"
+                    className="w-full font-semibold cursor-pointer"
                     color="primary"
                     size="lg"
-                    className="w-full font-semibold cursor-pointer"
                     startContent={<QrCodeIcon className="h-5 w-5" />}
                   >
                     Choose QR Code Image
@@ -372,8 +416,10 @@ export default function PaymentQRSettingsPage() {
 
           <div className={`bg-${color}-50 p-4 rounded-lg`}>
             <p className="text-sm text-default-700">
-              <strong>Tip:</strong> This QR code will be displayed to customers who select {method.toUpperCase()}
-              as their payment method. Make sure it's your valid merchant QR code.
+              <strong>Tip:</strong> This QR code will be displayed to customers
+              who select {method.toUpperCase()}
+              as their payment method. Make sure it's your valid merchant QR
+              code.
             </p>
           </div>
 
@@ -385,11 +431,11 @@ export default function PaymentQRSettingsPage() {
             {preview && !qrFile && (
               <Button
                 color="danger"
-                variant="bordered"
-                size="lg"
-                onPress={() => handleDeleteQR(method)}
                 isLoading={uploading}
+                size="lg"
                 startContent={<XCircleIcon className="h-5 w-5" />}
+                variant="bordered"
+                onPress={() => handleDeleteQR(method)}
               >
                 Delete QR Code
               </Button>
@@ -400,21 +446,23 @@ export default function PaymentQRSettingsPage() {
               <div className="flex gap-2 ml-auto">
                 <Button
                   color="default"
-                  variant="flat"
                   size="lg"
+                  variant="flat"
                   onPress={() => clearPreview(method)}
                 >
                   Cancel
                 </Button>
                 <Button
-                  color="primary"
-                  size="lg"
-                  onPress={() => handleUpload(method)}
-                  isLoading={uploading}
-                  startContent={<QrCodeIcon className="h-5 w-5" />}
                   className="font-semibold"
+                  color="primary"
+                  isLoading={uploading}
+                  size="lg"
+                  startContent={<QrCodeIcon className="h-5 w-5" />}
+                  onPress={() => handleUpload(method)}
                 >
-                  {uploading ? 'Uploading...' : `Upload ${method.toUpperCase()} QR Code`}
+                  {uploading
+                    ? "Uploading..."
+                    : `Upload ${method.toUpperCase()} QR Code`}
                 </Button>
               </div>
             )}
@@ -447,12 +495,22 @@ export default function PaymentQRSettingsPage() {
               </div>
             </div>
             <div>
-              <h3 className="font-semibold text-blue-900 mb-2">How it works:</h3>
+              <h3 className="font-semibold text-blue-900 mb-2">
+                How it works:
+              </h3>
               <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
                 <li>Upload separate QR codes for GCash and PayMaya</li>
-                <li>When customers select a payment method, they'll see the corresponding QR code</li>
-                <li>Customers scan with their payment app and complete payment</li>
-                <li>Customers enter the reference number they receive after payment</li>
+                <li>
+                  When customers select a payment method, they'll see the
+                  corresponding QR code
+                </li>
+                <li>
+                  Customers scan with their payment app and complete payment
+                </li>
+                <li>
+                  Customers enter the reference number they receive after
+                  payment
+                </li>
                 <li>Cashier verifies the payment using the reference number</li>
               </ol>
             </div>
@@ -485,24 +543,20 @@ export default function PaymentQRSettingsPage() {
 
       {/* Tabs for GCash and PayMaya */}
       <Tabs
-        selectedKey={selectedTab}
-        onSelectionChange={(key) => setSelectedTab(key as PaymentMethod)}
-        size="lg"
-        color="primary"
         classNames={{
           tabList: "w-full",
-          tab: "text-lg font-semibold"
+          tab: "text-lg font-semibold",
         }}
+        color="primary"
+        selectedKey={selectedTab}
+        size="lg"
+        onSelectionChange={(key) => setSelectedTab(key as PaymentMethod)}
       >
         <Tab key="gcash" title="GCash">
-          <div className="mt-6">
-            {renderQRUpload('gcash')}
-          </div>
+          <div className="mt-6">{renderQRUpload("gcash")}</div>
         </Tab>
         <Tab key="paymaya" title="PayMaya">
-          <div className="mt-6">
-            {renderQRUpload('paymaya')}
-          </div>
+          <div className="mt-6">{renderQRUpload("paymaya")}</div>
         </Tab>
       </Tabs>
 
@@ -512,16 +566,18 @@ export default function PaymentQRSettingsPage() {
           <h3 className="font-semibold mb-3">Payment Methods Supported</h3>
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div className="flex items-center gap-2 p-3 bg-blue-100 rounded-lg">
-              <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+              <div className="w-3 h-3 bg-blue-600 rounded-full" />
               <span className="font-semibold">GCash</span>
             </div>
             <div className="flex items-center gap-2 p-3 bg-purple-100 rounded-lg">
-              <div className="w-3 h-3 bg-purple-600 rounded-full"></div>
+              <div className="w-3 h-3 bg-purple-600 rounded-full" />
               <span className="font-semibold">PayMaya/Maya</span>
             </div>
           </div>
           <p className="text-xs text-default-500 mt-4">
-            Upload your merchant QR codes for each payment method. Customers will see the appropriate QR code based on their selected payment method.
+            Upload your merchant QR codes for each payment method. Customers
+            will see the appropriate QR code based on their selected payment
+            method.
           </p>
         </CardBody>
       </Card>

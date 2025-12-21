@@ -1,22 +1,37 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Card, CardBody, CardHeader } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { Input } from '@heroui/input';
-import { Table, TableHeader, TableBody, TableColumn, TableRow, TableCell } from '@heroui/table';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/modal';
-import { Select, SelectItem } from '@heroui/select';
-import { TaxService } from '@/services/tax.service';
-import type { TaxRule, CreateTaxRuleRequest, ItemType } from '@/types/api';
-import { TaxType } from '@/types/api';
+import type { TaxRule, CreateTaxRuleRequest, ItemType } from "@/types/api";
+
+import { useEffect, useState } from "react";
+import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableColumn,
+  TableRow,
+  TableCell,
+} from "@heroui/table";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@heroui/modal";
+import { Select, SelectItem } from "@heroui/select";
 import {
   PlusIcon,
   MagnifyingGlassIcon,
   PencilIcon,
   DocumentTextIcon,
   CalculatorIcon,
-} from '@heroicons/react/24/outline';
+} from "@heroicons/react/24/outline";
+
+import { TaxService } from "@/services/tax.service";
+import { TaxType } from "@/types/api";
 
 // Types
 interface TaxFormState extends CreateTaxRuleRequest {
@@ -33,7 +48,7 @@ export default function TaxPage() {
   // State Management
   const [taxRules, setTaxRules] = useState<TaxRule[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [stats, setStats] = useState<TaxStats>({
     totalRules: 0,
     percentageRules: 0,
@@ -47,12 +62,12 @@ export default function TaxPage() {
 
   // Form State
   const [formState, setFormState] = useState<TaxFormState>({
-    tax_name: '',
+    tax_name: "",
     tax_type: TaxType.PERCENTAGE,
     tax_value: 0,
     applies_to_item_types: [],
     is_inclusive: false,
-    effective_date: new Date().toISOString().split('T')[0],
+    effective_date: new Date().toISOString().split("T")[0],
   });
 
   // Initial Data Fetch
@@ -62,8 +77,10 @@ export default function TaxPage() {
 
   // Calculate Stats
   useEffect(() => {
-    const percentage = taxRules.filter(t => t.tax_type === TaxType.PERCENTAGE).length;
-    const fixed = taxRules.filter(t => t.tax_type === TaxType.FIXED).length;
+    const percentage = taxRules.filter(
+      (t) => t.tax_type === TaxType.PERCENTAGE,
+    ).length;
+    const fixed = taxRules.filter((t) => t.tax_type === TaxType.FIXED).length;
 
     setStats({
       totalRules: taxRules.length,
@@ -77,13 +94,14 @@ export default function TaxPage() {
     try {
       setLoading(true);
       const response = await TaxService.getTaxRules();
+
       if (response.success) {
         setTaxRules(Array.isArray(response.data) ? response.data : []);
       } else {
-        console.error('Failed to fetch tax rules:', response.message);
+        console.error("Failed to fetch tax rules:", response.message);
       }
     } catch (error) {
-      console.error('Failed to fetch tax rules:', error);
+      console.error("Failed to fetch tax rules:", error);
     } finally {
       setLoading(false);
     }
@@ -92,15 +110,16 @@ export default function TaxPage() {
   const handleCreateTaxRule = async () => {
     try {
       const response = await TaxService.createTaxRule(formState);
+
       if (response.success) {
         setShowCreateModal(false);
         resetForm();
         fetchTaxRules();
       } else {
-        console.error('Failed to create tax rule:', response.message);
+        console.error("Failed to create tax rule:", response.message);
       }
     } catch (error) {
-      console.error('Failed to create tax rule:', error);
+      console.error("Failed to create tax rule:", error);
     }
   };
 
@@ -109,33 +128,35 @@ export default function TaxPage() {
 
     try {
       const updateData: Partial<CreateTaxRuleRequest> = { ...formState };
+
       delete (updateData as any).tax_id;
 
       const response = await TaxService.updateTaxRule(
         selectedTaxRule.tax_id,
-        updateData
+        updateData,
       );
+
       if (response.success) {
         setShowEditModal(false);
         resetForm();
         fetchTaxRules();
       } else {
-        console.error('Failed to update tax rule:', response.message);
+        console.error("Failed to update tax rule:", response.message);
       }
     } catch (error) {
-      console.error('Failed to update tax rule:', error);
+      console.error("Failed to update tax rule:", error);
     }
   };
 
   // Form Handlers
   const resetForm = () => {
     setFormState({
-      tax_name: '',
+      tax_name: "",
       tax_type: TaxType.PERCENTAGE,
       tax_value: 0,
       applies_to_item_types: [],
       is_inclusive: false,
-      effective_date: new Date().toISOString().split('T')[0],
+      effective_date: new Date().toISOString().split("T")[0],
     });
   };
 
@@ -159,24 +180,33 @@ export default function TaxPage() {
   };
 
   // Filtering
-  const filteredTaxRules = taxRules.filter(rule =>
-    rule.tax_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredTaxRules = taxRules.filter((rule) =>
+    rule.tax_name?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // Helper Functions
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-PH');
+    return new Date(date).toLocaleDateString("en-PH");
   };
 
   const formatTaxValue = (type: TaxType, value: number) => {
     if (type === TaxType.PERCENTAGE) {
       return `${value}%`;
     }
-    return `₱${parseFloat(value.toString()).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+
+    return `₱${parseFloat(value.toString()).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`;
   };
 
   const itemTypeOptions = [
-    'cake', 'pastry', 'beverage', 'coffee', 'sandwich', 'bread', 'dessert', 'snack', 'other'
+    "cake",
+    "pastry",
+    "beverage",
+    "coffee",
+    "sandwich",
+    "bread",
+    "dessert",
+    "snack",
+    "other",
   ];
 
   return (
@@ -243,11 +273,12 @@ export default function TaxPage() {
 
       {/* Search */}
       <Input
-        placeholder="Search tax rules by name..."
-       
-        onValueChange={setSearchTerm}
-        startContent={<MagnifyingGlassIcon className="h-5 w-5 text-default-400" />}
         className="max-w-md"
+        placeholder="Search tax rules by name..."
+        startContent={
+          <MagnifyingGlassIcon className="h-5 w-5 text-default-400" />
+        }
+        onValueChange={setSearchTerm}
       />
 
       {/* Tax Rules Table */}
@@ -279,8 +310,8 @@ export default function TaxPage() {
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-semibold ${
                           rule.tax_type === TaxType.PERCENTAGE
-                            ? 'bg-primary/10 text-primary'
-                            : 'bg-success/10 text-success'
+                            ? "bg-primary/10 text-primary"
+                            : "bg-success/10 text-success"
                         }`}
                       >
                         {rule.tax_type.toUpperCase()}
@@ -294,14 +325,16 @@ export default function TaxPage() {
                     <TableCell>
                       {rule.applies_to_item_types.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
-                          {rule.applies_to_item_types.slice(0, 3).map((type) => (
-                            <span
-                              key={type}
-                              className="px-2 py-0.5 bg-default-100 rounded text-xs"
-                            >
-                              {type}
-                            </span>
-                          ))}
+                          {rule.applies_to_item_types
+                            .slice(0, 3)
+                            .map((type) => (
+                              <span
+                                key={type}
+                                className="px-2 py-0.5 bg-default-100 rounded text-xs"
+                              >
+                                {type}
+                              </span>
+                            ))}
                           {rule.applies_to_item_types.length > 3 && (
                             <span className="text-xs text-default-400">
                               +{rule.applies_to_item_types.length - 3} more
@@ -309,27 +342,29 @@ export default function TaxPage() {
                           )}
                         </div>
                       ) : (
-                        <span className="text-default-400 text-sm">All items</span>
+                        <span className="text-default-400 text-sm">
+                          All items
+                        </span>
                       )}
                     </TableCell>
                     <TableCell>
                       <span
                         className={`px-2 py-1 rounded text-xs font-semibold ${
                           rule.is_inclusive
-                            ? 'bg-success/10 text-success'
-                            : 'bg-default-100'
+                            ? "bg-success/10 text-success"
+                            : "bg-default-100"
                         }`}
                       >
-                        {rule.is_inclusive ? 'Inclusive' : 'Exclusive'}
+                        {rule.is_inclusive ? "Inclusive" : "Exclusive"}
                       </span>
                     </TableCell>
                     <TableCell>{formatDate(rule.effective_date)}</TableCell>
                     <TableCell>
                       <Button
                         isIconOnly
+                        color="primary"
                         size="sm"
                         variant="light"
-                        color="primary"
                         onPress={() => openEditModal(rule)}
                       >
                         <PencilIcon className="h-4 w-4" />
@@ -344,66 +379,90 @@ export default function TaxPage() {
       </Card>
 
       {/* Create Tax Rule Modal */}
-      <Modal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} size="lg">
+      <Modal
+        isOpen={showCreateModal}
+        size="lg"
+        onClose={() => setShowCreateModal(false)}
+      >
         <ModalContent>
           <ModalHeader>Create New Tax Rule</ModalHeader>
           <ModalBody>
             <div className="space-y-4">
               <Input
+                isRequired
                 label="Tax Name"
                 placeholder="e.g., VAT, Sales Tax"
-               
-                onValueChange={(v) => setFormState({ ...formState, tax_name: v })}
-                isRequired
+                onValueChange={(v) =>
+                  setFormState({ ...formState, tax_name: v })
+                }
               />
 
               <Select
+                isRequired
                 label="Tax Type"
                 selectedKeys={[formState.tax_type]}
                 onSelectionChange={(keys) => {
-                  setFormState({ ...formState, tax_type: Array.from(keys)[0] as TaxType });
+                  setFormState({
+                    ...formState,
+                    tax_type: Array.from(keys)[0] as TaxType,
+                  });
                 }}
-                isRequired
               >
-                <SelectItem key={TaxType.PERCENTAGE}>
-                  Percentage
-                </SelectItem>
-                <SelectItem key={TaxType.FIXED}>
-                  Fixed Amount
-                </SelectItem>
+                <SelectItem key={TaxType.PERCENTAGE}>Percentage</SelectItem>
+                <SelectItem key={TaxType.FIXED}>Fixed Amount</SelectItem>
               </Select>
 
               <Input
-                label={formState.tax_type === TaxType.PERCENTAGE ? 'Tax Rate (%)' : 'Tax Amount (₱)'}
-                type="number"
-                placeholder={formState.tax_type === TaxType.PERCENTAGE ? '12' : '50'}
-               
-                onValueChange={(v) => setFormState({ ...formState, tax_value: parseFloat(v) || 0 })}
                 isRequired
+                label={
+                  formState.tax_type === TaxType.PERCENTAGE
+                    ? "Tax Rate (%)"
+                    : "Tax Amount (₱)"
+                }
+                placeholder={
+                  formState.tax_type === TaxType.PERCENTAGE ? "12" : "50"
+                }
+                type="number"
+                onValueChange={(v) =>
+                  setFormState({ ...formState, tax_value: parseFloat(v) || 0 })
+                }
               />
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Applies to Item Types (optional)</label>
+                <label className="text-sm font-medium">
+                  Applies to Item Types (optional)
+                </label>
                 <div className="grid grid-cols-2 gap-2">
                   {itemTypeOptions.map((type) => (
-                    <label key={type} className="flex items-center gap-2 cursor-pointer">
+                    <label
+                      key={type}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
                       <input
+                        checked={formState.applies_to_item_types.includes(
+                          type as ItemType,
+                        )}
+                        className="rounded"
                         type="checkbox"
-                        checked={formState.applies_to_item_types.includes(type as ItemType)}
                         onChange={(e) => {
                           if (e.target.checked) {
                             setFormState({
                               ...formState,
-                              applies_to_item_types: [...formState.applies_to_item_types, type as ItemType]
+                              applies_to_item_types: [
+                                ...formState.applies_to_item_types,
+                                type as ItemType,
+                              ],
                             });
                           } else {
                             setFormState({
                               ...formState,
-                              applies_to_item_types: formState.applies_to_item_types.filter(t => t !== type)
+                              applies_to_item_types:
+                                formState.applies_to_item_types.filter(
+                                  (t) => t !== type,
+                                ),
                             });
                           }
                         }}
-                        className="rounded"
                       />
                       <span className="text-sm capitalize">{type}</span>
                     </label>
@@ -412,22 +471,30 @@ export default function TaxPage() {
               </div>
 
               <Input
+                isRequired
                 label="Effective Date"
                 type="date"
-               
-                onValueChange={(v) => setFormState({ ...formState, effective_date: v })}
-                isRequired
+                onValueChange={(v) =>
+                  setFormState({ ...formState, effective_date: v })
+                }
               />
 
               <div className="space-y-2">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
-                    type="checkbox"
                     checked={formState.is_inclusive}
-                    onChange={(e) => setFormState({ ...formState, is_inclusive: e.target.checked })}
                     className="rounded"
+                    type="checkbox"
+                    onChange={(e) =>
+                      setFormState({
+                        ...formState,
+                        is_inclusive: e.target.checked,
+                      })
+                    }
                   />
-                  <span className="text-sm">Is Inclusive (included in price)</span>
+                  <span className="text-sm">
+                    Is Inclusive (included in price)
+                  </span>
                 </label>
               </div>
             </div>
@@ -444,66 +511,90 @@ export default function TaxPage() {
       </Modal>
 
       {/* Edit Tax Rule Modal */}
-      <Modal isOpen={showEditModal} onClose={() => setShowEditModal(false)} size="lg">
+      <Modal
+        isOpen={showEditModal}
+        size="lg"
+        onClose={() => setShowEditModal(false)}
+      >
         <ModalContent>
           <ModalHeader>Edit Tax Rule</ModalHeader>
           <ModalBody>
             <div className="space-y-4">
               <Input
+                isRequired
                 label="Tax Name"
                 placeholder="e.g., VAT, Sales Tax"
-               
-                onValueChange={(v) => setFormState({ ...formState, tax_name: v })}
-                isRequired
+                onValueChange={(v) =>
+                  setFormState({ ...formState, tax_name: v })
+                }
               />
 
               <Select
+                isRequired
                 label="Tax Type"
                 selectedKeys={[formState.tax_type]}
                 onSelectionChange={(keys) => {
-                  setFormState({ ...formState, tax_type: Array.from(keys)[0] as TaxType });
+                  setFormState({
+                    ...formState,
+                    tax_type: Array.from(keys)[0] as TaxType,
+                  });
                 }}
-                isRequired
               >
-                <SelectItem key={TaxType.PERCENTAGE}>
-                  Percentage
-                </SelectItem>
-                <SelectItem key={TaxType.FIXED}>
-                  Fixed Amount
-                </SelectItem>
+                <SelectItem key={TaxType.PERCENTAGE}>Percentage</SelectItem>
+                <SelectItem key={TaxType.FIXED}>Fixed Amount</SelectItem>
               </Select>
 
               <Input
-                label={formState.tax_type === TaxType.PERCENTAGE ? 'Tax Rate (%)' : 'Tax Amount (₱)'}
-                type="number"
-                placeholder={formState.tax_type === TaxType.PERCENTAGE ? '12' : '50'}
-               
-                onValueChange={(v) => setFormState({ ...formState, tax_value: parseFloat(v) || 0 })}
                 isRequired
+                label={
+                  formState.tax_type === TaxType.PERCENTAGE
+                    ? "Tax Rate (%)"
+                    : "Tax Amount (₱)"
+                }
+                placeholder={
+                  formState.tax_type === TaxType.PERCENTAGE ? "12" : "50"
+                }
+                type="number"
+                onValueChange={(v) =>
+                  setFormState({ ...formState, tax_value: parseFloat(v) || 0 })
+                }
               />
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Applies to Item Types (optional)</label>
+                <label className="text-sm font-medium">
+                  Applies to Item Types (optional)
+                </label>
                 <div className="grid grid-cols-2 gap-2">
                   {itemTypeOptions.map((type) => (
-                    <label key={type} className="flex items-center gap-2 cursor-pointer">
+                    <label
+                      key={type}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
                       <input
+                        checked={formState.applies_to_item_types.includes(
+                          type as ItemType,
+                        )}
+                        className="rounded"
                         type="checkbox"
-                        checked={formState.applies_to_item_types.includes(type as ItemType)}
                         onChange={(e) => {
                           if (e.target.checked) {
                             setFormState({
                               ...formState,
-                              applies_to_item_types: [...formState.applies_to_item_types, type as ItemType]
+                              applies_to_item_types: [
+                                ...formState.applies_to_item_types,
+                                type as ItemType,
+                              ],
                             });
                           } else {
                             setFormState({
                               ...formState,
-                              applies_to_item_types: formState.applies_to_item_types.filter(t => t !== type)
+                              applies_to_item_types:
+                                formState.applies_to_item_types.filter(
+                                  (t) => t !== type,
+                                ),
                             });
                           }
                         }}
-                        className="rounded"
                       />
                       <span className="text-sm capitalize">{type}</span>
                     </label>
@@ -512,22 +603,30 @@ export default function TaxPage() {
               </div>
 
               <Input
+                isRequired
                 label="Effective Date"
                 type="date"
-               
-                onValueChange={(v) => setFormState({ ...formState, effective_date: v })}
-                isRequired
+                onValueChange={(v) =>
+                  setFormState({ ...formState, effective_date: v })
+                }
               />
 
               <div className="space-y-2">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
-                    type="checkbox"
                     checked={formState.is_inclusive}
-                    onChange={(e) => setFormState({ ...formState, is_inclusive: e.target.checked })}
                     className="rounded"
+                    type="checkbox"
+                    onChange={(e) =>
+                      setFormState({
+                        ...formState,
+                        is_inclusive: e.target.checked,
+                      })
+                    }
                   />
-                  <span className="text-sm">Is Inclusive (included in price)</span>
+                  <span className="text-sm">
+                    Is Inclusive (included in price)
+                  </span>
                 </label>
               </div>
             </div>

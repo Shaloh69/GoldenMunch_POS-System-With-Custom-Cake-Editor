@@ -1,17 +1,21 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Card, CardBody, CardHeader } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { Input } from '@heroui/input';
-import { Select, SelectItem } from '@heroui/select';
-import { Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from '@heroui/table';
-import { Chip } from '@heroui/chip';
-import { Spinner } from '@heroui/spinner';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from '@heroui/modal';
-import { Divider } from '@heroui/divider';
-import { OrderService } from '@/services/order.service';
-import { CustomerOrder, PaymentMethod, PaymentStatus } from '@/types/api';
+import React, { useState, useEffect } from "react";
+import { Card, CardBody } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
+import { Select, SelectItem } from "@heroui/select";
+import { Chip } from "@heroui/chip";
+import { Spinner } from "@heroui/spinner";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+} from "@heroui/modal";
+import { Divider } from "@heroui/divider";
 import {
   BanknotesIcon,
   DocumentArrowDownIcon,
@@ -21,20 +25,26 @@ import {
   ChevronUpIcon,
   EyeIcon,
   CreditCardIcon,
-  ShoppingBagIcon
-} from '@heroicons/react/24/outline';
+  ShoppingBagIcon,
+} from "@heroicons/react/24/outline";
+
+import { OrderService } from "@/services/order.service";
+import { CustomerOrder } from "@/types/api";
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<CustomerOrder[]>([]);
-  const [filteredTransactions, setFilteredTransactions] = useState<CustomerOrder[]>([]);
+  const [filteredTransactions, setFilteredTransactions] = useState<
+    CustomerOrder[]
+  >([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>('all');
-  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>('all');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>("all");
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
-  const [selectedTransaction, setSelectedTransaction] = useState<CustomerOrder | null>(null);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<CustomerOrder | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   useEffect(() => {
@@ -43,12 +53,20 @@ export default function TransactionsPage() {
 
   useEffect(() => {
     filterTransactions();
-  }, [transactions, searchTerm, paymentMethodFilter, paymentStatusFilter, dateFrom, dateTo]);
+  }, [
+    transactions,
+    searchTerm,
+    paymentMethodFilter,
+    paymentStatusFilter,
+    dateFrom,
+    dateTo,
+  ]);
 
   const loadTransactions = async () => {
     try {
       setLoading(true);
       const response = await OrderService.getOrders();
+
       if (response.success && response.data) {
         // Get orders data (handle both array and paginated response)
         const orders = Array.isArray(response.data)
@@ -57,25 +75,30 @@ export default function TransactionsPage() {
 
         // Only show paid orders as transactions
         const completedOrders = orders.filter(
-          (order: CustomerOrder) => order.payment_status === 'paid'
+          (order: CustomerOrder) => order.payment_status === "paid",
         );
 
         // Fetch full details for each transaction including items
         const detailedTransactions = await Promise.all(
           completedOrders.map(async (order: CustomerOrder) => {
             try {
-              const detailResponse = await OrderService.getOrderById(order.order_id);
-              return detailResponse.success && detailResponse.data ? detailResponse.data : order;
+              const detailResponse = await OrderService.getOrderById(
+                order.order_id,
+              );
+
+              return detailResponse.success && detailResponse.data
+                ? detailResponse.data
+                : order;
             } catch {
               return order;
             }
-          })
+          }),
         );
 
         setTransactions(detailedTransactions);
       }
     } catch (error) {
-      console.error('Failed to load transactions:', error);
+      console.error("Failed to load transactions:", error);
     } finally {
       setLoading(false);
     }
@@ -86,29 +109,38 @@ export default function TransactionsPage() {
 
     // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(t =>
-        t.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t.order_id.toString().includes(searchTerm) ||
-        t.verification_code?.includes(searchTerm)
+      filtered = filtered.filter(
+        (t) =>
+          t.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          t.order_id.toString().includes(searchTerm) ||
+          t.verification_code?.includes(searchTerm),
       );
     }
 
     // Payment method filter
-    if (paymentMethodFilter !== 'all') {
-      filtered = filtered.filter(t => t.payment_method === paymentMethodFilter);
+    if (paymentMethodFilter !== "all") {
+      filtered = filtered.filter(
+        (t) => t.payment_method === paymentMethodFilter,
+      );
     }
 
     // Payment status filter
-    if (paymentStatusFilter !== 'all') {
-      filtered = filtered.filter(t => t.payment_status === paymentStatusFilter);
+    if (paymentStatusFilter !== "all") {
+      filtered = filtered.filter(
+        (t) => t.payment_status === paymentStatusFilter,
+      );
     }
 
     // Date range filter
     if (dateFrom) {
-      filtered = filtered.filter(t => new Date(t.order_datetime) >= new Date(dateFrom));
+      filtered = filtered.filter(
+        (t) => new Date(t.order_datetime) >= new Date(dateFrom),
+      );
     }
     if (dateTo) {
-      filtered = filtered.filter(t => new Date(t.order_datetime) <= new Date(dateTo + 'T23:59:59'));
+      filtered = filtered.filter(
+        (t) => new Date(t.order_datetime) <= new Date(dateTo + "T23:59:59"),
+      );
     }
 
     setFilteredTransactions(filtered);
@@ -116,6 +148,7 @@ export default function TransactionsPage() {
 
   const toggleRow = (orderId: number) => {
     const newExpanded = new Set(expandedRows);
+
     if (newExpanded.has(orderId)) {
       newExpanded.delete(orderId);
     } else {
@@ -126,69 +159,81 @@ export default function TransactionsPage() {
 
   const exportToCSV = () => {
     const headers = [
-      'Order ID',
-      'Date',
-      'Customer Name',
-      'Payment Method',
-      'Status',
-      'Items',
-      'Subtotal',
-      'Tax',
-      'Discount Type',
-      'Discount Amount',
-      'Final Amount',
-      'Amount Paid',
-      'Change',
-      'Cashier'
+      "Order ID",
+      "Date",
+      "Customer Name",
+      "Payment Method",
+      "Status",
+      "Items",
+      "Subtotal",
+      "Tax",
+      "Discount Type",
+      "Discount Amount",
+      "Final Amount",
+      "Amount Paid",
+      "Change",
+      "Cashier",
     ];
 
-    const rows = filteredTransactions.map(t => {
+    const rows = filteredTransactions.map((t) => {
       const transaction = t as any;
+
       return [
         t.order_number || t.order_id,
         new Date(t.order_datetime).toLocaleString(),
-        t.customer?.name || 'Walk-in Customer',
+        t.customer?.name || "Walk-in Customer",
         t.payment_method,
         t.payment_status,
-        t.items?.map(item => `${(item as any).item_name || 'Item'} x${item.quantity}`).join('; ') || 'N/A',
+        t.items
+          ?.map(
+            (item) => `${(item as any).item_name || "Item"} x${item.quantity}`,
+          )
+          .join("; ") || "N/A",
         Number(t.total_amount || 0).toFixed(2),
         Number(t.tax_amount || 0).toFixed(2),
-        t.customer_discount?.name || 'None',
+        t.customer_discount?.name || "None",
         Number(t.discount_amount || 0).toFixed(2),
         Number(t.final_amount || 0).toFixed(2),
         Number(transaction.amount_paid || t.final_amount || 0).toFixed(2),
         Number(transaction.change_amount || 0).toFixed(2),
-        transaction.cashier?.name || 'N/A'
+        transaction.cashier?.name || "N/A",
       ];
     });
 
     const csvContent = [
-      headers.join(','),
-      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-    ].join('\n');
+      headers.join(","),
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+    ].join("\n");
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([csvContent], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
+    const link = document.createElement("a");
+
     link.href = url;
-    link.download = `transactions_${new Date().toISOString().split('T')[0]}.csv`;
+    link.download = `transactions_${new Date().toISOString().split("T")[0]}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };
 
   const getTotalAmount = () => {
-    return filteredTransactions.reduce((sum, t) => sum + Number(t.final_amount || 0), 0);
+    return filteredTransactions.reduce(
+      (sum, t) => sum + Number(t.final_amount || 0),
+      0,
+    );
   };
 
   const getTotalCashCollected = () => {
     return filteredTransactions
-      .filter(t => t.payment_method === 'cash')
-      .reduce((sum, t) => sum + Number((t as any).amount_paid || t.final_amount || 0), 0);
+      .filter((t) => t.payment_method === "cash")
+      .reduce(
+        (sum, t) => sum + Number((t as any).amount_paid || t.final_amount || 0),
+        0,
+      );
   };
 
   const getTotalChangeGiven = () => {
     return filteredTransactions
-      .filter(t => t.payment_method === 'cash')
+      .filter((t) => t.payment_method === "cash")
       .reduce((sum, t) => sum + Number((t as any).change_amount || 0), 0);
   };
 
@@ -197,12 +242,12 @@ export default function TransactionsPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', {
-      month: 'short',
-      day: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(dateString).toLocaleString("en-US", {
+      month: "short",
+      day: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -228,14 +273,15 @@ export default function TransactionsPage() {
             Transaction History
           </h1>
           <p className="text-default-500 mt-1">
-            Detailed view of all completed transactions with items and payment info
+            Detailed view of all completed transactions with items and payment
+            info
           </p>
         </div>
         <Button
           color="primary"
+          isDisabled={filteredTransactions.length === 0}
           startContent={<DocumentArrowDownIcon className="h-5 w-5" />}
           onPress={exportToCSV}
-          isDisabled={filteredTransactions.length === 0}
         >
           Export CSV
         </Button>
@@ -251,7 +297,9 @@ export default function TransactionsPage() {
               </div>
               <div>
                 <p className="text-sm text-default-500">Total Revenue</p>
-                <p className="text-2xl font-bold">{formatCurrency(getTotalAmount())}</p>
+                <p className="text-2xl font-bold">
+                  {formatCurrency(getTotalAmount())}
+                </p>
               </div>
             </div>
           </CardBody>
@@ -265,7 +313,9 @@ export default function TransactionsPage() {
               </div>
               <div>
                 <p className="text-sm text-default-500">Total Transactions</p>
-                <p className="text-2xl font-bold">{filteredTransactions.length}</p>
+                <p className="text-2xl font-bold">
+                  {filteredTransactions.length}
+                </p>
               </div>
             </div>
           </CardBody>
@@ -280,7 +330,11 @@ export default function TransactionsPage() {
               <div>
                 <p className="text-sm text-default-500">Average Amount</p>
                 <p className="text-2xl font-bold">
-                  {formatCurrency(filteredTransactions.length > 0 ? getTotalAmount() / filteredTransactions.length : 0)}
+                  {formatCurrency(
+                    filteredTransactions.length > 0
+                      ? getTotalAmount() / filteredTransactions.length
+                      : 0,
+                  )}
                 </p>
               </div>
             </div>
@@ -295,8 +349,12 @@ export default function TransactionsPage() {
               </div>
               <div>
                 <p className="text-sm text-default-500">Cash Collected</p>
-                <p className="text-lg font-bold">{formatCurrency(getTotalCashCollected())}</p>
-                <p className="text-xs text-default-400">Change: {formatCurrency(getTotalChangeGiven())}</p>
+                <p className="text-lg font-bold">
+                  {formatCurrency(getTotalCashCollected())}
+                </p>
+                <p className="text-xs text-default-400">
+                  Change: {formatCurrency(getTotalChangeGiven())}
+                </p>
               </div>
             </div>
           </CardBody>
@@ -308,17 +366,17 @@ export default function TransactionsPage() {
         <CardBody>
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <Input
+              classNames={{ input: "text-sm" }}
               placeholder="Search order..."
               value={searchTerm}
               onValueChange={setSearchTerm}
-              classNames={{ input: "text-sm" }}
             />
 
             <Select
               label="Payment Method"
               selectedKeys={[paymentMethodFilter]}
-              onChange={(e) => setPaymentMethodFilter(e.target.value)}
               size="sm"
+              onChange={(e) => setPaymentMethodFilter(e.target.value)}
             >
               <SelectItem key="all">All Methods</SelectItem>
               <SelectItem key="cash">Cash</SelectItem>
@@ -330,8 +388,8 @@ export default function TransactionsPage() {
             <Select
               label="Payment Status"
               selectedKeys={[paymentStatusFilter]}
-              onChange={(e) => setPaymentStatusFilter(e.target.value)}
               size="sm"
+              onChange={(e) => setPaymentStatusFilter(e.target.value)}
             >
               <SelectItem key="all">All Status</SelectItem>
               <SelectItem key="paid">Paid</SelectItem>
@@ -340,19 +398,19 @@ export default function TransactionsPage() {
             </Select>
 
             <Input
-              type="date"
               label="From"
+              size="sm"
+              type="date"
               value={dateFrom}
               onValueChange={setDateFrom}
-              size="sm"
             />
 
             <Input
-              type="date"
               label="To"
+              size="sm"
+              type="date"
               value={dateTo}
               onValueChange={setDateTo}
-              size="sm"
             />
           </div>
         </CardBody>
@@ -388,7 +446,10 @@ export default function TransactionsPage() {
               <tbody className="bg-white divide-y divide-default-200">
                 {filteredTransactions.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-default-400">
+                    <td
+                      className="px-4 py-8 text-center text-default-400"
+                      colSpan={6}
+                    >
                       No transactions found
                     </td>
                   </tr>
@@ -403,7 +464,8 @@ export default function TransactionsPage() {
                           <td className="px-4 py-4">
                             <div className="space-y-1">
                               <p className="font-semibold text-sm">
-                                {transaction.order_number || `#${transaction.order_id}`}
+                                {transaction.order_number ||
+                                  `#${transaction.order_id}`}
                               </p>
                               <p className="text-xs text-default-500">
                                 {formatDate(transaction.order_datetime)}
@@ -418,11 +480,20 @@ export default function TransactionsPage() {
                           <td className="px-4 py-4">
                             <div className="space-y-1">
                               <p className="text-sm font-medium">
-                                {transaction.customer?.name || 'Walk-in'}
+                                {transaction.customer?.name || "Walk-in"}
                               </p>
                               {transaction.customer_discount && (
-                                <Chip size="sm" color="secondary" variant="flat">
-                                  {transaction.customer_discount.name} - {Number(transaction.customer_discount_percentage || 0).toFixed(1)}%
+                                <Chip
+                                  color="secondary"
+                                  size="sm"
+                                  variant="flat"
+                                >
+                                  {transaction.customer_discount.name} -{" "}
+                                  {Number(
+                                    transaction.customer_discount_percentage ||
+                                      0,
+                                  ).toFixed(1)}
+                                  %
                                 </Chip>
                               )}
                             </div>
@@ -430,13 +501,17 @@ export default function TransactionsPage() {
                           <td className="px-4 py-4">
                             <div className="flex items-center gap-2">
                               <ShoppingBagIcon className="h-4 w-4 text-default-400" />
-                              <span className="text-sm">{itemsCount} item{itemsCount !== 1 ? 's' : ''}</span>
+                              <span className="text-sm">
+                                {itemsCount} item{itemsCount !== 1 ? "s" : ""}
+                              </span>
                               {itemsCount > 0 && (
                                 <Button
+                                  isIconOnly
                                   size="sm"
                                   variant="flat"
-                                  isIconOnly
-                                  onPress={() => toggleRow(transaction.order_id)}
+                                  onPress={() =>
+                                    toggleRow(transaction.order_id)
+                                  }
                                 >
                                   {isExpanded ? (
                                     <ChevronUpIcon className="h-4 w-4" />
@@ -450,46 +525,74 @@ export default function TransactionsPage() {
                           <td className="px-4 py-4">
                             <div className="space-y-2">
                               <Chip
+                                className="uppercase"
+                                color={
+                                  transaction.payment_method === "cash"
+                                    ? "success"
+                                    : "primary"
+                                }
                                 size="sm"
                                 variant="flat"
-                                color={transaction.payment_method === 'cash' ? 'success' : 'primary'}
-                                className="uppercase"
                               >
                                 {transaction.payment_method}
                               </Chip>
-                              {transaction.payment_method === 'cash' && (transaction as any).change_amount && Number((transaction as any).change_amount) > 0 && (
-                                <p className="text-xs text-default-500">
-                                  Change: {formatCurrency((transaction as any).change_amount)}
-                                </p>
-                              )}
+                              {transaction.payment_method === "cash" &&
+                                (transaction as any).change_amount &&
+                                Number((transaction as any).change_amount) >
+                                  0 && (
+                                  <p className="text-xs text-default-500">
+                                    Change:{" "}
+                                    {formatCurrency(
+                                      (transaction as any).change_amount,
+                                    )}
+                                  </p>
+                                )}
                             </div>
                           </td>
                           <td className="px-4 py-4 text-right">
                             <div className="space-y-1">
-                              {transaction.discount_amount && Number(transaction.discount_amount) > 0 && (
-                                <p className="text-xs text-default-500 line-through">
-                                  {formatCurrency(Number(transaction.total_amount) + Number(transaction.discount_amount))}
-                                </p>
-                              )}
-                              <p className="font-bold text-lg">{formatCurrency(transaction.final_amount)}</p>
-                              {transaction.payment_method === 'cash' && (transaction as any).amount_paid && Number((transaction as any).amount_paid) > 0 && (
-                                <p className="text-xs text-success">
-                                  Paid: {formatCurrency((transaction as any).amount_paid)}
-                                </p>
-                              )}
-                              {transaction.payment_method === 'cash' && (transaction as any).change_amount && Number((transaction as any).change_amount) > 0 && (
-                                <p className="text-xs text-warning">
-                                  Change: {formatCurrency((transaction as any).change_amount)}
-                                </p>
-                              )}
+                              {transaction.discount_amount &&
+                                Number(transaction.discount_amount) > 0 && (
+                                  <p className="text-xs text-default-500 line-through">
+                                    {formatCurrency(
+                                      Number(transaction.total_amount) +
+                                        Number(transaction.discount_amount),
+                                    )}
+                                  </p>
+                                )}
+                              <p className="font-bold text-lg">
+                                {formatCurrency(transaction.final_amount)}
+                              </p>
+                              {transaction.payment_method === "cash" &&
+                                (transaction as any).amount_paid &&
+                                Number((transaction as any).amount_paid) >
+                                  0 && (
+                                  <p className="text-xs text-success">
+                                    Paid:{" "}
+                                    {formatCurrency(
+                                      (transaction as any).amount_paid,
+                                    )}
+                                  </p>
+                                )}
+                              {transaction.payment_method === "cash" &&
+                                (transaction as any).change_amount &&
+                                Number((transaction as any).change_amount) >
+                                  0 && (
+                                  <p className="text-xs text-warning">
+                                    Change:{" "}
+                                    {formatCurrency(
+                                      (transaction as any).change_amount,
+                                    )}
+                                  </p>
+                                )}
                             </div>
                           </td>
                           <td className="px-4 py-4 text-center">
                             <Button
-                              size="sm"
                               color="primary"
-                              variant="flat"
+                              size="sm"
                               startContent={<EyeIcon className="h-4 w-4" />}
+                              variant="flat"
                               onPress={() => handleViewDetails(transaction)}
                             >
                               View
@@ -498,30 +601,47 @@ export default function TransactionsPage() {
                         </tr>
 
                         {/* Expanded Row - Items Detail */}
-                        {isExpanded && transaction.items && transaction.items.length > 0 && (
-                          <tr>
-                            <td colSpan={6} className="px-4 py-4 bg-default-50">
-                              <div className="space-y-2">
-                                <p className="text-sm font-semibold text-default-700 mb-3">Order Items:</p>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                  {transaction.items.map((item) => (
-                                    <div key={item.order_item_id} className="flex justify-between items-center bg-white p-3 rounded border border-default-200">
-                                      <div className="flex-1">
-                                        <p className="font-medium text-sm">{(item as any).item_name || 'Item'}</p>
-                                        <p className="text-xs text-default-500">
-                                          {formatCurrency(item.unit_price)} × {item.quantity}
+                        {isExpanded &&
+                          transaction.items &&
+                          transaction.items.length > 0 && (
+                            <tr>
+                              <td
+                                className="px-4 py-4 bg-default-50"
+                                colSpan={6}
+                              >
+                                <div className="space-y-2">
+                                  <p className="text-sm font-semibold text-default-700 mb-3">
+                                    Order Items:
+                                  </p>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {transaction.items.map((item) => (
+                                      <div
+                                        key={item.order_item_id}
+                                        className="flex justify-between items-center bg-white p-3 rounded border border-default-200"
+                                      >
+                                        <div className="flex-1">
+                                          <p className="font-medium text-sm">
+                                            {(item as any).item_name || "Item"}
+                                          </p>
+                                          <p className="text-xs text-default-500">
+                                            {formatCurrency(item.unit_price)} ×{" "}
+                                            {item.quantity}
+                                          </p>
+                                        </div>
+                                        <p className="font-semibold text-sm">
+                                          {formatCurrency(
+                                            item.item_total ||
+                                              Number(item.unit_price || 0) *
+                                                Number(item.quantity || 0),
+                                          )}
                                         </p>
                                       </div>
-                                      <p className="font-semibold text-sm">
-                                        {formatCurrency(item.item_total || (Number(item.unit_price || 0) * Number(item.quantity || 0)))}
-                                      </p>
-                                    </div>
-                                  ))}
+                                    ))}
+                                  </div>
                                 </div>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
+                              </td>
+                            </tr>
+                          )}
                       </React.Fragment>
                     );
                   })
@@ -533,12 +653,18 @@ export default function TransactionsPage() {
       </Card>
 
       {/* Transaction Details Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="3xl" scrollBehavior="inside">
+      <Modal
+        isOpen={isOpen}
+        scrollBehavior="inside"
+        size="3xl"
+        onClose={onClose}
+      >
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">
             <h3>Transaction Details</h3>
             <p className="text-sm font-normal text-default-500">
-              {selectedTransaction?.order_number || `Order #${selectedTransaction?.order_id}`}
+              {selectedTransaction?.order_number ||
+                `Order #${selectedTransaction?.order_id}`}
             </p>
           </ModalHeader>
           <ModalBody>
@@ -548,21 +674,29 @@ export default function TransactionsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-default-500">Order Number</p>
-                    <p className="font-semibold">{selectedTransaction.order_number}</p>
+                    <p className="font-semibold">
+                      {selectedTransaction.order_number}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-sm text-default-500">Verification Code</p>
+                    <p className="text-sm text-default-500">
+                      Verification Code
+                    </p>
                     <code className="font-semibold bg-default-100 px-2 py-1 rounded">
                       {selectedTransaction.verification_code}
                     </code>
                   </div>
                   <div>
                     <p className="text-sm text-default-500">Order Date</p>
-                    <p className="font-semibold">{formatDate(selectedTransaction.order_datetime)}</p>
+                    <p className="font-semibold">
+                      {formatDate(selectedTransaction.order_datetime)}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-default-500">Order Type</p>
-                    <p className="font-semibold capitalize">{selectedTransaction.order_type?.replace('_', ' ')}</p>
+                    <p className="font-semibold capitalize">
+                      {selectedTransaction.order_type?.replace("_", " ")}
+                    </p>
                   </div>
                 </div>
 
@@ -570,18 +704,29 @@ export default function TransactionsPage() {
 
                 {/* Items */}
                 <div>
-                  <p className="text-sm font-semibold text-default-700 mb-3">Items Purchased:</p>
+                  <p className="text-sm font-semibold text-default-700 mb-3">
+                    Items Purchased:
+                  </p>
                   <div className="space-y-2">
                     {selectedTransaction.items?.map((item) => (
-                      <div key={item.order_item_id} className="flex justify-between items-start p-3 bg-default-50 rounded">
+                      <div
+                        key={item.order_item_id}
+                        className="flex justify-between items-start p-3 bg-default-50 rounded"
+                      >
                         <div className="flex-1">
-                          <p className="font-medium">{(item as any).item_name || 'Item'}</p>
+                          <p className="font-medium">
+                            {(item as any).item_name || "Item"}
+                          </p>
                           <p className="text-sm text-default-500">
                             {formatCurrency(item.unit_price)} × {item.quantity}
                           </p>
                         </div>
                         <p className="font-semibold">
-                          {formatCurrency(item.item_total || (Number(item.unit_price || 0) * Number(item.quantity || 0)))}
+                          {formatCurrency(
+                            item.item_total ||
+                              Number(item.unit_price || 0) *
+                                Number(item.quantity || 0),
+                          )}
                         </p>
                       </div>
                     ))}
@@ -592,57 +737,80 @@ export default function TransactionsPage() {
 
                 {/* Payment Breakdown */}
                 <div>
-                  <p className="text-sm font-semibold text-default-700 mb-3">Payment Details:</p>
+                  <p className="text-sm font-semibold text-default-700 mb-3">
+                    Payment Details:
+                  </p>
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span>Subtotal:</span>
-                      <span>{formatCurrency(selectedTransaction.total_amount)}</span>
+                      <span>
+                        {formatCurrency(selectedTransaction.total_amount)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Tax:</span>
-                      <span>{formatCurrency(selectedTransaction.tax_amount)}</span>
+                      <span>
+                        {formatCurrency(selectedTransaction.tax_amount)}
+                      </span>
                     </div>
                     {Number(selectedTransaction.discount_amount || 0) > 0 && (
                       <div className="flex justify-between text-success">
                         <span>Discount:</span>
-                        <span>-{formatCurrency(selectedTransaction.discount_amount)}</span>
+                        <span>
+                          -{formatCurrency(selectedTransaction.discount_amount)}
+                        </span>
                       </div>
                     )}
                     <Divider />
                     <div className="flex justify-between font-bold text-lg">
                       <span>Final Amount:</span>
-                      <span>{formatCurrency(selectedTransaction.final_amount)}</span>
+                      <span>
+                        {formatCurrency(selectedTransaction.final_amount)}
+                      </span>
                     </div>
 
                     {/* Cash Handling Details */}
-                    {selectedTransaction.payment_method === 'cash' && (
+                    {selectedTransaction.payment_method === "cash" && (
                       <>
                         <Divider />
                         <div className="bg-success-50 p-4 rounded-lg space-y-2">
-                          <p className="font-semibold text-sm text-success-700">Cash Payment Details</p>
+                          <p className="font-semibold text-sm text-success-700">
+                            Cash Payment Details
+                          </p>
                           <div className="flex justify-between">
                             <span className="text-sm">Amount Received:</span>
-                            <span className="font-semibold">{formatCurrency((selectedTransaction as any).amount_paid || selectedTransaction.final_amount)}</span>
+                            <span className="font-semibold">
+                              {formatCurrency(
+                                (selectedTransaction as any).amount_paid ||
+                                  selectedTransaction.final_amount,
+                              )}
+                            </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-sm">Change Given:</span>
-                            <span className="font-semibold">{formatCurrency((selectedTransaction as any).change_amount)}</span>
+                            <span className="font-semibold">
+                              {formatCurrency(
+                                (selectedTransaction as any).change_amount,
+                              )}
+                            </span>
                           </div>
                         </div>
                       </>
                     )}
 
                     {/* Cashless Payment Details */}
-                    {selectedTransaction.payment_method !== 'cash' && (
+                    {selectedTransaction.payment_method !== "cash" && (
                       <>
                         <Divider />
                         <div className="bg-primary-50 p-4 rounded-lg">
-                          <p className="font-semibold text-sm text-primary-700 mb-2">Payment Reference</p>
+                          <p className="font-semibold text-sm text-primary-700 mb-2">
+                            Payment Reference
+                          </p>
                           <code className="text-sm bg-white px-2 py-1 rounded">
                             {selectedTransaction.gcash_reference_number ||
-                             selectedTransaction.paymaya_reference_number ||
-                             selectedTransaction.card_transaction_ref ||
-                             'N/A'}
+                              selectedTransaction.paymaya_reference_number ||
+                              selectedTransaction.card_transaction_ref ||
+                              "N/A"}
                           </code>
                         </div>
                       </>
@@ -656,25 +824,39 @@ export default function TransactionsPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-default-500">Payment Method</p>
-                    <Chip color="primary" variant="flat" className="uppercase mt-1">
+                    <Chip
+                      className="uppercase mt-1"
+                      color="primary"
+                      variant="flat"
+                    >
                       {selectedTransaction.payment_method}
                     </Chip>
                   </div>
                   <div>
                     <p className="text-sm text-default-500">Payment Status</p>
-                    <Chip color="success" variant="flat" className="capitalize mt-1">
+                    <Chip
+                      className="capitalize mt-1"
+                      color="success"
+                      variant="flat"
+                    >
                       {selectedTransaction.payment_status}
                     </Chip>
                   </div>
                   {(selectedTransaction as any).cashier && (
                     <div>
                       <p className="text-sm text-default-500">Processed By</p>
-                      <p className="font-semibold">{(selectedTransaction as any).cashier.name || 'Cashier'}</p>
+                      <p className="font-semibold">
+                        {(selectedTransaction as any).cashier.name || "Cashier"}
+                      </p>
                     </div>
                   )}
                   <div>
                     <p className="text-sm text-default-500">Order Status</p>
-                    <Chip color="default" variant="flat" className="capitalize mt-1">
+                    <Chip
+                      className="capitalize mt-1"
+                      color="default"
+                      variant="flat"
+                    >
                       {selectedTransaction.order_status}
                     </Chip>
                   </div>
@@ -684,7 +866,9 @@ export default function TransactionsPage() {
                   <>
                     <Divider />
                     <div>
-                      <p className="text-sm text-default-500 mb-2">Special Instructions</p>
+                      <p className="text-sm text-default-500 mb-2">
+                        Special Instructions
+                      </p>
                       <p className="text-sm bg-warning-50 p-3 rounded">
                         {selectedTransaction.special_instructions}
                       </p>

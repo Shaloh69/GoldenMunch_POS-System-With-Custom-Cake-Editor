@@ -1,22 +1,37 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Card, CardBody, CardHeader } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { Input } from '@heroui/input';
-import { Table, TableHeader, TableBody, TableColumn, TableRow, TableCell } from '@heroui/table';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/modal';
-import { Select, SelectItem } from '@heroui/select';
-import { RefundService } from '@/services/refund.service';
-import type { RefundRequest } from '@/types/api';
-import { RefundStatus, RefundMethod } from '@/types/api';
+import type { RefundRequest } from "@/types/api";
+
+import { useEffect, useState } from "react";
+import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableColumn,
+  TableRow,
+  TableCell,
+} from "@heroui/table";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@heroui/modal";
+import { Select, SelectItem } from "@heroui/select";
 import {
   MagnifyingGlassIcon,
   CurrencyDollarIcon,
   CheckCircleIcon,
   XCircleIcon,
   ClockIcon,
-} from '@heroicons/react/24/outline';
+} from "@heroicons/react/24/outline";
+
+import { RefundService } from "@/services/refund.service";
+import { RefundStatus, RefundMethod } from "@/types/api";
 
 // Types
 interface RefundStats {
@@ -31,8 +46,8 @@ export default function RefundsPage() {
   // State Management
   const [refunds, setRefunds] = useState<RefundRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("");
   const [stats, setStats] = useState<RefundStats>({
     totalRequests: 0,
     pendingRequests: 0,
@@ -45,11 +60,13 @@ export default function RefundsPage() {
   const [showApproveModal, setShowApproveModal] = useState(false);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
-  const [selectedRefund, setSelectedRefund] = useState<RefundRequest | null>(null);
-  const [rejectReason, setRejectReason] = useState('');
+  const [selectedRefund, setSelectedRefund] = useState<RefundRequest | null>(
+    null,
+  );
+  const [rejectReason, setRejectReason] = useState("");
   const [completeForm, setCompleteForm] = useState({
     refund_method: RefundMethod.CASH,
-    refund_reference: '',
+    refund_reference: "",
   });
 
   // Initial Data Fetch
@@ -59,9 +76,15 @@ export default function RefundsPage() {
 
   // Calculate Stats
   useEffect(() => {
-    const pending = refunds.filter(r => r.refund_status === RefundStatus.PENDING).length;
-    const approved = refunds.filter(r => r.refund_status === RefundStatus.APPROVED).length;
-    const rejected = refunds.filter(r => r.refund_status === RefundStatus.REJECTED).length;
+    const pending = refunds.filter(
+      (r) => r.refund_status === RefundStatus.PENDING,
+    ).length;
+    const approved = refunds.filter(
+      (r) => r.refund_status === RefundStatus.APPROVED,
+    ).length;
+    const rejected = refunds.filter(
+      (r) => r.refund_status === RefundStatus.REJECTED,
+    ).length;
     const totalAmount = refunds.reduce((sum, r) => sum + r.refund_amount, 0);
 
     setStats({
@@ -78,16 +101,18 @@ export default function RefundsPage() {
     try {
       setLoading(true);
       const params: any = {};
+
       if (statusFilter) params.status = statusFilter;
 
       const response = await RefundService.getAllRefunds(params);
+
       if (response.success) {
         setRefunds(Array.isArray(response.data) ? response.data : []);
       } else {
-        console.error('Failed to fetch refunds:', response.message);
+        console.error("Failed to fetch refunds:", response.message);
       }
     } catch (error) {
-      console.error('Failed to fetch refunds:', error);
+      console.error("Failed to fetch refunds:", error);
     } finally {
       setLoading(false);
     }
@@ -97,16 +122,19 @@ export default function RefundsPage() {
     if (!selectedRefund) return;
 
     try {
-      const response = await RefundService.approveRefund(selectedRefund.refund_id);
+      const response = await RefundService.approveRefund(
+        selectedRefund.refund_id,
+      );
+
       if (response.success) {
         setShowApproveModal(false);
         setSelectedRefund(null);
         fetchRefunds();
       } else {
-        console.error('Failed to approve refund:', response.message);
+        console.error("Failed to approve refund:", response.message);
       }
     } catch (error) {
-      console.error('Failed to approve refund:', error);
+      console.error("Failed to approve refund:", error);
     }
   };
 
@@ -114,17 +142,21 @@ export default function RefundsPage() {
     if (!selectedRefund) return;
 
     try {
-      const response = await RefundService.rejectRefund(selectedRefund.refund_id, rejectReason);
+      const response = await RefundService.rejectRefund(
+        selectedRefund.refund_id,
+        rejectReason,
+      );
+
       if (response.success) {
         setShowRejectModal(false);
         setSelectedRefund(null);
-        setRejectReason('');
+        setRejectReason("");
         fetchRefunds();
       } else {
-        console.error('Failed to reject refund:', response.message);
+        console.error("Failed to reject refund:", response.message);
       }
     } catch (error) {
-      console.error('Failed to reject refund:', error);
+      console.error("Failed to reject refund:", error);
     }
   };
 
@@ -132,17 +164,24 @@ export default function RefundsPage() {
     if (!selectedRefund) return;
 
     try {
-      const response = await RefundService.completeRefund(selectedRefund.refund_id, completeForm);
+      const response = await RefundService.completeRefund(
+        selectedRefund.refund_id,
+        completeForm,
+      );
+
       if (response.success) {
         setShowCompleteModal(false);
         setSelectedRefund(null);
-        setCompleteForm({ refund_method: RefundMethod.CASH, refund_reference: '' });
+        setCompleteForm({
+          refund_method: RefundMethod.CASH,
+          refund_reference: "",
+        });
         fetchRefunds();
       } else {
-        console.error('Failed to complete refund:', response.message);
+        console.error("Failed to complete refund:", response.message);
       }
     } catch (error) {
-      console.error('Failed to complete refund:', error);
+      console.error("Failed to complete refund:", error);
     }
   };
 
@@ -154,39 +193,43 @@ export default function RefundsPage() {
 
   const openRejectModal = (refund: RefundRequest) => {
     setSelectedRefund(refund);
-    setRejectReason('');
+    setRejectReason("");
     setShowRejectModal(true);
   };
 
   const openCompleteModal = (refund: RefundRequest) => {
     setSelectedRefund(refund);
-    setCompleteForm({ refund_method: RefundMethod.CASH, refund_reference: '' });
+    setCompleteForm({ refund_method: RefundMethod.CASH, refund_reference: "" });
     setShowCompleteModal(true);
   };
 
   // Filtering
-  const filteredRefunds = refunds.filter(refund =>
-    refund.order?.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    refund.detailed_reason?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredRefunds = refunds.filter(
+    (refund) =>
+      refund.order?.order_number
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      refund.detailed_reason?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // Helper Functions
   const formatCurrency = (value: number) => {
-    return `₱${parseFloat(value.toString()).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+    return `₱${parseFloat(value.toString()).toLocaleString("en-PH", { minimumFractionDigits: 2 })}`;
   };
 
   const formatDateTime = (date: string) => {
-    return new Date(date).toLocaleString('en-PH');
+    return new Date(date).toLocaleString("en-PH");
   };
 
   const getStatusColor = (status: RefundStatus) => {
     const colors: Record<RefundStatus, string> = {
-      [RefundStatus.PENDING]: 'bg-warning/10 text-warning',
-      [RefundStatus.APPROVED]: 'bg-primary/10 text-primary',
-      [RefundStatus.REJECTED]: 'bg-danger/10 text-danger',
-      [RefundStatus.COMPLETED]: 'bg-success/10 text-success',
+      [RefundStatus.PENDING]: "bg-warning/10 text-warning",
+      [RefundStatus.APPROVED]: "bg-primary/10 text-primary",
+      [RefundStatus.REJECTED]: "bg-danger/10 text-danger",
+      [RefundStatus.COMPLETED]: "bg-success/10 text-success",
     };
-    return colors[status] || 'bg-default-100';
+
+    return colors[status] || "bg-default-100";
   };
 
   return (
@@ -195,7 +238,9 @@ export default function RefundsPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Refunds Management</h1>
-          <p className="text-default-500 mt-1">Review and process refund requests</p>
+          <p className="text-default-500 mt-1">
+            Review and process refund requests
+          </p>
         </div>
       </div>
 
@@ -265,7 +310,9 @@ export default function RefundsPage() {
               </div>
               <div>
                 <p className="text-sm text-default-500">Total Amount</p>
-                <p className="text-lg font-bold">{formatCurrency(stats.totalAmount)}</p>
+                <p className="text-lg font-bold">
+                  {formatCurrency(stats.totalAmount)}
+                </p>
               </div>
             </div>
           </CardBody>
@@ -275,42 +322,32 @@ export default function RefundsPage() {
       {/* Filters */}
       <div className="flex flex-wrap gap-4">
         <Input
-          placeholder="Search by order number or reason..."
-         
-          onValueChange={setSearchTerm}
-          startContent={<MagnifyingGlassIcon className="h-5 w-5 text-default-400" />}
           className="max-w-md"
+          placeholder="Search by order number or reason..."
+          startContent={
+            <MagnifyingGlassIcon className="h-5 w-5 text-default-400" />
+          }
+          onValueChange={setSearchTerm}
         />
 
         <Select
+          className="max-w-xs"
           label="Filter by Status"
           placeholder="All statuses"
           selectedKeys={statusFilter ? [statusFilter] : []}
           onSelectionChange={(keys) => {
-            setStatusFilter(Array.from(keys)[0] as string || '');
+            setStatusFilter((Array.from(keys)[0] as string) || "");
           }}
-          className="max-w-xs"
         >
           <SelectItem key="">All Statuses</SelectItem>
-          <SelectItem key={RefundStatus.PENDING}>
-            Pending
-          </SelectItem>
-          <SelectItem key={RefundStatus.APPROVED}>
-            Approved
-          </SelectItem>
-          <SelectItem key={RefundStatus.REJECTED}>
-            Rejected
-          </SelectItem>
-          <SelectItem key={RefundStatus.COMPLETED}>
-            Completed
-          </SelectItem>
+          <SelectItem key={RefundStatus.PENDING}>Pending</SelectItem>
+          <SelectItem key={RefundStatus.APPROVED}>Approved</SelectItem>
+          <SelectItem key={RefundStatus.REJECTED}>Rejected</SelectItem>
+          <SelectItem key={RefundStatus.COMPLETED}>Completed</SelectItem>
         </Select>
 
         {statusFilter && (
-          <Button
-            variant="flat"
-            onPress={() => setStatusFilter('')}
-          >
+          <Button variant="flat" onPress={() => setStatusFilter("")}>
             Clear Filter
           </Button>
         )}
@@ -357,7 +394,7 @@ export default function RefundsPage() {
                     <TableCell>
                       <div className="flex flex-col max-w-xs">
                         <span className="text-sm font-semibold capitalize">
-                          {refund.refund_reason.replace(/_/g, ' ')}
+                          {refund.refund_reason.replace(/_/g, " ")}
                         </span>
                         {refund.detailed_reason && (
                           <span className="text-xs text-default-400 truncate">
@@ -382,7 +419,9 @@ export default function RefundsPage() {
                           </span>
                         </div>
                       ) : (
-                        <span className="text-default-400 text-sm">Unknown</span>
+                        <span className="text-default-400 text-sm">
+                          Unknown
+                        </span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -395,15 +434,15 @@ export default function RefundsPage() {
                         {refund.refund_status === RefundStatus.PENDING && (
                           <>
                             <Button
-                              size="sm"
                               color="success"
+                              size="sm"
                               onPress={() => openApproveModal(refund)}
                             >
                               Approve
                             </Button>
                             <Button
-                              size="sm"
                               color="danger"
+                              size="sm"
                               onPress={() => openRejectModal(refund)}
                             >
                               Reject
@@ -412,16 +451,19 @@ export default function RefundsPage() {
                         )}
                         {refund.refund_status === RefundStatus.APPROVED && (
                           <Button
-                            size="sm"
                             color="primary"
+                            size="sm"
                             onPress={() => openCompleteModal(refund)}
                           >
                             Complete
                           </Button>
                         )}
-                        {refund.refund_status === RefundStatus.REJECTED && refund.rejected_reason && (
-                          <span className="text-xs text-danger">{refund.rejected_reason}</span>
-                        )}
+                        {refund.refund_status === RefundStatus.REJECTED &&
+                          refund.rejected_reason && (
+                            <span className="text-xs text-danger">
+                              {refund.rejected_reason}
+                            </span>
+                          )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -433,23 +475,32 @@ export default function RefundsPage() {
       </Card>
 
       {/* Approve Refund Modal */}
-      <Modal isOpen={showApproveModal} onClose={() => setShowApproveModal(false)}>
+      <Modal
+        isOpen={showApproveModal}
+        onClose={() => setShowApproveModal(false)}
+      >
         <ModalContent>
           <ModalHeader>Approve Refund</ModalHeader>
           <ModalBody>
             <p>
-              Are you sure you want to approve the refund for order{' '}
-              <span className="font-bold">{selectedRefund?.order?.order_number}</span>?
+              Are you sure you want to approve the refund for order{" "}
+              <span className="font-bold">
+                {selectedRefund?.order?.order_number}
+              </span>
+              ?
             </p>
             <div className="mt-4 p-4 bg-default-50 rounded-lg space-y-2">
               <p className="text-sm">
-                <span className="font-semibold">Amount:</span> {formatCurrency(selectedRefund?.refund_amount || 0)}
+                <span className="font-semibold">Amount:</span>{" "}
+                {formatCurrency(selectedRefund?.refund_amount || 0)}
               </p>
               <p className="text-sm">
-                <span className="font-semibold">Type:</span> {selectedRefund?.refund_type}
+                <span className="font-semibold">Type:</span>{" "}
+                {selectedRefund?.refund_type}
               </p>
               <p className="text-sm">
-                <span className="font-semibold">Reason:</span> {selectedRefund?.refund_reason.replace(/_/g, ' ')}
+                <span className="font-semibold">Reason:</span>{" "}
+                {selectedRefund?.refund_reason.replace(/_/g, " ")}
               </p>
             </div>
           </ModalBody>
@@ -470,22 +521,28 @@ export default function RefundsPage() {
           <ModalHeader>Reject Refund</ModalHeader>
           <ModalBody>
             <p className="mb-4">
-              Please provide a reason for rejecting the refund for order{' '}
-              <span className="font-bold">{selectedRefund?.order?.order_number}</span>:
+              Please provide a reason for rejecting the refund for order{" "}
+              <span className="font-bold">
+                {selectedRefund?.order?.order_number}
+              </span>
+              :
             </p>
             <Input
+              isRequired
               label="Rejection Reason"
               placeholder="Enter reason for rejection"
-             
               onValueChange={setRejectReason}
-              isRequired
             />
           </ModalBody>
           <ModalFooter>
             <Button variant="light" onPress={() => setShowRejectModal(false)}>
               Cancel
             </Button>
-            <Button color="danger" onPress={handleRejectRefund} isDisabled={!rejectReason}>
+            <Button
+              color="danger"
+              isDisabled={!rejectReason}
+              onPress={handleRejectRefund}
+            >
               Reject Refund
             </Button>
           </ModalFooter>
@@ -493,38 +550,36 @@ export default function RefundsPage() {
       </Modal>
 
       {/* Complete Refund Modal */}
-      <Modal isOpen={showCompleteModal} onClose={() => setShowCompleteModal(false)}>
+      <Modal
+        isOpen={showCompleteModal}
+        onClose={() => setShowCompleteModal(false)}
+      >
         <ModalContent>
           <ModalHeader>Complete Refund</ModalHeader>
           <ModalBody>
             <p className="mb-4">
-              Complete the refund for order{' '}
-              <span className="font-bold">{selectedRefund?.order?.order_number}</span>:
+              Complete the refund for order{" "}
+              <span className="font-bold">
+                {selectedRefund?.order?.order_number}
+              </span>
+              :
             </p>
             <div className="space-y-4">
               <Select
+                isRequired
                 label="Refund Method"
                 selectedKeys={[completeForm.refund_method]}
                 onSelectionChange={(keys) => {
                   setCompleteForm({
                     ...completeForm,
-                    refund_method: Array.from(keys)[0] as RefundMethod
+                    refund_method: Array.from(keys)[0] as RefundMethod,
                   });
                 }}
-                isRequired
               >
-                <SelectItem key={RefundMethod.CASH}>
-                  Cash
-                </SelectItem>
-                <SelectItem key={RefundMethod.GCASH}>
-                  GCash
-                </SelectItem>
-                <SelectItem key={RefundMethod.PAYMAYA}>
-                  PayMaya
-                </SelectItem>
-                <SelectItem key={RefundMethod.CARD}>
-                  Card
-                </SelectItem>
+                <SelectItem key={RefundMethod.CASH}>Cash</SelectItem>
+                <SelectItem key={RefundMethod.GCASH}>GCash</SelectItem>
+                <SelectItem key={RefundMethod.PAYMAYA}>PayMaya</SelectItem>
+                <SelectItem key={RefundMethod.CARD}>Card</SelectItem>
                 <SelectItem key={RefundMethod.BANK_TRANSFER}>
                   Bank Transfer
                 </SelectItem>
@@ -536,13 +591,15 @@ export default function RefundsPage() {
               <Input
                 label="Reference Number (optional)"
                 placeholder="Enter reference number"
-               
-                onValueChange={(v) => setCompleteForm({ ...completeForm, refund_reference: v })}
+                onValueChange={(v) =>
+                  setCompleteForm({ ...completeForm, refund_reference: v })
+                }
               />
 
               <div className="p-4 bg-default-50 rounded-lg">
                 <p className="text-sm font-semibold">
-                  Refund Amount: {formatCurrency(selectedRefund?.refund_amount || 0)}
+                  Refund Amount:{" "}
+                  {formatCurrency(selectedRefund?.refund_amount || 0)}
                 </p>
               </div>
             </div>

@@ -1,16 +1,28 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Card, CardBody, CardHeader } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { Input } from '@heroui/input';
-import { Select, SelectItem } from '@heroui/select';
-import { Table, TableHeader, TableBody, TableColumn, TableRow, TableCell } from '@heroui/table';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/modal';
-import { Chip } from '@heroui/chip';
-import { Divider } from '@heroui/divider';
-import { CustomCakeCashierService, type ApprovedCustomCake, type ProcessPaymentData } from '@/services/customCakeCashier.service';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from "react";
+import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
+import { Select, SelectItem } from "@heroui/select";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableColumn,
+  TableRow,
+  TableCell,
+} from "@heroui/table";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+} from "@heroui/modal";
+import { Chip } from "@heroui/chip";
+import { Divider } from "@heroui/divider";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   CakeIcon,
   CalendarIcon,
@@ -21,22 +33,30 @@ import {
   EnvelopeIcon,
   CheckCircleIcon,
   MagnifyingGlassIcon,
-} from '@heroicons/react/24/outline';
+} from "@heroicons/react/24/outline";
+
+import {
+  CustomCakeCashierService,
+  type ApprovedCustomCake,
+  type ProcessPaymentData,
+} from "@/services/customCakeCashier.service";
 
 export default function CashierCustomCakesPage() {
   // State Management
   const [approvedCakes, setApprovedCakes] = useState<ApprovedCustomCake[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [processingPayment, setProcessingPayment] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   // Payment Modal States
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedCake, setSelectedCake] = useState<ApprovedCustomCake | null>(null);
+  const [selectedCake, setSelectedCake] = useState<ApprovedCustomCake | null>(
+    null,
+  );
   const [paymentForm, setPaymentForm] = useState<ProcessPaymentData>({
-    payment_method: 'cash',
+    payment_method: "cash",
     amount_paid: 0,
   });
 
@@ -46,6 +66,7 @@ export default function CashierCustomCakesPage() {
 
     // Auto-refresh every 30 seconds
     const interval = setInterval(fetchApprovedCakes, 30000);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -53,9 +74,10 @@ export default function CashierCustomCakesPage() {
   useEffect(() => {
     if (successMessage || errorMessage) {
       const timer = setTimeout(() => {
-        setSuccessMessage('');
-        setErrorMessage('');
+        setSuccessMessage("");
+        setErrorMessage("");
       }, 5000);
+
       return () => clearTimeout(timer);
     }
   }, [successMessage, errorMessage]);
@@ -65,9 +87,10 @@ export default function CashierCustomCakesPage() {
     try {
       setLoading(true);
       const cakes = await CustomCakeCashierService.getApprovedCakes();
+
       setApprovedCakes(cakes);
     } catch (error: any) {
-      setErrorMessage(error.message || 'Failed to load approved custom cakes');
+      setErrorMessage(error.message || "Failed to load approved custom cakes");
     } finally {
       setLoading(false);
     }
@@ -77,7 +100,7 @@ export default function CashierCustomCakesPage() {
   const openPaymentModal = (cake: ApprovedCustomCake) => {
     setSelectedCake(cake);
     setPaymentForm({
-      payment_method: 'cash',
+      payment_method: "cash",
       amount_paid: cake.approved_price,
     });
     setShowPaymentModal(true);
@@ -87,7 +110,7 @@ export default function CashierCustomCakesPage() {
   const closePaymentModal = () => {
     setShowPaymentModal(false);
     setSelectedCake(null);
-    setPaymentForm({ payment_method: 'cash', amount_paid: 0 });
+    setPaymentForm({ payment_method: "cash", amount_paid: 0 });
   };
 
   // Process payment
@@ -95,25 +118,35 @@ export default function CashierCustomCakesPage() {
     if (!selectedCake) return;
 
     // Validate payment amount
-    if (!CustomCakeCashierService.isValidPayment(paymentForm.amount_paid, selectedCake.approved_price)) {
-      setErrorMessage('Payment amount must be greater than or equal to the total amount');
+    if (
+      !CustomCakeCashierService.isValidPayment(
+        paymentForm.amount_paid,
+        selectedCake.approved_price,
+      )
+    ) {
+      setErrorMessage(
+        "Payment amount must be greater than or equal to the total amount",
+      );
+
       return;
     }
 
     try {
       setProcessingPayment(true);
-      setErrorMessage('');
+      setErrorMessage("");
 
       const result = await CustomCakeCashierService.processPayment(
         selectedCake.request_id,
-        paymentForm
+        paymentForm,
       );
 
-      setSuccessMessage(`Payment processed successfully! Order #${result.order_id} created.`);
+      setSuccessMessage(
+        `Payment processed successfully! Order #${result.order_id} created.`,
+      );
       closePaymentModal();
       fetchApprovedCakes(); // Refresh list
     } catch (error: any) {
-      setErrorMessage(error.message || 'Failed to process payment');
+      setErrorMessage(error.message || "Failed to process payment");
     } finally {
       setProcessingPayment(false);
     }
@@ -122,15 +155,17 @@ export default function CashierCustomCakesPage() {
   // Calculate change
   const calculateChange = () => {
     if (!selectedCake) return 0;
+
     return CustomCakeCashierService.calculateChange(
       paymentForm.amount_paid,
-      selectedCake.approved_price
+      selectedCake.approved_price,
     );
   };
 
   // Filter cakes by search term
-  const filteredCakes = approvedCakes.filter(cake => {
+  const filteredCakes = approvedCakes.filter((cake) => {
     const search = searchTerm.toLowerCase();
+
     return (
       cake.customer_name?.toLowerCase().includes(search) ||
       cake.customer_phone?.toLowerCase().includes(search) ||
@@ -142,18 +177,22 @@ export default function CashierCustomCakesPage() {
     <div className="min-h-screen">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-rich-brown mb-2">Custom Cake Payments</h1>
-        <p className="text-warm-brown">Process payments for approved custom cake orders</p>
+        <h1 className="text-3xl font-bold text-rich-brown mb-2">
+          Custom Cake Payments
+        </h1>
+        <p className="text-warm-brown">
+          Process payments for approved custom cake orders
+        </p>
       </div>
 
       {/* Success/Error Messages */}
       <AnimatePresence>
         {successMessage && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
             className="mb-4"
+            exit={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -20 }}
           >
             <Card className="bg-success-50 border-2 border-success">
               <CardBody className="flex flex-row items-center gap-2">
@@ -166,10 +205,10 @@ export default function CashierCustomCakesPage() {
 
         {errorMessage && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
             className="mb-4"
+            exit={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -20 }}
           >
             <Card className="bg-danger-50 border-2 border-danger">
               <CardBody>
@@ -190,7 +229,9 @@ export default function CashierCustomCakesPage() {
               </div>
               <div>
                 <p className="text-sm text-warm-brown">Awaiting Payment</p>
-                <p className="text-2xl font-bold text-rich-brown">{approvedCakes.length}</p>
+                <p className="text-2xl font-bold text-rich-brown">
+                  {approvedCakes.length}
+                </p>
               </div>
             </div>
           </CardBody>
@@ -206,7 +247,10 @@ export default function CashierCustomCakesPage() {
                 <p className="text-sm text-warm-brown">Total Value</p>
                 <p className="text-2xl font-bold text-rich-brown">
                   {CustomCakeCashierService.formatPrice(
-                    approvedCakes.reduce((sum, cake) => sum + cake.approved_price, 0)
+                    approvedCakes.reduce(
+                      (sum, cake) => sum + cake.approved_price,
+                      0,
+                    ),
                   )}
                 </p>
               </div>
@@ -223,13 +267,17 @@ export default function CashierCustomCakesPage() {
               <div>
                 <p className="text-sm text-warm-brown">Pickup This Week</p>
                 <p className="text-2xl font-bold text-rich-brown">
-                  {approvedCakes.filter(cake => {
-                    const pickupDate = new Date(cake.scheduled_pickup_date);
-                    const today = new Date();
-                    const weekFromNow = new Date();
-                    weekFromNow.setDate(today.getDate() + 7);
-                    return pickupDate >= today && pickupDate <= weekFromNow;
-                  }).length}
+                  {
+                    approvedCakes.filter((cake) => {
+                      const pickupDate = new Date(cake.scheduled_pickup_date);
+                      const today = new Date();
+                      const weekFromNow = new Date();
+
+                      weekFromNow.setDate(today.getDate() + 7);
+
+                      return pickupDate >= today && pickupDate <= weekFromNow;
+                    }).length
+                  }
                 </p>
               </div>
             </div>
@@ -242,14 +290,18 @@ export default function CashierCustomCakesPage() {
         <CardHeader className="flex flex-col gap-4 p-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h2 className="text-xl font-bold text-rich-brown">Approved Custom Cakes</h2>
-              <p className="text-sm text-warm-brown mt-1">Ready for payment processing</p>
+              <h2 className="text-xl font-bold text-rich-brown">
+                Approved Custom Cakes
+              </h2>
+              <p className="text-sm text-warm-brown mt-1">
+                Ready for payment processing
+              </p>
             </div>
             <Button
               color="primary"
+              isLoading={loading}
               size="sm"
               onPress={fetchApprovedCakes}
-              isLoading={loading}
             >
               Refresh
             </Button>
@@ -258,12 +310,14 @@ export default function CashierCustomCakesPage() {
           {/* Search Bar */}
           <div className="w-full md:w-96">
             <Input
+              isClearable
               placeholder="Search by customer name, phone, or request ID..."
+              startContent={
+                <MagnifyingGlassIcon className="h-5 w-5 text-default-400" />
+              }
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              startContent={<MagnifyingGlassIcon className="h-5 w-5 text-default-400" />}
-              isClearable
-              onClear={() => setSearchTerm('')}
+              onClear={() => setSearchTerm("")}
             />
           </div>
         </CardHeader>
@@ -274,7 +328,7 @@ export default function CashierCustomCakesPage() {
           {loading ? (
             <div className="flex justify-center items-center py-12">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rich-brown mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-rich-brown mx-auto mb-4" />
                 <p className="text-warm-brown">Loading approved cakes...</p>
               </div>
             </div>
@@ -282,7 +336,9 @@ export default function CashierCustomCakesPage() {
             <div className="text-center py-12">
               <CakeIcon className="h-16 w-16 text-default-300 mx-auto mb-4" />
               <p className="text-lg text-warm-brown">
-                {searchTerm ? 'No cakes found matching your search' : 'No approved cakes awaiting payment'}
+                {searchTerm
+                  ? "No cakes found matching your search"
+                  : "No approved cakes awaiting payment"}
               </p>
             </div>
           ) : (
@@ -299,7 +355,7 @@ export default function CashierCustomCakesPage() {
                 {filteredCakes.map((cake) => (
                   <TableRow key={cake.request_id}>
                     <TableCell>
-                      <Chip color="primary" variant="flat" size="sm">
+                      <Chip color="primary" size="sm" variant="flat">
                         #{cake.request_id}
                       </Chip>
                     </TableCell>
@@ -307,7 +363,9 @@ export default function CashierCustomCakesPage() {
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
                           <UserIcon className="h-4 w-4 text-default-500" />
-                          <span className="font-medium">{cake.customer_name}</span>
+                          <span className="font-medium">
+                            {cake.customer_name}
+                          </span>
                         </div>
                         {cake.customer_phone && (
                           <div className="flex items-center gap-2 text-sm text-default-500">
@@ -318,15 +376,21 @@ export default function CashierCustomCakesPage() {
                         {cake.customer_email && (
                           <div className="flex items-center gap-2 text-sm text-default-500">
                             <EnvelopeIcon className="h-3 w-3" />
-                            <span className="truncate max-w-[200px]">{cake.customer_email}</span>
+                            <span className="truncate max-w-[200px]">
+                              {cake.customer_email}
+                            </span>
                           </div>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        <p className="font-medium">{cake.num_layers} Layer Cake</p>
-                        <p className="text-sm text-default-500">{cake.preparation_days} days prep</p>
+                        <p className="font-medium">
+                          {cake.num_layers} Layer Cake
+                        </p>
+                        <p className="text-sm text-default-500">
+                          {cake.preparation_days} days prep
+                        </p>
                         {cake.special_instructions && (
                           <p className="text-xs text-default-400 italic truncate max-w-[200px]">
                             {cake.special_instructions}
@@ -339,21 +403,27 @@ export default function CashierCustomCakesPage() {
                         <CalendarIcon className="h-4 w-4 text-default-500" />
                         <div>
                           <p className="font-medium">
-                            {new Date(cake.scheduled_pickup_date).toLocaleDateString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
+                            {new Date(
+                              cake.scheduled_pickup_date,
+                            ).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
                             })}
                           </p>
                           {cake.scheduled_pickup_time && (
-                            <p className="text-sm text-default-500">{cake.scheduled_pickup_time}</p>
+                            <p className="text-sm text-default-500">
+                              {cake.scheduled_pickup_time}
+                            </p>
                           )}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <p className="text-lg font-bold text-success">
-                        {CustomCakeCashierService.formatPrice(cake.approved_price)}
+                        {CustomCakeCashierService.formatPrice(
+                          cake.approved_price,
+                        )}
                       </p>
                     </TableCell>
                     <TableCell>
@@ -376,15 +446,18 @@ export default function CashierCustomCakesPage() {
       {/* Payment Modal */}
       <Modal
         isOpen={showPaymentModal}
-        onClose={closePaymentModal}
-        size="2xl"
         scrollBehavior="inside"
+        size="2xl"
+        onClose={closePaymentModal}
       >
         <ModalContent>
           <ModalHeader className="flex flex-col gap-1">
-            <h3 className="text-xl font-bold text-rich-brown">Process Payment</h3>
+            <h3 className="text-xl font-bold text-rich-brown">
+              Process Payment
+            </h3>
             <p className="text-sm text-warm-brown font-normal">
-              Request #{selectedCake?.request_id} - {selectedCake?.customer_name}
+              Request #{selectedCake?.request_id} -{" "}
+              {selectedCake?.customer_name}
             </p>
           </ModalHeader>
           <Divider />
@@ -394,19 +467,29 @@ export default function CashierCustomCakesPage() {
                 {/* Order Summary */}
                 <Card className="bg-cream-white">
                   <CardBody>
-                    <h4 className="font-bold text-rich-brown mb-3">Order Summary</h4>
+                    <h4 className="font-bold text-rich-brown mb-3">
+                      Order Summary
+                    </h4>
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-warm-brown">Custom Cake ({selectedCake.num_layers} layers)</span>
+                        <span className="text-warm-brown">
+                          Custom Cake ({selectedCake.num_layers} layers)
+                        </span>
                         <span className="font-medium">
-                          {CustomCakeCashierService.formatPrice(selectedCake.approved_price)}
+                          {CustomCakeCashierService.formatPrice(
+                            selectedCake.approved_price,
+                          )}
                         </span>
                       </div>
                       <Divider className="my-2" />
                       <div className="flex justify-between text-lg">
-                        <span className="font-bold text-rich-brown">Total Amount</span>
+                        <span className="font-bold text-rich-brown">
+                          Total Amount
+                        </span>
                         <span className="font-bold text-success">
-                          {CustomCakeCashierService.formatPrice(selectedCake.approved_price)}
+                          {CustomCakeCashierService.formatPrice(
+                            selectedCake.approved_price,
+                          )}
                         </span>
                       </div>
                     </div>
@@ -421,7 +504,10 @@ export default function CashierCustomCakesPage() {
                   <Select
                     selectedKeys={[paymentForm.payment_method]}
                     onChange={(e) =>
-                      setPaymentForm({ ...paymentForm, payment_method: e.target.value as any })
+                      setPaymentForm({
+                        ...paymentForm,
+                        payment_method: e.target.value as any,
+                      })
                     }
                   >
                     <SelectItem key="cash">Cash</SelectItem>
@@ -436,48 +522,61 @@ export default function CashierCustomCakesPage() {
                     Amount Paid
                   </label>
                   <Input
+                    min={0}
+                    startContent={<span className="text-default-400">₱</span>}
+                    step={0.01}
                     type="number"
                     value={paymentForm.amount_paid.toString()}
                     onChange={(e) =>
-                      setPaymentForm({ ...paymentForm, amount_paid: parseFloat(e.target.value) || 0 })
+                      setPaymentForm({
+                        ...paymentForm,
+                        amount_paid: parseFloat(e.target.value) || 0,
+                      })
                     }
-                    startContent={<span className="text-default-400">₱</span>}
-                    min={0}
-                    step={0.01}
                   />
                 </div>
 
                 {/* Change Calculation */}
-                {paymentForm.payment_method === 'cash' && paymentForm.amount_paid > 0 && (
-                  <Card className="bg-success-50 border-2 border-success">
-                    <CardBody>
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium text-success">Change Due:</span>
-                        <span className="text-2xl font-bold text-success">
-                          {CustomCakeCashierService.formatPrice(calculateChange())}
-                        </span>
-                      </div>
-                    </CardBody>
-                  </Card>
-                )}
+                {paymentForm.payment_method === "cash" &&
+                  paymentForm.amount_paid > 0 && (
+                    <Card className="bg-success-50 border-2 border-success">
+                      <CardBody>
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium text-success">
+                            Change Due:
+                          </span>
+                          <span className="text-2xl font-bold text-success">
+                            {CustomCakeCashierService.formatPrice(
+                              calculateChange(),
+                            )}
+                          </span>
+                        </div>
+                      </CardBody>
+                    </Card>
+                  )}
 
                 {/* Pickup Information */}
                 <Card className="bg-warning-50 border-2 border-warning">
                   <CardBody>
-                    <h4 className="font-bold text-warning mb-2">Pickup Details</h4>
+                    <h4 className="font-bold text-warning mb-2">
+                      Pickup Details
+                    </h4>
                     <div className="space-y-1 text-sm">
                       <p>
-                        <span className="font-medium">Date:</span>{' '}
-                        {new Date(selectedCake.scheduled_pickup_date).toLocaleDateString('en-US', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
+                        <span className="font-medium">Date:</span>{" "}
+                        {new Date(
+                          selectedCake.scheduled_pickup_date,
+                        ).toLocaleDateString("en-US", {
+                          weekday: "long",
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
                         })}
                       </p>
                       {selectedCake.scheduled_pickup_time && (
                         <p>
-                          <span className="font-medium">Time:</span> {selectedCake.scheduled_pickup_time}
+                          <span className="font-medium">Time:</span>{" "}
+                          {selectedCake.scheduled_pickup_time}
                         </p>
                       )}
                     </div>
@@ -488,22 +587,26 @@ export default function CashierCustomCakesPage() {
           </ModalBody>
           <Divider />
           <ModalFooter>
-            <Button variant="light" onPress={closePaymentModal} isDisabled={processingPayment}>
+            <Button
+              isDisabled={processingPayment}
+              variant="light"
+              onPress={closePaymentModal}
+            >
               Cancel
             </Button>
             <Button
               color="success"
-              onPress={handleProcessPayment}
-              isLoading={processingPayment}
               isDisabled={
                 !selectedCake ||
                 !CustomCakeCashierService.isValidPayment(
                   paymentForm.amount_paid,
-                  selectedCake?.approved_price || 0
+                  selectedCake?.approved_price || 0,
                 )
               }
+              isLoading={processingPayment}
+              onPress={handleProcessPayment}
             >
-              {processingPayment ? 'Processing...' : 'Confirm Payment'}
+              {processingPayment ? "Processing..." : "Confirm Payment"}
             </Button>
           </ModalFooter>
         </ModalContent>

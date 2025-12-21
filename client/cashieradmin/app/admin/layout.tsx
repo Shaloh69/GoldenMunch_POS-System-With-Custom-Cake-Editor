@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { ProtectedRoute } from '@/components/protected-route';
-import { Sidebar } from '@/components/sidebar';
+import { ProtectedRoute } from "@/components/protected-route";
+import { Sidebar } from "@/components/sidebar";
 
 export default function AdminLayout({
   children,
@@ -13,9 +13,7 @@ export default function AdminLayout({
       <div className="flex h-screen overflow-hidden">
         <Sidebar />
         <main className="flex-1 overflow-y-auto bg-mesh-gradient">
-          <div className="container mx-auto p-6">
-            {children}
-          </div>
+          <div className="container mx-auto p-6">{children}</div>
         </main>
       </div>
     </ProtectedRoute>

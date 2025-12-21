@@ -1,4 +1,4 @@
-import { apiClient } from '@/lib/api-client';
+import { apiClient } from "@/lib/api-client";
 
 /**
  * Approved Custom Cake (ready for payment)
@@ -22,7 +22,7 @@ export interface ApprovedCustomCake {
  * Payment Request Data
  */
 export interface ProcessPaymentData {
-  payment_method: 'cash' | 'gcash' | 'maya';
+  payment_method: "cash" | "gcash" | "maya";
   amount_paid: number;
 }
 
@@ -34,7 +34,10 @@ export class CustomCakeCashierService {
    * Get all approved custom cakes ready for payment
    */
   static async getApprovedCakes(): Promise<ApprovedCustomCake[]> {
-    const response = await apiClient.get<ApprovedCustomCake[]>('/cashier/custom-cakes/approved');
+    const response = await apiClient.get<ApprovedCustomCake[]>(
+      "/cashier/custom-cakes/approved",
+    );
+
     return response.data || [];
   }
 
@@ -43,33 +46,26 @@ export class CustomCakeCashierService {
    */
   static async processPayment(
     requestId: number,
-    data: ProcessPaymentData
+    data: ProcessPaymentData,
   ): Promise<{ order_id: number }> {
     const response = await apiClient.post<{ order_id: number }>(
       `/cashier/custom-cakes/${requestId}/process-payment`,
-      data
+      data,
     );
-    
 
     // Check if response was successful
 
     if (!response.success) {
-
-      throw new Error(response.message || response.error || 'Failed to process payment');
-
+      throw new Error(
+        response.message || response.error || "Failed to process payment",
+      );
     }
-
- 
 
     // Ensure data exists
 
     if (!response.data) {
-
-      throw new Error('No data returned from payment processing');
-
+      throw new Error("No data returned from payment processing");
     }
-
- 
 
     return response.data;
   }
@@ -78,9 +74,9 @@ export class CustomCakeCashierService {
    * Format price to Philippine Peso
    */
   static formatPrice(price: number): string {
-    return new Intl.NumberFormat('en-PH', {
-      style: 'currency',
-      currency: 'PHP',
+    return new Intl.NumberFormat("en-PH", {
+      style: "currency",
+      currency: "PHP",
     }).format(price);
   }
 

@@ -1,5 +1,6 @@
-import { apiClient } from '@/lib/api-client';
-import type { CustomCakeRequest } from '@/types/api';
+import type { CustomCakeRequest } from "@/types/api";
+
+import { apiClient } from "@/lib/api-client";
 
 /**
  * Custom Cake Request Details (from stored procedure)
@@ -56,7 +57,10 @@ export class CustomCakeRequestService {
    * Get all pending custom cake requests
    */
   static async getPendingRequests(): Promise<CustomCakeRequest[]> {
-    const response = await apiClient.get<CustomCakeRequest[]>('/admin/custom-cakes/pending');
+    const response = await apiClient.get<CustomCakeRequest[]>(
+      "/admin/custom-cakes/pending",
+    );
+
     return response.data || [];
   }
 
@@ -64,15 +68,23 @@ export class CustomCakeRequestService {
    * Get ALL custom cake requests (all statuses)
    */
   static async getAllRequests(): Promise<CustomCakeRequest[]> {
-    const response = await apiClient.get<CustomCakeRequest[]>('/admin/custom-cakes/all');
+    const response = await apiClient.get<CustomCakeRequest[]>(
+      "/admin/custom-cakes/all",
+    );
+
     return response.data || [];
   }
 
   /**
    * Get detailed information about a custom cake request
    */
-  static async getRequestDetails(requestId: number): Promise<CustomCakeRequestDetails> {
-    const response = await apiClient.get<CustomCakeRequestDetails>(`/admin/custom-cakes/${requestId}`);
+  static async getRequestDetails(
+    requestId: number,
+  ): Promise<CustomCakeRequestDetails> {
+    const response = await apiClient.get<CustomCakeRequestDetails>(
+      `/admin/custom-cakes/${requestId}`,
+    );
+
     return response.data as CustomCakeRequestDetails;
   }
 
@@ -81,9 +93,12 @@ export class CustomCakeRequestService {
    */
   static async approveRequest(
     requestId: number,
-    data: ApproveCustomCakeData
+    data: ApproveCustomCakeData,
   ): Promise<void> {
-    await apiClient.post<void>(`/admin/custom-cakes/${requestId}/approve`, data);
+    await apiClient.post<void>(
+      `/admin/custom-cakes/${requestId}/approve`,
+      data,
+    );
   }
 
   /**
@@ -91,7 +106,7 @@ export class CustomCakeRequestService {
    */
   static async rejectRequest(
     requestId: number,
-    data: RejectCustomCakeData
+    data: RejectCustomCakeData,
   ): Promise<void> {
     await apiClient.post<void>(`/admin/custom-cakes/${requestId}/reject`, data);
   }
@@ -107,9 +122,13 @@ export class CustomCakeRequestService {
 
     const numLayers = request.num_layers || 1;
     const hasTheme = !!request.theme_id;
-    const hasDecorations = request.decorations_3d && Array.isArray(request.decorations_3d) && request.decorations_3d.length > 0;
+    const hasDecorations =
+      request.decorations_3d &&
+      Array.isArray(request.decorations_3d) &&
+      request.decorations_3d.length > 0;
 
     let total = BASE_PRICE;
+
     total += (numLayers - 1) * LAYER_PRICE;
     if (hasTheme) total += THEME_COST;
     if (hasDecorations) total += DECORATION_COST;
@@ -121,9 +140,9 @@ export class CustomCakeRequestService {
    * Format price to Philippine Peso
    */
   static formatPrice(price: number): string {
-    return new Intl.NumberFormat('en-PH', {
-      style: 'currency',
-      currency: 'PHP',
+    return new Intl.NumberFormat("en-PH", {
+      style: "currency",
+      currency: "PHP",
     }).format(price);
   }
 
@@ -132,20 +151,20 @@ export class CustomCakeRequestService {
    */
   static getStatusColor(status: string): string {
     switch (status) {
-      case 'draft':
-        return 'default';
-      case 'pending_review':
-        return 'warning';
-      case 'approved':
-        return 'success';
-      case 'rejected':
-        return 'danger';
-      case 'completed':
-        return 'primary';
-      case 'cancelled':
-        return 'default';
+      case "draft":
+        return "default";
+      case "pending_review":
+        return "warning";
+      case "approved":
+        return "success";
+      case "rejected":
+        return "danger";
+      case "completed":
+        return "primary";
+      case "cancelled":
+        return "default";
       default:
-        return 'default';
+        return "default";
     }
   }
 
@@ -154,12 +173,13 @@ export class CustomCakeRequestService {
    */
   static getStatusLabel(status: string): string {
     if (!status) {
-      return 'Unknown';
+      return "Unknown";
     }
+
     return status
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   }
 }
 

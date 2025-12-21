@@ -1,19 +1,17 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { Card, CardBody, CardHeader } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { Input } from '@heroui/input';
-import { Select, SelectItem } from '@heroui/select';
-import { Chip } from '@heroui/chip';
-import { Divider } from '@heroui/divider';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from '@heroui/modal';
-import { Spinner } from '@heroui/spinner';
-import Image from 'next/image';
-import { MenuService } from '@/services/menu.service';
-import { DiscountService } from '@/services/discount.service';
-import { OrderService } from '@/services/order.service';
-import type { MenuItem, CustomerDiscountType } from '@/types/api';
+import type { MenuItem, CustomerDiscountType } from "@/types/api";
+
+import { useEffect, useState } from "react";
+import { Card, CardBody, CardHeader } from "@heroui/card";
+import { Button } from "@heroui/button";
+import { Input } from "@heroui/input";
+import { Select, SelectItem } from "@heroui/select";
+import { Chip } from "@heroui/chip";
+import { Divider } from "@heroui/divider";
+import { Modal, ModalContent, ModalHeader, ModalBody } from "@heroui/modal";
+import { Spinner } from "@heroui/spinner";
+import Image from "next/image";
 import {
   PlusIcon,
   MinusIcon,
@@ -25,9 +23,13 @@ import {
   PhoneIcon,
   CheckCircleIcon,
   MagnifyingGlassIcon,
-} from '@heroicons/react/24/outline';
-import { motion, AnimatePresence } from 'framer-motion';
-import { getImageUrl } from '@/utils/imageUtils';
+} from "@heroicons/react/24/outline";
+import { motion, AnimatePresence } from "framer-motion";
+
+import { MenuService } from "@/services/menu.service";
+import { DiscountService } from "@/services/discount.service";
+import { OrderService } from "@/services/order.service";
+import { getImageUrl } from "@/utils/imageUtils";
 
 interface CartItem {
   menuItem: MenuItem;
@@ -38,9 +40,9 @@ interface CartItem {
 interface OrderForm {
   customer_name: string;
   customer_phone: string;
-  order_type: 'dine_in' | 'takeout' | 'delivery';
+  order_type: "dine_in" | "takeout" | "delivery";
   customer_discount_type_id: number | null;
-  payment_method: 'cash' | 'gcash' | 'maya';
+  payment_method: "cash" | "gcash" | "maya";
   amount_paid: number;
 }
 
@@ -49,27 +51,28 @@ export default function NewOrderPage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Discount State
   const [discounts, setDiscounts] = useState<CustomerDiscountType[]>([]);
-  const [selectedDiscount, setSelectedDiscount] = useState<CustomerDiscountType | null>(null);
+  const [selectedDiscount, setSelectedDiscount] =
+    useState<CustomerDiscountType | null>(null);
 
   // Order Form State
   const [orderForm, setOrderForm] = useState<OrderForm>({
-    customer_name: '',
-    customer_phone: '',
-    order_type: 'takeout',
+    customer_name: "",
+    customer_phone: "",
+    order_type: "takeout",
     customer_discount_type_id: null,
-    payment_method: 'cash',
+    payment_method: "cash",
     amount_paid: 0,
   });
 
   // UI State
   const [processingOrder, setProcessingOrder] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [createdOrderId, setCreatedOrderId] = useState<number | null>(null);
 
   // Load menu items and discounts
@@ -82,18 +85,22 @@ export default function NewOrderPage() {
       setLoading(true);
 
       // Load menu items (status=available filters for active items)
-      const menuResponse = await MenuService.getMenuItems({ status: 'available' });
+      const menuResponse = await MenuService.getMenuItems({
+        status: "available",
+      });
+
       if (menuResponse.success && menuResponse.data) {
         setMenuItems(menuResponse.data);
       }
 
       // Load active discounts
       const discountResponse = await DiscountService.getActiveDiscountTypes();
+
       if (discountResponse.success && discountResponse.data) {
         setDiscounts(discountResponse.data);
       }
     } catch (error: any) {
-      setErrorMessage(error.message || 'Failed to load data');
+      setErrorMessage(error.message || "Failed to load data");
     } finally {
       setLoading(false);
     }
@@ -101,7 +108,9 @@ export default function NewOrderPage() {
 
   // Cart Operations
   const addToCart = (item: MenuItem) => {
-    const existingItem = cartItems.find(ci => ci.menuItem.menu_item_id === item.menu_item_id);
+    const existingItem = cartItems.find(
+      (ci) => ci.menuItem.menu_item_id === item.menu_item_id,
+    );
 
     if (existingItem) {
       updateQuantity(item.menu_item_id, existingItem.quantity + 1);
@@ -120,30 +129,35 @@ export default function NewOrderPage() {
   const updateQuantity = (itemId: number, newQuantity: number) => {
     if (newQuantity <= 0) {
       removeFromCart(itemId);
+
       return;
     }
 
     setCartItems(
-      cartItems.map(ci =>
+      cartItems.map((ci) =>
         ci.menuItem.menu_item_id === itemId
-          ? { ...ci, quantity: newQuantity, subtotal: Number(ci.menuItem.current_price) * newQuantity }
-          : ci
-      )
+          ? {
+              ...ci,
+              quantity: newQuantity,
+              subtotal: Number(ci.menuItem.current_price) * newQuantity,
+            }
+          : ci,
+      ),
     );
   };
 
   const removeFromCart = (itemId: number) => {
-    setCartItems(cartItems.filter(ci => ci.menuItem.menu_item_id !== itemId));
+    setCartItems(cartItems.filter((ci) => ci.menuItem.menu_item_id !== itemId));
   };
 
   const clearCart = () => {
     setCartItems([]);
     setOrderForm({
-      customer_name: '',
-      customer_phone: '',
-      order_type: 'takeout',
+      customer_name: "",
+      customer_phone: "",
+      order_type: "takeout",
       customer_discount_type_id: null,
-      payment_method: 'cash',
+      payment_method: "cash",
       amount_paid: 0,
     });
     setSelectedDiscount(null);
@@ -157,6 +171,7 @@ export default function NewOrderPage() {
   const calculateDiscount = () => {
     if (!selectedDiscount) return 0;
     const subtotal = calculateSubtotal();
+
     return (subtotal * selectedDiscount.discount_percentage) / 100;
   };
 
@@ -165,22 +180,30 @@ export default function NewOrderPage() {
   };
 
   const calculateChange = () => {
-    if (orderForm.payment_method !== 'cash') return 0;
+    if (orderForm.payment_method !== "cash") return 0;
+
     return Math.max(0, orderForm.amount_paid - calculateTotal());
   };
 
   // Handle discount selection
   const handleDiscountChange = (discountId: string) => {
-    if (!discountId || discountId === 'none') {
+    if (!discountId || discountId === "none") {
       setSelectedDiscount(null);
       setOrderForm({ ...orderForm, customer_discount_type_id: null });
+
       return;
     }
 
-    const discount = discounts.find(d => d.discount_type_id === parseInt(discountId));
+    const discount = discounts.find(
+      (d) => d.discount_type_id === parseInt(discountId),
+    );
+
     if (discount) {
       setSelectedDiscount(discount);
-      setOrderForm({ ...orderForm, customer_discount_type_id: discount.discount_type_id });
+      setOrderForm({
+        ...orderForm,
+        customer_discount_type_id: discount.discount_type_id,
+      });
     }
   };
 
@@ -188,23 +211,29 @@ export default function NewOrderPage() {
   const handleSubmitOrder = async () => {
     // Validation
     if (cartItems.length === 0) {
-      setErrorMessage('Please add items to cart');
+      setErrorMessage("Please add items to cart");
+
       return;
     }
 
     if (!orderForm.customer_name.trim()) {
-      setErrorMessage('Please enter customer name');
+      setErrorMessage("Please enter customer name");
+
       return;
     }
 
-    if (orderForm.payment_method === 'cash' && orderForm.amount_paid < calculateTotal()) {
-      setErrorMessage('Amount paid is less than total');
+    if (
+      orderForm.payment_method === "cash" &&
+      orderForm.amount_paid < calculateTotal()
+    ) {
+      setErrorMessage("Amount paid is less than total");
+
       return;
     }
 
     try {
       setProcessingOrder(true);
-      setErrorMessage('');
+      setErrorMessage("");
 
       // Prepare order data
       const orderData = {
@@ -212,22 +241,27 @@ export default function NewOrderPage() {
         customer_phone: orderForm.customer_phone || null,
         order_type: orderForm.order_type,
         customer_discount_type_id: orderForm.customer_discount_type_id,
-        items: cartItems.map(ci => ({
+        items: cartItems.map((ci) => ({
           menu_item_id: ci.menuItem.menu_item_id,
           quantity: ci.quantity,
           unit_price: Number(ci.menuItem.current_price),
         })),
         payment_method: orderForm.payment_method,
-        amount_paid: orderForm.payment_method === 'cash' ? orderForm.amount_paid : calculateTotal(),
-        order_source: 'cashier',
+        amount_paid:
+          orderForm.payment_method === "cash"
+            ? orderForm.amount_paid
+            : calculateTotal(),
+        order_source: "cashier",
       };
 
       const response = await OrderService.createOrder(orderData);
 
       if (response.success && response.data) {
-        const orderId = typeof response.data === 'object'
-          ? (response.data as any).order_id
-          : response.data;
+        const orderId =
+          typeof response.data === "object"
+            ? (response.data as any).order_id
+            : response.data;
+
         setCreatedOrderId(orderId);
         setSuccessMessage(`Order #${orderId} created successfully!`);
         setShowSuccessModal(true);
@@ -238,36 +272,40 @@ export default function NewOrderPage() {
           setShowSuccessModal(false);
         }, 3000);
       } else {
-        setErrorMessage(response.message || 'Failed to create order');
+        setErrorMessage(response.message || "Failed to create order");
       }
     } catch (error: any) {
-      setErrorMessage(error.message || 'Failed to create order');
+      setErrorMessage(error.message || "Failed to create order");
     } finally {
       setProcessingOrder(false);
     }
   };
 
   // Filter menu items by search
-  const filteredMenuItems = menuItems.filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredMenuItems = menuItems.filter((item) =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
     <div className="min-h-screen">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-rich-brown mb-2">Create New Order</h1>
-        <p className="text-warm-brown">Create walk-in orders with discount support</p>
+        <h1 className="text-3xl font-bold text-rich-brown mb-2">
+          Create New Order
+        </h1>
+        <p className="text-warm-brown">
+          Create walk-in orders with discount support
+        </p>
       </div>
 
       {/* Error Message */}
       <AnimatePresence>
         {errorMessage && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
             className="mb-4"
+            exit={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -20 }}
           >
             <Card className="bg-danger-50 border-2 border-danger">
               <CardBody>
@@ -284,17 +322,21 @@ export default function NewOrderPage() {
           <Card className="shadow-lg">
             <CardHeader className="flex flex-col gap-4 p-6">
               <div className="flex items-center justify-between w-full">
-                <h2 className="text-xl font-bold text-rich-brown">Menu Items</h2>
+                <h2 className="text-xl font-bold text-rich-brown">
+                  Menu Items
+                </h2>
               </div>
 
               {/* Search */}
               <Input
+                isClearable
                 placeholder="Search menu items..."
+                startContent={
+                  <MagnifyingGlassIcon className="h-5 w-5 text-default-400" />
+                }
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                startContent={<MagnifyingGlassIcon className="h-5 w-5 text-default-400" />}
-                isClearable
-                onClear={() => setSearchTerm('')}
+                onClear={() => setSearchTerm("")}
               />
             </CardHeader>
 
@@ -311,20 +353,20 @@ export default function NewOrderPage() {
                     <Card
                       key={item.menu_item_id}
                       isPressable
-                      onPress={() => addToCart(item)}
                       className="hover:scale-105 transition-transform cursor-pointer"
+                      onPress={() => addToCart(item)}
                     >
                       <CardBody className="p-0">
                         {/* Image Section */}
                         <div className="relative h-40 w-full overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10">
                           {getImageUrl(item.image_url) ? (
                             <Image
-                              src={getImageUrl(item.image_url) || ''}
-                              alt={item.name}
                               fill
+                              unoptimized
+                              alt={item.name}
                               className="object-cover"
                               sizes="(max-width: 768px) 50vw, 33vw"
-                              unoptimized
+                              src={getImageUrl(item.image_url) || ""}
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
@@ -341,7 +383,7 @@ export default function NewOrderPage() {
                           <p className="text-lg font-bold text-success mb-2">
                             ₱{Number(item.current_price).toFixed(2)}
                           </p>
-                          <Chip size="sm" color="primary" variant="flat">
+                          <Chip color="primary" size="sm" variant="flat">
                             {item.item_type}
                           </Chip>
                         </div>
@@ -383,7 +425,9 @@ export default function NewOrderPage() {
                       className="flex items-center gap-3 p-3 bg-cream-white rounded-lg"
                     >
                       <div className="flex-1">
-                        <p className="font-medium text-rich-brown">{item.menuItem.name}</p>
+                        <p className="font-medium text-rich-brown">
+                          {item.menuItem.name}
+                        </p>
                         <p className="text-sm text-warm-brown">
                           ₱{Number(item.menuItem.current_price).toFixed(2)} each
                         </p>
@@ -391,31 +435,45 @@ export default function NewOrderPage() {
 
                       <div className="flex items-center gap-2">
                         <Button
-                          size="sm"
                           isIconOnly
+                          size="sm"
                           variant="flat"
-                          onPress={() => updateQuantity(item.menuItem.menu_item_id, item.quantity - 1)}
+                          onPress={() =>
+                            updateQuantity(
+                              item.menuItem.menu_item_id,
+                              item.quantity - 1,
+                            )
+                          }
                         >
                           <MinusIcon className="h-4 w-4" />
                         </Button>
 
-                        <span className="w-8 text-center font-bold">{item.quantity}</span>
+                        <span className="w-8 text-center font-bold">
+                          {item.quantity}
+                        </span>
 
                         <Button
-                          size="sm"
                           isIconOnly
+                          size="sm"
                           variant="flat"
-                          onPress={() => updateQuantity(item.menuItem.menu_item_id, item.quantity + 1)}
+                          onPress={() =>
+                            updateQuantity(
+                              item.menuItem.menu_item_id,
+                              item.quantity + 1,
+                            )
+                          }
                         >
                           <PlusIcon className="h-4 w-4" />
                         </Button>
 
                         <Button
-                          size="sm"
                           isIconOnly
                           color="danger"
+                          size="sm"
                           variant="flat"
-                          onPress={() => removeFromCart(item.menuItem.menu_item_id)}
+                          onPress={() =>
+                            removeFromCart(item.menuItem.menu_item_id)
+                          }
                         >
                           <TrashIcon className="h-4 w-4" />
                         </Button>
@@ -431,7 +489,9 @@ export default function NewOrderPage() {
           {cartItems.length > 0 && (
             <Card className="shadow-lg">
               <CardHeader className="p-4">
-                <h3 className="text-lg font-bold text-rich-brown">Customer Information</h3>
+                <h3 className="text-lg font-bold text-rich-brown">
+                  Customer Information
+                </h3>
               </CardHeader>
 
               <Divider />
@@ -439,21 +499,35 @@ export default function NewOrderPage() {
               <CardBody className="p-4 space-y-4">
                 {/* Customer Name */}
                 <Input
+                  isRequired
                   label="Customer Name"
                   placeholder="Enter customer name"
+                  startContent={
+                    <UserIcon className="h-4 w-4 text-default-400" />
+                  }
                   value={orderForm.customer_name}
-                  onChange={(e) => setOrderForm({ ...orderForm, customer_name: e.target.value })}
-                  startContent={<UserIcon className="h-4 w-4 text-default-400" />}
-                  isRequired
+                  onChange={(e) =>
+                    setOrderForm({
+                      ...orderForm,
+                      customer_name: e.target.value,
+                    })
+                  }
                 />
 
                 {/* Customer Phone */}
                 <Input
                   label="Phone Number (Optional)"
                   placeholder="Enter phone number"
+                  startContent={
+                    <PhoneIcon className="h-4 w-4 text-default-400" />
+                  }
                   value={orderForm.customer_phone}
-                  onChange={(e) => setOrderForm({ ...orderForm, customer_phone: e.target.value })}
-                  startContent={<PhoneIcon className="h-4 w-4 text-default-400" />}
+                  onChange={(e) =>
+                    setOrderForm({
+                      ...orderForm,
+                      customer_phone: e.target.value,
+                    })
+                  }
                 />
 
                 {/* Order Type */}
@@ -462,12 +536,16 @@ export default function NewOrderPage() {
                     Order Type
                   </label>
                   <Select
+                    isRequired
                     selectedKeys={[orderForm.order_type]}
                     onSelectionChange={(keys) => {
-                      const value = Array.from(keys)[0] as 'dine_in' | 'takeout' | 'delivery';
+                      const value = Array.from(keys)[0] as
+                        | "dine_in"
+                        | "takeout"
+                        | "delivery";
+
                       setOrderForm({ ...orderForm, order_type: value });
                     }}
-                    isRequired
                   >
                     <SelectItem key="takeout">🚗 Takeout</SelectItem>
                     <SelectItem key="dine_in">🍽️ Dine In</SelectItem>
@@ -485,19 +563,26 @@ export default function NewOrderPage() {
                   </label>
                   <Select
                     placeholder="Select discount type"
-                    selectedKeys={selectedDiscount ? [selectedDiscount.discount_type_id.toString()] : []}
+                    selectedKeys={
+                      selectedDiscount
+                        ? [selectedDiscount.discount_type_id.toString()]
+                        : []
+                    }
                     onSelectionChange={(keys) => {
                       const value = Array.from(keys)[0] as string;
+
                       handleDiscountChange(value);
                     }}
                   >
                     <SelectItem key="none">No Discount</SelectItem>
-                    {(discounts.map((discount) => (
-                      <SelectItem key={discount.discount_type_id.toString()}>
-                        {discount.name} - {discount.discount_percentage}%
-                        {discount.requires_id && ' (Requires ID)'}
-                      </SelectItem>
-                    )) as any)}
+                    {
+                      discounts.map((discount) => (
+                        <SelectItem key={discount.discount_type_id.toString()}>
+                          {discount.name} - {discount.discount_percentage}%
+                          {discount.requires_id && " (Requires ID)"}
+                        </SelectItem>
+                      )) as any
+                    }
                   </Select>
 
                   {selectedDiscount && selectedDiscount.requires_id && (
@@ -515,7 +600,11 @@ export default function NewOrderPage() {
                   <Select
                     selectedKeys={[orderForm.payment_method]}
                     onSelectionChange={(keys) => {
-                      const value = Array.from(keys)[0] as 'cash' | 'gcash' | 'maya';
+                      const value = Array.from(keys)[0] as
+                        | "cash"
+                        | "gcash"
+                        | "maya";
+
                       setOrderForm({ ...orderForm, payment_method: value });
                     }}
                   >
@@ -526,16 +615,19 @@ export default function NewOrderPage() {
                 </div>
 
                 {/* Amount Paid (Cash only) */}
-                {orderForm.payment_method === 'cash' && (
+                {orderForm.payment_method === "cash" && (
                   <Input
                     label="Amount Paid"
-                    type="number"
                     placeholder="0.00"
+                    startContent={<span className="text-default-400">₱</span>}
+                    type="number"
                     value={orderForm.amount_paid.toString()}
                     onChange={(e) =>
-                      setOrderForm({ ...orderForm, amount_paid: parseFloat(e.target.value) || 0 })
+                      setOrderForm({
+                        ...orderForm,
+                        amount_paid: parseFloat(e.target.value) || 0,
+                      })
                     }
-                    startContent={<span className="text-default-400">₱</span>}
                   />
                 )}
               </CardBody>
@@ -546,18 +638,26 @@ export default function NewOrderPage() {
           {cartItems.length > 0 && (
             <Card className="shadow-lg bg-gradient-to-br from-primary/10 to-secondary/10">
               <CardBody className="p-4 space-y-3">
-                <h3 className="text-lg font-bold text-rich-brown mb-2">Order Summary</h3>
+                <h3 className="text-lg font-bold text-rich-brown mb-2">
+                  Order Summary
+                </h3>
 
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-warm-brown">Subtotal:</span>
-                    <span className="font-bold">₱{calculateSubtotal().toFixed(2)}</span>
+                    <span className="font-bold">
+                      ₱{calculateSubtotal().toFixed(2)}
+                    </span>
                   </div>
 
                   {selectedDiscount && (
                     <div className="flex justify-between text-success">
-                      <span>Discount ({selectedDiscount.discount_percentage}%):</span>
-                      <span className="font-bold">-₱{calculateDiscount().toFixed(2)}</span>
+                      <span>
+                        Discount ({selectedDiscount.discount_percentage}%):
+                      </span>
+                      <span className="font-bold">
+                        -₱{calculateDiscount().toFixed(2)}
+                      </span>
                     </div>
                   )}
 
@@ -565,42 +665,49 @@ export default function NewOrderPage() {
 
                   <div className="flex justify-between text-lg">
                     <span className="font-bold text-rich-brown">Total:</span>
-                    <span className="font-bold text-success">₱{calculateTotal().toFixed(2)}</span>
+                    <span className="font-bold text-success">
+                      ₱{calculateTotal().toFixed(2)}
+                    </span>
                   </div>
 
-                  {orderForm.payment_method === 'cash' && orderForm.amount_paid > 0 && (
-                    <>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-warm-brown">Amount Paid:</span>
-                        <span>₱{orderForm.amount_paid.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-warm-brown">Change:</span>
-                        <span className="font-bold text-warning">₱{calculateChange().toFixed(2)}</span>
-                      </div>
-                    </>
-                  )}
+                  {orderForm.payment_method === "cash" &&
+                    orderForm.amount_paid > 0 && (
+                      <>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-warm-brown">Amount Paid:</span>
+                          <span>₱{orderForm.amount_paid.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-warm-brown">Change:</span>
+                          <span className="font-bold text-warning">
+                            ₱{calculateChange().toFixed(2)}
+                          </span>
+                        </div>
+                      </>
+                    )}
                 </div>
 
                 <Divider />
 
                 <Button
-                  color="success"
-                  size="lg"
                   className="w-full font-bold"
-                  onPress={handleSubmitOrder}
+                  color="success"
                   isLoading={processingOrder}
-                  startContent={!processingOrder && <BanknotesIcon className="h-5 w-5" />}
+                  size="lg"
+                  startContent={
+                    !processingOrder && <BanknotesIcon className="h-5 w-5" />
+                  }
+                  onPress={handleSubmitOrder}
                 >
-                  {processingOrder ? 'Processing...' : 'Complete Order'}
+                  {processingOrder ? "Processing..." : "Complete Order"}
                 </Button>
 
                 <Button
-                  variant="light"
-                  size="sm"
                   className="w-full"
-                  onPress={clearCart}
                   isDisabled={processingOrder}
+                  size="sm"
+                  variant="light"
+                  onPress={clearCart}
                 >
                   Clear Cart
                 </Button>
@@ -611,7 +718,10 @@ export default function NewOrderPage() {
       </div>
 
       {/* Success Modal */}
-      <Modal isOpen={showSuccessModal} onClose={() => setShowSuccessModal(false)}>
+      <Modal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+      >
         <ModalContent>
           <ModalHeader>
             <div className="flex items-center gap-2 text-success">

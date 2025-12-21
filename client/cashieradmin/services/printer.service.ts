@@ -65,6 +65,7 @@ class PrinterService {
   async printReceipt(orderData: ReceiptData): Promise<PrintResult> {
     if (!this.isAvailable()) {
       console.warn("Printer not available in this environment");
+
       return {
         success: false,
         error: "Printer only available in Electron app",
@@ -75,9 +76,11 @@ class PrinterService {
       const result = await (window as any).electron.printer.printReceipt(
         orderData,
       );
+
       return result;
     } catch (error: any) {
       console.error("Error printing receipt:", error);
+
       return {
         success: false,
         error: error.message || "Unknown error occurred",
@@ -98,9 +101,11 @@ class PrinterService {
 
     try {
       const result = await (window as any).electron.printer.printTest();
+
       return result;
     } catch (error: any) {
       console.error("Error printing test:", error);
+
       return {
         success: false,
         error: error.message || "Unknown error occurred",
@@ -123,9 +128,11 @@ class PrinterService {
       const result = await (window as any).electron.printer.printDailyReport(
         reportData,
       );
+
       return result;
     } catch (error: any) {
       console.error("Error printing report:", error);
+
       return {
         success: false,
         error: error.message || "Unknown error occurred",
@@ -147,9 +154,11 @@ class PrinterService {
 
     try {
       const status = await (window as any).electron.printer.getStatus();
+
       return status;
     } catch (error) {
       console.error("Error getting printer status:", error);
+
       return {
         available: false,
         connected: false,

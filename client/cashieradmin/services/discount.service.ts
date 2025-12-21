@@ -1,5 +1,6 @@
-import { apiClient } from '@/lib/api-client';
-import type { CustomerDiscountType } from '@/types/api';
+import type { CustomerDiscountType } from "@/types/api";
+
+import { apiClient } from "@/lib/api-client";
 
 export interface CreateDiscountTypeRequest {
   name: string;
@@ -29,7 +30,9 @@ export interface DiscountStats {
 export class DiscountService {
   // Admin endpoints
   static async getDiscountTypes(params?: { include_inactive?: boolean }) {
-    return apiClient.get<CustomerDiscountType[]>('/admin/discounts', { params });
+    return apiClient.get<CustomerDiscountType[]>("/admin/discounts", {
+      params,
+    });
   }
 
   static async getDiscountTypeById(id: number) {
@@ -37,7 +40,7 @@ export class DiscountService {
   }
 
   static async createDiscountType(data: CreateDiscountTypeRequest) {
-    return apiClient.post<CustomerDiscountType>('/admin/discounts', data);
+    return apiClient.post<CustomerDiscountType>("/admin/discounts", data);
   }
 
   static async updateDiscountType(id: number, data: UpdateDiscountTypeRequest) {
@@ -48,12 +51,15 @@ export class DiscountService {
     return apiClient.delete(`/admin/discounts/${id}`);
   }
 
-  static async getDiscountStats(params?: { start_date?: string; end_date?: string }) {
-    return apiClient.get<DiscountStats[]>('/admin/discounts/stats', { params });
+  static async getDiscountStats(params?: {
+    start_date?: string;
+    end_date?: string;
+  }) {
+    return apiClient.get<DiscountStats[]>("/admin/discounts/stats", { params });
   }
 
   // Cashier endpoints
   static async getActiveDiscountTypes() {
-    return apiClient.get<CustomerDiscountType[]>('/cashier/discounts');
+    return apiClient.get<CustomerDiscountType[]>("/cashier/discounts");
   }
 }

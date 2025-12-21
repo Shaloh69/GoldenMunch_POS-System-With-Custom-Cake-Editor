@@ -1,9 +1,10 @@
-import { apiClient } from '@/lib/api-client';
-import type { Cashier, CreateCashierRequest } from '@/types/api';
+import type { Cashier, CreateCashierRequest } from "@/types/api";
+
+import { apiClient } from "@/lib/api-client";
 
 export class CashierService {
   static async getCashiers(params?: any) {
-    return apiClient.get<Cashier[]>('/admin/cashiers', { params });
+    return apiClient.get<Cashier[]>("/admin/cashiers", { params });
   }
 
   static async getCashierById(id: number) {
@@ -11,7 +12,7 @@ export class CashierService {
   }
 
   static async createCashier(data: CreateCashierRequest) {
-    return apiClient.post<Cashier>('/admin/cashiers', data);
+    return apiClient.post<Cashier>("/admin/cashiers", data);
   }
 
   static async updateCashier(id: number, data: Partial<CreateCashierRequest>) {
