@@ -74,6 +74,15 @@ const paymentMethodIcons: Record<string, JSX.Element> = {
   cashless: <CreditCardIcon className="h-4 w-4" />,
 };
 
+// Helper function to safely parse numeric values from database (returns as strings)
+const parseAmount = (value: any): number => {
+  if (value === null || value === undefined || value === '') {
+    return 0;
+  }
+  const parsed = typeof value === 'string' ? parseFloat(value) : Number(value);
+  return isNaN(parsed) ? 0 : parsed;
+};
+
 export default function UnifiedCashierPage() {
   // Tab state
   const [selectedTab, setSelectedTab] = useState<string>("pending");
@@ -285,6 +294,17 @@ export default function UnifiedCashierPage() {
       const response = await OrderService.getOrderById(order.order_id);
 
       if (response.success && response.data) {
+        // Debug logging to diagnose total display issues
+        console.log('📊 Order data received:', {
+          order_id: response.data.order_id,
+          subtotal: response.data.subtotal,
+          total_amount: response.data.total_amount,
+          final_amount: response.data.final_amount,
+          subtotal_type: typeof response.data.subtotal,
+          total_type: typeof response.data.total_amount,
+          final_type: typeof response.data.final_amount,
+        });
+
         setSelectedOrder(response.data);
         loadOrderTimeline(order.order_id);
         setVerifyError("");
@@ -510,12 +530,14 @@ export default function UnifiedCashierPage() {
   // Update change when amount tendered changes
   useEffect(() => {
     if (selectedOrder && amountTendered) {
-      const finalAmount = calculateFinalAmount(
-        Number(selectedOrder.final_amount || 0),
-        selectedDiscount,
-      );
+      const orderTotal = parseAmount(selectedOrder.final_amount) ||
+                        parseAmount(selectedOrder.total_amount) ||
+                        parseAmount(selectedOrder.subtotal) || 0;
+      const finalAmount = selectedDiscount
+        ? calculateFinalAmount(orderTotal, selectedDiscount)
+        : orderTotal;
 
-      setCalculatedChange(calculateChange(Number(amountTendered), finalAmount));
+      setCalculatedChange(calculateChange(parseAmount(amountTendered), finalAmount));
     } else {
       setCalculatedChange(0);
     }
@@ -648,8 +670,10 @@ export default function UnifiedCashierPage() {
       OrderStatus.READY,
     ].includes(selectedOrder.order_status as OrderStatus);
 
-    // Calculate final amount with proper null handling
-    const orderTotal = Number(selectedOrder.final_amount) || Number(selectedOrder.total_amount) || 0;
+    // Calculate final amount with robust parsing for database string values
+    const orderTotal = parseAmount(selectedOrder.final_amount) ||
+                      parseAmount(selectedOrder.total_amount) ||
+                      parseAmount(selectedOrder.subtotal) || 0;
     const finalAmount = selectedDiscount
       ? calculateFinalAmount(orderTotal, selectedDiscount)
       : orderTotal;

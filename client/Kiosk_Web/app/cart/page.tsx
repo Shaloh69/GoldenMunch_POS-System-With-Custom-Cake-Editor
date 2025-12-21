@@ -147,6 +147,8 @@ export default function CartPage() {
         order_type: orderType,
         order_source: OrderSource.KIOSK,
         payment_method: paymentMethod,
+        customer_name: customerName.trim() || undefined,
+        customer_phone: customerPhone.trim() || undefined,
         special_instructions: specialInstructions || undefined,
         items: getOrderItems(),
       };

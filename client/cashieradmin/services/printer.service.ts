@@ -183,8 +183,16 @@ class PrinterService {
 
   /**
    * Format order data for printing
+   * Safely parses numeric values that may come as strings from database
    */
   formatOrderForPrint(order: any): ReceiptData {
+    // Helper to safely parse amounts (handles string and number types)
+    const parseAmount = (value: any): number => {
+      if (value === null || value === undefined || value === '') return 0;
+      const parsed = typeof value === 'string' ? parseFloat(value) : Number(value);
+      return isNaN(parsed) ? 0 : parsed;
+    };
+
     return {
       orderNumber: order.order_number || order.orderNumber || "N/A",
       orderDate: new Date(
@@ -193,20 +201,20 @@ class PrinterService {
       items: (order.items || []).map((item: any) => ({
         name: item.name || item.item_name || "Unknown Item",
         quantity: item.quantity || 1,
-        price: parseFloat(item.price || item.unit_price || 0),
+        price: parseAmount(item.price || item.unit_price || item.subtotal),
         specialInstructions:
           item.special_instructions || item.specialInstructions,
       })),
-      subtotal: parseFloat(order.total_amount || order.subtotal || 0),
-      tax: parseFloat(order.tax_amount || order.tax || 0),
-      discount: parseFloat(order.discount_amount || order.discount || 0),
-      total: parseFloat(order.final_amount || order.total || 0),
+      subtotal: parseAmount(order.subtotal) || parseAmount(order.total_amount) || 0,
+      tax: parseAmount(order.tax_amount) || parseAmount(order.tax) || 0,
+      discount: parseAmount(order.discount_amount) || parseAmount(order.discount) || 0,
+      total: parseAmount(order.final_amount) || parseAmount(order.total) || parseAmount(order.total_amount) || 0,
       paymentMethod: order.payment_method || order.paymentMethod || "Cash",
       verificationCode: order.verification_code || order.verificationCode,
-      customerName: order.customer_name || order.customerName,
+      customerName: order.name || order.customer_name || order.customerName,
       specialInstructions:
         order.special_instructions || order.specialInstructions,
-      referenceNumber: order.reference_number || order.referenceNumber,
+      referenceNumber: order.gcash_reference_number || order.paymaya_reference_number || order.reference_number || order.referenceNumber,
     };
   }
 }

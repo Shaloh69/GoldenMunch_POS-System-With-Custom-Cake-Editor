@@ -14,6 +14,19 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
   const orderData: CreateOrderRequest = req.body;
 
   const result = await transaction(async (conn: PoolConnection) => {
+    // Handle guest customer creation if name/phone provided without customer_id
+    let customerId = orderData.customer_id || null;
+    if (!customerId && (orderData.customer_name || orderData.customer_phone)) {
+      // Create a guest customer record for kiosk orders
+      const [customerResult] = await conn.query(
+        `INSERT INTO customer (name, phone, created_at, updated_at)
+         VALUES (?, ?, NOW(), NOW())`,
+        [orderData.customer_name || 'Guest', orderData.customer_phone || null]
+      );
+      customerId = (customerResult as any).insertId;
+      console.log(`✓ Created guest customer record (ID: ${customerId}) for kiosk order`);
+    }
+
     // Calculate order total
     let subtotal = 0;
     const orderItems: any[] = [];
@@ -127,7 +140,7 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
       [
         orderNumber,
         verificationCode,
-        orderData.customer_id || null,
+        customerId,
         orderData.order_type,
         orderData.payment_method,
         totals.subtotal,

@@ -218,6 +218,7 @@ export interface CustomerOrder {
   gcash_reference_number?: string;
   paymaya_reference_number?: string;
   card_transaction_ref?: string;
+  subtotal?: number;
   total_amount: number;
   discount_amount: number;
   tax_amount: number;
