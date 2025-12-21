@@ -231,6 +231,8 @@ export interface CustomerOrder {
 // Request/Response DTOs
 export interface CreateOrderRequest {
   customer_id?: number;
+  customer_name?: string;
+  customer_phone?: string;
   order_type: OrderType;
   order_source: OrderSource;
   scheduled_pickup_datetime?: string;

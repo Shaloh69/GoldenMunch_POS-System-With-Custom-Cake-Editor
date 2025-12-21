@@ -76,6 +76,8 @@ export const schemas = {
   // Order schemas
   createOrder: Joi.object({
     customer_id: Joi.number().optional(),
+    customer_name: Joi.string().optional().allow(''),
+    customer_phone: Joi.string().optional().allow(''),
     order_type: Joi.string()
       .valid(...ENUMS.order_type)
       .required(),
@@ -86,6 +88,8 @@ export const schemas = {
     payment_method: Joi.string()
       .valid(...ENUMS.payment_method)
       .required(),
+    gcash_reference_number: Joi.string().optional().allow(''),
+    paymaya_reference_number: Joi.string().optional().allow(''),
     special_instructions: Joi.string().optional().allow(''),
     kiosk_session_id: Joi.string().optional(),
     items: Joi.array()
