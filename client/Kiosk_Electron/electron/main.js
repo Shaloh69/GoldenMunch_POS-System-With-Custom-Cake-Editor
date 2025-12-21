@@ -72,13 +72,22 @@ function createMainWindow() {
   });
 
   // ================================
-  // CRASH HANDLING (REAL CRASHES ONLY)
+  // CRASH HANDLING (IMPROVED - NO AGGRESSIVE RELOADS)
   // ================================
   mainWindow.webContents.on('render-process-gone', (_event, details) => {
     console.error('Renderer process gone:', details);
 
-    if (details.reason === 'crashed' || details.reason === 'killed') {
-      setTimeout(safeReload, 1500);
+    // Only reload on actual crashes, not on clean exits
+    // Let systemd handle full app restarts
+    if (details.reason === 'crashed') {
+      console.log('Renderer crashed - letting systemd handle restart');
+      console.log('Exiting app to trigger clean restart...');
+      app.quit(); // Let systemd restart the entire app cleanly
+    } else if (details.reason === 'killed') {
+      console.log('Renderer killed (likely OOM) - exiting for clean restart');
+      app.quit(); // Let systemd restart
+    } else {
+      console.log(`Renderer exited (${details.reason}) - monitoring for issues`);
     }
   });
 
@@ -86,11 +95,12 @@ function createMainWindow() {
   // DO NOT RELOAD ON TEMP UNRESPONSIVE
   // ================================
   mainWindow.webContents.on('unresponsive', () => {
-    console.warn('Renderer temporarily unresponsive');
+    console.warn('Renderer temporarily unresponsive - waiting for recovery');
+    // Don't do anything - let it recover naturally
   });
 
   mainWindow.webContents.on('responsive', () => {
-    console.log('Renderer responsive again');
+    console.log('Renderer responsive again - recovered successfully');
   });
 }
 
