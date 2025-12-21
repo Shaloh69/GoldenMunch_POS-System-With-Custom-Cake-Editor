@@ -233,6 +233,9 @@ export interface CustomerOrder {
   is_deleted: boolean;
   created_at: string;
   updated_at: string;
+  // Fields from customer JOIN (from backend queries)
+  name?: string;  // Customer name from customer table JOIN
+  phone?: string;  // Customer phone from customer table JOIN
   items?: OrderItem[];
   customer?: Customer;
   cashier?: Cashier;
