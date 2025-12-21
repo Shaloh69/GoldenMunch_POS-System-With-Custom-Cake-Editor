@@ -10,7 +10,7 @@ let mainWindow;
 
 // Default configuration
 const DEFAULT_CONFIG = {
-  serverUrl: 'http://localhost:3000',
+  serverUrl: 'https://goldenmunch-pos-cashieradmin.onrender.com',
   printerName: 'POS-58',
   windowWidth: 1400,
   windowHeight: 900,
