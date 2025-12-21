@@ -428,6 +428,16 @@ export const getOrderDetails = async (req: AuthRequest, res: Response) => {
     [id]
   );
 
+  // Calculate total from items if final_amount is null or missing
+  if (!order.final_amount && Array.isArray(items) && items.length > 0) {
+    const itemsTotal = items.reduce((sum: number, item: any) => sum + (Number(item.subtotal) || 0), 0);
+    order.subtotal = order.subtotal || itemsTotal;
+    order.total_amount = order.total_amount || itemsTotal;
+    order.final_amount = itemsTotal;
+    order.tax_amount = order.tax_amount || 0;
+    order.discount_amount = order.discount_amount || 0;
+  }
+
   res.json(successResponse('Order details retrieved', { ...order, items }));
 };
 
@@ -438,6 +448,8 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response) => {
   const user_id = req.user?.id;
   const user_type = req.user?.type; // 'admin' or 'cashier'
 
+  console.log('📝 updateOrderStatus called:', { id, order_status, user_id, user_type, notes });
+
   if (!order_status) {
     throw new AppError('Order status is required', 400);
   }
@@ -446,27 +458,54 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response) => {
     throw new AppError('User authentication required', 401);
   }
 
-  // Update order status (only update cashier_id if user is a cashier)
-  if (user_type === 'cashier') {
-    await query(
-      'UPDATE customer_order SET order_status = ?, cashier_id = ?, updated_at = NOW() WHERE order_id = ?',
-      [order_status, user_id, id]
+  try {
+    // Check if order exists
+    const existingOrder = await query(
+      'SELECT order_id, order_status FROM customer_order WHERE order_id = ?',
+      [id]
     );
-  } else {
-    await query(
-      'UPDATE customer_order SET order_status = ?, updated_at = NOW() WHERE order_id = ?',
-      [order_status, id]
+
+    if (!existingOrder || (Array.isArray(existingOrder) && existingOrder.length === 0)) {
+      throw new AppError('Order not found', 404);
+    }
+
+    console.log('✓ Order found:', existingOrder);
+
+    // Update order status (only update cashier_id if user is a cashier)
+    let updateResult;
+    if (user_type === 'cashier') {
+      console.log('📝 Updating as cashier, setting cashier_id:', user_id);
+      updateResult = await query(
+        'UPDATE customer_order SET order_status = ?, cashier_id = ?, updated_at = NOW() WHERE order_id = ?',
+        [order_status, user_id, id]
+      );
+    } else {
+      console.log('📝 Updating as admin');
+      updateResult = await query(
+        'UPDATE customer_order SET order_status = ?, updated_at = NOW() WHERE order_id = ?',
+        [order_status, id]
+      );
+    }
+
+    console.log('✓ Order status updated:', updateResult);
+
+    // Add timeline entry
+    const timelineResult = await query(
+      `INSERT INTO order_timeline (order_id, status, changed_by, notes, timestamp)
+       VALUES (?, ?, ?, ?, NOW())`,
+      [id, order_status, user_id, notes || null]
+    );
+
+    console.log('✓ Timeline entry added:', timelineResult);
+
+    res.json(successResponse('Order status updated', { order_status }));
+  } catch (error: any) {
+    console.error('❌ Error updating order status:', error);
+    throw new AppError(
+      `Failed to update order status: ${error.message || 'Unknown error'}`,
+      500
     );
   }
-
-  // Add timeline entry
-  await query(
-    `INSERT INTO order_timeline (order_id, status, changed_by, notes, timestamp)
-     VALUES (?, ?, ?, ?, NOW())`,
-    [id, order_status, user_id, notes || null]
-  );
-
-  res.json(successResponse('Order status updated', { order_status }));
 };
 
 // Delete order (soft delete)
