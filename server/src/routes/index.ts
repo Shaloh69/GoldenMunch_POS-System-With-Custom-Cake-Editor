@@ -430,6 +430,7 @@ router.get('/cashier/orders', authenticateCashier, asyncHandler(orderController.
 router.get('/cashier/orders/:id', authenticateCashier, asyncHandler(orderController.getOrderDetails));
 router.get('/cashier/orders/:id/timeline', authenticateCashier, asyncHandler(additionalController.getOrderTimeline));
 router.patch('/cashier/orders/:id/status', authenticateCashier, asyncHandler(orderController.updateOrderStatus));
+router.delete('/cashier/orders/:id', authenticateCashier, asyncHandler(orderController.deleteOrder));
 
 // Cashier - Waste Tracking
 router.post('/cashier/waste', authenticateCashier, asyncHandler(wasteController.createWasteEntry));
@@ -539,6 +540,7 @@ router.get('/admin/orders', authenticateAdmin, asyncHandler(orderController.getO
 router.get('/admin/orders/:id', authenticateAdmin, asyncHandler(orderController.getOrderDetails));
 router.get('/admin/orders/:id/timeline', authenticateAdmin, asyncHandler(additionalController.getOrderTimeline));
 router.patch('/admin/orders/:id/status', authenticateAdmin, asyncHandler(orderController.updateOrderStatus));
+router.delete('/admin/orders/:id', authenticateAdmin, asyncHandler(orderController.deleteOrder));
 
 // Customer Management
 router.post('/admin/customers', authenticateAdmin, asyncHandler(additionalController.createCustomer));

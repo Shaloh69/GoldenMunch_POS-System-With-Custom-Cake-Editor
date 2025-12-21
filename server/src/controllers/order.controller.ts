@@ -463,6 +463,42 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response) => {
   res.json(successResponse('Order status updated', { order_status }));
 };
 
+// Delete order (soft delete)
+export const deleteOrder = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  const user_id = req.user?.id;
+  const user_type = req.user?.type;
+
+  if (!user_id) {
+    throw new AppError('User authentication required', 401);
+  }
+
+  // Check if order exists
+  const existingOrder = await query(
+    'SELECT order_id, order_status FROM customer_order WHERE order_id = ? AND is_deleted = FALSE',
+    [id]
+  );
+
+  if (!Array.isArray(existingOrder) || existingOrder.length === 0) {
+    throw new AppError('Order not found', 404);
+  }
+
+  // Soft delete the order
+  await query(
+    'UPDATE customer_order SET is_deleted = TRUE, updated_at = NOW() WHERE order_id = ?',
+    [id]
+  );
+
+  // Add timeline entry
+  await query(
+    `INSERT INTO order_timeline (order_id, status, changed_by, notes, timestamp)
+     VALUES (?, ?, ?, ?, NOW())`,
+    [id, 'cancelled', user_id, `Order deleted by ${user_type}`]
+  );
+
+  res.json(successResponse('Order deleted successfully'));
+};
+
 // Get orders list with filters
 export const getOrders = async (req: AuthRequest, res: Response) => {
   const {
