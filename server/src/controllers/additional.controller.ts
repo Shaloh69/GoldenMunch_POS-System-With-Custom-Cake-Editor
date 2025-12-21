@@ -523,9 +523,12 @@ export const getOrderTimeline = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
 
   const timeline = await query(
-    `SELECT ot.*, c.name as changed_by_name
+    `SELECT
+      ot.*,
+      COALESCE(c.name, a.name, 'System') as changed_by_name
      FROM order_timeline ot
      LEFT JOIN cashier c ON ot.changed_by = c.cashier_id
+     LEFT JOIN admin a ON ot.changed_by = a.admin_id
      WHERE ot.order_id = ?
      ORDER BY ot.timestamp ASC`,
     [id]

@@ -429,23 +429,35 @@ export const getOrderDetails = async (req: AuthRequest, res: Response) => {
 export const updateOrderStatus = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const { order_status, notes } = req.body;
-  const cashier_id = req.user?.id;
+  const user_id = req.user?.id;
+  const user_type = req.user?.type; // 'admin' or 'cashier'
 
   if (!order_status) {
     throw new AppError('Order status is required', 400);
   }
 
-  // Update order status
-  await query(
-    'UPDATE customer_order SET order_status = ?, cashier_id = ?, updated_at = NOW() WHERE order_id = ?',
-    [order_status, cashier_id, id]
-  );
+  if (!user_id) {
+    throw new AppError('User authentication required', 401);
+  }
+
+  // Update order status (only update cashier_id if user is a cashier)
+  if (user_type === 'cashier') {
+    await query(
+      'UPDATE customer_order SET order_status = ?, cashier_id = ?, updated_at = NOW() WHERE order_id = ?',
+      [order_status, user_id, id]
+    );
+  } else {
+    await query(
+      'UPDATE customer_order SET order_status = ?, updated_at = NOW() WHERE order_id = ?',
+      [order_status, id]
+    );
+  }
 
   // Add timeline entry
   await query(
     `INSERT INTO order_timeline (order_id, status, changed_by, notes, timestamp)
      VALUES (?, ?, ?, ?, NOW())`,
-    [id, order_status, cashier_id, notes || null]
+    [id, order_status, user_id, notes || null]
   );
 
   res.json(successResponse('Order status updated', { order_status }));
