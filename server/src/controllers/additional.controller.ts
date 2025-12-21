@@ -530,7 +530,7 @@ export const getOrderTimeline = async (req: AuthRequest, res: Response) => {
      LEFT JOIN cashier c ON ot.changed_by = c.cashier_id
      LEFT JOIN admin a ON ot.changed_by = a.admin_id
      WHERE ot.order_id = ?
-     ORDER BY ot.timestamp ASC`,
+     ORDER BY ot.created_at ASC`,
     [id]
   );
 
