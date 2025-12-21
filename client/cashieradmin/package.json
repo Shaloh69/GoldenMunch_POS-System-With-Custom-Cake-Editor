@@ -20,7 +20,7 @@
     "@heroui/chip": "2.2.22",
     "@heroui/code": "2.2.21",
     "@heroui/divider": "2.2.20",
-    "@heroui/drawer": "2.2.24",
+    "@heroui/drawer": "^2.2.24",
     "@heroui/dropdown": "2.3.27",
     "@heroui/form": "2.1.27",
     "@heroui/framer-utils": "2.1.23",

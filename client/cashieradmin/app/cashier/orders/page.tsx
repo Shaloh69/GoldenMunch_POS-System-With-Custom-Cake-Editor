@@ -21,13 +21,13 @@ import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Select, SelectItem } from "@heroui/select";
 import {
-  Modal,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  useDisclosure,
-} from "@heroui/modal";
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerBody,
+  DrawerFooter,
+} from "@heroui/drawer";
+import { useDisclosure } from "@heroui/modal";
 import { Spinner } from "@heroui/spinner";
 import { Divider } from "@heroui/divider";
 import { Tabs, Tab } from "@heroui/tabs";
@@ -609,81 +609,97 @@ export default function UnifiedCashierPage() {
     );
 
     return (
-      <Modal
-        isOpen={isOpen}
-        scrollBehavior="inside"
-        size="4xl"
-        onClose={onClose}
-      >
-        <ModalContent>
-          <ModalHeader className="flex flex-col gap-1 bg-gradient-to-br from-golden-orange/10 via-deep-amber/5 to-transparent border-b-2 border-golden-orange/20 pb-6">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-gradient-to-br from-golden-orange to-deep-amber rounded-xl shadow-lg">
-                  <ReceiptPercentIcon className="h-8 w-8 text-white" />
+      <Drawer isOpen={isOpen} size="4xl" onClose={onClose}>
+        <DrawerContent>
+          {(onClose) => (
+            <>
+              <DrawerHeader className="flex flex-col gap-1 bg-gradient-to-br from-golden-orange/10 via-deep-amber/5 to-transparent border-b-2 border-golden-orange/20 pb-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-golden-orange to-deep-amber rounded-xl shadow-lg">
+                      <ReceiptPercentIcon className="h-8 w-8 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-black bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent">
+                        Order #{selectedOrder.order_number}
+                      </h2>
+                      <div className="flex items-center gap-2 mt-1">
+                        <CalendarDaysIcon className="h-4 w-4 text-default-400" />
+                        <p className="text-sm text-default-600 font-medium">
+                          {formatDate(selectedOrder.order_datetime)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <Chip
+                    color={statusColors[selectedOrder.order_status]}
+                    size="lg"
+                    variant="shadow"
+                    className="font-bold uppercase tracking-wide"
+                  >
+                    {selectedOrder.order_status}
+                  </Chip>
                 </div>
+              </DrawerHeader>
+              <DrawerBody className="gap-6 py-6">{/* Phase 1: Customer Information */}
                 <div>
-                  <h2 className="text-3xl font-black bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent">
-                    Order #{selectedOrder.order_number}
-                  </h2>
-                  <div className="flex items-center gap-2 mt-1">
-                    <CalendarDaysIcon className="h-4 w-4 text-default-400" />
-                    <p className="text-sm text-default-600 font-medium">
-                      {formatDate(selectedOrder.order_datetime)}
-                    </p>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="h-8 w-1 bg-gradient-to-b from-golden-orange to-deep-amber rounded-full" />
+                    <h3 className="text-xl font-black text-default-900 uppercase tracking-wide">
+                      Phase 1: Customer Details
+                    </h3>
                   </div>
+                  <Card className="border-2 border-default-200 shadow-lg">
+                    <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 border-b-2 border-default-200">
+                      <div className="flex items-center gap-2">
+                        <UserIcon className="h-5 w-5 text-blue-600" />
+                        <h3 className="font-bold text-lg">
+                          Customer Information
+                        </h3>
+                      </div>
+                    </CardHeader>
+                    <CardBody className="grid grid-cols-2 gap-6 p-6">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <UserIcon className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-default-500 uppercase tracking-wide font-semibold mb-1">
+                            Name
+                          </p>
+                          <p className="font-bold text-lg text-default-900">
+                            {selectedOrder.name || "Guest"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-purple-100 rounded-lg">
+                          <PhoneIcon className="h-5 w-5 text-purple-600" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-default-500 uppercase tracking-wide font-semibold mb-1">
+                            Phone
+                          </p>
+                          <p className="font-bold text-lg text-default-900">
+                            {selectedOrder.phone || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+                    </CardBody>
+                  </Card>
                 </div>
-              </div>
-              <Chip
-                color={statusColors[selectedOrder.order_status]}
-                size="lg"
-                variant="shadow"
-                className="font-bold uppercase tracking-wide"
-              >
-                {selectedOrder.order_status}
-              </Chip>
-            </div>
-          </ModalHeader>
-          <ModalBody className="gap-6 py-6">
-            {/* Customer Info */}
-            <Card className="border-2 border-default-200 shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 border-b-2 border-default-200">
-                <div className="flex items-center gap-2">
-                  <UserIcon className="h-5 w-5 text-blue-600" />
-                  <h3 className="font-bold text-lg">Customer Information</h3>
-                </div>
-              </CardHeader>
-              <CardBody className="grid grid-cols-2 gap-6 p-6">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <UserIcon className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-default-500 uppercase tracking-wide font-semibold mb-1">
-                      Name
-                    </p>
-                    <p className="font-bold text-lg text-default-900">
-                      {selectedOrder.name || "Guest"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <PhoneIcon className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-default-500 uppercase tracking-wide font-semibold mb-1">
-                      Phone
-                    </p>
-                    <p className="font-bold text-lg text-default-900">
-                      {selectedOrder.phone || "N/A"}
-                    </p>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
 
-            {/* Order Items */}
+                {/* Divider */}
+                <Divider className="my-4 bg-gradient-to-r from-transparent via-golden-orange/30 to-transparent h-0.5" />
+
+                {/* Phase 2: Order Items */}
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="h-8 w-1 bg-gradient-to-b from-golden-orange to-deep-amber rounded-full" />
+                    <h3 className="text-xl font-black text-default-900 uppercase tracking-wide">
+                      Phase 2: Order Items & Pricing
+                    </h3>
+                  </div>
             <Card className="border-2 border-default-200 shadow-lg">
               <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b-2 border-default-200">
                 <div className="flex items-center gap-2">
@@ -777,12 +793,23 @@ export default function UnifiedCashierPage() {
                     </span>
                   </div>
                 </div>
-              </CardBody>
-            </Card>
+                  </CardBody>
+                </Card>
+              </div>
 
-            {/* Payment Verification (for pending orders) */}
-            {isPending && (
-              <Card className="border-3 border-warning-400 bg-gradient-to-br from-warning-50 to-yellow-50 shadow-xl">
+              {/* Divider */}
+              <Divider className="my-4 bg-gradient-to-r from-transparent via-golden-orange/30 to-transparent h-0.5" />
+
+              {/* Phase 3: Payment Verification (for pending orders) */}
+              {isPending && (
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="h-8 w-1 bg-gradient-to-b from-golden-orange to-deep-amber rounded-full" />
+                    <h3 className="text-xl font-black text-default-900 uppercase tracking-wide">
+                      Phase 3: Payment Verification
+                    </h3>
+                  </div>
+                  <Card className="border-3 border-warning-400 bg-gradient-to-br from-warning-50 to-yellow-50 shadow-xl">
                 <CardHeader className="bg-gradient-to-r from-warning-100 to-yellow-100 border-b-3 border-warning-300">
                   <div className="flex items-center gap-3">
                     <div className="p-3 bg-warning-500 rounded-xl shadow-lg animate-pulse">
@@ -898,11 +925,24 @@ export default function UnifiedCashierPage() {
                       </div>
                     </div>
                   )}
-                </CardBody>
-              </Card>
-            )}
+                    </CardBody>
+                  </Card>
+                </div>
+              )}
 
-            {/* Order Timeline */}
+              {/* Divider */}
+              <Divider className="my-4 bg-gradient-to-r from-transparent via-golden-orange/30 to-transparent h-0.5" />
+
+              {/* Phase 4: Order Timeline */}
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="h-8 w-1 bg-gradient-to-b from-golden-orange to-deep-amber rounded-full" />
+                  <h3 className="text-xl font-black text-default-900 uppercase tracking-wide">
+                    {isPending
+                      ? "Phase 4: Order History"
+                      : "Order Processing Timeline"}
+                  </h3>
+                </div>
             <Card className="border-2 border-default-200 shadow-lg">
               <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 border-b-2 border-default-200">
                 <div className="flex items-center gap-2">
@@ -963,10 +1003,11 @@ export default function UnifiedCashierPage() {
                     </p>
                   </div>
                 )}
-              </CardBody>
-            </Card>
-          </ModalBody>
-          <ModalFooter className="bg-gradient-to-r from-default-50 to-default-100 border-t-2 border-default-200 gap-3 p-6">
+                  </CardBody>
+                </Card>
+              </div>
+            </DrawerBody>
+            <DrawerFooter className="bg-gradient-to-r from-default-50 to-default-100 border-t-2 border-default-200 gap-3 p-6">
             <Button
               color="default"
               variant="bordered"
@@ -1031,9 +1072,11 @@ export default function UnifiedCashierPage() {
                 )}
               </div>
             )}
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+          </DrawerFooter>
+            </>
+          )}
+        </DrawerContent>
+      </Drawer>
     );
   };
 
