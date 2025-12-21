@@ -1214,14 +1214,21 @@ export default function UnifiedCashierPage() {
                         ? "Connected"
                         : printerStatus.available
                           ? "Available"
-                          : "Offline"}
+                          : "Not Available"}
                     </Chip>
                   )}
                 </div>
                 {!loadingPrinterStatus && printerStatus.printerName && (
-                  <p className="text-xs text-default-500 mt-1">
-                    {printerStatus.printerName}
-                  </p>
+                  <div className="mt-1">
+                    <p className="text-xs font-semibold text-default-600">
+                      {printerStatus.printerName}
+                    </p>
+                    {printerStatus.printerName === "Web Browser Mode" && (
+                      <p className="text-xs text-warning-600 mt-0.5">
+                        Run in Electron for printing
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
               {printerStatus.connected && (
