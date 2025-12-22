@@ -484,43 +484,53 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response) => {
     throw new AppError('User authentication required', 401);
   }
 
-  // Check if order exists
-  const existingOrder = await query(
-    'SELECT order_id, order_status FROM customer_order WHERE order_id = ?',
-    [id]
-  );
+  await transaction(async (conn: PoolConnection) => {
+    // Check if order exists and get payment status
+    const existingOrder = getFirstRow<any>(await conn.query(
+      'SELECT order_id, order_status, payment_status FROM customer_order WHERE order_id = ?',
+      [id]
+    ));
 
-  if (!existingOrder || (Array.isArray(existingOrder) && existingOrder.length === 0)) {
-    throw new AppError('Order not found', 404);
-  }
+    if (!existingOrder) {
+      throw new AppError('Order not found', 404);
+    }
 
-  console.log('✓ Order found:', existingOrder);
+    console.log('✓ Order found:', existingOrder);
 
-  // Update order status (only update cashier_id if user is a cashier)
-  if (user_type === 'cashier') {
-    console.log('📝 Updating as cashier, setting cashier_id:', user_id);
-    await query(
-      'UPDATE customer_order SET order_status = ?, cashier_id = ?, updated_at = NOW() WHERE order_id = ?',
-      [order_status, user_id, id]
+    // ⚠️ REQUIRE PAYMENT VERIFICATION BEFORE COMPLETION
+    if (order_status === 'completed' && existingOrder.payment_status !== 'paid') {
+      throw new AppError(
+        'Payment must be verified before marking order as completed. Please verify payment first.',
+        400
+      );
+    }
+
+    // Update order status (only update cashier_id if user is a cashier)
+    if (user_type === 'cashier') {
+      console.log('📝 Updating as cashier, setting cashier_id:', user_id);
+      await conn.query(
+        'UPDATE customer_order SET order_status = ?, cashier_id = ?, updated_at = NOW() WHERE order_id = ?',
+        [order_status, user_id, id]
+      );
+    } else {
+      console.log('📝 Updating as admin');
+      await conn.query(
+        'UPDATE customer_order SET order_status = ?, updated_at = NOW() WHERE order_id = ?',
+        [order_status, id]
+      );
+    }
+
+    console.log('✓ Order status updated successfully');
+
+    // Add timeline entry
+    await conn.query(
+      `INSERT INTO order_timeline (order_id, status, changed_by, notes, created_at)
+       VALUES (?, ?, ?, ?, NOW())`,
+      [id, order_status, user_id, notes || null]
     );
-  } else {
-    console.log('📝 Updating as admin');
-    await query(
-      'UPDATE customer_order SET order_status = ?, updated_at = NOW() WHERE order_id = ?',
-      [order_status, id]
-    );
-  }
 
-  console.log('✓ Order status updated successfully');
-
-  // Add timeline entry
-  await query(
-    `INSERT INTO order_timeline (order_id, status, changed_by, notes, created_at)
-     VALUES (?, ?, ?, ?, NOW())`,
-    [id, order_status, user_id, notes || null]
-  );
-
-  console.log('✓ Timeline entry added successfully');
+    console.log('✓ Timeline entry added successfully');
+  });
 
   res.json(successResponse('Order status updated', { order_status }));
   console.log('✓ Response sent successfully');
