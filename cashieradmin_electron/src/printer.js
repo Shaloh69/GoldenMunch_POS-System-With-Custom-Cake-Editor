@@ -153,6 +153,12 @@ async function printReceipt(printerName, receiptData) {
   console.log('📦 Order Number:', receiptData.orderNumber);
   console.log('💰 Total Amount: ₱' + receiptData.total?.toFixed(2));
   try {
+    // Get the main window reference for printing
+    const mainWindow = BrowserWindow.getAllWindows()[0];
+    if (!mainWindow) {
+      throw new Error('No window available for printing');
+    }
+    console.log('🪟 Using window ID:', mainWindow.id);
     // Build receipt data structure for electron-pos-printer
     const data = [
       // Header
@@ -389,9 +395,33 @@ async function printReceipt(printerName, receiptData) {
       silent: true,
     };
 
+    // Verify printer exists before attempting to print
+    const printers = await mainWindow.webContents.getPrintersAsync();
+    const targetPrinter = printers.find(p => p.name === printerName);
+
+    if (!targetPrinter) {
+      console.error('❌ Printer not found:', printerName);
+      console.log('📋 Available printers:', printers.map(p => p.name));
+      throw new Error(`Printer "${printerName}" not found. Available: ${printers.map(p => p.name).join(', ')}`);
+    }
+
+    console.log('✅ Target printer verified:', targetPrinter.name, '- Status:', targetPrinter.status);
+
     // Print the receipt
     console.log('📄 Sending', data.length, 'sections to printer...');
-    await PosPrinter.print(data, options);
+    console.log('🔧 Print Options:', JSON.stringify(options, null, 2));
+    console.log('📝 First 3 data sections:', JSON.stringify(data.slice(0, 3), null, 2));
+
+    // Use the mainWindow for printing
+    await PosPrinter.print(data, options)
+      .then(() => {
+        console.log('🎉 PosPrinter.print() completed');
+      })
+      .catch((err) => {
+        console.error('💥 PosPrinter.print() error:', err);
+        throw err;
+      });
+
     console.log('✅ Receipt printed successfully!');
     console.log('═══════════════════════════════════════════════════════════════\n');
 
@@ -464,6 +494,12 @@ async function printDailyReport(printerName, reportData) {
   console.log('📈 Total Orders:', reportData.totalOrders);
   console.log('💰 Total Sales: ₱' + reportData.totalSales?.toFixed(2));
   try {
+    // Get the main window reference for printing
+    const mainWindow = BrowserWindow.getAllWindows()[0];
+    if (!mainWindow) {
+      throw new Error('No window available for printing');
+    }
+    console.log('🪟 Using window ID:', mainWindow.id);
     // Build report data structure
     const data = [
       // Header
