@@ -944,11 +944,13 @@ export default function UnifiedCashierPage() {
                         : []
                     }
                     startContent={<PercentBadgeIcon className="h-4 w-4" />}
-                    onChange={(e) => {
+                    onSelectionChange={(keys) => {
+                      const selectedKey = Array.from(keys)[0];
+                    
                       const discount = discounts.find(
-                        (d) => d.discount_type_id.toString() === e.target.value,
+                        (d) => d.discount_type_id.toString() === selectedKey
                       );
-
+                    
                       setSelectedDiscount(discount || null);
                     }}
                   >
@@ -958,6 +960,7 @@ export default function UnifiedCashierPage() {
                       </SelectItem>
                     ))}
                   </Select>
+
 
                   {/* Cash Payment */}
                   {selectedOrder.payment_method === "cash" && (
