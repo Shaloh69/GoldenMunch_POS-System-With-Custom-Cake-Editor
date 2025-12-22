@@ -289,7 +289,7 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
   // Handle cash and cashless payments
   await transaction(async (conn: PoolConnection) => {
     const orderData = getFirstRow<any>(await conn.query(
-      'SELECT subtotal, tax_amount, final_amount, payment_method FROM customer_order WHERE order_id = ?',
+      'SELECT subtotal, tax_amount, final_amount, payment_method FROM customer_order WHERE order_id = ? AND is_deleted = FALSE',
       [order_id]
     ));
 
@@ -432,7 +432,7 @@ export const getOrderDetails = async (req: AuthRequest, res: Response) => {
     `SELECT co.*, c.name, c.phone
      FROM customer_order co
      LEFT JOIN customer c ON co.customer_id = c.customer_id
-     WHERE co.order_id = ?`,
+     WHERE co.order_id = ? AND co.is_deleted = FALSE`,
     [id]
   ));
 
@@ -487,7 +487,7 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response) => {
   await transaction(async (conn: PoolConnection) => {
     // Check if order exists and get payment status
     const existingOrder = getFirstRow<any>(await conn.query(
-      'SELECT order_id, order_status, payment_status FROM customer_order WHERE order_id = ?',
+      'SELECT order_id, order_status, payment_status FROM customer_order WHERE order_id = ? AND is_deleted = FALSE',
       [id]
     ));
 
@@ -593,7 +593,7 @@ export const getOrders = async (req: AuthRequest, res: Response) => {
     SELECT co.*, c.name, c.phone
     FROM customer_order co
     LEFT JOIN customer c ON co.customer_id = c.customer_id
-    WHERE 1=1
+    WHERE co.is_deleted = FALSE
   `;
 
   const params: any[] = [];
