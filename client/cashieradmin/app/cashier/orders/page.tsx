@@ -97,7 +97,7 @@ export default function UnifiedCashierPage() {
   const [selectedOrder, setSelectedOrder] = useState<CustomerOrder | null>(
     null,
   );
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen, onOpen, onClose: onCloseDrawer } = useDisclosure();
 
   // Order timeline
   const [orderTimeline, setOrderTimeline] = useState<OrderTimelineEntry[]>([]);
@@ -114,6 +114,19 @@ export default function UnifiedCashierPage() {
   const [discounts, setDiscounts] = useState<CustomerDiscountType[]>([]);
   const [selectedDiscount, setSelectedDiscount] =
     useState<CustomerDiscountType | null>(null);
+
+  // Custom close handler to reset all state and prevent button issues
+  const onClose = () => {
+    setSelectedOrder(null);
+    setOrderTimeline([]);
+    setReferenceNumber("");
+    setAmountTendered("");
+    setCalculatedChange(0);
+    setVerifyError("");
+    setSelectedDiscount(null);
+    setVerifying(false);  // Reset verifying state
+    onCloseDrawer();
+  };
 
   // Search
   const [searchQuery, setSearchQuery] = useState("");
