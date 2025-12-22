@@ -896,8 +896,8 @@ export default function UnifiedCashierPage() {
                     <span className="text-2xl font-black text-default-900">
                       Total:
                     </span>
-                    <span className="text-3xl font-black bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text text-transparent">
-                      ₱{(selectedOrder.total_amount || 0).toFixed(2)}
+                    <span className="text-3xl text-black bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text">
+                      ₱{(finalAmount || 0).toFixed(2)}
                     </span>
                   </div>
                 </div>
