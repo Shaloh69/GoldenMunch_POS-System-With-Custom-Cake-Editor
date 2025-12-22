@@ -301,14 +301,14 @@ export default function CakeModel({ design, options }: CakeModelProps) {
         );
       })}
 
-      {/* Candles - positioned on top of the top layer */}
-      {design.candles_count > 0 && (
+      {/* Candles - DISABLED: Baker will add candles to actual cake */}
+      {/* {design.candles_count > 0 && (
         <group position={[0, totalCakeHeight, 0]}>
           {getCandlePositions(design.candles_count, topLayerRadius).map((pos, i) => (
             <Candle3D key={i} position={pos} index={i} count={design.candles_count} />
           ))}
         </group>
-      )}
+      )} */}
 
       {/* Cake Text - positioned on top layer */}
       {design.cake_text && (
@@ -333,10 +333,10 @@ export default function CakeModel({ design, options }: CakeModelProps) {
         </group>
       )}
 
-      {/* 3D Decorations */}
-      {design.decorations_3d && design.decorations_3d.map((decoration, i) => (
+      {/* 3D Decorations - DISABLED: Baker will add decorations to actual cake */}
+      {/* {design.decorations_3d && design.decorations_3d.map((decoration, i) => (
         <Decoration3D key={i} decoration={decoration} />
-      ))}
+      ))} */}
     </group>
   );
 }
