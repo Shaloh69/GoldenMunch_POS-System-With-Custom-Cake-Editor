@@ -392,6 +392,14 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
       );
     }
 
+    console.log('💰 Updating payment status to PAID:', {
+      order_id,
+      amount_paid: amountPaid,
+      change_amount: changeAmount,
+      cashier_id,
+      payment_method
+    });
+
     await conn.query(
       `UPDATE customer_order
        SET payment_status = 'paid',
@@ -403,12 +411,23 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
       [amountPaid, changeAmount, cashier_id, order_id]
     );
 
+    console.log('✓ Payment status updated successfully');
+
     await conn.query(
       `INSERT INTO payment_transaction
        (order_id, transaction_type, payment_method, amount, reference_number, status, processed_by, completed_at)
        VALUES (?, 'payment', ?, ?, ?, 'completed', ?, NOW())`,
       [order_id, payment_method, amountPaid, reference_number || null, cashier_id]
     );
+
+    console.log('✓ Payment transaction recorded');
+
+    // Verify the update actually worked
+    const verifyUpdate = getFirstRow<any>(await conn.query(
+      'SELECT payment_status, amount_paid FROM customer_order WHERE order_id = ?',
+      [order_id]
+    ));
+    console.log('✅ Payment verification complete:', verifyUpdate);
   });
 
   res.json(successResponse('Payment verified successfully'));
@@ -496,11 +515,23 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response) => {
     }
 
     console.log('✓ Order found:', existingOrder);
+    console.log('📊 Payment status check:', {
+      requested_status: order_status,
+      current_status: existingOrder.order_status,
+      payment_status: existingOrder.payment_status,
+      payment_status_type: typeof existingOrder.payment_status,
+      is_paid: existingOrder.payment_status === 'paid'
+    });
 
     // ⚠️ REQUIRE PAYMENT VERIFICATION BEFORE COMPLETION
     if (order_status === 'completed' && existingOrder.payment_status !== 'paid') {
+      console.error('❌ Payment verification failed:', {
+        order_id: id,
+        current_payment_status: existingOrder.payment_status,
+        required: 'paid'
+      });
       throw new AppError(
-        'Payment must be verified before marking order as completed. Please verify payment first.',
+        `Payment must be verified before completing order. Current payment status: "${existingOrder.payment_status}" (expected: "paid")`,
         400
       );
     }
