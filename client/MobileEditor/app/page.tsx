@@ -586,7 +586,7 @@ function CakeEditorContent() {
 
       {/* Toggle Controls Button - Floats above panel when visible, center when hidden */}
       {!showControls && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
           <Popover
             isOpen={showTutorial && tutorialStep === 0}
             placement={tutorialSteps[0].placement}
@@ -598,13 +598,14 @@ function CakeEditorContent() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 20 }}
                 onClick={() => setShowControls(true)}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-6 py-3 sm:p-4 rounded-full shadow-2xl hover:scale-110 transition-all active:scale-95 min-w-[56px] min-h-[56px] flex items-center justify-center gap-2"
+                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-full shadow-2xl hover:scale-105 transition-all active:scale-95 min-w-[64px] min-h-[64px] flex items-center justify-center gap-3 touch-manipulation"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
                 aria-label="Show controls"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" />
                 </svg>
-                <span className="text-sm font-bold hidden sm:inline">Show Panel</span>
+                <span className="text-base font-bold">Show Panel</span>
               </motion.button>
             </PopoverTrigger>
             <PopoverContent className="bg-gradient-to-br from-purple-500 to-pink-500 text-white border-2 border-white max-w-xs">
@@ -688,8 +689,8 @@ function CakeEditorContent() {
             className="fixed left-0 right-0 bottom-0 bg-white/98 backdrop-blur-xl shadow-2xl z-40 rounded-t-3xl border-t-4 border-purple-300 max-h-[75vh] flex flex-col touch-pan-y"
           >
             {/* Drag Handle - Now functional! */}
-            <div className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing">
-              <div className="w-16 h-1.5 bg-gray-400 rounded-full"></div>
+            <div className="flex justify-center pt-4 pb-3 cursor-grab active:cursor-grabbing touch-manipulation" style={{ WebkitTapHighlightColor: 'transparent' }}>
+              <div className="w-20 h-2 bg-gray-400 rounded-full"></div>
             </div>
 
             {/* Header with Price, Progress, and Close Button */}
@@ -739,11 +740,12 @@ function CakeEditorContent() {
                 {/* Close Button */}
                 <button
                   onClick={() => setShowControls(false)}
-                  className="ml-2 p-2 hover:bg-white/20 rounded-full transition-colors active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
+                  className="ml-2 p-3 hover:bg-white/20 rounded-full transition-colors active:scale-95 min-w-[52px] min-h-[52px] flex items-center justify-center touch-manipulation"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
                   aria-label="Hide panel"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
               </div>
