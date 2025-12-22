@@ -356,12 +356,13 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
     }
 
     // ✅ STOCK DEDUCTION: Get order items and deduct stock quantities
-    const orderItems = await conn.query(
+    const [orderItemsRows] = await conn.query(
       'SELECT menu_item_id, quantity FROM order_item WHERE order_id = ?',
       [order_id]
     );
+    const orderItems = orderItemsRows as any[];
 
-    for (const item of orderItems as any[]) {
+    for (const item of orderItems) {
       // Get menu item details including stock info
       const [menuItemRows] = await conn.query(
         'SELECT is_infinite_stock, stock_quantity, name FROM menu_item WHERE menu_item_id = ?',
