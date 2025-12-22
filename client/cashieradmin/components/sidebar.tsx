@@ -227,7 +227,7 @@ export function Sidebar() {
         {/* Footer */}
         <div className="p-4 border-t border-light-caramel/20 bg-gradient-to-r from-soft-sand/30 to-transparent">
           <Button
-            className={`w-full bg-gradient-to-r from-red-400 to-red-500 text-white hover:from-red-500 hover:to-red-600 shadow-md hover:shadow-lg transition-all duration-300 ${isCollapsed ? "px-2" : ""}`}
+            className={`w-full bg-gradient-to-r from-red-400 to-red-500 text-black hover:from-red-500 hover:to-red-600 shadow-md hover:shadow-lg transition-all duration-300 ${isCollapsed ? "px-2" : ""}`}
             startContent={
               !isCollapsed && <ArrowRightOnRectangleIcon className="h-5 w-5" />
             }
