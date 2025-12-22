@@ -537,19 +537,41 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response) => {
       );
     }
 
+    // Auto-set payment_status to 'paid' when changing to 'confirmed'
+    // This ensures proper workflow: confirmed orders should have payment verified
+    let paymentStatusUpdate = '';
+    if (order_status === 'confirmed' && existingOrder.payment_status !== 'paid') {
+      console.log('📝 Auto-setting payment_status to paid (confirming order)');
+      paymentStatusUpdate = ", payment_status = 'paid', payment_verified_by = ?, payment_verified_at = NOW()";
+    }
+
     // Update order status (only update cashier_id if user is a cashier)
     if (user_type === 'cashier') {
       console.log('📝 Updating as cashier, setting cashier_id:', user_id);
-      await conn.query(
-        'UPDATE customer_order SET order_status = ?, cashier_id = ?, updated_at = NOW() WHERE order_id = ?',
-        [order_status, user_id, id]
-      );
+      if (paymentStatusUpdate) {
+        await conn.query(
+          `UPDATE customer_order SET order_status = ?, cashier_id = ?${paymentStatusUpdate}, updated_at = NOW() WHERE order_id = ?`,
+          [order_status, user_id, user_id, id]
+        );
+      } else {
+        await conn.query(
+          'UPDATE customer_order SET order_status = ?, cashier_id = ?, updated_at = NOW() WHERE order_id = ?',
+          [order_status, user_id, id]
+        );
+      }
     } else {
       console.log('📝 Updating as admin');
-      await conn.query(
-        'UPDATE customer_order SET order_status = ?, updated_at = NOW() WHERE order_id = ?',
-        [order_status, id]
-      );
+      if (paymentStatusUpdate) {
+        await conn.query(
+          `UPDATE customer_order SET order_status = ?${paymentStatusUpdate}, updated_at = NOW() WHERE order_id = ?`,
+          [order_status, user_id, id]
+        );
+      } else {
+        await conn.query(
+          'UPDATE customer_order SET order_status = ?, updated_at = NOW() WHERE order_id = ?',
+          [order_status, id]
+        );
+      }
     }
 
     console.log('✓ Order status updated successfully');
