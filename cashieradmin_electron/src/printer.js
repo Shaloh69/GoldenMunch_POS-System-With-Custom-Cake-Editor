@@ -1,6 +1,10 @@
 const { PosPrinter } = require('electron-pos-printer');
 const { BrowserWindow } = require('electron');
 
+console.log('🔌 Printer module loading...');
+console.log('📦 PosPrinter available:', typeof PosPrinter);
+console.log('🪟 BrowserWindow available:', typeof BrowserWindow);
+
 /**
  * Get printer status
  * @param {string} printerName - Name of the printer to check
@@ -385,6 +389,7 @@ async function printReceipt(printerName, receiptData) {
     );
 
     // Print options
+    // NOTE: Removed 'silent' option as it may cause "Cannot convert undefined or null to object" error
     const options = {
       preview: false,
       width: '58mm', // Supports: 80mm, 78mm, 76mm, 58mm, 57mm, 44mm
@@ -392,7 +397,7 @@ async function printReceipt(printerName, receiptData) {
       copies: 1,
       printerName: printerName,
       timeOutPerLine: 400,
-      silent: true,
+      // silent: true,  // Commented out - may cause issues with electron-pos-printer
     };
 
     // Verify printer exists before attempting to print
@@ -644,6 +649,7 @@ async function printDailyReport(printerName, reportData) {
     );
 
     // Print options
+    // NOTE: Removed 'silent' option as it may cause "Cannot convert undefined or null to object" error
     const options = {
       preview: false,
       width: '58mm',
@@ -651,7 +657,7 @@ async function printDailyReport(printerName, reportData) {
       copies: 1,
       printerName: printerName,
       timeOutPerLine: 400,
-      silent: true,
+      // silent: true,  // Commented out - may cause issues with electron-pos-printer
     };
 
     // Verify printer exists before attempting to print
