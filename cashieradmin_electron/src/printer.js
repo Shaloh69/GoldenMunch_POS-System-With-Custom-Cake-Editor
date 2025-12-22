@@ -16,8 +16,8 @@ async function getStatus(printerName = 'POS-58') {
       throw new Error('No window available');
     }
 
-    // Get list of available printers from Electron's native API
-    const printers = await mainWindow.webContents.getPrinters();
+    // Get list of available printers from Electron's native API (synchronous)
+    const printers = mainWindow.webContents.getPrinters();
 
     console.log(`📋 Found ${printers?.length || 0} system printers:`,
       printers?.map(p => ({
@@ -116,7 +116,7 @@ async function getAvailablePrinters() {
       return [];
     }
 
-    const printers = await mainWindow.webContents.getPrinters();
+    const printers = mainWindow.webContents.getPrinters();
     console.log('🖨️ Detected printers:', printers.map(p => p.name));
 
     if (!printers || printers.length === 0) {
