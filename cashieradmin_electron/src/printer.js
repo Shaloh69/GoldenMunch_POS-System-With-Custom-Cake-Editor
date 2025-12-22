@@ -148,6 +148,10 @@ async function getAvailablePrinters() {
  * @returns {Promise<{success: boolean, message?: string, error?: string}>}
  */
 async function printReceipt(printerName, receiptData) {
+  console.log('\n🧾 ═══════════════════ PRINTING RECEIPT ═══════════════════');
+  console.log('🖨️  Target Printer:', printerName);
+  console.log('📦 Order Number:', receiptData.orderNumber);
+  console.log('💰 Total Amount: ₱' + receiptData.total?.toFixed(2));
   try {
     // Build receipt data structure for electron-pos-printer
     const data = [
@@ -386,14 +390,19 @@ async function printReceipt(printerName, receiptData) {
     };
 
     // Print the receipt
+    console.log('📄 Sending', data.length, 'sections to printer...');
     await PosPrinter.print(data, options);
+    console.log('✅ Receipt printed successfully!');
+    console.log('═══════════════════════════════════════════════════════════════\n');
 
     return {
       success: true,
       message: 'Receipt printed successfully',
     };
   } catch (error) {
-    console.error('Error printing receipt:', error);
+    console.error('❌ Error printing receipt:', error.message);
+    console.error('Full error:', error);
+    console.error('═══════════════════════════════════════════════════════════════\n');
 
     return {
       success: false,
@@ -410,6 +419,8 @@ async function printReceipt(printerName, receiptData) {
  * @returns {Promise<{success: boolean, message?: string, error?: string}>}
  */
 async function printTest(printerName) {
+  console.log('\n🧪 ═══════════════════ TEST PRINT ═══════════════════');
+  console.log('🖨️  Target Printer:', printerName);
   const testData = {
     orderNumber: 'TEST-001',
     orderDate: new Date().toLocaleString(),
@@ -434,7 +445,10 @@ async function printTest(printerName) {
     verificationCode: '1234',
   };
 
-  return printReceipt(printerName, testData);
+  console.log('📝 Test data prepared');
+  const result = await printReceipt(printerName, testData);
+  console.log('═══════════════════════════════════════════════════════════════\n');
+  return result;
 }
 
 /**
@@ -444,6 +458,11 @@ async function printTest(printerName) {
  * @returns {Promise<{success: boolean, message?: string, error?: string}>}
  */
 async function printDailyReport(printerName, reportData) {
+  console.log('\n📊 ═══════════════════ DAILY REPORT ═══════════════════');
+  console.log('🖨️  Target Printer:', printerName);
+  console.log('📅 Report Date:', reportData.date);
+  console.log('📈 Total Orders:', reportData.totalOrders);
+  console.log('💰 Total Sales: ₱' + reportData.totalSales?.toFixed(2));
   try {
     // Build report data structure
     const data = [
@@ -590,14 +609,19 @@ async function printDailyReport(printerName, reportData) {
     };
 
     // Print the report
+    console.log('📄 Sending', data.length, 'sections to printer...');
     await PosPrinter.print(data, options);
+    console.log('✅ Report printed successfully!');
+    console.log('═══════════════════════════════════════════════════════════════\n');
 
     return {
       success: true,
       message: 'Report printed successfully',
     };
   } catch (error) {
-    console.error('Error printing report:', error);
+    console.error('❌ Error printing report:', error.message);
+    console.error('Full error:', error);
+    console.error('═══════════════════════════════════════════════════════════════\n');
 
     return {
       success: false,
