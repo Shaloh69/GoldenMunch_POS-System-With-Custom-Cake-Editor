@@ -413,14 +413,24 @@ async function printReceipt(printerName, receiptData) {
     console.log('📝 First 3 data sections:', JSON.stringify(data.slice(0, 3), null, 2));
 
     // Use the mainWindow for printing
-    await PosPrinter.print(data, options)
-      .then(() => {
-        console.log('🎉 PosPrinter.print() completed');
-      })
-      .catch((err) => {
-        console.error('💥 PosPrinter.print() error:', err);
-        throw err;
-      });
+    try {
+      console.log('🔄 Attempting to print with electron-pos-printer...');
+      await PosPrinter.print(data, options);
+      console.log('🎉 PosPrinter.print() completed successfully');
+    } catch (printError) {
+      console.error('💥 PosPrinter.print() error:', printError);
+      console.error('📚 Error stack:', printError.stack);
+
+      // Log the error type
+      if (printError.message) {
+        console.error('📝 Error message:', printError.message);
+      }
+      if (printError.name) {
+        console.error('🏷️  Error name:', printError.name);
+      }
+
+      throw printError;
+    }
 
     console.log('✅ Receipt printed successfully!');
     console.log('═══════════════════════════════════════════════════════════════\n');
@@ -644,9 +654,31 @@ async function printDailyReport(printerName, reportData) {
       silent: true,
     };
 
+    // Verify printer exists before attempting to print
+    const printers = await mainWindow.webContents.getPrintersAsync();
+    const targetPrinter = printers.find(p => p.name === printerName);
+
+    if (!targetPrinter) {
+      console.error('❌ Printer not found:', printerName);
+      console.log('📋 Available printers:', printers.map(p => p.name));
+      throw new Error(`Printer "${printerName}" not found. Available: ${printers.map(p => p.name).join(', ')}`);
+    }
+
+    console.log('✅ Target printer verified:', targetPrinter.name, '- Status:', targetPrinter.status);
+
     // Print the report
     console.log('📄 Sending', data.length, 'sections to printer...');
-    await PosPrinter.print(data, options);
+
+    try {
+      console.log('🔄 Attempting to print report with electron-pos-printer...');
+      await PosPrinter.print(data, options);
+      console.log('🎉 Report print completed successfully');
+    } catch (printError) {
+      console.error('💥 PosPrinter.print() error:', printError);
+      console.error('📚 Error stack:', printError.stack);
+      throw printError;
+    }
+
     console.log('✅ Report printed successfully!');
     console.log('═══════════════════════════════════════════════════════════════\n');
 
