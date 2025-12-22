@@ -1,6 +1,8 @@
 const escpos = require('escpos');
 // Install escpos-usb adapter
-escpos.USB = require('escpos-usb');
+const USB = require('@node-escpos/usb');
+
+escpos.USB = USB;
 
 /**
  * Get printer status
