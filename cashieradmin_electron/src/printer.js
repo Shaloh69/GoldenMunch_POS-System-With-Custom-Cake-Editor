@@ -1,8 +1,6 @@
-const { PosPrinter } = require('electron-pos-printer');
 const { BrowserWindow } = require('electron');
 
 console.log('🔌 Printer module loading...');
-console.log('📦 PosPrinter available:', typeof PosPrinter);
 console.log('🪟 BrowserWindow available:', typeof BrowserWindow);
 
 /**
@@ -146,7 +144,88 @@ async function getAvailablePrinters() {
 }
 
 /**
- * Print receipt
+ * Generate HTML for receipt printing
+ * @param {Object} receiptData - Receipt data
+ * @returns {string} HTML string
+ */
+function generateReceiptHTML(receiptData) {
+  let itemsHTML = '';
+  receiptData.items.forEach((item) => {
+    const itemTotal = item.price * item.quantity;
+    itemsHTML += `
+      <div style="margin: 3px 0;">
+        <div>${item.name}</div>
+        <div style="text-align: right; margin-top: -18px;">x${item.quantity} ₱${itemTotal.toFixed(2)}</div>
+      </div>`;
+    if (item.specialInstructions) {
+      itemsHTML += `<div style="font-size: 9px; font-style: italic; margin-left: 10px;">Note: ${item.specialInstructions}</div>`;
+    }
+  });
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        @page {
+          size: 58mm auto;
+          margin: 0;
+        }
+        body {
+          font-family: 'Courier New', monospace;
+          font-size: 11px;
+          margin: 0;
+          padding: 5mm;
+          width: 48mm;
+        }
+        .center { text-align: center; }
+        .bold { font-weight: bold; }
+        .large { font-size: 16px; }
+        .medium { font-size: 12px; }
+        .divider { border-top: 1px dashed #000; margin: 5px 0; }
+        .right { text-align: right; }
+      </style>
+    </head>
+    <body>
+      <div class="center bold large">GOLDENMUNCH</div>
+      <div class="center medium">Order Receipt</div>
+      <div class="divider"></div>
+      <div>Order #: ${receiptData.orderNumber}</div>
+      <div>Date: ${receiptData.orderDate}</div>
+      <div class="divider"></div>
+      ${receiptData.customerName ? `<div>Customer: ${receiptData.customerName}</div>` : ''}
+      ${receiptData.verificationCode ? `
+        <div class="center" style="margin-top: 10px;">
+          <div style="font-size: 10px;">Verification Code:</div>
+          <div class="bold large">${receiptData.verificationCode}</div>
+        </div>` : ''}
+      <div style="margin-top: 10px;" class="bold">ITEMS:</div>
+      <div class="divider"></div>
+      ${itemsHTML}
+      <div class="divider"></div>
+      <div class="right">Subtotal: ₱${receiptData.subtotal.toFixed(2)}</div>
+      <div class="right">Tax: ₱${receiptData.tax.toFixed(2)}</div>
+      ${receiptData.discount > 0 ? `<div class="right">Discount: -₱${receiptData.discount.toFixed(2)}</div>` : ''}
+      <div class="divider"></div>
+      <div class="right bold large">TOTAL: ₱${receiptData.total.toFixed(2)}</div>
+      <div class="divider"></div>
+      <div>Payment: ${receiptData.paymentMethod}</div>
+      ${receiptData.referenceNumber ? `<div>Reference #: ${receiptData.referenceNumber}</div>` : ''}
+      ${receiptData.specialInstructions ? `
+        <div style="margin-top: 10px;">
+          <div class="bold">SPECIAL INSTRUCTIONS:</div>
+          <div style="font-size: 9px;">${receiptData.specialInstructions}</div>
+        </div>` : ''}
+      <div class="center bold" style="margin-top: 15px;">Thank you for your order!</div>
+      <div class="center">Please come again</div>
+    </body>
+    </html>
+  `;
+}
+
+/**
+ * Print receipt using Electron's native printing API
  * @param {string} printerName - Name of printer to use
  * @param {Object} receiptData - Receipt data
  * @returns {Promise<{success: boolean, message?: string, error?: string}>}
@@ -156,306 +235,115 @@ async function printReceipt(printerName, receiptData) {
   console.log('🖨️  Target Printer:', printerName);
   console.log('📦 Order Number:', receiptData.orderNumber);
   console.log('💰 Total Amount: ₱' + receiptData.total?.toFixed(2));
-  try {
-    // Get the main window reference for printing
-    const mainWindow = BrowserWindow.getAllWindows()[0];
-    if (!mainWindow) {
-      throw new Error('No window available for printing');
-    }
-    console.log('🪟 Using window ID:', mainWindow.id);
-    // Build receipt data structure for electron-pos-printer
-    const data = [
-      // Header
-      {
-        type: 'text',
-        value: 'GOLDENMUNCH',
-        style: {
-          textAlign: 'center',
-          fontSize: '20px',
-          fontWeight: 'bold',
-          marginTop: '10px',
-        },
-      },
-      {
-        type: 'text',
-        value: 'Order Receipt',
-        style: {
-          textAlign: 'center',
-          fontSize: '14px',
-          marginBottom: '10px',
-        },
-      },
-      {
-        type: 'text',
-        value: '--------------------------------',
-        style: { textAlign: 'center' },
-      },
-      // Order info
-      {
-        type: 'text',
-        value: `Order #: ${receiptData.orderNumber}`,
-        style: { marginTop: '5px' },
-      },
-      {
-        type: 'text',
-        value: `Date: ${receiptData.orderDate}`,
-        style: { marginBottom: '5px' },
-      },
-      {
-        type: 'text',
-        value: '--------------------------------',
-      },
-    ];
 
-    // Customer info
-    if (receiptData.customerName) {
-      data.push({
-        type: 'text',
-        value: `Customer: ${receiptData.customerName}`,
-        style: { marginTop: '5px' },
-      });
-    }
-    if (receiptData.verificationCode) {
-      data.push(
-        {
-          type: 'text',
-          value: 'Verification Code:',
-          style: {
-            textAlign: 'center',
-            fontSize: '12px',
-            marginTop: '10px',
-          },
-        },
-        {
-          type: 'text',
-          value: receiptData.verificationCode,
-          style: {
-            textAlign: 'center',
-            fontSize: '24px',
-            fontWeight: 'bold',
-            marginBottom: '10px',
-          },
-        }
-      );
-    }
-
-    // Items section
-    data.push(
-      {
-        type: 'text',
-        value: '',
-        style: { marginTop: '5px' },
-      },
-      {
-        type: 'text',
-        value: 'ITEMS:',
-        style: { fontWeight: 'bold' },
-      },
-      {
-        type: 'text',
-        value: '--------------------------------',
-      }
-    );
-
-    // Add each item
-    receiptData.items.forEach((item) => {
-      const itemTotal = item.price * item.quantity;
-
-      data.push(
-        {
-          type: 'text',
-          value: item.name,
-          style: { marginTop: '3px' },
-        },
-        {
-          type: 'text',
-          value: `  x${item.quantity}    ₱${itemTotal.toFixed(2)}`,
-          style: { textAlign: 'right' },
-        }
-      );
-
-      if (item.specialInstructions) {
-        data.push({
-          type: 'text',
-          value: `  Note: ${item.specialInstructions}`,
-          style: { fontSize: '11px', fontStyle: 'italic' },
-        });
-      }
-    });
-
-    // Totals
-    data.push(
-      {
-        type: 'text',
-        value: '--------------------------------',
-        style: { marginTop: '5px' },
-      },
-      {
-        type: 'text',
-        value: `Subtotal: ₱${receiptData.subtotal.toFixed(2)}`,
-        style: { textAlign: 'right' },
-      },
-      {
-        type: 'text',
-        value: `Tax: ₱${receiptData.tax.toFixed(2)}`,
-        style: { textAlign: 'right' },
-      }
-    );
-
-    if (receiptData.discount > 0) {
-      data.push({
-        type: 'text',
-        value: `Discount: -₱${receiptData.discount.toFixed(2)}`,
-        style: { textAlign: 'right' },
-      });
-    }
-
-    data.push(
-      {
-        type: 'text',
-        value: '--------------------------------',
-      },
-      {
-        type: 'text',
-        value: `TOTAL: ₱${receiptData.total.toFixed(2)}`,
-        style: {
-          textAlign: 'right',
-          fontSize: '18px',
-          fontWeight: 'bold',
-          marginTop: '5px',
-        },
-      },
-      {
-        type: 'text',
-        value: '--------------------------------',
-      }
-    );
-
-    // Payment method
-    data.push(
-      {
-        type: 'text',
-        value: `Payment: ${receiptData.paymentMethod}`,
-        style: { marginTop: '5px' },
-      }
-    );
-
-    // Reference number for digital payments
-    if (receiptData.referenceNumber) {
-      data.push({
-        type: 'text',
-        value: `Reference #: ${receiptData.referenceNumber}`,
-      });
-    }
-
-    // Special instructions
-    if (receiptData.specialInstructions) {
-      data.push(
-        {
-          type: 'text',
-          value: '',
-          style: { marginTop: '5px' },
-        },
-        {
-          type: 'text',
-          value: 'SPECIAL INSTRUCTIONS:',
-          style: { fontWeight: 'bold' },
-        },
-        {
-          type: 'text',
-          value: receiptData.specialInstructions,
-          style: { fontSize: '11px' },
-        }
-      );
-    }
-
-    // Footer
-    data.push(
-      {
-        type: 'text',
-        value: '',
-        style: { marginTop: '10px' },
-      },
-      {
-        type: 'text',
-        value: 'Thank you for your order!',
-        style: { textAlign: 'center', fontWeight: 'bold' },
-      },
-      {
-        type: 'text',
-        value: 'Please come again',
-        style: { textAlign: 'center', marginBottom: '10px' },
-      }
-    );
-
-    // Print options
-    // NOTE: Removed 'silent' option as it may cause "Cannot convert undefined or null to object" error
-    const options = {
-      preview: false,
-      width: '58mm', // Supports: 80mm, 78mm, 76mm, 58mm, 57mm, 44mm
-      margin: '0 0 0 0',
-      copies: 1,
-      printerName: printerName,
-      timeOutPerLine: 400,
-      // silent: true,  // Commented out - may cause issues with electron-pos-printer
-    };
-
-    // Verify printer exists before attempting to print
-    const printers = await mainWindow.webContents.getPrintersAsync();
-    const targetPrinter = printers.find(p => p.name === printerName);
-
-    if (!targetPrinter) {
-      console.error('❌ Printer not found:', printerName);
-      console.log('📋 Available printers:', printers.map(p => p.name));
-      throw new Error(`Printer "${printerName}" not found. Available: ${printers.map(p => p.name).join(', ')}`);
-    }
-
-    console.log('✅ Target printer verified:', targetPrinter.name, '- Status:', targetPrinter.status);
-
-    // Print the receipt
-    console.log('📄 Sending', data.length, 'sections to printer...');
-    console.log('🔧 Print Options:', JSON.stringify(options, null, 2));
-    console.log('📝 First 3 data sections:', JSON.stringify(data.slice(0, 3), null, 2));
-
-    // Use the mainWindow for printing
+  return new Promise((resolve, reject) => {
     try {
-      console.log('🔄 Attempting to print with electron-pos-printer...');
-      await PosPrinter.print(data, options);
-      console.log('🎉 PosPrinter.print() completed successfully');
-    } catch (printError) {
-      console.error('💥 PosPrinter.print() error:', printError);
-      console.error('📚 Error stack:', printError.stack);
-
-      // Log the error type
-      if (printError.message) {
-        console.error('📝 Error message:', printError.message);
+      // Get the main window reference for printing
+      const mainWindow = BrowserWindow.getAllWindows()[0];
+      if (!mainWindow) {
+        throw new Error('No window available for printing');
       }
-      if (printError.name) {
-        console.error('🏷️  Error name:', printError.name);
-      }
+      console.log('🪟 Using window ID:', mainWindow.id);
 
-      throw printError;
+      // Create a hidden BrowserWindow for printing
+      const printWindow = new BrowserWindow({
+        show: false,
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true,
+        },
+      });
+
+      console.log('📄 Creating print window...');
+      const htmlContent = generateReceiptHTML(receiptData);
+
+      printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(htmlContent)}`);
+
+      printWindow.webContents.on('did-finish-load', async () => {
+        console.log('✅ Print content loaded');
+
+        // Verify printer exists before attempting to print
+        const printers = await printWindow.webContents.getPrintersAsync();
+        const targetPrinter = printers.find(p => p.name === printerName);
+
+        if (!targetPrinter) {
+          printWindow.close();
+          console.error('❌ Printer not found:', printerName);
+          console.log('📋 Available printers:', printers.map(p => p.name));
+          resolve({
+            success: false,
+            error: `Printer "${printerName}" not found. Available: ${printers.map(p => p.name).join(', ')}`,
+          });
+          return;
+        }
+
+        console.log('✅ Target printer verified:', targetPrinter.name, '- Status:', targetPrinter.status);
+
+        // Print options for thermal printer
+        const options = {
+          silent: true,
+          printBackground: true,
+          deviceName: printerName,
+          margins: {
+            marginType: 'none',
+          },
+        };
+
+        console.log('🔧 Print Options:', JSON.stringify(options, null, 2));
+        console.log('🔄 Attempting to print with native Electron API...');
+
+        try {
+          printWindow.webContents.print(options, (success, errorType) => {
+            printWindow.close();
+
+            if (success) {
+              console.log('🎉 Print completed successfully');
+              console.log('═══════════════════════════════════════════════════════════════\n');
+              resolve({
+                success: true,
+                message: 'Receipt printed successfully',
+              });
+            } else {
+              console.error('❌ Print failed. Error type:', errorType);
+              console.error('═══════════════════════════════════════════════════════════════\n');
+              resolve({
+                success: false,
+                error: `Print failed: ${errorType}`,
+              });
+            }
+          });
+        } catch (printError) {
+          printWindow.close();
+          console.error('💥 Print error:', printError);
+          console.error('═══════════════════════════════════════════════════════════════\n');
+          resolve({
+            success: false,
+            error: printError.message || 'Failed to print receipt',
+          });
+        }
+      });
+
+      printWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+        printWindow.close();
+        console.error('❌ Failed to load print content:', errorCode, errorDescription);
+        console.error('═══════════════════════════════════════════════════════════════\n');
+        resolve({
+          success: false,
+          error: `Failed to load print content: ${errorDescription}`,
+        });
+      });
+
+    } catch (error) {
+      console.error('❌ Error in printReceipt:', error.message);
+      console.error('Full error:', error);
+      console.error('═══════════════════════════════════════════════════════════════\n');
+      resolve({
+        success: false,
+        error: error.message || 'Failed to print receipt',
+        suggestion: 'Please check printer connection and ensure the printer is set up in Windows Settings > Printers & scanners',
+      });
     }
-
-    console.log('✅ Receipt printed successfully!');
-    console.log('═══════════════════════════════════════════════════════════════\n');
-
-    return {
-      success: true,
-      message: 'Receipt printed successfully',
-    };
-  } catch (error) {
-    console.error('❌ Error printing receipt:', error.message);
-    console.error('Full error:', error);
-    console.error('═══════════════════════════════════════════════════════════════\n');
-
-    return {
-      success: false,
-      error: error.message || 'Failed to print receipt',
-      suggestion:
-        'Please check printer connection and ensure the printer is set up in Windows Settings > Printers & scanners',
-    };
-  }
+  });
 }
 
 /**
