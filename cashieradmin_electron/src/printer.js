@@ -1,6 +1,4 @@
-const escpos = require('escpos');
-const USB = require('@node-escpos/usb-adapter');
-escpos.USB = USB;
+const { PosPrinter } = require('electron-pos-printer');
 
 /**
  * Get printer status
@@ -9,32 +7,53 @@ escpos.USB = USB;
  */
 async function getStatus(printerName = 'POS-58') {
   try {
-    // Try to find USB printer devices
-    const devices = escpos.USB.findPrinter();
+    // Get list of available printers from the system
+    const printers = await PosPrinter.listPrinters();
 
-    if (!devices || devices.length === 0) {
+    if (!printers || printers.length === 0) {
       return {
         available: false,
         connected: false,
         config: {
           printerName: printerName,
-          error: 'No USB printers detected. Please check connection.',
+          error: 'No printers detected. Please check connection and ensure printer is installed in Windows.',
+          suggestion: 'Install your thermal printer using Windows Settings > Devices > Printers & scanners',
         },
       };
     }
 
-    // For POS-58, we typically look for the first available thermal printer
-    const device = devices[0];
+    // Check if the specified printer exists
+    const printer = printers.find(
+      (p) =>
+        p.name === printerName ||
+        p.displayName === printerName ||
+        p.name.includes(printerName)
+    );
 
+    if (printer) {
+      return {
+        available: true,
+        connected: true,
+        config: {
+          printerName: printer.name,
+          name: printer.name,
+          displayName: printer.displayName,
+          status: printer.status,
+          isDefault: printer.isDefault,
+          options: printer.options,
+        },
+      };
+    }
+
+    // Printer not found, but other printers are available
     return {
       available: true,
-      connected: true,
+      connected: false,
       config: {
         printerName: printerName,
-        name: printerName,
-        vendorId: device.deviceDescriptor?.idVendor,
-        productId: device.deviceDescriptor?.idProduct,
-        deviceCount: devices.length,
+        error: `Printer "${printerName}" not found`,
+        suggestion: `Available printers: ${printers.map((p) => p.name).join(', ')}`,
+        availablePrinters: printers.map((p) => p.name),
       },
     };
   } catch (error) {
@@ -45,7 +64,8 @@ async function getStatus(printerName = 'POS-58') {
       config: {
         printerName: printerName,
         error: error.message || 'Failed to detect printer',
-        suggestion: 'Please ensure printer is connected and drivers are installed',
+        suggestion:
+          'Please ensure printer is connected and drivers are installed in Windows',
       },
     };
   }
@@ -57,16 +77,12 @@ async function getStatus(printerName = 'POS-58') {
  */
 async function getAvailablePrinters() {
   try {
-    const devices = escpos.USB.findPrinter();
-    if (!devices || devices.length === 0) {
+    const printers = await PosPrinter.listPrinters();
+    if (!printers || printers.length === 0) {
       return [];
     }
 
-    return devices.map((device, index) => {
-      const vendorId = device.deviceDescriptor?.idVendor;
-      const productId = device.deviceDescriptor?.idProduct;
-      return `USB Printer ${index + 1} (VID: ${vendorId}, PID: ${productId})`;
-    });
+    return printers.map((printer) => printer.name);
   } catch (error) {
     console.error('Error getting available printers:', error);
     return [];
@@ -80,128 +96,245 @@ async function getAvailablePrinters() {
  * @returns {Promise<{success: boolean, message?: string, error?: string}>}
  */
 async function printReceipt(printerName, receiptData) {
-  let device = null;
   try {
-    const devices = escpos.USB.findPrinter();
-    if (!devices || devices.length === 0) {
-      throw new Error('No printer found. Please check USB connection.');
-    }
-
-    // Create USB device - alpha version uses direct device object
-    device = new escpos.USB();
-
-    // Open device with promise-based approach for alpha version
-    await new Promise((resolve, reject) => {
-      device.open((err) => {
-        if (err) {
-          reject(new Error(`Failed to open printer: ${err.message}`));
-        } else {
-          resolve();
-        }
-      });
-    });
-
-    const printer = new escpos.Printer(device);
-
-    // Print header
-    printer
-      .font('a')
-      .align('ct')
-      .style('bu')
-      .size(2, 2)
-      .text('GOLDENMUNCH')
-      .size(1, 1)
-      .style('normal')
-      .text('Order Receipt')
-      .text('--------------------------------')
-      .align('lt')
-      .text('');
-
-    // Order info
-    printer
-      .text(`Order #: ${receiptData.orderNumber}`)
-      .text(`Date: ${receiptData.orderDate}`)
-      .text('--------------------------------');
+    // Build receipt data structure for electron-pos-printer
+    const data = [
+      // Header
+      {
+        type: 'text',
+        value: 'GOLDENMUNCH',
+        style: {
+          textAlign: 'center',
+          fontSize: '20px',
+          fontWeight: 'bold',
+          marginTop: '10px',
+        },
+      },
+      {
+        type: 'text',
+        value: 'Order Receipt',
+        style: {
+          textAlign: 'center',
+          fontSize: '14px',
+          marginBottom: '10px',
+        },
+      },
+      {
+        type: 'text',
+        value: '--------------------------------',
+        style: { textAlign: 'center' },
+      },
+      // Order info
+      {
+        type: 'text',
+        value: `Order #: ${receiptData.orderNumber}`,
+        style: { marginTop: '5px' },
+      },
+      {
+        type: 'text',
+        value: `Date: ${receiptData.orderDate}`,
+        style: { marginBottom: '5px' },
+      },
+      {
+        type: 'text',
+        value: '--------------------------------',
+      },
+    ];
 
     // Customer info
     if (receiptData.customerName) {
-      printer.text(`Customer: ${receiptData.customerName}`);
+      data.push({
+        type: 'text',
+        value: `Customer: ${receiptData.customerName}`,
+        style: { marginTop: '5px' },
+      });
     }
     if (receiptData.verificationCode) {
-      printer.text(`Code: ${receiptData.verificationCode}`);
+      data.push(
+        {
+          type: 'text',
+          value: 'Verification Code:',
+          style: {
+            textAlign: 'center',
+            fontSize: '12px',
+            marginTop: '10px',
+          },
+        },
+        {
+          type: 'text',
+          value: receiptData.verificationCode,
+          style: {
+            textAlign: 'center',
+            fontSize: '24px',
+            fontWeight: 'bold',
+            marginBottom: '10px',
+          },
+        }
+      );
     }
-    printer.text('');
 
-    // Items
-    printer.text('ITEMS:').text('--------------------------------');
+    // Items section
+    data.push(
+      {
+        type: 'text',
+        value: '',
+        style: { marginTop: '5px' },
+      },
+      {
+        type: 'text',
+        value: 'ITEMS:',
+        style: { fontWeight: 'bold' },
+      },
+      {
+        type: 'text',
+        value: '--------------------------------',
+      }
+    );
 
+    // Add each item
     receiptData.items.forEach((item) => {
-      const itemName = item.name.substring(0, 20); // Limit length
-      const qty = `x${item.quantity}`;
-      const price = `₱${(item.price * item.quantity).toFixed(2)}`;
+      const itemTotal = item.price * item.quantity;
 
-      // Item name and total
-      printer.text(`${itemName}`);
-
-      // Quantity and price on next line, right aligned
-      const qtyPriceLine = `  ${qty}    ${price}`;
-      printer.align('rt').text(qtyPriceLine).align('lt');
+      data.push(
+        {
+          type: 'text',
+          value: item.name,
+          style: { marginTop: '3px' },
+        },
+        {
+          type: 'text',
+          value: `  x${item.quantity}    ₱${itemTotal.toFixed(2)}`,
+          style: { textAlign: 'right' },
+        }
+      );
 
       if (item.specialInstructions) {
-        printer.text(`  Note: ${item.specialInstructions}`);
+        data.push({
+          type: 'text',
+          value: `  Note: ${item.specialInstructions}`,
+          style: { fontSize: '11px', fontStyle: 'italic' },
+        });
       }
     });
 
-    printer.text('--------------------------------');
-
     // Totals
-    printer
-      .align('rt')
-      .text(`Subtotal: ₱${receiptData.subtotal.toFixed(2)}`)
-      .text(`Tax: ₱${receiptData.tax.toFixed(2)}`);
+    data.push(
+      {
+        type: 'text',
+        value: '--------------------------------',
+        style: { marginTop: '5px' },
+      },
+      {
+        type: 'text',
+        value: `Subtotal: ₱${receiptData.subtotal.toFixed(2)}`,
+        style: { textAlign: 'right' },
+      },
+      {
+        type: 'text',
+        value: `Tax: ₱${receiptData.tax.toFixed(2)}`,
+        style: { textAlign: 'right' },
+      }
+    );
 
     if (receiptData.discount > 0) {
-      printer.text(`Discount: -₱${receiptData.discount.toFixed(2)}`);
+      data.push({
+        type: 'text',
+        value: `Discount: -₱${receiptData.discount.toFixed(2)}`,
+        style: { textAlign: 'right' },
+      });
     }
 
-    printer
-      .style('bu')
-      .size(1, 2)
-      .text(`TOTAL: ₱${receiptData.total.toFixed(2)}`)
-      .size(1, 1)
-      .style('normal');
-
-    printer.text('--------------------------------').align('lt');
+    data.push(
+      {
+        type: 'text',
+        value: '--------------------------------',
+      },
+      {
+        type: 'text',
+        value: `TOTAL: ₱${receiptData.total.toFixed(2)}`,
+        style: {
+          textAlign: 'right',
+          fontSize: '18px',
+          fontWeight: 'bold',
+          marginTop: '5px',
+        },
+      },
+      {
+        type: 'text',
+        value: '--------------------------------',
+      }
+    );
 
     // Payment method
-    printer.text(`Payment: ${receiptData.paymentMethod}`).text('');
+    data.push(
+      {
+        type: 'text',
+        value: `Payment: ${receiptData.paymentMethod}`,
+        style: { marginTop: '5px' },
+      }
+    );
+
+    // Reference number for digital payments
+    if (receiptData.referenceNumber) {
+      data.push({
+        type: 'text',
+        value: `Reference #: ${receiptData.referenceNumber}`,
+      });
+    }
 
     // Special instructions
     if (receiptData.specialInstructions) {
-      printer
-        .text('SPECIAL INSTRUCTIONS:')
-        .text(receiptData.specialInstructions)
-        .text('');
+      data.push(
+        {
+          type: 'text',
+          value: '',
+          style: { marginTop: '5px' },
+        },
+        {
+          type: 'text',
+          value: 'SPECIAL INSTRUCTIONS:',
+          style: { fontWeight: 'bold' },
+        },
+        {
+          type: 'text',
+          value: receiptData.specialInstructions,
+          style: { fontSize: '11px' },
+        }
+      );
     }
 
     // Footer
-    printer
-      .align('ct')
-      .text('Thank you for your order!')
-      .text('Please come again')
-      .text('')
-      .text('')
-      .text('');
+    data.push(
+      {
+        type: 'text',
+        value: '',
+        style: { marginTop: '10px' },
+      },
+      {
+        type: 'text',
+        value: 'Thank you for your order!',
+        style: { textAlign: 'center', fontWeight: 'bold' },
+      },
+      {
+        type: 'text',
+        value: 'Please come again',
+        style: { textAlign: 'center', marginBottom: '10px' },
+      }
+    );
 
-    // Cut paper and close
-    printer.cut();
+    // Print options
+    const options = {
+      preview: false,
+      width: '58mm', // Supports: 80mm, 78mm, 76mm, 58mm, 57mm, 44mm
+      margin: '0 0 0 0',
+      copies: 1,
+      printerName: printerName,
+      timeOutPerLine: 400,
+      silent: true,
+    };
 
-    // Close device properly
-    await new Promise((resolve) => {
-      printer.close(() => {
-        resolve();
-      });
-    });
+    // Print the receipt
+    await PosPrinter.print(data, options);
 
     return {
       success: true,
@@ -210,19 +343,11 @@ async function printReceipt(printerName, receiptData) {
   } catch (error) {
     console.error('Error printing receipt:', error);
 
-    // Try to close device if it was opened
-    if (device) {
-      try {
-        device.close();
-      } catch (closeError) {
-        console.error('Error closing device:', closeError);
-      }
-    }
-
     return {
       success: false,
       error: error.message || 'Failed to print receipt',
-      suggestion: 'Please check printer connection and ensure POS-58 is properly connected via USB',
+      suggestion:
+        'Please check printer connection and ensure the printer is set up in Windows Settings > Printers & scanners',
     };
   }
 }
@@ -249,7 +374,7 @@ async function printTest(printerName) {
       },
     ],
     subtotal: 349.97,
-    tax: 42.00,
+    tax: 42.0,
     discount: 0,
     total: 391.97,
     paymentMethod: 'Cash',
@@ -267,97 +392,153 @@ async function printTest(printerName) {
  * @returns {Promise<{success: boolean, message?: string, error?: string}>}
  */
 async function printDailyReport(printerName, reportData) {
-  let device = null;
   try {
-    const devices = escpos.USB.findPrinter();
-    if (!devices || devices.length === 0) {
-      throw new Error('No printer found. Please check USB connection.');
-    }
+    // Build report data structure
+    const data = [
+      // Header
+      {
+        type: 'text',
+        value: 'GOLDENMUNCH',
+        style: {
+          textAlign: 'center',
+          fontSize: '20px',
+          fontWeight: 'bold',
+          marginTop: '10px',
+        },
+      },
+      {
+        type: 'text',
+        value: 'Daily Sales Report',
+        style: {
+          textAlign: 'center',
+          fontSize: '14px',
+          marginBottom: '10px',
+        },
+      },
+      {
+        type: 'text',
+        value: '--------------------------------',
+        style: { textAlign: 'center' },
+      },
+      // Report date
+      {
+        type: 'text',
+        value: `Date: ${reportData.date}`,
+        style: { marginTop: '5px', marginBottom: '5px' },
+      },
+      {
+        type: 'text',
+        value: '--------------------------------',
+      },
+      // Summary
+      {
+        type: 'text',
+        value: '',
+        style: { marginTop: '5px' },
+      },
+      {
+        type: 'text',
+        value: 'SUMMARY:',
+        style: { fontWeight: 'bold' },
+      },
+      {
+        type: 'text',
+        value: `Total Orders: ${reportData.totalOrders}`,
+      },
+      {
+        type: 'text',
+        value: `Total Sales: ₱${reportData.totalSales.toFixed(2)}`,
+        style: {
+          fontSize: '16px',
+          fontWeight: 'bold',
+          textAlign: 'right',
+          marginTop: '5px',
+        },
+      },
+      {
+        type: 'text',
+        value: '--------------------------------',
+        style: { marginTop: '5px' },
+      },
+    ];
 
-    // Create USB device - alpha version uses direct device object
-    device = new escpos.USB();
+    // Payment breakdown
+    data.push(
+      {
+        type: 'text',
+        value: '',
+        style: { marginTop: '5px' },
+      },
+      {
+        type: 'text',
+        value: 'PAYMENT BREAKDOWN:',
+        style: { fontWeight: 'bold' },
+      }
+    );
 
-    // Open device with promise-based approach for alpha version
-    await new Promise((resolve, reject) => {
-      device.open((err) => {
-        if (err) {
-          reject(new Error(`Failed to open printer: ${err.message}`));
-        } else {
-          resolve();
-        }
+    Object.entries(reportData.paymentBreakdown).forEach(([method, amount]) => {
+      data.push({
+        type: 'text',
+        value: `${method.padEnd(15)} ₱${amount.toFixed(2)}`,
       });
     });
 
-    const printer = new escpos.Printer(device);
-
-    // Print header
-    printer
-      .font('a')
-      .align('ct')
-      .style('bu')
-      .size(2, 2)
-      .text('GOLDENMUNCH')
-      .size(1, 1)
-      .style('normal')
-      .text('Daily Sales Report')
-      .text('--------------------------------')
-      .align('lt')
-      .text('');
-
-    // Report date
-    printer
-      .text(`Date: ${reportData.date}`)
-      .text('--------------------------------')
-      .text('');
-
-    // Summary
-    printer
-      .text('SUMMARY:')
-      .text(`Total Orders: ${reportData.totalOrders}`)
-      .align('rt')
-      .style('bu')
-      .size(1, 2)
-      .text(`Total Sales: ₱${reportData.totalSales.toFixed(2)}`)
-      .size(1, 1)
-      .style('normal')
-      .align('lt')
-      .text('--------------------------------')
-      .text('');
-
-    // Payment breakdown
-    printer.text('PAYMENT BREAKDOWN:');
-    Object.entries(reportData.paymentBreakdown).forEach(([method, amount]) => {
-      const methodText = method.padEnd(15);
-      printer.text(`${methodText} ₱${amount.toFixed(2)}`);
+    data.push({
+      type: 'text',
+      value: '--------------------------------',
+      style: { marginTop: '5px' },
     });
-    printer.text('--------------------------------').text('');
 
     // Top items
     if (reportData.topItems && reportData.topItems.length > 0) {
-      printer.text('TOP ITEMS:');
+      data.push(
+        {
+          type: 'text',
+          value: '',
+          style: { marginTop: '5px' },
+        },
+        {
+          type: 'text',
+          value: 'TOP ITEMS:',
+          style: { fontWeight: 'bold' },
+        }
+      );
+
       reportData.topItems.forEach((item, index) => {
-        printer.text(`${index + 1}. ${item.name} (${item.quantity}x)`);
+        data.push({
+          type: 'text',
+          value: `${index + 1}. ${item.name} (${item.quantity}x)`,
+        });
       });
-      printer.text('');
     }
 
     // Footer
-    printer
-      .align('ct')
-      .text('End of Report')
-      .text('')
-      .text('')
-      .text('');
+    data.push(
+      {
+        type: 'text',
+        value: '',
+        style: { marginTop: '10px' },
+      },
+      {
+        type: 'text',
+        value: 'End of Report',
+        style: { textAlign: 'center', fontWeight: 'bold', marginBottom: '10px' },
+      }
+    );
 
-    // Cut paper
-    printer.cut();
+    // Print options
+    const options = {
+      preview: false,
+      width: '58mm',
+      margin: '0 0 0 0',
+      copies: 1,
+      printerName: printerName,
+      timeOutPerLine: 400,
+      silent: true,
+    };
 
-    // Close device properly
-    await new Promise((resolve) => {
-      printer.close(() => {
-        resolve();
-      });
-    });
+    // Print the report
+    await PosPrinter.print(data, options);
 
     return {
       success: true,
@@ -366,19 +547,11 @@ async function printDailyReport(printerName, reportData) {
   } catch (error) {
     console.error('Error printing report:', error);
 
-    // Try to close device if it was opened
-    if (device) {
-      try {
-        device.close();
-      } catch (closeError) {
-        console.error('Error closing device:', closeError);
-      }
-    }
-
     return {
       success: false,
       error: error.message || 'Failed to print report',
-      suggestion: 'Please check printer connection and ensure POS-58 is properly connected via USB',
+      suggestion:
+        'Please check printer connection and ensure the printer is set up in Windows Settings > Printers & scanners',
     };
   }
 }

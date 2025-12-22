@@ -42,7 +42,8 @@
         "deb"
       ],
       "icon": "assets/icon.png",
-      "category": "Office"
+      "category": "Office",
+      "maintainer": "support@goldenmunch.com"
     },
     "nsis": {
       "oneClick": false,
@@ -58,12 +59,15 @@
     "printer",
     "goldenmunch"
   ],
-  "author": "GoldenMunch",
+  "author": {
+    "name": "GoldenMunch",
+    "email": "support@goldenmunch.com"
+  },
+  "homepage": "https://github.com/Shaloh69/GoldenMunch_POS-System-With-Custom-Cake-Editor",
   "license": "ISC",
   "dependencies": {
-    "@node-escpos/usb-adapter": "^0.3.1",
-    "electron-store": "^8.1.0",
-    "escpos": "^3.0.0-alpha.6"
+    "electron-pos-printer": "^1.3.5",
+    "electron-store": "^8.1.0"
   },
   "devDependencies": {
     "electron": "^28.0.0",
