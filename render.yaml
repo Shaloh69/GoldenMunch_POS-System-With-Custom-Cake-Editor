@@ -20,7 +20,7 @@ services:
       - key: NEXT_TELEMETRY_DISABLED
         value: 1
       - key: NEXT_PUBLIC_API_URL
-        value: https://goldenmunch-pos-system-server-fobd.onrender.com/api
+        value: https://goldenmunch-server.onrender.com/api
     healthCheckPath: /
     autoDeploy: true
 
@@ -54,7 +54,7 @@ services:
       - key: CASHIER_JWT_SECRET
         generateValue: true
       - key: CORS_ORIGIN
-        value: https://goldenmunch-pos-system-with-custom-cake-ud4p.onrender.com,https://goldenmunch-pos-cashieradmin.onrender.com,https://goldenmunch-pos-cakeeditor.onrender.com
+        value: https://golden-munch-pos-system-with-custom-tau.vercel.app,https://goldenmunch-cashieradmin.onrender.com,https://goldenmunch-pos-system-with-custom-cake-lcxl.onrender.com
     healthCheckPath: /api/health
     autoDeploy: true
 
@@ -76,7 +76,7 @@ services:
       - key: NEXT_TELEMETRY_DISABLED
         value: 1
       - key: NEXT_PUBLIC_API_URL
-        value: https://goldenmunch-pos-system-server-fobd.onrender.com/api
+        value: https://goldenmunch-server.onrender.com/api
     healthCheckPath: /
     autoDeploy: true
 
