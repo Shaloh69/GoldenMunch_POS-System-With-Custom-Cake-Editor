@@ -41,7 +41,7 @@ function createWindow() {
   // In production, this should point to your deployed cashieradmin URL
   // In development, it points to localhost
   const appUrl = process.argv.includes('--dev')
-    ? 'http://localhost:3001' // Development cashieradmin URL
+    ? 'https://goldenmunch-pos-cashieradmin.onrender.com' // Development cashieradmin URL
     : serverUrl; // Production URL from settings
 
   mainWindow.loadURL(appUrl);
