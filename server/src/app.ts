@@ -87,6 +87,12 @@ app.use(cors({
     callback(new Error(`Origin ${origin} not allowed by CORS policy`));
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 86400, // 24 hours - cache preflight requests
+  preflightContinue: false,
+  optionsSuccessStatus: 204
 }));
 
 // Rate limiting - General API rate limiter
