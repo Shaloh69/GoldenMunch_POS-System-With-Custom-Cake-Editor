@@ -1,4 +1,5 @@
 const { PosPrinter } = require('electron-pos-printer');
+const { BrowserWindow } = require('electron');
 
 /**
  * Get printer status
@@ -9,8 +10,14 @@ async function getStatus(printerName = 'POS-58') {
   try {
     console.log(`🖨️  Checking printer status for: "${printerName}"`);
 
-    // Get list of available printers from the system
-    const printers = await PosPrinter.listPrinters();
+    // Get the main window to access printers
+    const mainWindow = BrowserWindow.getAllWindows()[0];
+    if (!mainWindow) {
+      throw new Error('No window available');
+    }
+
+    // Get list of available printers from Electron's native API
+    const printers = await mainWindow.webContents.getPrinters();
 
     console.log(`📋 Found ${printers?.length || 0} system printers:`,
       printers?.map(p => ({
@@ -103,7 +110,15 @@ async function getStatus(printerName = 'POS-58') {
  */
 async function getAvailablePrinters() {
   try {
-    const printers = await PosPrinter.listPrinters();
+    const mainWindow = BrowserWindow.getAllWindows()[0];
+    if (!mainWindow) {
+      console.warn('No window available to get printers');
+      return [];
+    }
+
+    const printers = await mainWindow.webContents.getPrinters();
+    console.log('🖨️ Detected printers:', printers.map(p => p.name));
+
     if (!printers || printers.length === 0) {
       return [];
     }
