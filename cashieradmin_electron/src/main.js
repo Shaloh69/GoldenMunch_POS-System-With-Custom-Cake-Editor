@@ -154,10 +154,12 @@ function setupIpcHandlers() {
   // Get available printers
   ipcMain.handle('printer:getAvailablePrinters', async () => {
     try {
+      console.log('🔔 IPC: printer:getAvailablePrinters called');
       const printers = await printer.getAvailablePrinters();
+      console.log('🔔 IPC: Returning printers:', printers);
       return printers;
     } catch (error) {
-      console.error('Error getting available printers:', error);
+      console.error('❌ IPC Error getting available printers:', error);
       return [];
     }
   });
