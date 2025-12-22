@@ -22,7 +22,7 @@ let mainWindow;
 
 // Default configuration
 const DEFAULT_CONFIG = {
-  serverUrl: 'https://goldenmunch-pos-cashieradmin.onrender.com',
+  serverUrl: 'https://goldenmunch-cashieradmin.onrender.com',
   printerName: 'POS-58',
   windowWidth: 1400,
   windowHeight: 900,
@@ -64,7 +64,7 @@ function createWindow() {
   // In production, this should point to your deployed cashieradmin URL
   // In development, it points to localhost
   const appUrl = process.argv.includes('--dev')
-    ? 'https://goldenmunch-pos-cashieradmin.onrender.com' // Development cashieradmin URL
+    ? 'https://goldenmunch-cashieradmin.onrender.com' // Development cashieradmin URL
     : serverUrl; // Production URL from settings
 
   console.log('🌐 Loading URL:', appUrl);
