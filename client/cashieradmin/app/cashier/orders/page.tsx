@@ -194,11 +194,7 @@ export default function UnifiedCashierPage() {
           (o: CustomerOrder) => o.order_status === OrderStatus.PENDING,
         );
         const active = allOrders.filter((o: CustomerOrder) =>
-          [
-            OrderStatus.CONFIRMED,
-            OrderStatus.PREPARING,
-            OrderStatus.READY,
-          ].includes(o.order_status as OrderStatus),
+          o.order_status === OrderStatus.CONFIRMED,
         );
         const completed = allOrders.filter((o: CustomerOrder) =>
           [OrderStatus.COMPLETED, OrderStatus.CANCELLED].includes(
@@ -689,11 +685,7 @@ export default function UnifiedCashierPage() {
     if (!selectedOrder) return null;
 
     const isPending = selectedOrder.order_status === OrderStatus.PENDING;
-    const isActive = [
-      OrderStatus.CONFIRMED,
-      OrderStatus.PREPARING,
-      OrderStatus.READY,
-    ].includes(selectedOrder.order_status as OrderStatus);
+    const isActive = selectedOrder.order_status === OrderStatus.CONFIRMED;
 
     // Calculate final amount with robust parsing for database string values
     const orderTotal = parseAmount(selectedOrder.final_amount) ||
@@ -1172,32 +1164,6 @@ export default function UnifiedCashierPage() {
             {isActive && (
               <div className="flex gap-3">
                 {selectedOrder.order_status === OrderStatus.CONFIRMED && (
-                  <Button
-                    color="primary"
-                    size="lg"
-                    className="font-bold shadow-lg"
-                    isLoading={updatingStatus}
-                    isDisabled={updatingStatus || verifying || deleting}
-                    startContent={!updatingStatus && <ClockIcon className="h-5 w-5" />}
-                    onPress={() => handleUpdateStatus(OrderStatus.PREPARING)}
-                  >
-                    Mark as Preparing
-                  </Button>
-                )}
-                {selectedOrder.order_status === OrderStatus.PREPARING && (
-                  <Button
-                    color="success"
-                    size="lg"
-                    className="font-bold shadow-lg"
-                    isLoading={updatingStatus}
-                    isDisabled={updatingStatus || verifying || deleting}
-                    startContent={!updatingStatus && <CheckCircleIcon className="h-5 w-5" />}
-                    onPress={() => handleUpdateStatus(OrderStatus.READY)}
-                  >
-                    Mark as Ready
-                  </Button>
-                )}
-                {selectedOrder.order_status === OrderStatus.READY && (
                   <Button
                     color="success"
                     size="lg"
