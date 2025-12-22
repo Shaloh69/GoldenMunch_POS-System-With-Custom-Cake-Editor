@@ -935,31 +935,33 @@ export default function UnifiedCashierPage() {
                 </CardHeader>
                 <CardBody className="space-y-5 p-6">
                   {/* Discount Selection */}
-                  <Select
-                    label="Apply Discount (Optional)"
-                    placeholder="Select a discount"
-                    selectedKeys={
-                      selectedDiscount
-                        ? [selectedDiscount.discount_type_id.toString()]
-                        : []
-                    }
-                    startContent={<PercentBadgeIcon className="h-4 w-4" />}
-                    onSelectionChange={(keys) => {
-                      const selectedKey = Array.from(keys)[0];
-                    
-                      const discount = discounts.find(
-                        (d) => d.discount_type_id.toString() === selectedKey
-                      );
-                    
-                      setSelectedDiscount(discount || null);
-                    }}
-                  >
-                    {discounts.map((discount) => (
-                      <SelectItem key={discount.discount_type_id.toString()}>
-                        {discount.name} - {discount.discount_percentage}% off
-                      </SelectItem>
-                    ))}
-                  </Select>
+                <Select
+                  label="Apply Discount (Optional)"
+                  placeholder="Select a discount"
+                  selectedKeys={
+                    selectedDiscount
+                      ? new Set([selectedDiscount.discount_type_id.toString()])
+                      : new Set()
+                  }
+                  onSelectionChange={(keys) => {
+                    const key = [...keys][0];
+                  
+                    const discount = discounts.find(
+                      d => d.discount_type_id.toString() === key
+                    );
+                  
+                    setSelectedDiscount(discount || null);
+                  }}
+                >
+                  {discounts.map((discount) => (
+                    <SelectItem
+                      key={discount.discount_type_id.toString()}
+                      textValue={`${discount.name} - ${discount.discount_percentage}% off`}
+                    >
+                      {discount.name} - {discount.discount_percentage}% off
+                    </SelectItem>
+                  ))}
+                </Select>
 
 
                   {/* Cash Payment */}
