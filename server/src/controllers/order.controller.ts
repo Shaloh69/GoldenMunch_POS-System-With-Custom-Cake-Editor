@@ -289,10 +289,11 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
 
   // Handle cash and cashless payments
   await transaction(async (conn: PoolConnection) => {
-    const orderData = getFirstRow<any>(await conn.query(
+    const [orderDataRows] = await conn.query(
       'SELECT subtotal, tax_amount, final_amount, payment_method FROM customer_order WHERE order_id = ? AND is_deleted = FALSE',
       [order_id]
-    ));
+    );
+    const orderData = getFirstRow<any>(orderDataRows);
 
     if (!orderData) {
       throw new AppError('Order not found', 404);
@@ -304,10 +305,11 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
 
     // Apply discount if provided
     if (customer_discount_type_id) {
-      const discountData = getFirstRow<any>(await conn.query(
+      const [discountRows] = await conn.query(
         'SELECT discount_percentage, name FROM customer_discount_type WHERE discount_type_id = ? AND is_active = TRUE',
         [customer_discount_type_id]
-      ));
+      );
+      const discountData = getFirstRow<any>(discountRows);
 
       if (!discountData) {
         throw new AppError('Invalid or inactive discount type', 400);
@@ -361,10 +363,11 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
 
     for (const item of orderItems as any[]) {
       // Get menu item details including stock info
-      const menuItem = getFirstRow<any>(await conn.query(
+      const [menuItemRows] = await conn.query(
         'SELECT is_infinite_stock, stock_quantity, name FROM menu_item WHERE menu_item_id = ?',
         [item.menu_item_id]
-      ));
+      );
+      const menuItem = getFirstRow<any>(menuItemRows);
 
       if (!menuItem) {
         throw new AppError(`Menu item ${item.menu_item_id} not found`, 404);
@@ -424,10 +427,11 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
     console.log('✓ Payment transaction recorded');
 
     // Verify the update actually worked
-    const verifyUpdate = getFirstRow<any>(await conn.query(
+    const [verifyRows] = await conn.query(
       'SELECT payment_status, amount_paid FROM customer_order WHERE order_id = ?',
       [order_id]
-    ));
+    );
+    const verifyUpdate = getFirstRow<any>(verifyRows);
     console.log('✅ Payment verification complete:', verifyUpdate);
   });
 
@@ -506,10 +510,12 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response) => {
 
   await transaction(async (conn: PoolConnection) => {
     // Check if order exists and get payment status
-    const existingOrder = getFirstRow<any>(await conn.query(
+    const [orderRows] = await conn.query(
       'SELECT order_id, order_status, payment_status FROM customer_order WHERE order_id = ? AND is_deleted = FALSE',
       [id]
-    ));
+    );
+
+    const existingOrder = getFirstRow<any>(orderRows);
 
     if (!existingOrder) {
       throw new AppError('Order not found', 404);

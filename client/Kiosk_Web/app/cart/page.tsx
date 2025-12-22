@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Card, CardBody, CardHeader,
   Button,
@@ -19,6 +19,7 @@ import { OrderService } from "@/services/order.service";
 import { SettingsService } from "@/services/settings.service";
 import { getImageUrl } from "@/utils/imageUtils";
 import { KioskAppSidebar } from "@/components/KioskAppSidebar";
+import TouchKeyboard, { TouchKeyboardHandle } from "@/components/TouchKeyboard";
 import {
   OrderType,
   OrderSource,
@@ -68,6 +69,13 @@ export default function CartPage() {
 
   // Track failed image URLs to show emoji fallback
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+
+  // Touch Keyboard State
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  const [activeInput, setActiveInput] = useState<string | null>(null);
+  const [layoutName, setLayoutName] = useState("default");
+  const keyboardRef = useRef<TouchKeyboardHandle>(null);
+  const inputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
 
   const handleImageError = (imageUrl: string | null) => {
     if (imageUrl) {
@@ -187,6 +195,52 @@ export default function CartPage() {
 
   const handleCloseSidebar = () => {
     setSelectedItem(null);
+  };
+
+  // Touch Keyboard Handlers
+  const handleInputFocus = (inputName: string, value: string) => {
+    setActiveInput(inputName);
+    setKeyboardVisible(true);
+    if (keyboardRef.current) {
+      keyboardRef.current.setInput(value);
+    }
+  };
+
+  const handleInputBlur = () => {
+    // Don't hide keyboard immediately - wait for potential keyboard clicks
+    setTimeout(() => {
+      setKeyboardVisible(false);
+      setActiveInput(null);
+    }, 100);
+  };
+
+  const handleKeyboardChange = (input: string) => {
+    if (!activeInput) return;
+
+    switch (activeInput) {
+      case "customerName":
+        setCustomerName(input);
+        break;
+      case "customerPhone":
+        setCustomerPhone(input);
+        break;
+      case "specialInstructions":
+        setSpecialInstructions(input);
+        break;
+      case "referenceNumber":
+        setReferenceNumber(input);
+        break;
+    }
+  };
+
+  const handleKeyPress = (button: string) => {
+    if (button === "{shift}" || button === "{lock}") {
+      setLayoutName(layoutName === "default" ? "shift" : "default");
+    } else if (button === "{enter}") {
+      // Hide keyboard when done
+      setKeyboardVisible(false);
+      setActiveInput(null);
+    }
   };
 
   if (cartItems.length === 0) {
@@ -404,13 +458,15 @@ export default function CartPage() {
                   placeholder="Enter your name"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
+                  onFocus={() => handleInputFocus("customerName", customerName)}
+                  readOnly
                   size="lg"
                   variant="bordered"
                   classNames={{
-                    input: "text-black",
+                    input: "text-black cursor-pointer",
                     label: "text-black font-semibold",
                     inputWrapper:
-                      "border-2 border-primary/60 hover:border-primary bg-card/50 shadow-sm",
+                      "border-2 border-primary/60 hover:border-primary bg-card/50 shadow-sm cursor-pointer",
                   }}
                 />
                 <Input
@@ -418,13 +474,15 @@ export default function CartPage() {
                   placeholder="For order updates"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
+                  onFocus={() => handleInputFocus("customerPhone", customerPhone)}
+                  readOnly
                   size="lg"
                   variant="bordered"
                   classNames={{
-                    input: "text-black",
+                    input: "text-black cursor-pointer",
                     label: "text-black font-semibold",
                     inputWrapper:
-                      "border-2 border-primary/60 hover:border-primary bg-card/50 shadow-sm",
+                      "border-2 border-primary/60 hover:border-primary bg-card/50 shadow-sm cursor-pointer",
                   }}
                 />
                 <Select
@@ -529,13 +587,15 @@ export default function CartPage() {
                   placeholder="Any special requests?"
                   value={specialInstructions}
                   onChange={(e) => setSpecialInstructions(e.target.value)}
+                  onFocus={() => handleInputFocus("specialInstructions", specialInstructions)}
+                  readOnly
                   size="lg"
                   variant="bordered"
                   classNames={{
-                    input: "text-black",
+                    input: "text-black cursor-pointer",
                     label: "text-black font-semibold",
                     inputWrapper:
-                      "border-2 border-primary/60 hover:border-primary bg-card/50 shadow-sm",
+                      "border-2 border-primary/60 hover:border-primary bg-card/50 shadow-sm cursor-pointer",
                   }}
                 />
               </CardBody>
@@ -746,14 +806,16 @@ export default function CartPage() {
                     placeholder="Enter your reference number"
                     value={referenceNumber}
                     onChange={(e) => setReferenceNumber(e.target.value)}
+                    onFocus={() => handleInputFocus("referenceNumber", referenceNumber)}
+                    readOnly
                     size="lg"
                     variant="bordered"
                     isRequired
                     classNames={{
-                      input: "text-black font-semibold text-lg",
+                      input: "text-black font-semibold text-lg cursor-pointer",
                       label: "text-black font-bold text-base",
                       inputWrapper:
-                        "border-3 border-primary/80 hover:border-primary bg-card shadow-md h-14",
+                        "border-3 border-primary/80 hover:border-primary bg-card shadow-md h-14 cursor-pointer",
                     }}
                     startContent={
                       <div className="pointer-events-none flex items-center">
@@ -800,10 +862,21 @@ export default function CartPage() {
       </Modal>
 
       {/* Spacer */}
-      <div className="h-20"></div>
+      <div className={keyboardVisible ? "h-[400px]" : "h-20"}></div>
         </div>
       </div>
       <KioskAppSidebar selectedItem={selectedItem} onClose={handleCloseSidebar} />
+
+      {/* Touch Keyboard */}
+      {keyboardVisible && (
+        <TouchKeyboard
+          ref={keyboardRef}
+          onChange={handleKeyboardChange}
+          onKeyPress={handleKeyPress}
+          inputName={activeInput || "default"}
+          layoutName={layoutName}
+        />
+      )}
     </>
   );
 }
