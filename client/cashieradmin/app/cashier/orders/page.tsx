@@ -678,6 +678,19 @@ export default function UnifiedCashierPage() {
       ? calculateFinalAmount(orderTotal, selectedDiscount)
       : orderTotal;
 
+    // Debug logging for total calculation
+    console.log('💰 Total calculation:', {
+      final_amount: selectedOrder.final_amount,
+      total_amount: selectedOrder.total_amount,
+      subtotal: selectedOrder.subtotal,
+      parsed_final: parseAmount(selectedOrder.final_amount),
+      parsed_total: parseAmount(selectedOrder.total_amount),
+      parsed_subtotal: parseAmount(selectedOrder.subtotal),
+      orderTotal,
+      finalAmount,
+      hasDiscount: !!selectedDiscount,
+    });
+
     return (
       <Drawer isOpen={isOpen} size="4xl" onClose={onClose}>
         <DrawerContent>
