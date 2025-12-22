@@ -110,6 +110,9 @@ export default function UnifiedCashierPage() {
   const [verifying, setVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState("");
 
+  // Status update loading state
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
   // Discounts
   const [discounts, setDiscounts] = useState<CustomerDiscountType[]>([]);
   const [selectedDiscount, setSelectedDiscount] =
@@ -125,6 +128,8 @@ export default function UnifiedCashierPage() {
     setVerifyError("");
     setSelectedDiscount(null);
     setVerifying(false);  // Reset verifying state
+    setUpdatingStatus(false);  // Reset status update state
+    setDeleting(false);  // Reset deleting state
     onCloseDrawer();
   };
 
@@ -324,6 +329,9 @@ export default function UnifiedCashierPage() {
         setReferenceNumber("");
         setAmountTendered("");
         setSelectedDiscount(null);
+        setVerifying(false);  // Reset loading states
+        setUpdatingStatus(false);
+        setDeleting(false);
         onOpen();
       }
     } catch (error) {
@@ -442,6 +450,8 @@ export default function UnifiedCashierPage() {
   const handleUpdateStatus = async (newStatus: OrderStatus) => {
     if (!selectedOrder) return;
 
+    setUpdatingStatus(true);
+
     try {
       const response = await OrderService.updateOrderStatus(
         selectedOrder.order_id,
@@ -477,6 +487,8 @@ export default function UnifiedCashierPage() {
         color: "danger",
         timeout: 3000,
       });
+    } finally {
+      setUpdatingStatus(false);
     }
   };
 
@@ -1114,6 +1126,7 @@ export default function UnifiedCashierPage() {
                     size="lg"
                     className="font-semibold"
                     isLoading={deleting}
+                    isDisabled={deleting || updatingStatus || verifying}
                     startContent={!deleting && <TrashIcon className="h-5 w-5" />}
                     onPress={handleDeleteOrder}
                   >
@@ -1140,6 +1153,7 @@ export default function UnifiedCashierPage() {
                 size="lg"
                 className="font-bold shadow-lg"
                 isLoading={verifying}
+                isDisabled={verifying || updatingStatus || deleting}
                 startContent={
                   !verifying && <CheckCircleIcon className="h-5 w-5" />
                 }
@@ -1157,7 +1171,9 @@ export default function UnifiedCashierPage() {
                     color="primary"
                     size="lg"
                     className="font-bold shadow-lg"
-                    startContent={<ClockIcon className="h-5 w-5" />}
+                    isLoading={updatingStatus}
+                    isDisabled={updatingStatus || verifying || deleting}
+                    startContent={!updatingStatus && <ClockIcon className="h-5 w-5" />}
                     onPress={() => handleUpdateStatus(OrderStatus.PREPARING)}
                   >
                     Mark as Preparing
@@ -1168,7 +1184,9 @@ export default function UnifiedCashierPage() {
                     color="success"
                     size="lg"
                     className="font-bold shadow-lg"
-                    startContent={<CheckCircleIcon className="h-5 w-5" />}
+                    isLoading={updatingStatus}
+                    isDisabled={updatingStatus || verifying || deleting}
+                    startContent={!updatingStatus && <CheckCircleIcon className="h-5 w-5" />}
                     onPress={() => handleUpdateStatus(OrderStatus.READY)}
                   >
                     Mark as Ready
@@ -1179,7 +1197,9 @@ export default function UnifiedCashierPage() {
                     color="success"
                     size="lg"
                     className="font-bold shadow-lg"
-                    startContent={<CheckCircleIcon className="h-5 w-5" />}
+                    isLoading={updatingStatus}
+                    isDisabled={updatingStatus || verifying || deleting}
+                    startContent={!updatingStatus && <CheckCircleIcon className="h-5 w-5" />}
                     onPress={() => handleUpdateStatus(OrderStatus.COMPLETED)}
                   >
                     Mark as Completed
