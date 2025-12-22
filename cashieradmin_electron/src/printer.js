@@ -1,7 +1,5 @@
 const escpos = require('escpos');
-// Install escpos-usb adapter
-const USB = require('@node-escpos/usb');
-
+const USB = require('@node-escpos/usb-adapter');
 escpos.USB = USB;
 
 /**
