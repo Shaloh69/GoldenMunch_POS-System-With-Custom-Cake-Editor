@@ -1,40 +1,82 @@
+// preload.js — hardened, kiosk-safe
+
 const { contextBridge, ipcRenderer } = require('electron');
 
-// Expose protected methods that allow the renderer process to use
-// ipcRenderer without exposing the entire object
+// Helper: safe IPC invoke that never throws into the renderer
+async function safeInvoke(channel, payload) {
+  try {
+    return await ipcRenderer.invoke(channel, payload);
+  } catch (err) {
+    console.error(`IPC invoke failed [${channel}]:`, err);
+    return { success: false, error: err?.message || 'IPC failed' };
+  }
+}
+
 contextBridge.exposeInMainWorld('electron', {
-  // Add any electron APIs you need to expose to the renderer
-  // For security, only expose specific functions you need
-
-  // Printer Functions
+  // =========================
+  // Printer API (safe stubs)
+  // =========================
   printer: {
-    // Print order receipt
-    printReceipt: (orderData) => ipcRenderer.invoke('print-receipt', orderData),
+    printReceipt: (orderData) =>
+      safeInvoke('print-receipt', orderData),
 
-    // Print test receipt
-    printTest: () => ipcRenderer.invoke('print-test'),
+    printTest: () =>
+      safeInvoke('print-test'),
 
-    // Print daily report
-    printDailyReport: (reportData) => ipcRenderer.invoke('print-daily-report', reportData),
+    printDailyReport: (reportData) =>
+      safeInvoke('print-daily-report', reportData),
 
-    // Get printer status
-    getStatus: () => ipcRenderer.invoke('printer-status'),
+    getStatus: () =>
+      safeInvoke('printer-status'),
   },
 
-  // App Functions
-  getAppVersion: () => ipcRenderer.invoke('get-app-version'),
+  // =========================
+  // App Info
+  // =========================
+  getAppVersion: () =>
+    safeInvoke('get-app-version'),
 
-  // Payment Functions (for future integration)
-  openPayment: (paymentData) => ipcRenderer.invoke('open-payment', paymentData),
+  // =========================
+  // Payment (future use)
+  // =========================
+  openPayment: (paymentData) =>
+    safeInvoke('open-payment', paymentData),
+
+  // =========================
+  // Utility
+  // =========================
+  openSettings: () =>
+    safeInvoke('open-settings'),
 });
 
-// Optional: Disable specific features
+// =========================
+// KIOSK HARDENING
+// =========================
 window.addEventListener('DOMContentLoaded', () => {
-  // Disable text selection for kiosk mode
-  document.body.style.userSelect = 'none';
-  document.body.style.webkitUserSelect = 'none';
+  try {
+    // Disable text selection
+    document.body.style.userSelect = 'none';
+    document.body.style.webkitUserSelect = 'none';
 
-  // Disable drag and drop
-  document.addEventListener('dragover', (e) => e.preventDefault());
-  document.addEventListener('drop', (e) => e.preventDefault());
+    // Disable drag & drop
+    document.addEventListener('dragover', e => e.preventDefault());
+    document.addEventListener('drop', e => e.preventDefault());
+
+    // Prevent context menu (right click)
+    document.addEventListener('contextmenu', e => e.preventDefault());
+
+  } catch (err) {
+    console.warn('Preload DOMContentLoaded error:', err);
+  }
+});
+
+// =========================
+// OPTIONAL: renderer error logging
+// =========================
+window.addEventListener('error', (event) => {
+  console.error('Renderer error:', event.message, event.filename, event.lineno);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason);
 });
