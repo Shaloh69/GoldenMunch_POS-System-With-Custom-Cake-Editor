@@ -61,9 +61,7 @@ const statusColors: Record<
 > = {
   pending: "warning",
   confirmed: "primary",
-  preparing: "secondary",
-  ready: "success",
-  completed: "default",
+  completed: "success",
   cancelled: "danger",
 };
 
