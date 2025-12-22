@@ -7,10 +7,22 @@ const { PosPrinter } = require('electron-pos-printer');
  */
 async function getStatus(printerName = 'POS-58') {
   try {
+    console.log(`🖨️  Checking printer status for: "${printerName}"`);
+
     // Get list of available printers from the system
     const printers = await PosPrinter.listPrinters();
 
+    console.log(`📋 Found ${printers?.length || 0} system printers:`,
+      printers?.map(p => ({
+        name: p.name,
+        displayName: p.displayName,
+        isDefault: p.isDefault,
+        status: p.status
+      }))
+    );
+
     if (!printers || printers.length === 0) {
+      console.warn('⚠️  No printers detected');
       return {
         available: false,
         connected: false,
@@ -22,15 +34,28 @@ async function getStatus(printerName = 'POS-58') {
       };
     }
 
-    // Check if the specified printer exists
-    const printer = printers.find(
-      (p) =>
-        p.name === printerName ||
-        p.displayName === printerName ||
-        p.name.includes(printerName)
+    // Check if the specified printer exists (try exact match first, then partial)
+    let printer = printers.find((p) =>
+      p.name === printerName ||
+      p.displayName === printerName
     );
 
+    // If not found, try case-insensitive partial match
+    if (!printer) {
+      printer = printers.find((p) =>
+        p.name.toLowerCase().includes(printerName.toLowerCase()) ||
+        p.displayName?.toLowerCase().includes(printerName.toLowerCase())
+      );
+    }
+
+    // If still not found, use default printer if available
+    if (!printer && printers.length > 0) {
+      printer = printers.find((p) => p.isDefault) || printers[0];
+      console.log(`ℹ️  Printer "${printerName}" not found, using: ${printer.name}`);
+    }
+
     if (printer) {
+      console.log(`✅ Printer connected: ${printer.name}`);
       return {
         available: true,
         connected: true,
@@ -46,6 +71,7 @@ async function getStatus(printerName = 'POS-58') {
     }
 
     // Printer not found, but other printers are available
+    console.warn(`⚠️  Printer "${printerName}" not found among available printers`);
     return {
       available: true,
       connected: false,
@@ -57,7 +83,7 @@ async function getStatus(printerName = 'POS-58') {
       },
     };
   } catch (error) {
-    console.error('Error checking printer status:', error);
+    console.error('❌ Error checking printer status:', error);
     return {
       available: false,
       connected: false,
