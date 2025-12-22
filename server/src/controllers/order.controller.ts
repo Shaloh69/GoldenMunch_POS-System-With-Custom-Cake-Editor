@@ -429,7 +429,10 @@ export const getOrderDetails = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
 
   const order = getFirstRow<any>(await query(
-    'SELECT * FROM customer_order WHERE order_id = ?',
+    `SELECT co.*, c.name, c.phone
+     FROM customer_order co
+     LEFT JOIN customer c ON co.customer_id = c.customer_id
+     WHERE co.order_id = ?`,
     [id]
   ));
 
