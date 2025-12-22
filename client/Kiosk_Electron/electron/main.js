@@ -1,180 +1,137 @@
-// ================================
-// main.js – FIXED, STABLE, NO RANDOM RELOADS (KIOSK SAFE)
-// ================================
-
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
-const SettingsManager = require('./settings-manager');
 
-const isDev = !app.isPackaged;
 let mainWindow;
-let settingsWindow;
-let settingsManager;
-let lastReloadTime = 0;
+let heartbeatWindow;
+let lastPong = Date.now();
+let recovering = false;
 
-// ================================
-// STABLE KIOSK FLAGS (NO GPU / NO WAYLAND)
-// ================================
-app.commandLine.appendSwitch('disable-gpu');
-app.commandLine.appendSwitch('disable-gpu-compositing');
-app.commandLine.appendSwitch('disable-http-cache');
+// ⚠️ IMPORTANT: call BEFORE app.whenReady()
+app.disableHardwareAcceleration();
+app.commandLine.appendSwitch('enable-logging');
 
-if (process.getuid?.() === 0) {
-  // Acceptable ONLY in controlled kiosk environments
-  app.commandLine.appendSwitch('no-sandbox');
-}
-
-// ================================
-// SAFE RELOAD WITH COOLDOWN
-// ================================
-function safeReload() {
-  const now = Date.now();
-  if (now - lastReloadTime < 10000) {
-    console.warn('Reload suppressed (cooldown)');
-    return;
-  }
-  lastReloadTime = now;
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    console.log('Reloading main window');
-    mainWindow.reload();
-  }
-}
-
-// ================================
-// CREATE MAIN WINDOW
-// ================================
 function createMainWindow() {
   mainWindow = new BrowserWindow({
     fullscreen: true,
     kiosk: true,
-    backgroundColor: '#000000',
-    show: true,
+    frame: false,
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false
     }
   });
 
-  const startUrl = settingsManager.getAppUrl(isDev);
+  mainWindow.loadURL('YOUR_URL_HERE');
 
-  if (!startUrl) {
-    console.log('No app URL configured, opening settings');
-    openSettingsWindow();
-    return;
-  }
-
-  // Clear cache explicitly
-  mainWindow.webContents.session.clearCache().then(() => {
-    console.log('Cache cleared');
-    mainWindow.loadURL(startUrl).catch(console.error);
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
   });
 
-  // ================================
-  // CRASH HANDLING (IMPROVED - NO AGGRESSIVE RELOADS)
-  // ================================
-  mainWindow.webContents.on('render-process-gone', (_event, details) => {
-    console.error('Renderer process gone:', details);
-
-    // Only reload on actual crashes, not on clean exits
-    // Let systemd handle full app restarts
-    if (details.reason === 'crashed') {
-      console.log('Renderer crashed - letting systemd handle restart');
-      console.log('Exiting app to trigger clean restart...');
-      app.quit(); // Let systemd restart the entire app cleanly
-    } else if (details.reason === 'killed') {
-      console.log('Renderer killed (likely OOM) - exiting for clean restart');
-      app.quit(); // Let systemd restart
-    } else {
-      console.log(`Renderer exited (${details.reason}) - monitoring for issues`);
-    }
+  // 🔁 Renderer crash recovery
+  mainWindow.webContents.on('render-process-gone', (e, details) => {
+    console.error('Renderer crashed:', details);
+    recover('render-process-gone');
   });
 
-  // ================================
-  // DO NOT RELOAD ON TEMP UNRESPONSIVE
-  // ================================
-  mainWindow.webContents.on('unresponsive', () => {
-    console.warn('Renderer temporarily unresponsive - waiting for recovery');
-    // Don't do anything - let it recover naturally
+  // ❌ Failed load recovery
+  mainWindow.webContents.on('did-fail-load', (e, code, desc) => {
+    console.error('Load failed:', code, desc);
+    recover('did-fail-load');
   });
 
-  mainWindow.webContents.on('responsive', () => {
-    console.log('Renderer responsive again - recovered successfully');
+  // 🧊 Unresponsive recovery
+  mainWindow.on('unresponsive', () => {
+    console.error('Window unresponsive');
+    recover('unresponsive');
+  });
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
   });
 }
 
-// ================================
-// SETTINGS WINDOW
-// ================================
-function openSettingsWindow() {
-  if (settingsWindow && !settingsWindow.isDestroyed()) return;
-
-  settingsWindow = new BrowserWindow({
-    width: 900,
-    height: 600,
-    modal: true,
-    parent: mainWindow,
+// 👁️ Hidden heartbeat overlay
+function createHeartbeatWindow() {
+  heartbeatWindow = new BrowserWindow({
+    width: 1,
+    height: 1,
+    x: 0,
+    y: 0,
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    show: true,
+    focusable: false,
     webPreferences: {
-      preload: path.join(__dirname, 'settings-preload.js'),
       contextIsolation: true,
-      nodeIntegration: false
     }
   });
 
-  settingsWindow.loadFile('settings.html');
+  heartbeatWindow.loadURL(
+    `data:text/html,
+     <html>
+       <body>
+         <script>
+           setInterval(() => {
+             try { window.location.hash = Date.now(); } catch(e) {}
+           }, 1000);
+         </script>
+       </body>
+     </html>`
+  );
 
-  settingsWindow.on('closed', () => {
-    settingsWindow = null;
+  heartbeatWindow.on('unresponsive', () => {
+    console.error('Heartbeat window frozen — relaunching app');
+    relaunchApp();
   });
 }
 
-// ================================
-// IPC HANDLERS
-// ================================
-ipcMain.handle('open-settings', () => {
-  openSettingsWindow();
+// 🔄 Unified recovery logic
+function recover(reason) {
+  if (recovering) return;
+  recovering = true;
+
+  console.error('Recovering from:', reason);
+
+  setTimeout(() => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.reload();
+    }
+    recovering = false;
+  }, 3000);
+}
+
+// 💓 Renderer heartbeat
+ipcMain.on('pong', () => {
+  lastPong = Date.now();
 });
 
-ipcMain.handle('get-settings', () => {
-  return settingsManager.getSettings();
-});
-
-ipcMain.handle('save-settings', async (_event, newSettings) => {
-  try {
-    settingsManager.saveSettings(newSettings);
-    return { success: true };
-  } catch (err) {
-    console.error('Save settings failed:', err);
-    return { success: false, error: err.message };
+// Watchdog: reload if renderer freezes
+setInterval(() => {
+  if (Date.now() - lastPong > 60000) {
+    console.error('Renderer heartbeat lost — reloading');
+    recover('heartbeat-timeout');
   }
-});
 
-ipcMain.handle('get-app-version', () => {
-  try {
-    return { success: true, version: app.getVersion() };
-  } catch (err) {
-    return { success: false, error: err.message };
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('ping');
   }
-});
+}, 30000);
 
-ipcMain.handle('open-payment', async (_event, data) => {
-  console.log('Payment requested:', data);
-  return { success: false, message: 'Payment integration not implemented' };
-});
+// 🔁 Hard relaunch fallback
+function relaunchApp() {
+  app.relaunch();
+  app.exit(0);
+}
 
-// ================================
-// APP LIFECYCLE
-// ================================
 app.whenReady().then(() => {
-  settingsManager = new SettingsManager();
   createMainWindow();
+  createHeartbeatWindow();
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
-});
-
-app.on('activate', () => {
-  if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
+  // Kiosk app should stay alive
 });

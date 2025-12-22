@@ -1,5 +1,9 @@
 const { contextBridge, ipcRenderer } = require('electron');
+const { ipcRenderer } = require('electron');
 
+ipcRenderer.on('ping', () => {
+  ipcRenderer.send('pong');
+});
 // Expose protected methods that allow the renderer process to use
 // ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electron', {
