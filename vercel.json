@@ -1,8 +1,9 @@
 {
-  "buildCommand": "cd client/Kiosk_Web && npm run build",
-  "outputDirectory": "client/Kiosk_Web/.next",
-  "installCommand": "cd client/Kiosk_Web && npm install",
-  "framework": null,
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "rootDirectory": "client/Kiosk_Web",
   "env": {
     "NEXT_PUBLIC_API_URL": "https://goldenmunch-server.onrender.com/api",
     "NEXT_PUBLIC_API_TIMEOUT": "60000",
