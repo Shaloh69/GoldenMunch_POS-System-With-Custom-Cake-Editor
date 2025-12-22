@@ -144,7 +144,7 @@ async function getAvailablePrinters() {
 }
 
 /**
- * Generate HTML for receipt printing
+ * Generate HTML for receipt printing (optimized for thermal printers)
  * @param {Object} receiptData - Receipt data
  * @returns {string} HTML string
  */
@@ -153,75 +153,161 @@ function generateReceiptHTML(receiptData) {
   receiptData.items.forEach((item) => {
     const itemTotal = item.price * item.quantity;
     itemsHTML += `
-      <div style="margin: 3px 0;">
-        <div>${item.name}</div>
-        <div style="text-align: right; margin-top: -18px;">x${item.quantity} ₱${itemTotal.toFixed(2)}</div>
-      </div>`;
+      <tr>
+        <td colspan="3" style="padding: 2px 0;">${item.name}</td>
+      </tr>
+      <tr>
+        <td style="padding: 0 0 5px 10px;">x${item.quantity}</td>
+        <td style="padding: 0 0 5px 0;"></td>
+        <td style="padding: 0 0 5px 0; text-align: right;">₱${itemTotal.toFixed(2)}</td>
+      </tr>`;
     if (item.specialInstructions) {
-      itemsHTML += `<div style="font-size: 9px; font-style: italic; margin-left: 10px;">Note: ${item.specialInstructions}</div>`;
+      itemsHTML += `
+      <tr>
+        <td colspan="3" style="padding: 0 0 5px 15px; font-size: 9px; font-style: italic;">
+          Note: ${item.specialInstructions}
+        </td>
+      </tr>`;
     }
   });
 
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <style>
-        @page {
-          size: 58mm auto;
-          margin: 0;
-        }
-        body {
-          font-family: 'Courier New', monospace;
-          font-size: 11px;
-          margin: 0;
-          padding: 5mm;
-          width: 48mm;
-        }
-        .center { text-align: center; }
-        .bold { font-weight: bold; }
-        .large { font-size: 16px; }
-        .medium { font-size: 12px; }
-        .divider { border-top: 1px dashed #000; margin: 5px 0; }
-        .right { text-align: right; }
-      </style>
-    </head>
-    <body>
-      <div class="center bold large">GOLDENMUNCH</div>
-      <div class="center medium">Order Receipt</div>
-      <div class="divider"></div>
-      <div>Order #: ${receiptData.orderNumber}</div>
-      <div>Date: ${receiptData.orderDate}</div>
-      <div class="divider"></div>
-      ${receiptData.customerName ? `<div>Customer: ${receiptData.customerName}</div>` : ''}
-      ${receiptData.verificationCode ? `
-        <div class="center" style="margin-top: 10px;">
-          <div style="font-size: 10px;">Verification Code:</div>
-          <div class="bold large">${receiptData.verificationCode}</div>
-        </div>` : ''}
-      <div style="margin-top: 10px;" class="bold">ITEMS:</div>
-      <div class="divider"></div>
-      ${itemsHTML}
-      <div class="divider"></div>
-      <div class="right">Subtotal: ₱${receiptData.subtotal.toFixed(2)}</div>
-      <div class="right">Tax: ₱${receiptData.tax.toFixed(2)}</div>
-      ${receiptData.discount > 0 ? `<div class="right">Discount: -₱${receiptData.discount.toFixed(2)}</div>` : ''}
-      <div class="divider"></div>
-      <div class="right bold large">TOTAL: ₱${receiptData.total.toFixed(2)}</div>
-      <div class="divider"></div>
-      <div>Payment: ${receiptData.paymentMethod}</div>
-      ${receiptData.referenceNumber ? `<div>Reference #: ${receiptData.referenceNumber}</div>` : ''}
-      ${receiptData.specialInstructions ? `
-        <div style="margin-top: 10px;">
-          <div class="bold">SPECIAL INSTRUCTIONS:</div>
-          <div style="font-size: 9px;">${receiptData.specialInstructions}</div>
-        </div>` : ''}
-      <div class="center bold" style="margin-top: 15px;">Thank you for your order!</div>
-      <div class="center">Please come again</div>
-    </body>
-    </html>
-  `;
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    @page {
+      size: 58mm auto;
+      margin: 0mm;
+    }
+    @media print {
+      html, body {
+        width: 58mm;
+        margin: 0;
+        padding: 0;
+      }
+    }
+    body {
+      font-family: 'Courier New', 'Courier', monospace;
+      font-size: 12px;
+      color: #000;
+      background-color: #fff;
+      width: 58mm;
+      padding: 2mm 3mm;
+      line-height: 1.3;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .center {
+      text-align: center;
+    }
+    .right {
+      text-align: right;
+    }
+    .bold {
+      font-weight: bold;
+    }
+    .large {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    .medium {
+      font-size: 14px;
+    }
+    .divider {
+      border-top: 1px dashed #000;
+      margin: 3px 0;
+      height: 0;
+    }
+    .mt-10 {
+      margin-top: 10px;
+    }
+    .mb-5 {
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="center large">GOLDENMUNCH</div>
+  <div class="center medium mb-5">Order Receipt</div>
+  <div class="divider"></div>
+
+  <table>
+    <tr>
+      <td colspan="3" style="padding: 3px 0;">Order #: <span class="bold">${receiptData.orderNumber}</span></td>
+    </tr>
+    <tr>
+      <td colspan="3" style="padding: 0 0 3px 0;">Date: ${receiptData.orderDate}</td>
+    </tr>
+  </table>
+
+  <div class="divider"></div>
+
+  ${receiptData.customerName ? `<div style="padding: 3px 0;">Customer: ${receiptData.customerName}</div>` : ''}
+
+  ${receiptData.verificationCode ? `
+    <div class="center mt-10">
+      <div style="font-size: 10px;">Verification Code:</div>
+      <div class="bold large">${receiptData.verificationCode}</div>
+    </div>
+    <div class="divider" style="margin-top: 5px;"></div>
+  ` : ''}
+
+  <div class="bold mt-10 mb-5">ITEMS:</div>
+  <div class="divider"></div>
+
+  <table>
+    ${itemsHTML}
+  </table>
+
+  <div class="divider"></div>
+
+  <table>
+    <tr>
+      <td></td>
+      <td class="bold" style="text-align: right; width: 30%;">Subtotal:</td>
+      <td class="right" style="width: 35%;">₱${receiptData.subtotal.toFixed(2)}</td>
+    </tr>
+    <tr>
+      <td></td>
+      <td class="bold" style="text-align: right;">Tax:</td>
+      <td class="right">₱${receiptData.tax.toFixed(2)}</td>
+    </tr>
+    ${receiptData.discount > 0 ? `
+    <tr>
+      <td></td>
+      <td class="bold" style="text-align: right;">Discount:</td>
+      <td class="right">-₱${receiptData.discount.toFixed(2)}</td>
+    </tr>` : ''}
+  </table>
+
+  <div class="divider"></div>
+
+  <div class="right bold large" style="margin: 5px 0;">TOTAL: ₱${receiptData.total.toFixed(2)}</div>
+
+  <div class="divider"></div>
+
+  <div style="margin-top: 5px;">Payment: <span class="bold">${receiptData.paymentMethod}</span></div>
+  ${receiptData.referenceNumber ? `<div>Reference #: ${receiptData.referenceNumber}</div>` : ''}
+
+  ${receiptData.specialInstructions ? `
+    <div class="mt-10">
+      <div class="bold">SPECIAL INSTRUCTIONS:</div>
+      <div style="font-size: 10px; margin-top: 3px;">${receiptData.specialInstructions}</div>
+    </div>
+  ` : ''}
+
+  <div class="center bold mt-10">Thank you for your order!</div>
+  <div class="center" style="margin-bottom: 10px;">Please come again</div>
+</body>
+</html>`;
 }
 
 /**
@@ -279,14 +365,22 @@ async function printReceipt(printerName, receiptData) {
 
         console.log('✅ Target printer verified:', targetPrinter.name, '- Status:', targetPrinter.status);
 
-        // Print options for thermal printer
+        // Print options optimized for thermal printer (POS-58)
         const options = {
-          silent: true,
-          printBackground: true,
+          silent: true,                    // Don't show print dialog
+          printBackground: true,            // Print background colors/styles
+          color: false,                     // Thermal printers are monochrome
           deviceName: printerName,
-          margins: {
-            marginType: 'none',
+          pageSize: {
+            width: 58000,                   // 58mm in microns
           },
+          margins: {
+            marginType: 'none',             // No margins for thermal receipt
+          },
+          scaleFactor: 100,                 // No scaling
+          pagesPerSheet: 1,
+          collate: false,
+          copies: 1,
         };
 
         console.log('🔧 Print Options:', JSON.stringify(options, null, 2));
