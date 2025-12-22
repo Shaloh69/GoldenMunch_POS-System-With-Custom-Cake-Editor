@@ -110,22 +110,33 @@ async function getStatus(printerName = 'POS-58') {
  */
 async function getAvailablePrinters() {
   try {
+    console.log('🔍 Starting printer detection...');
+
     const mainWindow = BrowserWindow.getAllWindows()[0];
     if (!mainWindow) {
-      console.warn('No window available to get printers');
+      console.warn('❌ No window available to get printers');
       return [];
     }
+
+    console.log('✅ MainWindow found:', {
+      id: mainWindow.id,
+      isDestroyed: mainWindow.isDestroyed(),
+      webContentsId: mainWindow.webContents.id
+    });
 
     const printers = mainWindow.webContents.getPrinters();
-    console.log('🖨️ Detected printers:', printers.map(p => p.name));
+    console.log('📋 getPrinters() returned:', JSON.stringify(printers, null, 2));
+    console.log('🖨️ Printer count:', printers.length);
 
-    if (!printers || printers.length === 0) {
-      return [];
+    if (printers && printers.length > 0) {
+      console.log('🖨️ Detected printers:', printers.map(p => p.name));
+      return printers.map((printer) => printer.name);
     }
 
-    return printers.map((printer) => printer.name);
+    console.warn('⚠️ No printers detected by Electron');
+    return [];
   } catch (error) {
-    console.error('Error getting available printers:', error);
+    console.error('❌ Error getting available printers:', error);
     return [];
   }
 }
