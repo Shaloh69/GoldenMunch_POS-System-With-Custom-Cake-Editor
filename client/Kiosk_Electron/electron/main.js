@@ -1,137 +1,170 @@
+// ================================
+// main.js – FIXED, STABLE, NO RANDOM RELOADS (KIOSK SAFE)
+// ================================
+
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const SettingsManager = require('./settings-manager');
 
+const isDev = !app.isPackaged;
 let mainWindow;
-let heartbeatWindow;
-let lastPong = Date.now();
-let recovering = false;
+let settingsWindow;
+let settingsManager;
+let lastReloadTime = 0;
 
-// ⚠️ IMPORTANT: call BEFORE app.whenReady()
-app.disableHardwareAcceleration();
-app.commandLine.appendSwitch('enable-logging');
+// ================================
+// STABLE KIOSK FLAGS (NO GPU / NO WAYLAND)
+// ================================
+app.commandLine.appendSwitch('disable-gpu');
+app.commandLine.appendSwitch('disable-gpu-compositing');
+app.commandLine.appendSwitch('disable-http-cache');
 
+if (process.getuid?.() === 0) {
+  // Acceptable ONLY in controlled kiosk environments
+  app.commandLine.appendSwitch('no-sandbox');
+}
+
+// ================================
+// SAFE RELOAD WITH COOLDOWN
+// ================================
+function safeReload() {
+  const now = Date.now();
+  if (now - lastReloadTime < 10000) {
+    console.warn('Reload suppressed (cooldown)');
+    return;
+  }
+  lastReloadTime = now;
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    console.log('Reloading main window');
+    mainWindow.reload();
+  }
+}
+
+// ================================
+// CREATE MAIN WINDOW
+// ================================
 function createMainWindow() {
   mainWindow = new BrowserWindow({
     fullscreen: true,
     kiosk: true,
-    frame: false,
-    show: false,
+    backgroundColor: '#000000',
+    show: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      sandbox: false
     }
   });
 
-  mainWindow.loadURL('YOUR_URL_HERE');
+  const startUrl = settingsManager.getAppUrl(isDev);
 
-  mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
+  if (!startUrl) {
+    console.log('No app URL configured, opening settings');
+    openSettingsWindow();
+    return;
+  }
+
+  // Clear cache explicitly
+  mainWindow.webContents.session.clearCache().then(() => {
+    console.log('Cache cleared');
+    mainWindow.loadURL(startUrl).catch(console.error);
   });
 
-  // 🔁 Renderer crash recovery
-  mainWindow.webContents.on('render-process-gone', (e, details) => {
-    console.error('Renderer crashed:', details);
-    recover('render-process-gone');
+  // ================================
+  // CRASH HANDLING (REAL CRASHES ONLY)
+  // ================================
+  mainWindow.webContents.on('render-process-gone', (_event, details) => {
+    console.error('Renderer process gone:', details);
+
+    if (details.reason === 'crashed' || details.reason === 'killed') {
+      setTimeout(safeReload, 1500);
+    }
   });
 
-  // ❌ Failed load recovery
-  mainWindow.webContents.on('did-fail-load', (e, code, desc) => {
-    console.error('Load failed:', code, desc);
-    recover('did-fail-load');
+  // ================================
+  // DO NOT RELOAD ON TEMP UNRESPONSIVE
+  // ================================
+  mainWindow.webContents.on('unresponsive', () => {
+    console.warn('Renderer temporarily unresponsive');
   });
 
-  // 🧊 Unresponsive recovery
-  mainWindow.on('unresponsive', () => {
-    console.error('Window unresponsive');
-    recover('unresponsive');
-  });
-
-  mainWindow.on('closed', () => {
-    mainWindow = null;
+  mainWindow.webContents.on('responsive', () => {
+    console.log('Renderer responsive again');
   });
 }
 
-// 👁️ Hidden heartbeat overlay
-function createHeartbeatWindow() {
-  heartbeatWindow = new BrowserWindow({
-    width: 1,
-    height: 1,
-    x: 0,
-    y: 0,
-    frame: false,
-    transparent: true,
-    alwaysOnTop: true,
-    skipTaskbar: true,
-    show: true,
-    focusable: false,
+// ================================
+// SETTINGS WINDOW
+// ================================
+function openSettingsWindow() {
+  if (settingsWindow && !settingsWindow.isDestroyed()) return;
+
+  settingsWindow = new BrowserWindow({
+    width: 900,
+    height: 600,
+    modal: true,
+    parent: mainWindow,
     webPreferences: {
+      preload: path.join(__dirname, 'settings-preload.js'),
       contextIsolation: true,
+      nodeIntegration: false
     }
   });
 
-  heartbeatWindow.loadURL(
-    `data:text/html,
-     <html>
-       <body>
-         <script>
-           setInterval(() => {
-             try { window.location.hash = Date.now(); } catch(e) {}
-           }, 1000);
-         </script>
-       </body>
-     </html>`
-  );
+  settingsWindow.loadFile('settings.html');
 
-  heartbeatWindow.on('unresponsive', () => {
-    console.error('Heartbeat window frozen — relaunching app');
-    relaunchApp();
+  settingsWindow.on('closed', () => {
+    settingsWindow = null;
   });
 }
 
-// 🔄 Unified recovery logic
-function recover(reason) {
-  if (recovering) return;
-  recovering = true;
-
-  console.error('Recovering from:', reason);
-
-  setTimeout(() => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.reload();
-    }
-    recovering = false;
-  }, 3000);
-}
-
-// 💓 Renderer heartbeat
-ipcMain.on('pong', () => {
-  lastPong = Date.now();
+// ================================
+// IPC HANDLERS
+// ================================
+ipcMain.handle('open-settings', () => {
+  openSettingsWindow();
 });
 
-// Watchdog: reload if renderer freezes
-setInterval(() => {
-  if (Date.now() - lastPong > 60000) {
-    console.error('Renderer heartbeat lost — reloading');
-    recover('heartbeat-timeout');
+ipcMain.handle('get-settings', () => {
+  return settingsManager.getSettings();
+});
+
+ipcMain.handle('save-settings', async (_event, newSettings) => {
+  try {
+    settingsManager.saveSettings(newSettings);
+    return { success: true };
+  } catch (err) {
+    console.error('Save settings failed:', err);
+    return { success: false, error: err.message };
   }
+});
 
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('ping');
+ipcMain.handle('get-app-version', () => {
+  try {
+    return { success: true, version: app.getVersion() };
+  } catch (err) {
+    return { success: false, error: err.message };
   }
-}, 30000);
+});
 
-// 🔁 Hard relaunch fallback
-function relaunchApp() {
-  app.relaunch();
-  app.exit(0);
-}
+ipcMain.handle('open-payment', async (_event, data) => {
+  console.log('Payment requested:', data);
+  return { success: false, message: 'Payment integration not implemented' };
+});
 
+// ================================
+// APP LIFECYCLE
+// ================================
 app.whenReady().then(() => {
+  settingsManager = new SettingsManager();
   createMainWindow();
-  createHeartbeatWindow();
 });
 
 app.on('window-all-closed', () => {
-  // Kiosk app should stay alive
+  if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
 });
