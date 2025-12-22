@@ -124,10 +124,11 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
     const totals = calculateOrderTotal(subtotal, taxRate, 0);
 
     // Generate order number and verification code
-    // Use last 9 digits of timestamp + 3-digit random = ORD-123456789-123 (17 chars, fits in VARCHAR(20))
-    const timestamp = Date.now().toString().slice(-9);
-    const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    const orderNumber = `ORD-${timestamp}-${randomSuffix}`;
+    const FrOrderRandSuff = Math.floor(Math.random() * 1000)
+      .toString()
+      .padStart(3, '0');
+
+    const orderNumber = `ORD-${FrOrderRandSuff}`;
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
 
     // Create order
