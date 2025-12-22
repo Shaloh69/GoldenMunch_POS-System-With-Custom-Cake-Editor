@@ -102,6 +102,17 @@ export default function StepDecorations({ design, updateDesign, options }: StepD
       {/* 3D Decorations */}
       <div>
         <h3 className="font-semibold text-lg mb-3">🎨 3D Decorations</h3>
+
+        {/* Disclaimer */}
+        <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-3 mb-4">
+          <div className="flex items-start gap-2">
+            <span className="text-amber-600 text-lg flex-shrink-0">ℹ️</span>
+            <p className="text-sm text-amber-900 font-semibold">
+              The baker will add these decorations to your actual cake. This is for reference only and won't appear in the 3D preview.
+            </p>
+          </div>
+        </div>
+
         <p className="text-gray-600 text-sm mb-4">
           Add beautiful decorations to your cake
         </p>

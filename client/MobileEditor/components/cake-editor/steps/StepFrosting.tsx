@@ -92,6 +92,17 @@ export default function StepFrosting({ design, updateDesign }: StepFrostingProps
       {/* Candles */}
       <div>
         <label className="block text-sm font-medium mb-2">Candles</label>
+
+        {/* Disclaimer */}
+        <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-3 mb-3">
+          <div className="flex items-start gap-2">
+            <span className="text-amber-600 text-lg flex-shrink-0">ℹ️</span>
+            <p className="text-sm text-amber-900 font-semibold">
+              The baker will add candles to your actual cake. This is for reference only and won't appear in the 3D preview.
+            </p>
+          </div>
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           <Input
             type="number"

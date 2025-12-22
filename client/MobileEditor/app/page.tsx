@@ -103,6 +103,7 @@ function CakeEditorContent() {
   const [showTutorial, setShowTutorial] = useState(true);
   const [tutorialStep, setTutorialStep] = useState(0);
   const [showFullscreenTip, setShowFullscreenTip] = useState(false);
+  const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
 
   // Design Options from API
   const [options, setOptions] = useState<any>(null);
@@ -461,18 +462,16 @@ function CakeEditorContent() {
     } else {
       setShowTutorial(false);
       localStorage.setItem('cakeEditorTutorialCompleted', 'true');
-      // Show fullscreen tip after tutorial
-      setShowFullscreenTip(true);
-      setTimeout(() => setShowFullscreenTip(false), 5000); // Hide after 5 seconds
+      // Show disclaimer modal after completing tutorial
+      setShowDisclaimerModal(true);
     }
   };
 
   const handleSkipTutorial = () => {
     setShowTutorial(false);
     localStorage.setItem('cakeEditorTutorialCompleted', 'true');
-    // Show fullscreen tip after skipping tutorial
-    setShowFullscreenTip(true);
-    setTimeout(() => setShowFullscreenTip(false), 5000); // Hide after 5 seconds
+    // Show disclaimer modal when tutorial is skipped
+    setShowDisclaimerModal(true);
   };
 
   // Check if user has seen tutorial
@@ -587,50 +586,67 @@ function CakeEditorContent() {
       {/* Toggle Controls Button - Floats above panel when visible, center when hidden */}
       {!showControls && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-          <Popover
-            isOpen={showTutorial && tutorialStep === 0}
-            placement={tutorialSteps[0].placement}
-            showArrow
-          >
-            <PopoverTrigger>
-              <motion.button
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 20 }}
-                onClick={() => setShowControls(true)}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-full shadow-2xl hover:scale-105 transition-all active:scale-95 min-w-[64px] min-h-[64px] flex items-center justify-center gap-3 touch-manipulation"
-                style={{ WebkitTapHighlightColor: 'transparent' }}
-                aria-label="Show controls"
-              >
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" />
-                </svg>
-                <span className="text-base font-bold">Show Panel</span>
-              </motion.button>
-            </PopoverTrigger>
-            <PopoverContent className="bg-gradient-to-br from-purple-500 to-pink-500 text-white border-2 border-white max-w-xs">
-              <div className="p-3">
-                <div className="text-base font-bold mb-2">{tutorialSteps[0].title}</div>
-                <div className="text-sm mb-3">{tutorialSteps[0].content}</div>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    onClick={handleSkipTutorial}
-                    className="flex-1 bg-white/20 text-white font-bold"
-                  >
-                    Skip
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={handleNextTutorialStep}
-                    className="flex-1 bg-white text-purple-600 font-bold"
-                  >
-                    Next
-                  </Button>
+          {showTutorial && tutorialStep === 0 ? (
+            <Popover
+              isOpen={true}
+              placement={tutorialSteps[0].placement}
+              showArrow
+            >
+              <PopoverTrigger>
+                <motion.button
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  onClick={() => setShowControls(true)}
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-full shadow-2xl hover:scale-105 transition-all active:scale-95 min-w-[64px] min-h-[64px] flex items-center justify-center gap-3 touch-manipulation"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                  aria-label="Show controls"
+                >
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" />
+                  </svg>
+                  <span className="text-base font-bold">Show Panel</span>
+                </motion.button>
+              </PopoverTrigger>
+              <PopoverContent className="bg-gradient-to-br from-purple-500 to-pink-500 text-white border-2 border-white max-w-xs">
+                <div className="p-3">
+                  <div className="text-base font-bold mb-2">{tutorialSteps[0].title}</div>
+                  <div className="text-sm mb-3">{tutorialSteps[0].content}</div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={handleSkipTutorial}
+                      className="flex-1 bg-white/20 text-white font-bold"
+                    >
+                      Skip
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={handleNextTutorialStep}
+                      className="flex-1 bg-white text-purple-600 font-bold"
+                    >
+                      Next
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+              </PopoverContent>
+            </Popover>
+          ) : (
+            <motion.button
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              onClick={() => setShowControls(true)}
+              className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-full shadow-2xl hover:scale-105 transition-all active:scale-95 min-w-[64px] min-h-[64px] flex items-center justify-center gap-3 touch-manipulation"
+              style={{ WebkitTapHighlightColor: 'transparent' }}
+              aria-label="Show controls"
+            >
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 15l7-7 7 7" />
+              </svg>
+              <span className="text-base font-bold">Show Panel</span>
+            </motion.button>
+          )}
         </div>
       )}
 
@@ -916,6 +932,63 @@ function CakeEditorContent() {
                     Yes, Submit!
                   </Button>
                 </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Disclaimer Modal - Shown after tutorial completion or skip */}
+      <AnimatePresence>
+        {showDisclaimerModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4"
+            onClick={() => setShowDisclaimerModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl p-6 max-w-lg w-full shadow-2xl"
+            >
+              <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-amber-400 to-orange-400 rounded-full flex items-center justify-center">
+                  <span className="text-4xl">⚠️</span>
+                </div>
+                <h2 className="text-2xl font-bold text-black mb-3">Important Reminder</h2>
+
+                {/* Important Disclaimer */}
+                <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border-2 border-amber-300 mb-4 text-left">
+                  <h4 className="font-bold text-amber-900 mb-3 text-base">📋 Please Note:</h4>
+                  <div className="space-y-2 text-sm text-black/80">
+                    <p className="font-semibold">
+                      • The 3D cake preview is <span className="text-amber-700 font-bold">for reference purposes only</span>
+                    </p>
+                    <p className="font-semibold">
+                      • The actual cake may differ from the preview
+                    </p>
+                    <p className="font-semibold">
+                      • <span className="text-amber-700 font-bold">Candles and decorations</span> will be added by our baker
+                    </p>
+                    <p className="font-semibold">
+                      • Admin will contact you for further details and final verification
+                    </p>
+                    <p className="font-semibold">
+                      • <span className="text-red-600 font-bold">Ensure your contact information is correct</span> so we can reach you
+                    </p>
+                  </div>
+                </div>
+
+                <Button
+                  onClick={() => setShowDisclaimerModal(false)}
+                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold py-4 text-base"
+                >
+                  I Understand
+                </Button>
               </div>
             </motion.div>
           </motion.div>
