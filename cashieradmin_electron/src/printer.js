@@ -365,14 +365,16 @@ async function printReceipt(printerName, receiptData) {
 
         console.log('✅ Target printer verified:', targetPrinter.name, '- Status:', targetPrinter.status);
 
-        // Print options optimized for thermal printer (POS-58)
+        // Print options optimized for thermal receipt printer (POS-58)
+        // Thermal receipt dimensions: 58mm width, variable height (using generous 500mm)
         const options = {
           silent: true,                    // Don't show print dialog
           printBackground: true,            // Print background colors/styles
           color: false,                     // Thermal printers are monochrome
           deviceName: printerName,
           pageSize: {
-            width: 58000,                   // 58mm in microns
+            width: 58000,                   // 58mm in microns (1mm = 1000 microns)
+            height: 500000,                 // 500mm in microns (generous height for any receipt)
           },
           margins: {
             marginType: 'none',             // No margins for thermal receipt
