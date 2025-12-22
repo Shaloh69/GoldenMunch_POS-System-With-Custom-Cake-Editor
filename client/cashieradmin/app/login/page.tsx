@@ -117,7 +117,7 @@ export default function LoginPage() {
             )}
 
             <Button
-              className="mt-3 bg-gradient-to-r from-light-caramel via-muted-clay to-light-caramel text-white font-bold shadow-caramel hover:shadow-xl hover:scale-105 transition-all duration-300 border border-light-caramel/30"
+              className="text-black mt-3 bg-gradient-to-r from-light-caramel via-muted-clay to-light-caramel text-white font-bold shadow-caramel hover:shadow-xl hover:scale-105 transition-all duration-300 border border-light-caramel/30"
               isLoading={isLoading}
               size="lg"
               type="submit"
