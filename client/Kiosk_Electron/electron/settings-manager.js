@@ -85,7 +85,7 @@ class SettingsManager {
 
   /**
    * Get the app URL to load
-   * Priority: Configured URL > Environment variable > Development default
+   * Priority: Configured URL > Environment variable > Development default > Production default
    */
   getAppUrl(isDev) {
     // 1. Check configured URL
@@ -106,9 +106,9 @@ class SettingsManager {
       return 'http://localhost:3002';
     }
 
-    // 4. No URL configured
-    console.warn('No app URL configured! Please set via Settings (Ctrl+Shift+C)');
-    return null;
+    // 4. Production default (Vercel deployment)
+    console.log('Using production default URL: https://golden-munch-pos.vercel.app');
+    return 'https://golden-munch-pos.vercel.app';
   }
 
   /**

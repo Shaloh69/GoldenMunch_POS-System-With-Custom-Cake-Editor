@@ -155,18 +155,19 @@ Instead of using the settings panel, you can set environment variables:
 
 ```bash
 # Linux/macOS
-export KIOSK_APP_URL=https://your-app.onrender.com
+export KIOSK_APP_URL=https://golden-munch-pos.vercel.app
 export NODE_ENV=production
 
 # Windows
-set KIOSK_APP_URL=https://your-app.onrender.com
+set KIOSK_APP_URL=https://golden-munch-pos.vercel.app
 set NODE_ENV=production
 ```
 
 **Priority:**
 1. Settings Panel Configuration (highest)
 2. Environment Variable `KIOSK_APP_URL`
-3. Development Default (`http://localhost:3002`)
+3. Development Default (`http://localhost:3002` in dev mode)
+4. Production Default (`https://golden-munch-pos.vercel.app` in production)
 
 ---
 
