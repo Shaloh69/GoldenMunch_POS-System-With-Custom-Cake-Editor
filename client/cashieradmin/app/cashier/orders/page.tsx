@@ -393,11 +393,22 @@ export default function UnifiedCashierPage() {
         throw new Error("Failed to update order status");
       }
 
-      // Print receipt
+      // Print receipt - fetch full order details with items first
       try {
-        console.log("🖨️ Printing receipt for completed order...");
+        console.log("🖨️ Fetching full order details for printing...");
+
+        // Fetch full order details including items
+        const orderDetailsResponse = await OrderService.getOrderById(selectedOrder.order_id);
+
+        if (!orderDetailsResponse.success || !orderDetailsResponse.data) {
+          throw new Error("Failed to fetch order details for printing");
+        }
+
+        const fullOrderData = orderDetailsResponse.data as any;
+        console.log("📦 Order items for receipt:", fullOrderData.items);
+
         const receiptData = printerService.formatOrderForPrint({
-          ...selectedOrder,
+          ...fullOrderData,
           final_amount: finalAmount,
           discount_amount: selectedDiscount
             ? calculateDiscount(
@@ -407,6 +418,7 @@ export default function UnifiedCashierPage() {
             : 0,
         });
 
+        console.log("🖨️ Printing receipt with", receiptData.items?.length || 0, "items...");
         const printResult = await printerService.printReceipt(receiptData);
 
         if (printResult.success) {
@@ -416,9 +428,23 @@ export default function UnifiedCashierPage() {
             color: "success",
             timeout: 3000,
           });
+        } else {
+          console.warn("Print failed:", printResult.error);
+          addToast({
+            title: "Print Warning",
+            description: printResult.error || "Receipt printing failed",
+            color: "warning",
+            timeout: 5000,
+          });
         }
-      } catch (printError) {
+      } catch (printError: any) {
         console.error("Print error (non-blocking):", printError);
+        addToast({
+          title: "Print Error",
+          description: printError.message || "Could not print receipt",
+          color: "warning",
+          timeout: 5000,
+        });
       }
 
       addToast({
