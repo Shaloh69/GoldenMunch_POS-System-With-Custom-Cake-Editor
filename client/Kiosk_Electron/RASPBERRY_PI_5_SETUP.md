@@ -40,7 +40,7 @@ cd ~/GoldenMunch_POS-System-With-Custom-Cake-Editor/client/Kiosk_Electron
 npm install
 
 # 3. Configure kiosk URL
-export KIOSK_APP_URL="https://golden-munch-pos-system-with-custom-tau.vercel.app"
+export KIOSK_APP_URL="https://golden-munch-pos.vercel.app"
 
 # 4. Test manually first
 npm start
@@ -216,7 +216,7 @@ You need to tell the kiosk which URL to load. Choose one method:
 
 ```bash
 # Add to your .bashrc
-echo 'export KIOSK_APP_URL="https://golden-munch-pos-system-with-custom-tau.vercel.app"' >> ~/.bashrc
+echo 'export KIOSK_APP_URL="https://golden-munch-pos.vercel.app"' >> ~/.bashrc
 source ~/.bashrc
 
 # Verify
@@ -232,7 +232,7 @@ mkdir -p ~/.config/goldenmunch-kiosk-electron
 # Create config file
 cat > ~/.config/goldenmunch-kiosk-electron/kiosk-config.json << 'EOF'
 {
-  "appUrl": "https://golden-munch-pos-system-with-custom-tau.vercel.app",
+  "appUrl": "https://golden-munch-pos.vercel.app",
   "lastUpdated": "2025-01-15T10:00:00.000Z"
 }
 EOF
@@ -529,7 +529,7 @@ tail -100 ~/.goldenmunch-logs/kiosk.log
 
 ```bash
 # Test URL manually
-curl -I https://golden-munch-pos-system-with-custom-tau.vercel.app
+curl -I https://golden-munch-pos.vercel.app
 
 # Check configured URL
 cat ~/.config/goldenmunch-kiosk-electron/kiosk-config.json
