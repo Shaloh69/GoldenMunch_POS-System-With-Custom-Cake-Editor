@@ -182,12 +182,12 @@ function generateReceiptHTML(receiptData) {
       box-sizing: border-box;
     }
     @page {
-      size: 56mm auto;
+      size: 52mm auto;
       margin: 0mm;
     }
     @media print {
       html, body {
-        width: 56mm;
+        width: 52mm;
         margin: 0;
         padding: 0;
       }
@@ -197,7 +197,7 @@ function generateReceiptHTML(receiptData) {
       font-size: 12px;
       color: #000;
       background-color: #fff;
-      width: 56mm;
+      width: 52mm;
       padding: 2mm 2mm;
       line-height: 1.3;
     }
@@ -366,14 +366,14 @@ async function printReceipt(printerName, receiptData) {
         console.log('✅ Target printer verified:', targetPrinter.name, '- Status:', targetPrinter.status);
 
         // Print options optimized for thermal receipt printer (POS-58)
-        // Thermal receipt dimensions: 56mm width, variable height (using generous 500mm)
+        // Thermal receipt dimensions: 52mm width, variable height (using generous 500mm)
         const options = {
           silent: true,                    // Don't show print dialog
           printBackground: true,            // Print background colors/styles
           color: false,                     // Thermal printers are monochrome
           deviceName: printerName,
           pageSize: {
-            width: 56000,                   // 56mm in microns (1mm = 1000 microns)
+            width: 52000,                   // 52mm in microns (1mm = 1000 microns)
             height: 500000,                 // 500mm in microns (generous height for any receipt)
           },
           margins: {
