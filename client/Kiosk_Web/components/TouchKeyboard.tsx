@@ -131,10 +131,10 @@ const TouchKeyboard = forwardRef<TouchKeyboardHandle, TouchKeyboardProps>(
             left: 0;
             right: 0;
             z-index: 9999;
-            background: linear-gradient(135deg, hsl(45 100% 51%) 0%, hsl(39 100% 50%) 100%);
+            background: transparent;
             padding: 1rem;
-            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3);
-            border-top: 3px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
             animation: slideUp 0.3s ease-out;
           }
 
@@ -167,13 +167,13 @@ const TouchKeyboard = forwardRef<TouchKeyboardHandle, TouchKeyboardProps>(
           .hg-theme-kiosk .hg-button {
             height: 65px;
             min-width: 60px;
-            background: linear-gradient(145deg, #ffffff, #e6e6e6);
-            color: #333;
-            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: #ffffff;
+            color: #000000;
+            border: 2px solid rgba(0, 0, 0, 0.1);
             border-radius: 10px;
             font-size: 22px;
             font-weight: 700;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             transition: all 0.15s ease;
             cursor: pointer;
             user-select: none;
@@ -185,91 +185,92 @@ const TouchKeyboard = forwardRef<TouchKeyboardHandle, TouchKeyboardProps>(
 
           .hg-theme-kiosk .hg-button:active {
             transform: scale(0.95);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-            background: linear-gradient(145deg, #e6e6e6, #cccccc);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            background: #f0f0f0;
           }
 
           .hg-theme-kiosk .hg-button:hover {
-            background: linear-gradient(145deg, #f0f0f0, #d9d9d9);
-            border-color: rgba(255, 255, 255, 0.5);
+            background: #f5f5f5;
+            border-color: rgba(0, 0, 0, 0.15);
           }
 
           /* Primary Button (Enter/Done) */
           .hg-theme-kiosk .hg-primary-button {
-            background: linear-gradient(145deg, #4ade80, #22c55e);
-            color: white;
-            border-color: rgba(255, 255, 255, 0.4);
+            background: rgba(34, 197, 94, 0.3);
+            color: #000000;
+            border: 2px solid rgba(34, 197, 94, 0.5);
             font-weight: 800;
             min-width: 120px;
           }
 
           .hg-theme-kiosk .hg-primary-button:active {
-            background: linear-gradient(145deg, #22c55e, #16a34a);
+            background: rgba(34, 197, 94, 0.5);
           }
 
           .hg-theme-kiosk .hg-primary-button:hover {
-            background: linear-gradient(145deg, #22c55e, #16a34a);
-            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+            background: rgba(34, 197, 94, 0.4);
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.3);
           }
 
           /* Danger Button (Backspace) */
           .hg-theme-kiosk .hg-danger-button {
-            background: linear-gradient(145deg, #f87171, #ef4444);
-            color: white;
-            border-color: rgba(255, 255, 255, 0.4);
+            background: #ffffff;
+            color: #000000;
+            border: 2px solid rgba(0, 0, 0, 0.1);
             font-weight: 800;
             min-width: 100px;
           }
 
           .hg-theme-kiosk .hg-danger-button:active {
-            background: linear-gradient(145deg, #ef4444, #dc2626);
+            background: #f0f0f0;
           }
 
           .hg-theme-kiosk .hg-danger-button:hover {
-            background: linear-gradient(145deg, #ef4444, #dc2626);
-            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+            background: #f5f5f5;
+            border-color: rgba(0, 0, 0, 0.15);
           }
 
           /* Shift Button */
           .hg-theme-kiosk .hg-shift-button {
-            background: linear-gradient(145deg, hsl(39 100% 50%), hsl(33 100% 50%));
-            color: white;
-            border-color: rgba(255, 255, 255, 0.4);
+            background: #ffffff;
+            color: #000000;
+            border: 2px solid rgba(0, 0, 0, 0.1);
             font-weight: 700;
             min-width: 80px;
           }
 
           .hg-theme-kiosk .hg-shift-button:active {
-            background: linear-gradient(145deg, hsl(33 100% 50%), hsl(33 100% 45%));
+            background: #f0f0f0;
           }
 
           .hg-theme-kiosk .hg-shift-button:hover {
-            background: linear-gradient(145deg, hsl(33 100% 50%), hsl(33 100% 45%));
-            box-shadow: 0 6px 20px rgba(255, 153, 0, 0.4);
+            background: #f5f5f5;
+            border-color: rgba(0, 0, 0, 0.15);
           }
 
           /* Space Button */
           .hg-theme-kiosk .hg-space-button {
-            background: linear-gradient(145deg, #cbd5e1, #94a3b8);
-            color: #1e293b;
-            border-color: rgba(255, 255, 255, 0.4);
+            background: #9ca3af;
+            color: #000000;
+            border: 2px solid rgba(0, 0, 0, 0.1);
             font-weight: 700;
             min-width: 300px;
             flex: 1;
           }
 
           .hg-theme-kiosk .hg-space-button:active {
-            background: linear-gradient(145deg, #94a3b8, #64748b);
+            background: #6b7280;
           }
 
           .hg-theme-kiosk .hg-space-button:hover {
-            background: linear-gradient(145deg, #94a3b8, #64748b);
+            background: #6b7280;
           }
 
           /* Active State for Shift */
           .hg-theme-kiosk .hg-activeButton {
-            background: linear-gradient(145deg, hsl(33 100% 50%), hsl(33 100% 45%)) !important;
-            box-shadow: 0 0 20px rgba(255, 153, 0, 0.6) !important;
+            background: #e5e7eb !important;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2) !important;
+            border-color: rgba(0, 0, 0, 0.2) !important;
           }
 
           /* Responsive adjustments for smaller screens */
