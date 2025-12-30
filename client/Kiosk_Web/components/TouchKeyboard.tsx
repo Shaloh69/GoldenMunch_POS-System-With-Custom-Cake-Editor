@@ -131,10 +131,10 @@ const TouchKeyboard = forwardRef<TouchKeyboardHandle, TouchKeyboardProps>(
             left: 0;
             right: 0;
             z-index: 9999;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, hsl(45 100% 51%) 0%, hsl(39 100% 50%) 100%);
             padding: 1rem;
             box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3);
-            border-top: 3px solid rgba(255, 255, 255, 0.2);
+            border-top: 3px solid rgba(255, 255, 255, 0.3);
             animation: slideUp 0.3s ease-out;
           }
 
@@ -232,7 +232,7 @@ const TouchKeyboard = forwardRef<TouchKeyboardHandle, TouchKeyboardProps>(
 
           /* Shift Button */
           .hg-theme-kiosk .hg-shift-button {
-            background: linear-gradient(145deg, #a78bfa, #8b5cf6);
+            background: linear-gradient(145deg, hsl(39 100% 50%), hsl(33 100% 50%));
             color: white;
             border-color: rgba(255, 255, 255, 0.4);
             font-weight: 700;
@@ -240,12 +240,12 @@ const TouchKeyboard = forwardRef<TouchKeyboardHandle, TouchKeyboardProps>(
           }
 
           .hg-theme-kiosk .hg-shift-button:active {
-            background: linear-gradient(145deg, #8b5cf6, #7c3aed);
+            background: linear-gradient(145deg, hsl(33 100% 50%), hsl(33 100% 45%));
           }
 
           .hg-theme-kiosk .hg-shift-button:hover {
-            background: linear-gradient(145deg, #8b5cf6, #7c3aed);
-            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+            background: linear-gradient(145deg, hsl(33 100% 50%), hsl(33 100% 45%));
+            box-shadow: 0 6px 20px rgba(255, 153, 0, 0.4);
           }
 
           /* Space Button */
@@ -268,8 +268,8 @@ const TouchKeyboard = forwardRef<TouchKeyboardHandle, TouchKeyboardProps>(
 
           /* Active State for Shift */
           .hg-theme-kiosk .hg-activeButton {
-            background: linear-gradient(145deg, #7c3aed, #6d28d9) !important;
-            box-shadow: 0 0 20px rgba(124, 58, 237, 0.6) !important;
+            background: linear-gradient(145deg, hsl(33 100% 50%), hsl(33 100% 45%)) !important;
+            box-shadow: 0 0 20px rgba(255, 153, 0, 0.6) !important;
           }
 
           /* Responsive adjustments for smaller screens */
