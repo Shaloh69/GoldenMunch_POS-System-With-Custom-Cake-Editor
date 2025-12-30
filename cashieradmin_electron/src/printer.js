@@ -197,9 +197,9 @@ function generateReceiptHTML(receiptData) {
       font-size: 12px;
       color: #000;
       background-color: #fff;
-      width: 50mm;
-      margin: 0 auto;
-      padding: 2mm 0;
+      width: 58mm;
+      margin: 0;
+      padding: 2mm 4mm;
       line-height: 1.3;
     }
     table {
@@ -367,7 +367,7 @@ async function printReceipt(printerName, receiptData) {
         console.log('✅ Target printer verified:', targetPrinter.name, '- Status:', targetPrinter.status);
 
         // Print options optimized for thermal receipt printer (POS-58)
-        // Page: 58mm width, Content: 50mm width (centered with CSS margins)
+        // Page: 58mm width, Content: 50mm effective width (4mm padding on each side)
         const options = {
           silent: true,                    // Don't show print dialog
           printBackground: true,            // Print background colors/styles
