@@ -12,7 +12,8 @@
     "build:win": "electron-builder --win",
     "build:mac": "electron-builder --mac",
     "build:linux": "electron-builder --linux",
-    "build:rpi": "electron-builder --linux --armv7l",
+    "build:rpi": "electron-builder --linux --arm64",
+    "build:rpi32": "electron-builder --linux --armv7l",
     "clean": "rm -rf node_modules package-lock.json dist",
     "clean:win": "if exist node_modules rmdir /s /q node_modules && if exist package-lock.json del package-lock.json && if exist dist rmdir /s /q dist"
   },
