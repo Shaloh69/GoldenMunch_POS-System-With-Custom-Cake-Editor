@@ -6,11 +6,14 @@
 # CONFIGURATION
 # ============================================================================
 
+# Auto-detect user home directory
+USER_HOME="${HOME:-/home/$(whoami)}"
+
 # Project paths
-PROJECT_DIR="/home/user/GoldenMunch_POS-System-With-Custom-Cake-Editor"
+PROJECT_DIR="$USER_HOME/GoldenMunch_POS-System-With-Custom-Cake-Editor"
 KIOSK_DIR="$PROJECT_DIR/client/Kiosk_Electron"
 SERVER_DIR="$PROJECT_DIR/server"
-LOG_DIR="/home/user/.goldenmunch-logs"
+LOG_DIR="$USER_HOME/.goldenmunch-logs"
 
 # Create log directory if it doesn't exist
 mkdir -p "$LOG_DIR"
@@ -23,7 +26,7 @@ STARTUP_LOG="$LOG_DIR/startup.log"
 # Environment
 export NODE_ENV=production
 export DISPLAY=:0
-export XAUTHORITY=/home/user/.Xauthority
+export XAUTHORITY="$USER_HOME/.Xauthority"
 
 # CRITICAL: Force X11 to prevent Wayland DRM/GBM errors
 export ELECTRON_OZONE_PLATFORM_HINT=x11
