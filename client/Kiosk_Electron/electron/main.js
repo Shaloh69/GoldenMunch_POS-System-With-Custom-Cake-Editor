@@ -2,7 +2,7 @@
 // main.js – FIXED, STABLE, NO RANDOM RELOADS (KIOSK SAFE)
 // ================================
 
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, globalShortcut } = require('electron');
 const path = require('path');
 const SettingsManager = require('./settings-manager');
 
@@ -159,6 +159,30 @@ ipcMain.handle('open-payment', async (_event, data) => {
 app.whenReady().then(() => {
   settingsManager = new SettingsManager();
   createMainWindow();
+
+  // Register global keyboard shortcuts
+  // Ctrl+Shift+C - Open settings
+  globalShortcut.register('CommandOrControl+Shift+C', () => {
+    console.log('Settings shortcut triggered');
+    openSettingsWindow();
+  });
+
+  // Alt+F4 - Exit kiosk (in case user needs to close)
+  globalShortcut.register('Alt+F4', () => {
+    console.log('Exit shortcut triggered');
+    app.quit();
+  });
+
+  // Ctrl+Q - Exit kiosk (alternative)
+  globalShortcut.register('CommandOrControl+Q', () => {
+    console.log('Exit shortcut triggered');
+    app.quit();
+  });
+
+  console.log('Global shortcuts registered:');
+  console.log('  Ctrl+Shift+C - Open Settings');
+  console.log('  Alt+F4 - Exit Kiosk');
+  console.log('  Ctrl+Q - Exit Kiosk');
 });
 
 app.on('window-all-closed', () => {
@@ -167,4 +191,10 @@ app.on('window-all-closed', () => {
 
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
+});
+
+app.on('will-quit', () => {
+  // Unregister all shortcuts when app is about to quit
+  globalShortcut.unregisterAll();
+  console.log('Global shortcuts unregistered');
 });
