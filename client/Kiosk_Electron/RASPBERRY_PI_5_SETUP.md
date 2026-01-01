@@ -268,10 +268,13 @@ npm start
 - ✅ Touchscreen works (if applicable)
 - ✅ No error messages in logs
 
-**Exit kiosk:**
-- Press `Alt+F4`
-- Or press `Ctrl+Q`
-- Or SSH from another computer and run: `pkill -f electron`
+**Keyboard Shortcuts:**
+- `Ctrl+Shift+C` - Open Settings Panel
+- `Alt+F4` - Exit kiosk
+- `Ctrl+Q` - Exit kiosk (alternative)
+
+**Exit kiosk remotely:**
+- SSH from another computer and run: `pkill -f electron`
 
 ---
 
@@ -569,6 +572,32 @@ xinput list
 # For official Pi touchscreen:
 sudo apt install -y xserver-xorg-input-evdev
 sudo reboot
+```
+
+### Keyboard Shortcuts Not Working
+
+```bash
+# Ctrl+Shift+C doesn't open settings:
+# 1. Make sure you updated to latest version with keyboard shortcuts
+cd ~/GoldenMunch_POS-System-With-Custom-Cake-Editor/client/Kiosk_Electron
+git pull
+npm install
+
+# 2. Check logs for shortcut registration
+tail -50 ~/.goldenmunch-logs/kiosk.log | grep -i shortcut
+# Should see: "Global shortcuts registered"
+
+# 3. Alternative: Manually create config file
+mkdir -p ~/.config/goldenmunch-kiosk-electron
+cat > ~/.config/goldenmunch-kiosk-electron/kiosk-config.json << 'EOF'
+{
+  "appUrl": "https://golden-munch-pos.vercel.app",
+  "lastUpdated": "2025-01-15T10:00:00.000Z"
+}
+EOF
+
+# 4. Restart kiosk
+sudo systemctl restart goldenmunch-kiosk.service
 ```
 
 ### Printer Not Working
