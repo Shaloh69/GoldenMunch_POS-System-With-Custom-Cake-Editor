@@ -148,6 +148,16 @@ if [ -n "$TOUCH_ID" ] && [ -n "$DISPLAY_NAME" ]; then
     else
         log "WARNING: Failed to map touchscreen to display"
     fi
+
+    # FIX: Invert Y-axis for portrait mode (touch above was registering below)
+    # This transformation matrix inverts the Y coordinate
+    xinput set-prop "$TOUCH_ID" "Coordinate Transformation Matrix" 1 0 0 0 -1 1 0 0 1 2>/dev/null
+
+    if [ $? -eq 0 ]; then
+        log "Touch Y-axis inverted for portrait mode"
+    else
+        log "WARNING: Could not apply touch transformation"
+    fi
 else
     if [ -z "$TOUCH_ID" ]; then
         log "WARNING: Touchscreen not found"
@@ -207,6 +217,11 @@ chromium \
   --disable-background-timer-throttling \
   --disable-backgrounding-occluded-windows \
   --disable-renderer-backgrounding \
+  --disable-web-security \
+  --allow-running-insecure-content \
+  --disable-site-isolation-trials \
+  --disable-features=IsolateOrigins,site-per-process \
+  --enable-features=NetworkService,NetworkServiceInProcess \
   --check-for-update-interval=31536000 \
   --user-data-dir="$USER_HOME/.goldenmunch-chromium" \
   --app="$KIOSK_URL" \
