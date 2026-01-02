@@ -149,12 +149,13 @@ if [ -n "$TOUCH_ID" ] && [ -n "$DISPLAY_NAME" ]; then
         log "WARNING: Failed to map touchscreen to display"
     fi
 
-    # FIX: Invert Y-axis for portrait mode (touch above was registering below)
-    # This transformation matrix inverts the Y coordinate
-    xinput set-prop "$TOUCH_ID" "Coordinate Transformation Matrix" 1 0 0 0 -1 1 0 0 1 2>/dev/null
+    # FIX: Transform touch for portrait mode (90° rotation + possible inversion)
+    # Try different transformation matrices - this one swaps and inverts for portrait
+    # Matrix: 0 -1 1 1 0 0 0 0 1 (common for 90° right rotation)
+    xinput set-prop "$TOUCH_ID" "Coordinate Transformation Matrix" 0 -1 1 1 0 0 0 0 1 2>/dev/null
 
     if [ $? -eq 0 ]; then
-        log "Touch Y-axis inverted for portrait mode"
+        log "Touch transformation applied for portrait mode"
     else
         log "WARNING: Could not apply touch transformation"
     fi
@@ -204,7 +205,7 @@ if ! command -v chromium &>/dev/null; then
 fi
 
 # Start Chromium in kiosk mode
-# --app= flag creates true fullscreen with NO browser UI
+# Using standard kiosk mode (NOT --app=) for better network compatibility
 chromium \
   --kiosk \
   --noerrdialogs \
@@ -222,9 +223,10 @@ chromium \
   --disable-site-isolation-trials \
   --disable-features=IsolateOrigins,site-per-process \
   --enable-features=NetworkService,NetworkServiceInProcess \
+  --ignore-certificate-errors \
   --check-for-update-interval=31536000 \
   --user-data-dir="$USER_HOME/.goldenmunch-chromium" \
-  --app="$KIOSK_URL" \
+  "$KIOSK_URL" \
   > "$KIOSK_LOG" 2>&1 &
 
 KIOSK_PID=$!
