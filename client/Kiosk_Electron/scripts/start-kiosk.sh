@@ -205,25 +205,12 @@ if ! command -v chromium &>/dev/null; then
 fi
 
 # Start Chromium in kiosk mode
-# Using standard kiosk mode (NOT --app=) for better network compatibility
+# Using MINIMAL flags for maximum speed (like normal Chromium)
 chromium \
   --kiosk \
   --noerrdialogs \
   --disable-infobars \
   --no-first-run \
-  --disable-translate \
-  --disable-features=TranslateUI \
-  --disable-session-crashed-bubble \
-  --disable-restore-session-state \
-  --disable-background-timer-throttling \
-  --disable-backgrounding-occluded-windows \
-  --disable-renderer-backgrounding \
-  --disable-web-security \
-  --allow-running-insecure-content \
-  --disable-site-isolation-trials \
-  --disable-features=IsolateOrigins,site-per-process \
-  --enable-features=NetworkService,NetworkServiceInProcess \
-  --ignore-certificate-errors \
   --check-for-update-interval=31536000 \
   --user-data-dir="$USER_HOME/.goldenmunch-chromium" \
   "$KIOSK_URL" \
