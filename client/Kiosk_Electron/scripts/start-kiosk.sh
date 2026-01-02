@@ -1,6 +1,7 @@
 #!/bin/bash
-# GoldenMunch Kiosk - Startup Script for Raspberry Pi
-# This script starts the Electron kiosk application with proper environment settings
+# GoldenMunch Kiosk - Startup Script for Raspberry Pi 5
+# This script starts the Chromium kiosk with portrait mode and touch calibration
+# Optimized for Raspberry Pi 5 (aarch64) on Debian 13
 
 # ============================================================================
 # CONFIGURATION
@@ -12,7 +13,6 @@ USER_HOME="${HOME:-/home/$(whoami)}"
 # Project paths
 PROJECT_DIR="$USER_HOME/GoldenMunch_POS-System-With-Custom-Cake-Editor"
 KIOSK_DIR="$PROJECT_DIR/client/Kiosk_Electron"
-SERVER_DIR="$PROJECT_DIR/server"
 LOG_DIR="$USER_HOME/.goldenmunch-logs"
 
 # Create log directory if it doesn't exist
@@ -20,7 +20,6 @@ mkdir -p "$LOG_DIR"
 
 # Log files
 KIOSK_LOG="$LOG_DIR/kiosk.log"
-SERVER_LOG="$LOG_DIR/server.log"
 STARTUP_LOG="$LOG_DIR/startup.log"
 
 # Environment
@@ -28,7 +27,7 @@ export NODE_ENV=production
 export DISPLAY=:0
 export XAUTHORITY="$USER_HOME/.Xauthority"
 
-# CRITICAL: Force X11 to prevent Wayland DRM/GBM errors
+# CRITICAL: Force X11 to prevent Wayland errors
 export ELECTRON_OZONE_PLATFORM_HINT=x11
 export XDG_SESSION_TYPE=x11
 
@@ -49,7 +48,7 @@ log "Waiting for X server to be ready..."
 
 # Wait up to 30 seconds for X server
 for i in {1..30}; do
-    if xset q &>/dev/null; then
+    if xset q &>/dev/null 2>&1; then
         log "X server is ready!"
         break
     fi
@@ -57,7 +56,7 @@ for i in {1..30}; do
     sleep 1
 done
 
-if ! xset q &>/dev/null; then
+if ! xset q &>/dev/null 2>&1; then
     log "ERROR: X server not available after 30 seconds!"
     exit 1
 fi
@@ -70,7 +69,7 @@ log "Waiting for network connectivity..."
 
 # Wait up to 60 seconds for network
 for i in {1..60}; do
-    if ping -c 1 8.8.8.8 &>/dev/null; then
+    if ping -c 1 8.8.8.8 &>/dev/null 2>&1; then
         log "Network is ready!"
         break
     fi
@@ -78,7 +77,7 @@ for i in {1..60}; do
     sleep 1
 done
 
-if ! ping -c 1 8.8.8.8 &>/dev/null; then
+if ! ping -c 1 8.8.8.8 &>/dev/null 2>&1; then
     log "WARNING: No network connectivity detected!"
     log "Continuing anyway - kiosk may not load remote URL"
 fi
@@ -89,14 +88,77 @@ fi
 
 log "Disabling screen blanking and power management..."
 
-xset s off         # Disable screen saver
-xset s noblank     # Don't blank the screen
-xset -dpms         # Disable power management
+xset s off 2>/dev/null || log "WARNING: Could not disable screen saver"
+xset s noblank 2>/dev/null || log "WARNING: Could not disable screen blanking"
+xset -dpms 2>/dev/null || log "WARNING: Could not disable DPMS"
 
 log "Screen blanking disabled"
 
 # ============================================================================
-# HIDE CURSOR (OPTIONAL)
+# CONFIGURE PORTRAIT MODE
+# ============================================================================
+
+log "Configuring display rotation..."
+
+# Check if xrandr is available
+if command -v xrandr &>/dev/null; then
+    # Get primary display name
+    DISPLAY_NAME=$(xrandr 2>/dev/null | grep " connected" | head -1 | awk '{print $1}')
+
+    if [ -n "$DISPLAY_NAME" ]; then
+        log "Found display: $DISPLAY_NAME"
+
+        # Rotate to portrait (90° clockwise)
+        # Change to --rotate normal for landscape mode
+        xrandr --output "$DISPLAY_NAME" --rotate right 2>/dev/null
+        log "Display rotated to portrait mode (90° clockwise)"
+
+        # Wait for rotation to complete
+        sleep 2
+    else
+        log "WARNING: Could not detect display name"
+        DISPLAY_NAME="HDMI-1"  # Fallback default
+    fi
+else
+    log "WARNING: xrandr not available, skipping display rotation"
+    DISPLAY_NAME="HDMI-1"  # Fallback default
+fi
+
+# ============================================================================
+# CONFIGURE TOUCHSCREEN
+# ============================================================================
+
+log "Configuring touchscreen..."
+
+# Wait for touchscreen to be ready
+sleep 2
+
+# Find touchscreen device ID
+# Look for common touchscreen names
+TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touch|eGalax|FT5406|Goodix|ADS7846|Capacitive" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+
+if [ -n "$TOUCH_ID" ] && [ -n "$DISPLAY_NAME" ]; then
+    log "Found touchscreen (ID: $TOUCH_ID)"
+
+    # Map touchscreen to rotated display
+    xinput map-to-output "$TOUCH_ID" "$DISPLAY_NAME" 2>/dev/null
+
+    if [ $? -eq 0 ]; then
+        log "Touchscreen mapped to display: $DISPLAY_NAME"
+    else
+        log "WARNING: Failed to map touchscreen to display"
+    fi
+else
+    if [ -z "$TOUCH_ID" ]; then
+        log "WARNING: Touchscreen not found"
+    fi
+    if [ -z "$DISPLAY_NAME" ]; then
+        log "WARNING: Display not detected"
+    fi
+fi
+
+# ============================================================================
+# HIDE MOUSE CURSOR (OPTIONAL)
 # ============================================================================
 
 # Uncomment to hide mouse cursor in kiosk mode
@@ -104,45 +166,55 @@ log "Screen blanking disabled"
 # unclutter -idle 0.01 -root &
 
 # ============================================================================
-# START BACKEND SERVER (OPTIONAL)
+# GET KIOSK URL
 # ============================================================================
 
-# Uncomment if you want to run the backend server on the same Raspberry Pi
-# log "Starting backend server..."
-# cd "$SERVER_DIR"
-# npm start > "$SERVER_LOG" 2>&1 &
-# SERVER_PID=$!
-# log "Backend server started (PID: $SERVER_PID)"
+# Get kiosk URL from environment variable or use default
+if [ -n "$KIOSK_APP_URL" ]; then
+    KIOSK_URL="$KIOSK_APP_URL"
+else
+    # Default production URL
+    KIOSK_URL="https://golden-munch-pos.vercel.app"
+fi
 
-# Wait for server to be ready
-# log "Waiting for backend server..."
-# sleep 10
+log "Kiosk URL: $KIOSK_URL"
 
 # ============================================================================
-# START KIOSK ELECTRON
+# START CHROMIUM KIOSK
 # ============================================================================
 
-log "Changing to kiosk directory: $KIOSK_DIR"
-cd "$KIOSK_DIR" || {
-    log "ERROR: Failed to change to kiosk directory!"
-    exit 1
-}
+log "Starting GoldenMunch Kiosk (Chromium)..."
+log "Log file: $KIOSK_LOG"
 
-# Check if node_modules exists
-if [ ! -d "node_modules" ]; then
-    log "WARNING: node_modules not found!"
-    log "Please run: cd $KIOSK_DIR && npm install"
+# Check if Chromium is installed
+if ! command -v chromium &>/dev/null; then
+    log "ERROR: Chromium not installed!"
+    log "Please install: sudo apt install -y chromium"
     exit 1
 fi
 
-log "Starting GoldenMunch Kiosk..."
-log "Log file: $KIOSK_LOG"
+# Start Chromium in kiosk mode
+# --app= flag creates true fullscreen with NO browser UI
+chromium \
+  --kiosk \
+  --noerrdialogs \
+  --disable-infobars \
+  --no-first-run \
+  --disable-translate \
+  --disable-features=TranslateUI \
+  --disable-session-crashed-bubble \
+  --disable-restore-session-state \
+  --disable-background-timer-throttling \
+  --disable-backgrounding-occluded-windows \
+  --disable-renderer-backgrounding \
+  --check-for-update-interval=31536000 \
+  --user-data-dir="$USER_HOME/.goldenmunch-chromium" \
+  --app="$KIOSK_URL" \
+  > "$KIOSK_LOG" 2>&1 &
 
-# Start Electron kiosk
-npm start > "$KIOSK_LOG" 2>&1 &
 KIOSK_PID=$!
 
-log "Kiosk started (PID: $KIOSK_PID)"
+log "Chromium kiosk started (PID: $KIOSK_PID)"
 
 # ============================================================================
 # MONITOR PROCESS
