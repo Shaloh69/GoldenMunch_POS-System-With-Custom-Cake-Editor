@@ -134,8 +134,8 @@ log "Configuring touchscreen..."
 sleep 2
 
 # Find touchscreen device ID
-# Look for common touchscreen names
-TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touch|eGalax|FT5406|Goodix|ADS7846|Capacitive" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+# Look for common touchscreen names (including ILITEK for ILI Technology touchscreens)
+TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touch|eGalax|FT5406|Goodix|ADS7846|Capacitive|ILITEK" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
 
 if [ -n "$TOUCH_ID" ] && [ -n "$DISPLAY_NAME" ]; then
     log "Found touchscreen (ID: $TOUCH_ID)"
