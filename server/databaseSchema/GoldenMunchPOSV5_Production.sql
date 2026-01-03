@@ -497,7 +497,7 @@ CREATE TABLE custom_cake_notifications (
 CREATE TABLE customer (
     customer_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
-    phone VARCHAR(20) NOT NULL UNIQUE,
+    phone VARCHAR(20) NOT NULL,
     email VARCHAR(100),
     address TEXT,
     loyalty_points INT DEFAULT 0,

@@ -1014,12 +1014,22 @@ export const processPayment = async (req: AuthRequest, res: Response) => {
     }
 
     // 2. Find or create customer
+    // Note: We match by phone + name + email to handle cases where
+    // multiple people share the same phone number
     let customerId: number | null = null;
 
     if (request.customer_phone) {
+      const customerName = request.customer_name || 'Walk-in Customer';
+      const customerEmail = request.customer_email || null;
+
+      // Try to find existing customer by phone, name, and email
       const [existingCustomer] = await conn.query<any[]>(
-        `SELECT customer_id FROM customer WHERE phone = ?`,
-        [request.customer_phone]
+        `SELECT customer_id FROM customer
+         WHERE phone = ?
+         AND name = ?
+         AND (email = ? OR (email IS NULL AND ? IS NULL))
+         LIMIT 1`,
+        [request.customer_phone, customerName, customerEmail, customerEmail]
       );
 
       if (existingCustomer.length > 0) {
@@ -1027,11 +1037,7 @@ export const processPayment = async (req: AuthRequest, res: Response) => {
       } else {
         const [customerResult] = await conn.query<any>(
           `INSERT INTO customer (name, phone, email) VALUES (?, ?, ?)`,
-          [
-            request.customer_name || 'Walk-in Customer',
-            request.customer_phone,
-            request.customer_email,
-          ]
+          [customerName, request.customer_phone, customerEmail]
         );
         customerId = customerResult.insertId;
       }
