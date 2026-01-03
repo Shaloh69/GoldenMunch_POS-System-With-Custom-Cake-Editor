@@ -125,10 +125,10 @@ else
 fi
 
 # ============================================================================
-# CONFIGURE TOUCHSCREEN
+# DETECT TOUCHSCREEN (Configuration will happen AFTER Chromium loads)
 # ============================================================================
 
-log "Configuring touchscreen..."
+log "Detecting touchscreen..."
 
 # Wait for touchscreen to be ready
 sleep 2
@@ -148,35 +148,10 @@ if [ -z "$TOUCH_ID" ]; then
     TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "eGalax|FT5406|Goodix|ADS7846|Capacitive" | grep -v -i "mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
 fi
 
-if [ -n "$TOUCH_ID" ] && [ -n "$DISPLAY_NAME" ]; then
-    log "Found touchscreen (ID: $TOUCH_ID)"
-
-    # Map touchscreen to rotated display
-    xinput map-to-output "$TOUCH_ID" "$DISPLAY_NAME" 2>/dev/null
-
-    if [ $? -eq 0 ]; then
-        log "Touchscreen mapped to display: $DISPLAY_NAME"
-    else
-        log "WARNING: Failed to map touchscreen to display"
-    fi
-
-    # FIX: Transform touch for portrait mode (ILITEK touchscreen)
-    # Matrix: -1 0 1 0 -1 1 0 0 1 (inverts both X and Y for ILITEK in portrait)
-    # This matrix was tested and confirmed working for ILITEK ILITEK-TP touchscreen
-    xinput set-prop "$TOUCH_ID" "Coordinate Transformation Matrix" -1 0 1 0 -1 1 0 0 1 2>/dev/null
-
-    if [ $? -eq 0 ]; then
-        log "Touch transformation applied for portrait mode"
-    else
-        log "WARNING: Could not apply touch transformation"
-    fi
+if [ -n "$TOUCH_ID" ]; then
+    log "Touchscreen detected (ID: $TOUCH_ID) - will configure after Chromium loads"
 else
-    if [ -z "$TOUCH_ID" ]; then
-        log "WARNING: Touchscreen not found"
-    fi
-    if [ -z "$DISPLAY_NAME" ]; then
-        log "WARNING: Display not detected"
-    fi
+    log "WARNING: Touchscreen not found"
 fi
 
 # ============================================================================
@@ -230,6 +205,49 @@ chromium \
 KIOSK_PID=$!
 
 log "Chromium kiosk started (PID: $KIOSK_PID)"
+
+# ============================================================================
+# CONFIGURE TOUCHSCREEN (AFTER Chromium loads)
+# ============================================================================
+# CRITICAL: Touch transformation gets reset when Chromium loads or display rotates
+# Therefore, we apply it AFTER Chromium has fully initialized
+
+log "Waiting for Chromium to fully initialize..."
+sleep 10  # Wait for Chromium to complete initialization and rendering
+
+if [ -n "$TOUCH_ID" ]; then
+    log "Applying touch calibration (Matrix 6: inverts X and Y for ILITEK in portrait)..."
+
+    # Re-verify touchscreen is still detected
+    CURRENT_TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touchscreen|touch|ILITEK" | grep -v -i "mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+
+    if [ -n "$CURRENT_TOUCH_ID" ]; then
+        # Update TOUCH_ID in case it changed
+        TOUCH_ID="$CURRENT_TOUCH_ID"
+        log "Touchscreen verified (ID: $TOUCH_ID)"
+
+        # Map touchscreen to the display
+        if [ -n "$DISPLAY_NAME" ]; then
+            xinput map-to-output "$TOUCH_ID" "$DISPLAY_NAME" 2>/dev/null
+            log "Touchscreen mapped to display: $DISPLAY_NAME"
+        fi
+
+        # Apply transformation matrix (Matrix 6: -1 0 1 0 -1 1 0 0 1)
+        # This inverts both X and Y coordinates for ILITEK touchscreen in portrait mode
+        xinput set-prop "$TOUCH_ID" "Coordinate Transformation Matrix" -1 0 1 0 -1 1 0 0 1 2>/dev/null
+
+        if [ $? -eq 0 ]; then
+            log "✓ Touch calibration applied successfully!"
+            log "  Matrix: -1 0 1 0 -1 1 0 0 1 (inverts X and Y)"
+        else
+            log "WARNING: Failed to apply touch transformation matrix"
+        fi
+    else
+        log "WARNING: Touchscreen not found after Chromium load"
+    fi
+else
+    log "Skipping touch calibration (no touchscreen detected earlier)"
+fi
 
 # ============================================================================
 # MONITOR PROCESS
