@@ -1,3 +1,25 @@
 @import "tailwindcss";
 
-@config "../tailwind.config.js"
+@config "../tailwind.config.js";
+
+/* Fix menu table jitter on hover */
+[data-slot="table"] [data-slot="tr"]:hover {
+  transform: none !important;
+}
+
+[data-slot="table"] [data-slot="td"] {
+  will-change: auto;
+}
+
+/* Prevent button size changes on hover */
+[data-slot="table"] button {
+  transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  will-change: auto;
+}
+
+/* Ensure table cells don't shift */
+[data-slot="table"] [data-slot="td"] > div {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+}

@@ -1001,7 +1001,7 @@ export default function AdminMenuPage() {
 
               <Table aria-label="Menu items table">
                 <TableHeader>
-                  <TableColumn>
+                  <TableColumn width={50}>
                     <Checkbox
                       isSelected={
                         selectedItems.size ===
@@ -1012,11 +1012,11 @@ export default function AdminMenuPage() {
                     />
                   </TableColumn>
                   <TableColumn>NAME</TableColumn>
-                  <TableColumn>TYPE</TableColumn>
-                  <TableColumn>PRICE</TableColumn>
-                  <TableColumn>STOCK</TableColumn>
-                  <TableColumn>STATUS</TableColumn>
-                  <TableColumn>ACTIONS</TableColumn>
+                  <TableColumn width={100}>TYPE</TableColumn>
+                  <TableColumn width={100}>PRICE</TableColumn>
+                  <TableColumn width={150}>STOCK</TableColumn>
+                  <TableColumn width={120}>STATUS</TableColumn>
+                  <TableColumn width={280}>ACTIONS</TableColumn>
                 </TableHeader>
                 <TableBody>
                   {filteredAndPaginatedItems.items.map((item) => (
@@ -1121,11 +1121,12 @@ export default function AdminMenuPage() {
                         </Chip>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-2 flex-wrap">
+                        <div className="flex gap-2 items-center">
                           <Button
                             color="primary"
                             size="sm"
                             variant="flat"
+                            className="min-w-[60px]"
                             onPress={() => handleEdit(item)}
                           >
                             Edit
@@ -1134,6 +1135,7 @@ export default function AdminMenuPage() {
                             color="secondary"
                             size="sm"
                             variant="flat"
+                            className="min-w-[60px]"
                             onPress={() => {
                               setPriceModalItem(item);
                               setNewPrice(formatPrice(item.current_price));
@@ -1145,6 +1147,7 @@ export default function AdminMenuPage() {
                             color="danger"
                             size="sm"
                             variant="flat"
+                            className="min-w-[70px]"
                             onPress={() => handleDelete(item)}
                           >
                             Delete
