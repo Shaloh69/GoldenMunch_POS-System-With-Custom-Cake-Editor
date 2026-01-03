@@ -134,8 +134,19 @@ log "Configuring touchscreen..."
 sleep 2
 
 # Find touchscreen device ID
-# Look for common touchscreen names (including ILITEK for ILI Technology touchscreens)
-TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touch|eGalax|FT5406|Goodix|ADS7846|Capacitive|ILITEK" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+# Look for touchscreen devices, excluding "Mouse" devices (which are emulation layers)
+# Priority: Touchscreen keyword, then common touch devices (ILITEK, eGalax, FT5406, etc.)
+TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touchscreen|touch" | grep -v -i "mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+
+# If not found, try ILITEK specifically (excluding Mouse)
+if [ -z "$TOUCH_ID" ]; then
+    TOUCH_ID=$(xinput list 2>/dev/null | grep -i "ILITEK" | grep -v -i "mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+fi
+
+# If still not found, try other common touchscreen names
+if [ -z "$TOUCH_ID" ]; then
+    TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "eGalax|FT5406|Goodix|ADS7846|Capacitive" | grep -v -i "mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+fi
 
 if [ -n "$TOUCH_ID" ] && [ -n "$DISPLAY_NAME" ]; then
     log "Found touchscreen (ID: $TOUCH_ID)"
