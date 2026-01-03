@@ -134,8 +134,8 @@ log "Configuring touchscreen..."
 sleep 2
 
 # Find touchscreen device ID
-# Look for common touchscreen names
-TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touch|eGalax|FT5406|Goodix|ADS7846|Capacitive" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+# Look for common touchscreen names (including ILITEK for ILI Technology touchscreens)
+TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touch|eGalax|FT5406|Goodix|ADS7846|Capacitive|ILITEK" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
 
 if [ -n "$TOUCH_ID" ] && [ -n "$DISPLAY_NAME" ]; then
     log "Found touchscreen (ID: $TOUCH_ID)"
@@ -149,10 +149,10 @@ if [ -n "$TOUCH_ID" ] && [ -n "$DISPLAY_NAME" ]; then
         log "WARNING: Failed to map touchscreen to display"
     fi
 
-    # FIX: Transform touch for portrait mode (90° rotation + possible inversion)
-    # Try different transformation matrices - this one swaps and inverts for portrait
-    # Matrix: 0 -1 1 1 0 0 0 0 1 (common for 90° right rotation)
-    xinput set-prop "$TOUCH_ID" "Coordinate Transformation Matrix" 0 -1 1 1 0 0 0 0 1 2>/dev/null
+    # FIX: Transform touch for portrait mode (ILITEK touchscreen)
+    # Matrix: -1 0 1 0 -1 1 0 0 1 (inverts both X and Y for ILITEK in portrait)
+    # This matrix was tested and confirmed working for ILITEK ILITEK-TP touchscreen
+    xinput set-prop "$TOUCH_ID" "Coordinate Transformation Matrix" -1 0 1 0 -1 1 0 0 1 2>/dev/null
 
     if [ $? -eq 0 ]; then
         log "Touch transformation applied for portrait mode"
@@ -205,25 +205,12 @@ if ! command -v chromium &>/dev/null; then
 fi
 
 # Start Chromium in kiosk mode
-# Using standard kiosk mode (NOT --app=) for better network compatibility
+# Using MINIMAL flags for maximum speed (like normal Chromium)
 chromium \
   --kiosk \
   --noerrdialogs \
   --disable-infobars \
   --no-first-run \
-  --disable-translate \
-  --disable-features=TranslateUI \
-  --disable-session-crashed-bubble \
-  --disable-restore-session-state \
-  --disable-background-timer-throttling \
-  --disable-backgrounding-occluded-windows \
-  --disable-renderer-backgrounding \
-  --disable-web-security \
-  --allow-running-insecure-content \
-  --disable-site-isolation-trials \
-  --disable-features=IsolateOrigins,site-per-process \
-  --enable-features=NetworkService,NetworkServiceInProcess \
-  --ignore-certificate-errors \
   --check-for-update-interval=31536000 \
   --user-data-dir="$USER_HOME/.goldenmunch-chromium" \
   "$KIOSK_URL" \
