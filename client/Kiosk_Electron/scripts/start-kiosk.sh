@@ -250,6 +250,30 @@ else
 fi
 
 # ============================================================================
+# START TOUCH CALIBRATION MONITOR (AUTO-RECOVERY)
+# ============================================================================
+# This background script continuously monitors and auto-corrects the touch
+# calibration matrix, preventing it from reverting to inverted state
+
+if [ -n "$TOUCH_ID" ]; then
+    log "Starting touch calibration monitor (auto-recovery)..."
+
+    # Launch monitor script in background
+    MONITOR_SCRIPT="$KIOSK_DIR/scripts/monitor-touch-calibration.sh"
+
+    if [ -f "$MONITOR_SCRIPT" ]; then
+        bash "$MONITOR_SCRIPT" &
+        MONITOR_PID=$!
+        log "Touch calibration monitor started (PID: $MONITOR_PID)"
+        log "Monitor will check every 30 seconds and auto-restore Matrix 6"
+    else
+        log "WARNING: Touch monitor script not found: $MONITOR_SCRIPT"
+    fi
+else
+    log "Skipping touch monitor (no touchscreen detected)"
+fi
+
+# ============================================================================
 # MONITOR PROCESS
 # ============================================================================
 
