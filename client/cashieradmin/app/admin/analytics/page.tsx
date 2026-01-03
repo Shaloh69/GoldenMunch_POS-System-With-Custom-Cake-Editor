@@ -59,7 +59,7 @@ export default function AnalyticsPage() {
               acc.unique_customers + (Number(day.unique_customers) || 0),
             total_revenue: acc.total_revenue + (Number(day.total_revenue) || 0),
           }),
-          { total_orders: 0, unique_customers: 0, total_revenue: 0 },
+          { total_orders: 0, unique_customers: 0, total_revenue: 0 }
         );
 
         // Calculate average order value
@@ -76,7 +76,7 @@ export default function AnalyticsPage() {
 
       if (trendingRes.success) {
         setTrendingItems(
-          Array.isArray(trendingRes.data) ? trendingRes.data : [],
+          Array.isArray(trendingRes.data) ? trendingRes.data : []
         );
       }
 
@@ -154,7 +154,7 @@ export default function AnalyticsPage() {
                     ₱
                     {parseFloat(salesData.total_revenue || 0).toLocaleString(
                       "en-PH",
-                      { minimumFractionDigits: 2 },
+                      { minimumFractionDigits: 2 }
                     )}
                   </p>
                 </div>
@@ -190,7 +190,7 @@ export default function AnalyticsPage() {
                     ₱
                     {parseFloat(salesData.avg_order_value || 0).toLocaleString(
                       "en-PH",
-                      { minimumFractionDigits: 2 },
+                      { minimumFractionDigits: 2 }
                     )}
                   </p>
                 </div>
@@ -253,7 +253,7 @@ export default function AnalyticsPage() {
                       ₱
                       {parseFloat(item.recent_revenue || 0).toLocaleString(
                         "en-PH",
-                        { minimumFractionDigits: 2 },
+                        { minimumFractionDigits: 2 }
                       )}
                     </TableCell>
                     <TableCell>
@@ -268,41 +268,6 @@ export default function AnalyticsPage() {
           )}
         </CardBody>
       </Card>
-
-      {/* Waste Summary */}
-      {wasteData && (
-        <Card>
-          <CardHeader>
-            <h3 className="text-xl font-bold">Waste Summary</h3>
-          </CardHeader>
-          <CardBody>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 bg-danger/5 rounded-lg">
-                <p className="text-sm text-default-500">Total Waste Cost</p>
-                <p className="text-2xl font-bold text-danger">
-                  ₱
-                  {parseFloat(wasteData.total_waste_cost || 0).toLocaleString(
-                    "en-PH",
-                    { minimumFractionDigits: 2 },
-                  )}
-                </p>
-              </div>
-              <div className="p-4 bg-warning/5 rounded-lg">
-                <p className="text-sm text-default-500">Total Items Wasted</p>
-                <p className="text-2xl font-bold text-warning">
-                  {wasteData.total_items_wasted || 0}
-                </p>
-              </div>
-              <div className="p-4 bg-default-100 rounded-lg">
-                <p className="text-sm text-default-500">Waste Incidents</p>
-                <p className="text-2xl font-bold">
-                  {wasteData.waste_incidents || 0}
-                </p>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
-      )}
     </div>
   );
 }
