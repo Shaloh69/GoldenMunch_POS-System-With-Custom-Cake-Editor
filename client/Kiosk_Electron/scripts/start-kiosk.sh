@@ -149,10 +149,10 @@ if [ -n "$TOUCH_ID" ] && [ -n "$DISPLAY_NAME" ]; then
         log "WARNING: Failed to map touchscreen to display"
     fi
 
-    # FIX: Transform touch for portrait mode (90° rotation + possible inversion)
-    # Try different transformation matrices - this one swaps and inverts for portrait
-    # Matrix: 0 -1 1 1 0 0 0 0 1 (common for 90° right rotation)
-    xinput set-prop "$TOUCH_ID" "Coordinate Transformation Matrix" 0 -1 1 1 0 0 0 0 1 2>/dev/null
+    # FIX: Transform touch for portrait mode (ILITEK touchscreen)
+    # Matrix: -1 0 1 0 -1 1 0 0 1 (inverts both X and Y for ILITEK in portrait)
+    # This matrix was tested and confirmed working for ILITEK ILITEK-TP touchscreen
+    xinput set-prop "$TOUCH_ID" "Coordinate Transformation Matrix" -1 0 1 0 -1 1 0 0 1 2>/dev/null
 
     if [ $? -eq 0 ]; then
         log "Touch transformation applied for portrait mode"
