@@ -229,7 +229,7 @@ export function KioskAppSidebar({
                             size="icon"
                             onClick={() => handleQuantityChange(-1)}
                             disabled={quantity <= 1}
-                            className="btn-gradient w-16 h-16 text-3xl font-bold touch-target active:scale-60"
+                            className="btn-gradient w-12 h-12 text-2xl font-bold touch-target active:scale-60"
                           >
                             −
                           </Button>
@@ -240,7 +240,7 @@ export function KioskAppSidebar({
                             size="icon"
                             onClick={() => handleQuantityChange(1)}
                             disabled={quantity >= 99}
-                            className="btn-gradient w-16 h-16 text-3xl font-bold touch-target active:scale-60"
+                            className="btn-gradient w-12 h-12 text-2xl font-bold touch-target active:scale-60"
                           >
                             +
                           </Button>
