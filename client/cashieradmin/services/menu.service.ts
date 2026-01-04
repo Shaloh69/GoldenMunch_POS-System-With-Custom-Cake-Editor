@@ -112,7 +112,19 @@ export class MenuService {
       return apiClient.postFormData<Category>("/admin/categories", formData);
     }
 
-    return apiClient.post<Category>("/admin/categories", data);
+    // Convert booleans to 0/1 for MySQL TINYINT compatibility
+    const normalizedData: Record<string, any> = {};
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        if (typeof value === "boolean") {
+          normalizedData[key] = value ? 1 : 0;
+        } else {
+          normalizedData[key] = value;
+        }
+      }
+    });
+
+    return apiClient.post<Category>("/admin/categories", normalizedData);
   }
 
   static async updateCategory(
@@ -142,7 +154,19 @@ export class MenuService {
       );
     }
 
-    return apiClient.put<Category>(`/admin/categories/${id}`, data);
+    // Convert booleans to 0/1 for MySQL TINYINT compatibility
+    const normalizedData: Record<string, any> = {};
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        if (typeof value === "boolean") {
+          normalizedData[key] = value ? 1 : 0;
+        } else {
+          normalizedData[key] = value;
+        }
+      }
+    });
+
+    return apiClient.put<Category>(`/admin/categories/${id}`, normalizedData);
   }
 
   static async assignItemToCategory(data: {

@@ -395,6 +395,16 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
         'UPDATE menu_item SET stock_quantity = stock_quantity - ? WHERE menu_item_id = ?',
         [requestedQty, item.menu_item_id]
       );
+
+      // Auto-update status to 'sold_out' if stock reaches 0
+      const newStock = currentStock - requestedQty;
+      if (newStock === 0) {
+        await conn.query(
+          'UPDATE menu_item SET status = ? WHERE menu_item_id = ? AND status != ?',
+          ['sold_out', item.menu_item_id, 'discontinued']
+        );
+        console.log(`📦 Auto-updated status to 'sold_out' for ${menuItem.name} (stock: 0)`);
+      }
     }
 
     console.log('💰 Updating payment status to PAID:', {
