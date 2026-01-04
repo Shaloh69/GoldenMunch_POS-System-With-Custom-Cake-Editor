@@ -10,9 +10,9 @@ import type {
 import { apiClient } from "@/lib/api-client";
 
 export class MenuService {
-  // Public/Kiosk endpoints
+  // Admin endpoint - returns all menu items including sold_out
   static async getMenuItems(params?: any) {
-    return apiClient.get<MenuItem[]>("/kiosk/menu", { params });
+    return apiClient.get<MenuItem[]>("/admin/menu", { params });
   }
 
   static async getMenuItemById(id: number) {
