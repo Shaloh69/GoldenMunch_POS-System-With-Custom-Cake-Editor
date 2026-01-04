@@ -67,7 +67,7 @@ export default function HomePage() {
     return () => clearInterval(refreshInterval);
   }, []);
 
-  // Filter items by category
+  // Filter items by category and sort (sold_out items always last)
   useEffect(() => {
     let filtered = menuItems;
 
@@ -77,7 +77,19 @@ export default function HomePage() {
       );
     }
 
-    setFilteredItems(filtered);
+    // Sort: Always put sold_out/discontinued items last
+    const sorted = [...filtered].sort((a, b) => {
+      const aOutOfStock = a.status === "sold_out" || a.status === "discontinued";
+      const bOutOfStock = b.status === "sold_out" || b.status === "discontinued";
+
+      if (aOutOfStock && !bOutOfStock) return 1; // a goes to end
+      if (!aOutOfStock && bOutOfStock) return -1; // b goes to end
+
+      // If both same status, maintain original order (by display_order or id)
+      return 0;
+    });
+
+    setFilteredItems(sorted);
   }, [menuItems, selectedCategory]);
 
   const getCartQuantity = (itemId: number): number => {
