@@ -472,7 +472,9 @@ export const getOrderDetails = async (req: AuthRequest, res: Response) => {
             mi.name as item_name,
             mi.image_url,
             oi.unit_price,
-            oi.quantity
+            oi.quantity,
+            oi.customization_notes,
+            oi.special_requests
      FROM order_item oi
      JOIN menu_item mi ON oi.menu_item_id = mi.menu_item_id
      WHERE oi.order_id = ?`,
@@ -490,6 +492,34 @@ export const getOrderDetails = async (req: AuthRequest, res: Response) => {
   }
 
   res.json(successResponse('Order details retrieved', { ...order, items }));
+};
+
+// Mark order as printed
+export const markOrderPrinted = async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  const user_id = req.user?.id;
+
+  if (!user_id) {
+    throw new AppError('User authentication required', 401);
+  }
+
+  // Check if order exists
+  const order = getFirstRow<any>(await query(
+    'SELECT order_id, is_printed FROM customer_order WHERE order_id = ? AND is_deleted = FALSE',
+    [id]
+  ));
+
+  if (!order) {
+    throw new AppError('Order not found', 404);
+  }
+
+  // Update is_printed flag
+  await query(
+    'UPDATE customer_order SET is_printed = TRUE, updated_at = NOW() WHERE order_id = ?',
+    [id]
+  );
+
+  res.json(successResponse('Order marked as printed', { order_id: id, is_printed: true }));
 };
 
 // Update order status

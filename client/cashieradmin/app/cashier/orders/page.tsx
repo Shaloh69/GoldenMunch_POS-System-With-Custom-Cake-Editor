@@ -428,6 +428,15 @@ export default function UnifiedCashierPage() {
             color: "success",
             timeout: 3000,
           });
+
+          // Mark order as printed in database
+          try {
+            await OrderService.markOrderPrinted(selectedOrder.order_id);
+            console.log("✓ Order marked as printed in database");
+          } catch (printMarkError) {
+            console.warn("Failed to mark order as printed:", printMarkError);
+            // Don't show error to user - this is non-critical
+          }
         } else {
           console.warn("Print failed:", printResult.error);
           addToast({

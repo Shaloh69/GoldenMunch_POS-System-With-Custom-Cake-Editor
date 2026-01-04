@@ -190,31 +190,86 @@ class PrinterService {
     const parseAmount = (value: any): number => {
       if (value === null || value === undefined || value === '') return 0;
       const parsed = typeof value === 'string' ? parseFloat(value) : Number(value);
-      return isNaN(parsed) ? 0 : parsed;
+      // Validate parsed amount
+      if (isNaN(parsed)) return 0;
+      if (parsed < 0) {
+        console.warn('Negative amount detected:', value);
+        return 0;
+      }
+      return parsed;
     };
+
+    // Helper to parse customization notes (JSON)
+    const parseCustomization = (notes: any): string | undefined => {
+      if (!notes) return undefined;
+      try {
+        if (typeof notes === 'string') {
+          const parsed = JSON.parse(notes);
+          // Format custom cake design if present
+          if (parsed.frosting_type || parsed.design_complexity) {
+            return `Custom Design: ${parsed.frosting_type || 'N/A'}, Complexity: ${parsed.design_complexity || 'N/A'}`;
+          }
+          return JSON.stringify(parsed);
+        }
+        return String(notes);
+      } catch {
+        return String(notes);
+      }
+    };
+
+    // Get payment method-specific reference number
+    const getReferenceNumber = (): string | undefined => {
+      const method = order.payment_method || order.paymentMethod;
+      if (method === 'gcash' || method === 'GCASH') {
+        return order.gcash_reference_number;
+      } else if (method === 'paymaya' || method === 'PAYMAYA') {
+        return order.paymaya_reference_number;
+      } else if (method === 'card' || method === 'credit_card' || method === 'debit_card') {
+        return order.card_transaction_ref;
+      }
+      return undefined;
+    };
+
+    // Validate items array
+    const items = order.items || [];
+    if (items.length === 0) {
+      console.warn('Order has no items:', order.order_number || order.orderNumber);
+    }
 
     return {
       orderNumber: order.order_number || order.orderNumber || "N/A",
       orderDate: new Date(
-        order.order_datetime || order.orderDate || new Date(),
+        order.order_datetime || order.created_at || order.orderDate || new Date(),
       ).toLocaleDateString(),
-      items: (order.items || []).map((item: any) => ({
-        name: item.name || item.item_name || "Unknown Item",
-        quantity: item.quantity || 1,
-        price: parseAmount(item.price || item.unit_price || item.subtotal),
-        specialInstructions:
-          item.special_instructions || item.specialInstructions,
-      })),
+      items: items.map((item: any) => {
+        // CRITICAL: Never use subtotal as price fallback!
+        // subtotal = price × quantity, so using it as price would double-count
+        const unitPrice = parseAmount(item.unit_price || item.price);
+
+        if (unitPrice === 0) {
+          console.warn('Item has zero unit price:', item.name || item.item_name);
+        }
+
+        return {
+          name: item.name || item.item_name || item.menu_item_name || "Unknown Item",
+          quantity: item.quantity || 1,
+          price: unitPrice,
+          specialInstructions:
+            item.special_instructions ||
+            item.specialInstructions ||
+            parseCustomization(item.customization_notes),
+        };
+      }),
       subtotal: parseAmount(order.subtotal) || parseAmount(order.total_amount) || 0,
       tax: parseAmount(order.tax_amount) || parseAmount(order.tax) || 0,
       discount: parseAmount(order.discount_amount) || parseAmount(order.discount) || 0,
-      total: parseAmount(order.final_amount) || parseAmount(order.total) || parseAmount(order.total_amount) || 0,
+      total: parseAmount(order.final_amount) || parseAmount(order.total_amount) || 0,
       paymentMethod: order.payment_method || order.paymentMethod || "Cash",
       verificationCode: order.verification_code || order.verificationCode,
       customerName: order.name || order.customer_name || order.customerName,
       specialInstructions:
         order.special_instructions || order.specialInstructions,
-      referenceNumber: order.gcash_reference_number || order.paymaya_reference_number || order.reference_number || order.referenceNumber,
+      referenceNumber: getReferenceNumber(),
     };
   }
 }
