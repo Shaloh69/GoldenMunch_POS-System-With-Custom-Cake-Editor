@@ -130,6 +130,21 @@ export const MenuCard: React.FC<MenuCardProps> = ({
                 </Chip>
               </div>
             )}
+            {/* Stock Badge - Show for limited stock items */}
+            {!item.is_infinite_stock && isAvailable && (
+              <div className="animate-bounce-in animation-delay-200">
+                <Chip
+                  size="sm"
+                  className={`font-bold text-sm px-3 py-1.5 shadow-lg backdrop-blur-sm ${
+                    item.stock_quantity <= 5
+                      ? "bg-orange-500/90 text-white animate-pulse-gentle"
+                      : "bg-green-500/90 text-white"
+                  }`}
+                >
+                  📦 {item.stock_quantity} left
+                </Chip>
+              </div>
+            )}
           </div>
 
           {/* Cart Badge - Top left */}

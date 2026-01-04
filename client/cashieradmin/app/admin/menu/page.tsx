@@ -503,7 +503,7 @@ export default function AdminMenuPage() {
 
   const handleStatusToggle = async (itemId: number, currentStatus: string) => {
     const newStatus =
-      currentStatus === "available" ? "unavailable" : "available";
+      currentStatus === "available" ? "sold_out" : "available";
 
     try {
       const response = await MenuService.updateMenuItem(itemId, {
@@ -511,7 +511,7 @@ export default function AdminMenuPage() {
       });
 
       if (response.success) {
-        setSuccessMessage(`Status updated to ${newStatus}`);
+        setSuccessMessage(`Status updated to ${newStatus === "sold_out" ? "Sold Out" : "Available"}`);
         setTimeout(() => setSuccessMessage(null), 3000);
         loadMenuItems();
       } else {
@@ -876,8 +876,8 @@ export default function AdminMenuPage() {
               >
                 <SelectItem key="all">All Status</SelectItem>
                 <SelectItem key="available">Available</SelectItem>
-                <SelectItem key="unavailable">Unavailable</SelectItem>
-                <SelectItem key="out_of_stock">Out of Stock</SelectItem>
+                <SelectItem key="sold_out">Sold Out</SelectItem>
+                <SelectItem key="discontinued">Discontinued</SelectItem>
               </Select>
               <Select
                 className="w-40"
@@ -1012,11 +1012,11 @@ export default function AdminMenuPage() {
                     />
                   </TableColumn>
                   <TableColumn>NAME</TableColumn>
-                  <TableColumn width={100}>TYPE</TableColumn>
+                  <TableColumn width={120}>TYPE</TableColumn>
                   <TableColumn width={100}>PRICE</TableColumn>
-                  <TableColumn width={150}>STOCK</TableColumn>
-                  <TableColumn width={120}>STATUS</TableColumn>
-                  <TableColumn width={280}>ACTIONS</TableColumn>
+                  <TableColumn width={160}>STOCK</TableColumn>
+                  <TableColumn width={130}>STATUS</TableColumn>
+                  <TableColumn width={260}>ACTIONS</TableColumn>
                 </TableHeader>
                 <TableBody>
                   {filteredAndPaginatedItems.items.map((item) => (
@@ -1055,51 +1055,53 @@ export default function AdminMenuPage() {
                         </span>
                       </TableCell>
                       <TableCell>
-                        {item.is_infinite_stock ? (
-                          <span className="font-medium text-primary">∞</span>
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            <Button
-                              isIconOnly
-                              className="min-w-6 h-6"
-                              color="danger"
-                              isDisabled={
-                                stockAdjusting[item.menu_item_id] ||
-                                toNumber(item.stock_quantity, 0) <= 0
-                              }
-                              size="sm"
-                              variant="flat"
-                              onPress={() =>
-                                handleStockAdjust(item.menu_item_id, -1)
-                              }
-                            >
-                              −
-                            </Button>
-                            <span
-                              className={`font-medium min-w-10 text-center ${
-                                toNumber(item.stock_quantity, 0) <=
-                                item.min_stock_level
-                                  ? "text-danger"
-                                  : ""
-                              }`}
-                            >
-                              {formatStock(item)}
-                            </span>
-                            <Button
-                              isIconOnly
-                              className="min-w-6 h-6"
-                              color="success"
-                              isDisabled={stockAdjusting[item.menu_item_id]}
-                              size="sm"
-                              variant="flat"
-                              onPress={() =>
-                                handleStockAdjust(item.menu_item_id, 1)
-                              }
-                            >
-                              +
-                            </Button>
-                          </div>
-                        )}
+                        <div className="flex items-center justify-center">
+                          {item.is_infinite_stock ? (
+                            <span className="font-medium text-primary text-xl">∞</span>
+                          ) : (
+                            <div className="flex items-center gap-1.5">
+                              <Button
+                                isIconOnly
+                                className="min-w-7 h-7 w-7"
+                                color="danger"
+                                isDisabled={
+                                  stockAdjusting[item.menu_item_id] ||
+                                  toNumber(item.stock_quantity, 0) <= 0
+                                }
+                                size="sm"
+                                variant="flat"
+                                onPress={() =>
+                                  handleStockAdjust(item.menu_item_id, -1)
+                                }
+                              >
+                                −
+                              </Button>
+                              <span
+                                className={`font-semibold min-w-12 text-center text-base ${
+                                  toNumber(item.stock_quantity, 0) <=
+                                  item.min_stock_level
+                                    ? "text-danger"
+                                    : ""
+                                }`}
+                              >
+                                {formatStock(item)}
+                              </span>
+                              <Button
+                                isIconOnly
+                                className="min-w-7 h-7 w-7"
+                                color="success"
+                                isDisabled={stockAdjusting[item.menu_item_id]}
+                                size="sm"
+                                variant="flat"
+                                onPress={() =>
+                                  handleStockAdjust(item.menu_item_id, 1)
+                                }
+                              >
+                                +
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <Chip
@@ -1107,7 +1109,7 @@ export default function AdminMenuPage() {
                           color={
                             item.status === "available"
                               ? "success"
-                              : item.status === "unavailable"
+                              : item.status === "sold_out"
                                 ? "warning"
                                 : "danger"
                           }
@@ -1117,16 +1119,16 @@ export default function AdminMenuPage() {
                             handleStatusToggle(item.menu_item_id, item.status)
                           }
                         >
-                          {item.status || "unknown"}
+                          {item.status === "sold_out" ? "Sold Out" : item.status === "discontinued" ? "Discontinued" : item.status === "available" ? "Available" : "Unknown"}
                         </Chip>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-2 items-center">
+                        <div className="flex gap-1.5 items-center justify-start">
                           <Button
                             color="primary"
                             size="sm"
                             variant="flat"
-                            className="min-w-[60px]"
+                            className="min-w-[56px] px-2"
                             onPress={() => handleEdit(item)}
                           >
                             Edit
@@ -1135,7 +1137,7 @@ export default function AdminMenuPage() {
                             color="secondary"
                             size="sm"
                             variant="flat"
-                            className="min-w-[60px]"
+                            className="min-w-[56px] px-2"
                             onPress={() => {
                               setPriceModalItem(item);
                               setNewPrice(formatPrice(item.current_price));
@@ -1147,7 +1149,7 @@ export default function AdminMenuPage() {
                             color="danger"
                             size="sm"
                             variant="flat"
-                            className="min-w-[70px]"
+                            className="min-w-[60px] px-2"
                             onPress={() => handleDelete(item)}
                           >
                             Delete
