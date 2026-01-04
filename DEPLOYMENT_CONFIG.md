@@ -2,19 +2,17 @@
 
 ## Your Production URLs
 
-- **API Server**: `https://goldenmunch-pos-system-server-fobd.onrender.com`
+- **API Server**: `https://goldenmunch-server.onrender.com`
 - **Mobile Editor**: `https://goldenmunch-pos-system-with-custom-cake-lcxl.onrender.com`
-
-> **NOTE**: If you changed your server URL from `goldenmunch-server.onrender.com` to `goldenmunch-pos-system-server-fobd.onrender.com`, you MUST update the environment variables in both services and manually redeploy them!
 
 ---
 
 ## Required Environment Variables
 
 ### 1. API Server (Backend)
-**Service**: `goldenmunch-pos-system-server-fobd`
+**Service**: `goldenmunch-server`
 
-Go to: https://dashboard.render.com → Select `goldenmunch-pos-system-server-fobd` → Environment
+Go to: https://dashboard.render.com → Select `goldenmunch-server` → Environment
 
 **Add/Update these variables:**
 
@@ -29,7 +27,7 @@ DATABASE_URL=mysql://username:password@host:port/database
 MOBILE_EDITOR_URL=https://goldenmunch-pos-system-with-custom-cake-lcxl.onrender.com
 
 # Backend API URL (for reference)
-BACKEND_URL=https://goldenmunch-pos-system-server-fobd.onrender.com
+BACKEND_URL=https://goldenmunch-server.onrender.com
 
 # CORS - Allow mobile editor (NOTE: The code already allows all *.onrender.com domains)
 CORS_ORIGIN=https://goldenmunch-pos-system-with-custom-cake-lcxl.onrender.com
@@ -51,7 +49,7 @@ Go to: https://dashboard.render.com → Select service → Environment
 
 ```env
 # THIS IS THE FIX FOR "SESSION EXPIRED" AND CORS ISSUES
-NEXT_PUBLIC_API_URL=https://goldenmunch-pos-system-server-fobd.onrender.com/api
+NEXT_PUBLIC_API_URL=https://goldenmunch-server.onrender.com/api
 ```
 
 **Important Notes:**
@@ -78,7 +76,7 @@ NEXT_PUBLIC_API_URL=https://goldenmunch-pos-system-server-fobd.onrender.com/api
    - If it doesn't exist, click **"Add Environment Variable"**
 6. Enter:
    - **Key**: `NEXT_PUBLIC_API_URL`
-   - **Value**: `https://goldenmunch-pos-system-server-fobd.onrender.com/api`
+   - **Value**: `https://goldenmunch-server.onrender.com/api`
 7. Click **"Save Changes"**
 8. **CRITICAL**: Click **"Manual Deploy"** → **"Deploy latest commit"**
    - This rebuilds the app with the new environment variable baked in
@@ -89,14 +87,14 @@ NEXT_PUBLIC_API_URL=https://goldenmunch-pos-system-server-fobd.onrender.com/api
 #### Step 2: Configure Backend Server
 
 1. Go to: https://dashboard.render.com
-2. Find service: `goldenmunch-pos-system-server-fobd`
+2. Find service: `goldenmunch-server`
 3. Click on the service name
 4. Go to **"Environment"** tab
 5. Add/Update these variables:
    - **Key**: `MOBILE_EDITOR_URL`
    - **Value**: `https://goldenmunch-pos-system-with-custom-cake-lcxl.onrender.com`
    - **Key**: `BACKEND_URL`
-   - **Value**: `https://goldenmunch-pos-system-server-fobd.onrender.com`
+   - **Value**: `https://goldenmunch-server.onrender.com`
 6. Click **"Save Changes"**
 7. **IMPORTANT**: Click **"Manual Deploy"** → **"Deploy latest commit"**
    - This ensures the server restarts with new environment variables
@@ -125,7 +123,7 @@ Before testing, ensure both deployments completed successfully:
 4. Scan with phone
 5. **Check browser console** (F12 → Console tab):
    ```
-   🌐 API URL: https://goldenmunch-pos-system-server-fobd.onrender.com/api ✓
+   🌐 API URL: https://goldenmunch-server.onrender.com/api ✓
    ✅ Session is valid!
    ```
 6. Should NOT see:
@@ -147,7 +145,7 @@ After deployment:
 4. **Click**: "▶ Debug Info (for staff)"
 5. **Should show**:
    ```
-   API URL: https://goldenmunch-pos-system-server-fobd.onrender.com/api
+   API URL: https://goldenmunch-server.onrender.com/api
    ```
 6. **Should NOT show red warning** about "NOT CONFIGURED"
 7. **Open browser console (F12)** → should NOT see:
@@ -157,7 +155,7 @@ After deployment:
 ### Backend API Verification:
 
 1. **Test API Root**:
-   - Open: `https://goldenmunch-pos-system-server-fobd.onrender.com/api/`
+   - Open: `https://goldenmunch-server.onrender.com/api/`
    - Should show JSON with API info and status
 
 2. **Test CORS Headers** (from command line):
@@ -165,13 +163,13 @@ After deployment:
    curl -I -X OPTIONS \
      -H "Origin: https://goldenmunch-pos-system-with-custom-cake-lcxl.onrender.com" \
      -H "Access-Control-Request-Method: GET" \
-     https://goldenmunch-pos-system-server-fobd.onrender.com/api/custom-cake/options
+     https://goldenmunch-server.onrender.com/api/custom-cake/options
    ```
    - Look for: `Access-Control-Allow-Origin: https://goldenmunch-pos-system-with-custom-cake-lcxl.onrender.com`
 
 3. **Test Session Generation**:
    ```bash
-   curl -X POST https://goldenmunch-pos-system-server-fobd.onrender.com/api/kiosk/custom-cake/generate-qr \
+   curl -X POST https://goldenmunch-server.onrender.com/api/kiosk/custom-cake/generate-qr \
      -H "Content-Type: application/json" \
      -d '{"kiosk_id": "TEST-001"}'
    ```
@@ -269,7 +267,7 @@ LIMIT 10;
 
 **Error in browser console:**
 ```
-Access to fetch at 'https://goldenmunch-pos-system-server-fobd.onrender.com/api/...'
+Access to fetch at 'https://goldenmunch-server.onrender.com/api/...'
 from origin 'https://goldenmunch-pos-system-with-custom-cake-lcxl.onrender.com'
 has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present
 ```
@@ -287,7 +285,7 @@ has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is pres
    ```
 
 2. **Manually Redeploy Backend**:
-   - Go to: `goldenmunch-pos-system-server-fobd` service
+   - Go to: `goldenmunch-server` service
    - Click: **"Manual Deploy"** → **"Deploy latest commit"**
    - **Wait for deployment to complete**
 
@@ -297,7 +295,7 @@ has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is pres
    curl -I -X OPTIONS \
      -H "Origin: https://goldenmunch-pos-system-with-custom-cake-lcxl.onrender.com" \
      -H "Access-Control-Request-Method: GET" \
-     https://goldenmunch-pos-system-server-fobd.onrender.com/api/custom-cake/options
+     https://goldenmunch-server.onrender.com/api/custom-cake/options
    ```
    - Should see: `Access-Control-Allow-Origin: https://goldenmunch-pos-system-with-custom-cake-lcxl.onrender.com`
 
@@ -312,13 +310,13 @@ has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is pres
 ### ✅ Correct Configuration:
 
 ```
-QR Generated on: goldenmunch-pos-system-server-fobd.onrender.com
+QR Generated on: goldenmunch-server.onrender.com
      ↓
 Session saved in: Database (shared)
      ↓
 QR points to: goldenmunch-pos-system-with-custom-cake-lcxl.onrender.com
      ↓
-Mobile editor validates on: goldenmunch-pos-system-server-fobd.onrender.com/api
+Mobile editor validates on: goldenmunch-server.onrender.com/api
      ↓
 CORS: Server allows *.onrender.com origins
      ↓
@@ -328,13 +326,13 @@ Session found: ✓ SUCCESS
 ### ❌ Wrong Configuration (causes "Session Expired" or CORS errors):
 
 ```
-QR Generated on: goldenmunch-pos-system-server-fobd.onrender.com
+QR Generated on: goldenmunch-server.onrender.com
      ↓
 Session saved in: Database A
      ↓
 Mobile editor validates on: localhost:5000 (WRONG!)
      OR
-Mobile editor validates on: goldenmunch-server.onrender.com/api (OLD URL - WRONG!)
+Mobile editor validates on: wrong-server-url.onrender.com/api (WRONG!)
      ↓
 CORS blocked OR Session not found
      ↓
@@ -343,9 +341,9 @@ Result: ✗ "SESSION EXPIRED" or CORS ERROR
 
 ### 🔧 Common Mistakes:
 
-1. ❌ Changed server URL but didn't update `NEXT_PUBLIC_API_URL` in mobile editor
-2. ❌ Updated env vars but didn't manually redeploy
-3. ❌ Mobile editor still pointing to old `goldenmunch-server.onrender.com` instead of `goldenmunch-pos-system-server-fobd.onrender.com`
+1. ❌ `NEXT_PUBLIC_API_URL` not set or pointing to wrong server URL
+2. ❌ Updated env vars but didn't manually redeploy (critical for Next.js!)
+3. ❌ Mobile editor pointing to localhost instead of production server
 4. ❌ Forgot to include `/api` at the end of the URL
 
 ---
@@ -374,17 +372,17 @@ If issues persist after configuration:
    curl -I -X OPTIONS \
      -H "Origin: https://goldenmunch-pos-system-with-custom-cake-lcxl.onrender.com" \
      -H "Access-Control-Request-Method: GET" \
-     https://goldenmunch-pos-system-server-fobd.onrender.com/api/custom-cake/options
+     https://goldenmunch-server.onrender.com/api/custom-cake/options
 
    # Generate session
-   curl -X POST https://goldenmunch-pos-system-server-fobd.onrender.com/api/kiosk/custom-cake/generate-qr \
+   curl -X POST https://goldenmunch-server.onrender.com/api/kiosk/custom-cake/generate-qr \
      -H "Content-Type: application/json" \
      -d '{"kiosk_id": "TEST-001"}'
 
    # Copy session token from response
 
    # Validate session
-   curl https://goldenmunch-pos-system-server-fobd.onrender.com/api/custom-cake/session/SESSION_TOKEN_HERE
+   curl https://goldenmunch-server.onrender.com/api/custom-cake/session/SESSION_TOKEN_HERE
    ```
 
 ---
@@ -393,7 +391,7 @@ If issues persist after configuration:
 
 **The Fix (in 4 steps):**
 
-1. **Update Mobile Editor env var**: `NEXT_PUBLIC_API_URL=https://goldenmunch-pos-system-server-fobd.onrender.com/api`
+1. **Update Mobile Editor env var**: `NEXT_PUBLIC_API_URL=https://goldenmunch-server.onrender.com/api`
 2. **Manually redeploy Mobile Editor** (critical - Next.js bakes env vars into build!)
 3. **Update Backend env vars**: `BACKEND_URL` and `MOBILE_EDITOR_URL`
 4. **Manually redeploy Backend** (ensures CORS middleware restarts)
@@ -408,10 +406,10 @@ If issues persist after configuration:
 
 Use this checklist to ensure everything is configured correctly:
 
-- [ ] Mobile Editor: Set `NEXT_PUBLIC_API_URL=https://goldenmunch-pos-system-server-fobd.onrender.com/api`
+- [ ] Mobile Editor: Set `NEXT_PUBLIC_API_URL=https://goldenmunch-server.onrender.com/api`
 - [ ] Mobile Editor: Click "Manual Deploy" → "Deploy latest commit"
 - [ ] Mobile Editor: Wait for "Live" status
-- [ ] Backend: Set `BACKEND_URL=https://goldenmunch-pos-system-server-fobd.onrender.com`
+- [ ] Backend: Set `BACKEND_URL=https://goldenmunch-server.onrender.com`
 - [ ] Backend: Set `MOBILE_EDITOR_URL=https://goldenmunch-pos-system-with-custom-cake-lcxl.onrender.com`
 - [ ] Backend: Set `CORS_ORIGIN=https://goldenmunch-pos-system-with-custom-cake-lcxl.onrender.com`
 - [ ] Backend: Click "Manual Deploy" → "Deploy latest commit"
