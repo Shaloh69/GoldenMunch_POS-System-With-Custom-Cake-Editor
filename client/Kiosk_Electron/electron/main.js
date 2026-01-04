@@ -153,6 +153,32 @@ ipcMain.handle('open-payment', async (_event, data) => {
   return { success: false, message: 'Payment integration not implemented' };
 });
 
+ipcMain.on('close-settings', () => {
+  console.log('Close settings requested');
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.close();
+  }
+});
+
+ipcMain.on('reload-app', () => {
+  console.log('Reload app requested');
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    // Get updated URL from settings manager
+    const newUrl = settingsManager.getAppUrl(isDev);
+    console.log('Reloading app with URL:', newUrl);
+
+    // Clear cache and reload with new URL
+    mainWindow.webContents.session.clearCache().then(() => {
+      mainWindow.loadURL(newUrl).catch(console.error);
+    });
+  }
+
+  // Close settings window
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    settingsWindow.close();
+  }
+});
+
 // ================================
 // APP LIFECYCLE
 // ================================
@@ -165,6 +191,22 @@ app.whenReady().then(() => {
   globalShortcut.register('CommandOrControl+Shift+C', () => {
     console.log('Settings shortcut triggered');
     openSettingsWindow();
+  });
+
+  // Ctrl+Shift+I - Open Developer Tools (for debugging)
+  globalShortcut.register('CommandOrControl+Shift+I', () => {
+    console.log('DevTools shortcut triggered');
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.toggleDevTools();
+    }
+  });
+
+  // F12 - Open Developer Tools (alternative)
+  globalShortcut.register('F12', () => {
+    console.log('DevTools shortcut triggered (F12)');
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.toggleDevTools();
+    }
   });
 
   // Alt+F4 - Exit kiosk (in case user needs to close)
@@ -180,7 +222,8 @@ app.whenReady().then(() => {
   });
 
   console.log('Global shortcuts registered:');
-  console.log('  Ctrl+Shift+C - Open Settings');
+  console.log('  Ctrl+Shift+C - Open Settings Panel');
+  console.log('  Ctrl+Shift+I or F12 - Open Developer Tools');
   console.log('  Alt+F4 - Exit Kiosk');
   console.log('  Ctrl+Q - Exit Kiosk');
 });
