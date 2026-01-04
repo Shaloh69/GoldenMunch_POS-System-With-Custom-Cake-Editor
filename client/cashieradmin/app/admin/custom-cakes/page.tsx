@@ -514,6 +514,7 @@ export default function CustomCakesPage() {
                           color="default"
                           size="sm"
                           variant="flat"
+                          className="min-w-[62px] px-2"
                           onClick={() => handleViewDetails(request)}
                         >
                           <EyeIcon className="w-4 h-4" /> View

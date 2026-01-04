@@ -424,20 +424,22 @@ export default function DiscountsPage() {
                           isIconOnly
                           color="primary"
                           size="sm"
+                          className="min-w-[62px] px-2"
                           variant="flat"
                           onPress={() => openEditModal(discount)}
                         >
-                          <PencilIcon className="h-4 w-4" />
+                          <PencilIcon className="h-4 w-4" /> Edit
                         </Button>
                         <Button
                           isIconOnly
                           color="danger"
                           isDisabled={!discount.is_active}
                           size="sm"
+                          className="min-w-[62px] px-2"
                           variant="flat"
                           onPress={() => openDeleteModal(discount)}
                         >
-                          <TrashIcon className="h-4 w-4" />
+                          <TrashIcon className="h-4 w-4" /> Delete
                         </Button>
                       </div>
                     </TableCell>

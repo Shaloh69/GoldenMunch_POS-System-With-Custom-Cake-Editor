@@ -364,6 +364,7 @@ export default function CashiersPage() {
                           isIconOnly
                           color="primary"
                           size="sm"
+                          className="min-w-[62px] px-2"
                           variant="light"
                           onPress={() => openEditModal(cashier)}
                         >
@@ -373,6 +374,7 @@ export default function CashiersPage() {
                           isIconOnly
                           color="danger"
                           size="sm"
+                          className="min-w-[62px] px-2"
                           variant="light"
                           onPress={() => openDeleteModal(cashier)}
                         >
