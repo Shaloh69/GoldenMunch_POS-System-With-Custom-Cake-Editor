@@ -476,6 +476,8 @@ router.delete('/admin/menu/:id', authenticateAdmin, asyncHandler(adminController
 router.post('/admin/menu/prices', authenticateAdmin, asyncHandler(adminController.addItemPrice));
 
 // Categories
+router.get('/admin/categories', authenticateAdmin, asyncHandler(adminController.getAllCategories));
+
 router.post(
   '/admin/categories',
   authenticateAdmin,
