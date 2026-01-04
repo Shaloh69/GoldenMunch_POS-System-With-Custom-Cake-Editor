@@ -516,7 +516,7 @@ export default function CustomCakesPage() {
                           variant="flat"
                           onClick={() => handleViewDetails(request)}
                         >
-                          <EyeIcon className="w-4 h-4" />
+                          <EyeIcon className="w-4 h-4" /> View
                         </Button>
                         {request.status === "pending_review" && (
                           <>

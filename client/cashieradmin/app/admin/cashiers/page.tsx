@@ -367,7 +367,7 @@ export default function CashiersPage() {
                           variant="light"
                           onPress={() => openEditModal(cashier)}
                         >
-                          <PencilIcon className="h-4 w-4" />
+                          Edit
                         </Button>
                         <Button
                           isIconOnly
@@ -376,7 +376,7 @@ export default function CashiersPage() {
                           variant="light"
                           onPress={() => openDeleteModal(cashier)}
                         >
-                          <TrashIcon className="h-4 w-4" />
+                          Delete
                         </Button>
                       </div>
                     </TableCell>
