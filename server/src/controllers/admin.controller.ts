@@ -103,7 +103,7 @@ export const getAllMenuItems = async (req: AuthRequest, res: Response) => {
     item_type,
     status,
     search,
-    include_deleted = 'false',
+    include_discontinued = 'false',
     page = '1',
     limit = '100',
   } = req.query;
@@ -131,9 +131,10 @@ export const getAllMenuItems = async (req: AuthRequest, res: Response) => {
 
   const params: any[] = [];
 
-  // Only filter out deleted items if include_deleted is false
-  if (include_deleted !== 'true') {
-    sql += ` AND mi.is_deleted = FALSE`;
+  // Only filter out discontinued items if include_discontinued is false
+  // Note: menu_item doesn't have is_deleted column, uses status='discontinued' instead
+  if (include_discontinued !== 'true') {
+    sql += ` AND mi.status != 'discontinued'`;
   }
 
   if (category_id) {
