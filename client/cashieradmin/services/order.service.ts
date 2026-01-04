@@ -39,6 +39,10 @@ export class OrderService {
     return apiClient.delete(`/cashier/orders/${id}`);
   }
 
+  static async markOrderPrinted(id: number) {
+    return apiClient.post(`/cashier/orders/${id}/mark-printed`);
+  }
+
   static async createOrder(data: any) {
     return apiClient.post("/kiosk/orders", data);
   }

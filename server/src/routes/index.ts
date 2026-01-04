@@ -428,6 +428,7 @@ router.post(
 
 router.get('/cashier/orders', authenticateCashier, asyncHandler(orderController.getOrders));
 router.get('/cashier/orders/:id', authenticateCashier, asyncHandler(orderController.getOrderDetails));
+router.post('/cashier/orders/:id/mark-printed', authenticateCashier, asyncHandler(orderController.markOrderPrinted));
 router.get('/cashier/orders/:id/timeline', authenticateCashier, asyncHandler(additionalController.getOrderTimeline));
 router.patch('/cashier/orders/:id/status', authenticateCashier, asyncHandler(orderController.updateOrderStatus));
 router.delete('/cashier/orders/:id', authenticateCashier, asyncHandler(orderController.deleteOrder));
