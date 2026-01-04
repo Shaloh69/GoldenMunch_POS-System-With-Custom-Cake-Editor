@@ -98,11 +98,11 @@ export default function LoginPage() {
               }}
               color="primary"
               label={loginType === "admin" ? "Password" : "PIN"}
-              maxLength={loginType === "cashier" ? 4 : undefined}
+              maxLength={loginType === "cashier" ? 6 : undefined}
               placeholder={
                 loginType === "admin"
                   ? "Enter your password"
-                  : "Enter 4-digit PIN"
+                  : "Enter 4 to 6 digit PIN"
               }
               type="password"
               value={password}
