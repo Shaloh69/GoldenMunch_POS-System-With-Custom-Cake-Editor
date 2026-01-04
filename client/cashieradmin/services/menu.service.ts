@@ -19,8 +19,9 @@ export class MenuService {
     return apiClient.get<MenuItem>(`/kiosk/menu/${id}`);
   }
 
+  // Admin endpoint - returns all categories including inactive
   static async getCategories() {
-    return apiClient.get<Category[]>("/kiosk/categories");
+    return apiClient.get<Category[]>("/admin/categories");
   }
 
   // Admin endpoints

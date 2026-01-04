@@ -167,7 +167,6 @@ export interface MenuItem {
   is_featured: boolean;
   allergen_info?: string;
   nutritional_info?: string;
-  is_deleted: boolean;
   status: "available" | "sold_out" | "discontinued";
   created_at: string;
   updated_at: string;

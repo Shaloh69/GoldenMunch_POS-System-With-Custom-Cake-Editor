@@ -1049,20 +1049,29 @@ export const processPayment = async (req: AuthRequest, res: Response) => {
     const randomPart = Math.floor(1000 + Math.random() * 9000);
     const orderNumber = `ORD-${datePart}-${randomPart}`;
 
-    // 4. Create order (FIXED)
+    // Calculate amounts
+    const approvedPrice = Number(request.approved_price);
+    const paidAmount = Number(amount_paid);
+    const changeAmount = paidAmount - approvedPrice;
+
+    // 4. Create order (FIXED - added missing required fields)
     const [orderResult] = await conn.query<any>(
       `INSERT INTO customer_order
        (order_number, customer_id, order_type, order_status, order_source,
-        total_amount, final_amount, payment_method, payment_status,
+        subtotal, tax_amount, discount_amount, total_amount, final_amount,
+        payment_method, payment_status, amount_paid, change_amount,
         special_instructions, cashier_id, scheduled_pickup_datetime)
        VALUES (?, ?, 'custom_cake', 'pending', 'cashier',
-               ?, ?, ?, 'paid', ?, ?, ?)`,
+               ?, 0, 0, ?, ?, ?, 'paid', ?, ?, ?, ?, ?)`,
       [
         orderNumber,
         customerId,
-        request.approved_price,
-        request.approved_price,
+        approvedPrice,  // subtotal
+        approvedPrice,  // total_amount
+        approvedPrice,  // final_amount
         payment_method,
+        paidAmount,     // amount_paid
+        changeAmount,   // change_amount
         `Custom Cake - Pickup: ${request.scheduled_pickup_date}`,
         cashier_id,
         request.scheduled_pickup_date || null,
@@ -1070,6 +1079,48 @@ export const processPayment = async (req: AuthRequest, res: Response) => {
     );
 
     const newOrderId = orderResult.insertId;
+
+    // 4b. Create order_item for the custom cake
+    const itemName = `Custom Cake (${request.num_layers} layer${request.num_layers > 1 ? 's' : ''})`;
+    const itemDescription = [
+      request.theme_id ? `Theme ID: ${request.theme_id}` : null,
+      request.frosting_type ? `Frosting: ${request.frosting_type}` : null,
+      request.cake_text ? `Message: "${request.cake_text}"` : null,
+      request.candles_count && request.candles_count > 0 ? `Candles: ${request.candles_count}` : null,
+    ].filter(Boolean).join(' | ');
+
+    // Build customization notes JSON
+    const customizationNotes = JSON.stringify({
+      num_layers: request.num_layers,
+      theme_id: request.theme_id,
+      frosting_type: request.frosting_type,
+      frosting_color: request.frosting_color,
+      cake_text: request.cake_text,
+      text_color: request.text_color,
+      text_font: request.text_font,
+      text_position: request.text_position,
+      candles_count: request.candles_count,
+      candle_type: request.candle_type,
+      event_type: request.event_type,
+      event_date: request.event_date,
+    });
+
+    await conn.query(
+      `INSERT INTO order_item
+       (order_id, custom_cake_request_id, item_name, item_description,
+        quantity, unit_price, subtotal, customization_notes, special_requests)
+       VALUES (?, ?, ?, ?, 1, ?, ?, ?, ?)`,
+      [
+        newOrderId,
+        requestId,
+        itemName,
+        itemDescription,
+        approvedPrice,  // unit_price
+        approvedPrice,  // subtotal (quantity * unit_price = 1 * approvedPrice)
+        customizationNotes,
+        request.special_instructions || null,
+      ]
+    );
 
     // 5. Link request → order
     await conn.query(
@@ -1097,12 +1148,6 @@ export const processPayment = async (req: AuthRequest, res: Response) => {
     }
 
     return newOrderId;
-  });
-
-  res.json({
-    success: true,
-    message: 'Payment processed successfully',
-    order_id: orderId,
   });
 
   // Process pending notifications (send payment confirmation email)

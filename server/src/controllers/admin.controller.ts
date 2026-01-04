@@ -103,7 +103,7 @@ export const getAllMenuItems = async (req: AuthRequest, res: Response) => {
     item_type,
     status,
     search,
-    include_deleted = 'false',
+    include_discontinued = 'false',
     page = '1',
     limit = '100',
   } = req.query;
@@ -131,9 +131,10 @@ export const getAllMenuItems = async (req: AuthRequest, res: Response) => {
 
   const params: any[] = [];
 
-  // Only filter out deleted items if include_deleted is false
-  if (include_deleted !== 'true') {
-    sql += ` AND mi.is_deleted = FALSE`;
+  // Only filter out discontinued items if include_discontinued is false
+  // Note: menu_item doesn't have is_deleted column, uses status='discontinued' instead
+  if (include_discontinued !== 'true') {
+    sql += ` AND mi.status != 'discontinued'`;
   }
 
   if (category_id) {
@@ -482,6 +483,34 @@ export const getPromotionById = async (req: AuthRequest, res: Response) => {
 };
 
 // ==== CATEGORIES ====
+
+// Get all categories (for admin - includes inactive categories)
+export const getAllCategories = async (req: AuthRequest, res: Response) => {
+  const { include_inactive = 'true' } = req.query;
+
+  let sql = `
+    SELECT
+      c.*,
+      COUNT(DISTINCT chmi.menu_item_id) as item_count
+    FROM category c
+    LEFT JOIN category_has_menu_item chmi ON c.category_id = chmi.category_id
+    WHERE 1=1
+  `;
+
+  const params: any[] = [];
+
+  // Only filter out inactive categories if include_inactive is false
+  if (include_inactive !== 'true') {
+    sql += ` AND c.is_active = TRUE`;
+  }
+
+  sql += ` GROUP BY c.category_id`;
+  sql += ` ORDER BY c.display_order ASC, c.name ASC`;
+
+  const categories = await query(sql, params);
+
+  res.json(successResponse('Categories retrieved', categories));
+};
 
 // Create category
 export const createCategory = async (req: AuthRequest, res: Response) => {
