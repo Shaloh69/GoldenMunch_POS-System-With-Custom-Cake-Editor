@@ -172,6 +172,14 @@ export default function AdminMenuPage() {
 
     // Sort
     filtered.sort((a, b) => {
+      // Always put sold_out and discontinued items last, regardless of sort
+      const aOutOfStock = a.status === "sold_out" || a.status === "discontinued";
+      const bOutOfStock = b.status === "sold_out" || b.status === "discontinued";
+
+      if (aOutOfStock && !bOutOfStock) return 1; // a goes to end
+      if (!aOutOfStock && bOutOfStock) return -1; // b goes to end
+      // If both same status, continue with normal sort
+
       let comparison = 0;
 
       switch (sortBy) {
@@ -482,12 +490,25 @@ export default function AdminMenuPage() {
         0,
         toNumber(item.stock_quantity, 0) + adjustment,
       );
-      const response = await MenuService.updateMenuItem(itemId, {
+
+      // Prepare update data
+      const updateData: any = {
         stock_quantity: newStock,
-      });
+      };
+
+      // Auto-set status to sold_out when stock reaches 0
+      // Auto-set status back to available when stock increases from 0
+      if (newStock === 0 && item.status === "available") {
+        updateData.status = "sold_out";
+      } else if (newStock > 0 && item.status === "sold_out") {
+        updateData.status = "available";
+      }
+
+      const response = await MenuService.updateMenuItem(itemId, updateData);
 
       if (response.success) {
-        setSuccessMessage(`Stock updated to ${newStock}`);
+        const statusChanged = updateData.status ? ` (${updateData.status})` : "";
+        setSuccessMessage(`Stock updated to ${newStock}${statusChanged}`);
         setTimeout(() => setSuccessMessage(null), 3000);
         loadMenuItems();
       } else {
