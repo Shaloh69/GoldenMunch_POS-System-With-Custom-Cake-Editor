@@ -60,6 +60,15 @@ export const createWasteEntry = async (req: AuthRequest, res: Response) => {
          WHERE menu_item_id = ?`,
         [newQuantity, menu_item_id]
       );
+
+      // Auto-update status to 'sold_out' if stock reaches 0
+      if (newQuantity === 0) {
+        await conn.query(
+          'UPDATE menu_item SET status = ? WHERE menu_item_id = ? AND status != ?',
+          ['sold_out', menu_item_id, 'discontinued']
+        );
+        console.log(`📦 Auto-updated status to 'sold_out' for ${item.name} due to waste (stock: 0)`);
+      }
     }
 
     // Record inventory transaction
