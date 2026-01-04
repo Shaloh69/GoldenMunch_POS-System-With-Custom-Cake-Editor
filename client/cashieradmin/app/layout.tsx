@@ -42,7 +42,7 @@ export default function RootLayout({
         )}
       >
         <Providers themeProps={{ attribute: "class", defaultTheme: "light" }}>
-          <AnimatedBackground />
+          {/* <AnimatedBackground /> */}
           {children}
         </Providers>
       </body>
