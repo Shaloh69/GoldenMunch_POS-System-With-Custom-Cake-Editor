@@ -452,6 +452,8 @@ router.post('/cashier/custom-cakes/:requestId/process-payment', authenticateCash
 // ==== ADMIN ROUTES ====
 
 // Menu Management
+router.get('/admin/menu', authenticateAdmin, asyncHandler(adminController.getAllMenuItems));
+
 router.post(
   '/admin/menu',
   authenticateAdmin,

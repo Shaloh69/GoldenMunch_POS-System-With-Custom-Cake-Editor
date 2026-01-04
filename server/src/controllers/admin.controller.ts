@@ -96,6 +96,109 @@ export const deleteMenuItem = async (req: AuthRequest, res: Response) => {
   res.json(successResponse('Menu item deleted'));
 };
 
+// Get all menu items (for admin - includes all statuses)
+export const getAllMenuItems = async (req: AuthRequest, res: Response) => {
+  const {
+    category_id,
+    item_type,
+    status,
+    search,
+    include_deleted = 'false',
+    page = '1',
+    limit = '100',
+  } = req.query;
+
+  // Parse and validate pagination parameters
+  const parsedPage = parseInt(page as string, 10);
+  const parsedLimit = parseInt(limit as string, 10);
+
+  const pageNum = Number.isFinite(parsedPage) && parsedPage > 0 ? parsedPage : 1;
+  const limitNum = Number.isFinite(parsedLimit) && parsedLimit > 0 ? Math.min(200, parsedLimit) : 100;
+  const offset = (pageNum - 1) * limitNum;
+
+  let sql = `
+    SELECT
+      mi.*,
+      (SELECT unit_price FROM menu_item_price
+       WHERE menu_item_id = mi.menu_item_id
+       AND is_active = TRUE
+       AND CURDATE() BETWEEN valid_from AND valid_until
+       ORDER BY price_type = 'base' DESC, created_at DESC
+       LIMIT 1) as current_price
+    FROM menu_item mi
+    WHERE 1=1
+  `;
+
+  const params: any[] = [];
+
+  // Only filter out deleted items if include_deleted is false
+  if (include_deleted !== 'true') {
+    sql += ` AND mi.is_deleted = FALSE`;
+  }
+
+  if (category_id) {
+    const categoryIdNum = parseInt(category_id as string, 10);
+    if (!Number.isNaN(categoryIdNum)) {
+      sql += ` AND EXISTS (
+        SELECT 1 FROM category_has_menu_item
+        WHERE menu_item_id = mi.menu_item_id
+        AND category_id = ?
+      )`;
+      params.push(categoryIdNum);
+    }
+  }
+
+  if (item_type) {
+    sql += ` AND mi.item_type = ?`;
+    params.push(String(item_type));
+  }
+
+  if (status) {
+    sql += ` AND mi.status = ?`;
+    params.push(String(status));
+  }
+
+  if (search) {
+    sql += ` AND (mi.name LIKE ? OR mi.description LIKE ?)`;
+    const searchStr = String(search);
+    params.push(`%${searchStr}%`, `%${searchStr}%`);
+  }
+
+  sql += ` ORDER BY
+    CASE mi.status
+      WHEN 'available' THEN 1
+      WHEN 'sold_out' THEN 2
+      WHEN 'discontinued' THEN 3
+      ELSE 4
+    END,
+    mi.is_featured DESC,
+    mi.popularity_score DESC`;
+  sql += ` LIMIT ? OFFSET ?`;
+
+  // Ensure pagination parameters are valid before adding to params
+  if (!Number.isFinite(limitNum) || !Number.isFinite(offset) || limitNum < 1 || offset < 0) {
+    throw new AppError('Invalid pagination parameters', 400);
+  }
+
+  params.push(limitNum, offset);
+
+  const items = await query(sql, params);
+
+  // Fetch categories for each menu item
+  for (const item of items as any[]) {
+    const categories = await query(
+      `SELECT c.* FROM category c
+       INNER JOIN category_has_menu_item chmi ON c.category_id = chmi.category_id
+       WHERE chmi.menu_item_id = ?
+       ORDER BY chmi.display_order ASC`,
+      [item.menu_item_id]
+    );
+    item.categories = categories;
+  }
+
+  res.json(successResponse('Menu items retrieved', items));
+};
+
 // Add item price
 export const addItemPrice = async (req: AuthRequest, res: Response) => {
   const { menu_item_id, unit_price, valid_from, valid_until, price_type } = req.body;
