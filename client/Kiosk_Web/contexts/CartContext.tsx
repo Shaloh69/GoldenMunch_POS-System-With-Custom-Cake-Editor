@@ -77,6 +77,24 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const addItem = useCallback((newItem: CartItem) => {
     setItems((currentItems) => {
+      // Check stock availability before adding (unless infinite stock)
+      if (!newItem.menuItem.is_infinite_stock) {
+        const existingItem = currentItems.find(
+          (item) => item.menuItem.menu_item_id === newItem.menuItem.menu_item_id
+        );
+        const currentQuantity = existingItem?.quantity || 0;
+        const totalQuantity = currentQuantity + newItem.quantity;
+
+        if (totalQuantity > newItem.menuItem.stock_quantity) {
+          console.warn(
+            `Cannot add ${newItem.quantity} of ${newItem.menuItem.name}. ` +
+              `Only ${newItem.menuItem.stock_quantity} available, ${currentQuantity} already in cart.`
+          );
+          // Don't add - just return current items
+          return currentItems;
+        }
+      }
+
       // Check if item already exists (same menu item and customizations)
       // For custom cakes, always treat as unique (don't merge)
       const existingIndex = newItem.custom_cake_design
@@ -117,13 +135,29 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      setItems((currentItems) =>
-        currentItems.map((item) =>
+      setItems((currentItems) => {
+        const item = currentItems.find(
+          (item) => item.menuItem.menu_item_id === menuItemId
+        );
+
+        // Check stock availability before updating (unless infinite stock)
+        if (item && !item.menuItem.is_infinite_stock) {
+          if (quantity > item.menuItem.stock_quantity) {
+            console.warn(
+              `Cannot set quantity to ${quantity} for ${item.menuItem.name}. ` +
+                `Only ${item.menuItem.stock_quantity} available.`
+            );
+            // Don't update - just return current items
+            return currentItems;
+          }
+        }
+
+        return currentItems.map((item) =>
           item.menuItem.menu_item_id === menuItemId
             ? { ...item, quantity }
-            : item,
-        ),
-      );
+            : item
+        );
+      });
     },
     [removeItem],
   );

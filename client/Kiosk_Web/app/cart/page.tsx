@@ -410,10 +410,21 @@ export default function CartPage() {
                                     item.quantity + 1
                                   )
                                 }
+                                disabled={
+                                  !item.menuItem.is_infinite_stock &&
+                                  item.quantity >= item.menuItem.stock_quantity
+                                }
                               >
                                 +
                               </Button>
                             </div>
+                            {/* Stock Warning */}
+                            {!item.menuItem.is_infinite_stock &&
+                              item.quantity >= item.menuItem.stock_quantity && (
+                                <div className="text-xs text-orange-600 font-semibold">
+                                  Max stock reached
+                                </div>
+                              )}
 
                             {/* Item Total */}
                             <div className="text-center">

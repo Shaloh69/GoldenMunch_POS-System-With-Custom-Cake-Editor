@@ -36,6 +36,22 @@ export function KioskAppSidebar({
 
   const handleAddToCart = () => {
     if (selectedItem) {
+      // Check stock availability before adding
+      if (!selectedItem.is_infinite_stock) {
+        const currentCartItem = cartItems.find(
+          (item) => item.menuItem.menu_item_id === selectedItem.menu_item_id
+        );
+        const currentCartQuantity = currentCartItem?.quantity || 0;
+        const totalQuantity = currentCartQuantity + quantity;
+
+        if (totalQuantity > selectedItem.stock_quantity) {
+          alert(
+            `Sorry! Only ${selectedItem.stock_quantity} item(s) available.\nYou already have ${currentCartQuantity} in your cart.`
+          );
+          return;
+        }
+      }
+
       addItem({
         menuItem: selectedItem,
         quantity: quantity,
@@ -48,7 +64,18 @@ export function KioskAppSidebar({
 
   const handleQuantityChange = (delta: number) => {
     const newQty = quantity + delta;
-    if (newQty >= 1 && newQty <= 99) {
+
+    // Get max allowed quantity
+    let maxQty = 99;
+    if (selectedItem && !selectedItem.is_infinite_stock) {
+      const currentCartItem = cartItems.find(
+        (item) => item.menuItem.menu_item_id === selectedItem.menu_item_id
+      );
+      const currentCartQuantity = currentCartItem?.quantity || 0;
+      maxQty = Math.min(99, selectedItem.stock_quantity - currentCartQuantity);
+    }
+
+    if (newQty >= 1 && newQty <= maxQty) {
       setQuantity(newQty);
     }
   };
@@ -59,6 +86,20 @@ export function KioskAppSidebar({
     selectedItem?.status === "available" &&
     (selectedItem?.is_infinite_stock ||
       (selectedItem?.stock_quantity ?? 0) > 0);
+
+  // Calculate remaining available quantity for current item
+  const getRemainingStock = (): number | null => {
+    if (!selectedItem || selectedItem.is_infinite_stock) return null;
+
+    const currentCartItem = cartItems.find(
+      (item) => item.menuItem.menu_item_id === selectedItem.menu_item_id
+    );
+    const currentCartQuantity = currentCartItem?.quantity || 0;
+    return selectedItem.stock_quantity - currentCartQuantity;
+  };
+
+  const remainingStock = getRemainingStock();
+  const maxAllowedQty = remainingStock !== null ? Math.min(99, remainingStock) : 99;
 
   console.log("KioskAppSidebar: Rendering on path", pathname, {
     selectedItem: selectedItem?.name,
@@ -200,9 +241,28 @@ export function KioskAppSidebar({
                   {!selectedItem.is_infinite_stock && (
                     <div className="mb-6 animate-fade-in-up animation-delay-1000">
                       {isAvailable ? (
-                        <div className="flex items-center gap-2 text-lg text-black">
-                          <span>📦</span>
-                          <span>{selectedItem.stock_quantity} available</span>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-lg text-black">
+                            <span>📦</span>
+                            <span>{selectedItem.stock_quantity} in stock</span>
+                          </div>
+                          {remainingStock !== null &&
+                            remainingStock < selectedItem.stock_quantity && (
+                              <div className="flex items-center gap-2 text-base text-orange-600 font-semibold">
+                                <span>🛒</span>
+                                <span>
+                                  {remainingStock} available (
+                                  {selectedItem.stock_quantity - remainingStock} in
+                                  cart)
+                                </span>
+                              </div>
+                            )}
+                          {remainingStock === 0 && (
+                            <div className="flex items-center gap-2 text-base text-red-600 font-bold">
+                              <span>⚠️</span>
+                              <span>All items already in cart</span>
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <div className="flex items-center gap-2 text-lg text-red-500 font-bold">
@@ -217,7 +277,7 @@ export function KioskAppSidebar({
                   <div className="flex-1 min-h-4" />
 
                   {/* Quantity & Add to Cart */}
-                  {isAvailable && (
+                  {isAvailable && remainingStock !== 0 && (
                     <div className="space-y-5 animate-fade-in-up animation-delay-1000">
                       {/* Quantity Selector */}
                       <div className="glass-card p-5 rounded-2xl">
@@ -239,12 +299,17 @@ export function KioskAppSidebar({
                           <Button
                             size="icon"
                             onClick={() => handleQuantityChange(1)}
-                            disabled={quantity >= 99}
+                            disabled={quantity >= maxAllowedQty}
                             className="btn-gradient w-12 h-12 text-2xl font-bold touch-target active:scale-60"
                           >
                             +
                           </Button>
                         </div>
+                        {remainingStock !== null && remainingStock < 99 && (
+                          <div className="text-center mt-3 text-sm text-black font-medium">
+                            Max: {maxAllowedQty}
+                          </div>
+                        )}
                       </div>
 
                       {/* Add to Cart Button */}
@@ -256,6 +321,16 @@ export function KioskAppSidebar({
                         🛒 Add to Cart
                       </Button>
                     </div>
+                  )}
+
+                  {isAvailable && remainingStock === 0 && (
+                    <Button
+                      disabled
+                      size="lg"
+                      className="w-full bg-gray-300 text-gray-600 font-semibold text-3xl py-10 touch-target-lg rounded-2xl opacity-60"
+                    >
+                      All in Cart
+                    </Button>
                   )}
 
                   {!isAvailable && (
