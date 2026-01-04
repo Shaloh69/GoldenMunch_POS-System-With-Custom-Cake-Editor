@@ -168,7 +168,7 @@ export interface MenuItem {
   allergen_info?: string;
   nutritional_info?: string;
   is_deleted: boolean;
-  status: "available" | "unavailable" | "out_of_stock";
+  status: "available" | "sold_out" | "discontinued";
   created_at: string;
   updated_at: string;
   current_price?: number;
@@ -568,7 +568,7 @@ export interface CreateMenuItemRequest {
 }
 
 export interface UpdateMenuItemRequest extends Partial<CreateMenuItemRequest> {
-  status?: "available" | "unavailable" | "out_of_stock";
+  status?: "available" | "sold_out" | "discontinued";
 }
 
 export interface CreateCategoryRequest {

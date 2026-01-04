@@ -138,7 +138,7 @@ export default function AdminMenuPage() {
           ) / items.length
         : 0;
     const outOfStock = items.filter(
-      (item) => item.status === "out_of_stock",
+      (item) => item.status === "sold_out",
     ).length;
 
     return {
@@ -1003,9 +1003,9 @@ export default function AdminMenuPage() {
                       size="sm"
                       startContent={<XCircleIcon className="h-4 w-4" />}
                       variant="flat"
-                      onPress={() => handleBulkStatusChange("unavailable")}
+                      onPress={() => handleBulkStatusChange("sold_out")}
                     >
-                      Set Unavailable
+                      Set Sold Out
                     </Button>
                     <Button
                       color="danger"
