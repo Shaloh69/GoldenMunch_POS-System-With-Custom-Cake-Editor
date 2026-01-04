@@ -250,25 +250,85 @@ else
 fi
 
 # ============================================================================
-# START TOUCH CALIBRATION MONITOR (AUTO-RECOVERY)
+# START TOUCH CALIBRATION MONITOR (AUTO-RECOVERY) - INTEGRATED
 # ============================================================================
-# This background script continuously monitors and auto-corrects the touch
+# This background function continuously monitors and auto-corrects the touch
 # calibration matrix, preventing it from reverting to inverted state
 
 if [ -n "$TOUCH_ID" ]; then
-    log "Starting touch calibration monitor (auto-recovery)..."
+    log "Starting integrated touch calibration monitor (auto-recovery)..."
 
-    # Launch monitor script in background
-    MONITOR_SCRIPT="$KIOSK_DIR/scripts/monitor-touch-calibration.sh"
+    # Configuration
+    MONITOR_LOG="$LOG_DIR/touch-calibration-monitor.log"
+    CHECK_INTERVAL=30  # Check every 30 seconds
+    CALIBRATION_MATRIX="-1 0 1 0 -1 1 0 0 1"
 
-    if [ -f "$MONITOR_SCRIPT" ]; then
-        bash "$MONITOR_SCRIPT" &
-        MONITOR_PID=$!
-        log "Touch calibration monitor started (PID: $MONITOR_PID)"
-        log "Monitor will check every 30 seconds and auto-restore Matrix 6"
-    else
-        log "WARNING: Touch monitor script not found: $MONITOR_SCRIPT"
-    fi
+    # Background monitoring function
+    monitor_touch_calibration() {
+        # Logging function for monitor
+        monitor_log() {
+            echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$MONITOR_LOG"
+        }
+
+        monitor_log "=== Touch Calibration Monitor Started ==="
+        monitor_log "Check interval: ${CHECK_INTERVAL}s"
+        monitor_log "Target matrix: $CALIBRATION_MATRIX"
+
+        # Initial delay to ensure everything is ready
+        sleep 5
+
+        # Continuous monitoring loop
+        monitor_log "Starting continuous monitoring..."
+        while true; do
+            # Find touchscreen device ID (may change, so re-detect each time)
+            CURRENT_TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touchscreen|touch|ILITEK" | grep -v -i "mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+
+            if [ -z "$CURRENT_TOUCH_ID" ]; then
+                # Try other common touchscreen names
+                CURRENT_TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "eGalax|FT5406|Goodix|ADS7846|Capacitive" | grep -v -i "mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+            fi
+
+            if [ -n "$CURRENT_TOUCH_ID" ]; then
+                # Get current matrix
+                CURRENT_MATRIX=$(xinput list-props "$CURRENT_TOUCH_ID" 2>/dev/null | grep "Coordinate Transformation Matrix" | sed 's/.*:\s*//' | tr -d ',' | xargs)
+
+                # Compare with target matrix
+                if [ "$CURRENT_MATRIX" != "$CALIBRATION_MATRIX" ]; then
+                    monitor_log "⚠ Matrix mismatch detected!"
+                    monitor_log "  Touch ID: $CURRENT_TOUCH_ID"
+                    monitor_log "  Current: $CURRENT_MATRIX"
+                    monitor_log "  Target:  $CALIBRATION_MATRIX"
+                    monitor_log "  Reapplying calibration..."
+
+                    # Map to display first
+                    CURRENT_DISPLAY=$(xrandr 2>/dev/null | grep " connected" | head -1 | awk '{print $1}')
+                    if [ -n "$CURRENT_DISPLAY" ]; then
+                        xinput map-to-output "$CURRENT_TOUCH_ID" "$CURRENT_DISPLAY" 2>/dev/null
+                        monitor_log "  Mapped to display: $CURRENT_DISPLAY"
+                    fi
+
+                    # Apply calibration matrix
+                    xinput set-prop "$CURRENT_TOUCH_ID" "Coordinate Transformation Matrix" $CALIBRATION_MATRIX 2>/dev/null
+
+                    if [ $? -eq 0 ]; then
+                        monitor_log "  ✓ Calibration restored successfully!"
+                    else
+                        monitor_log "  ✗ Failed to apply calibration"
+                    fi
+                fi
+            fi
+
+            # Wait before next check
+            sleep "$CHECK_INTERVAL"
+        done
+    }
+
+    # Start monitor in background
+    monitor_touch_calibration &
+    MONITOR_PID=$!
+    log "Touch calibration monitor started (PID: $MONITOR_PID)"
+    log "Monitor will check every 30 seconds and auto-restore Matrix 6"
+    log "Monitor log: $MONITOR_LOG"
 else
     log "Skipping touch monitor (no touchscreen detected)"
 fi
