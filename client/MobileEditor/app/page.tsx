@@ -150,10 +150,19 @@ function CakeEditorContent() {
     }
 
     try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+
       console.log('🔍 Validating session token:', sessionToken.substring(0, 20) + '...');
+      console.log('🌐 API URL:', apiUrl);
+      console.log('⚙️  Environment:', process.env.NODE_ENV);
+
+      if (!process.env.NEXT_PUBLIC_API_URL) {
+        console.warn('⚠️  WARNING: NEXT_PUBLIC_API_URL not set! Using default:', apiUrl);
+        console.warn('⚠️  This may cause session validation to fail if API is on different server');
+      }
 
       // Call real API to validate session
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/custom-cake/session/${sessionToken}`);
+      const response = await fetch(`${apiUrl}/custom-cake/session/${sessionToken}`);
 
       console.log('📡 Session validation response status:', response.status);
 
@@ -550,11 +559,20 @@ function CakeEditorContent() {
             {/* Debug Info */}
             {sessionToken && (
               <details className="text-left mb-6 bg-gray-50 p-3 rounded border">
-                <summary className="text-xs font-medium text-gray-600 cursor-pointer">Debug Info (for staff)</summary>
-                <div className="mt-2 text-xs font-mono text-gray-500 break-all">
-                  <p><strong>Session Token:</strong> {sessionToken.substring(0, 30)}...</p>
-                  <p><strong>API URL:</strong> {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}</p>
+                <summary className="text-xs font-medium text-gray-600 cursor-pointer">▶ Debug Info (for staff)</summary>
+                <div className="mt-2 text-xs font-mono text-gray-500 space-y-1">
+                  <p><strong>Session Token:</strong> {sessionToken.substring(0, 40)}...</p>
+                  <p><strong>API URL:</strong> {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api (DEFAULT - NOT CONFIGURED!)'}</p>
+                  <p><strong>Current URL:</strong> {typeof window !== 'undefined' ? window.location.href : 'N/A'}</p>
                   <p><strong>Timestamp:</strong> {new Date().toLocaleString()}</p>
+                  <p><strong>Timezone:</strong> {Intl.DateTimeFormat().resolvedOptions().timeZone}</p>
+                  {!process.env.NEXT_PUBLIC_API_URL && (
+                    <div className="mt-2 p-2 bg-red-100 border border-red-300 rounded">
+                      <p className="text-red-700 font-semibold">⚠️ CONFIGURATION ISSUE:</p>
+                      <p className="text-red-600">NEXT_PUBLIC_API_URL environment variable is not set!</p>
+                      <p className="text-red-600 mt-1">Session validation may fail if API server is on a different host.</p>
+                    </div>
+                  )}
                 </div>
               </details>
             )}
