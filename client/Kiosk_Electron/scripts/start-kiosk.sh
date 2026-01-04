@@ -113,8 +113,9 @@ if command -v xrandr &>/dev/null; then
         xrandr --output "$DISPLAY_NAME" --rotate right 2>/dev/null
         log "Display rotated to portrait mode (90° clockwise)"
 
-        # Wait for rotation to complete
-        sleep 2
+        # Wait for rotation to fully complete and X server to settle
+        # Increased to 3s to prevent calibration reset issues
+        sleep 3
     else
         log "WARNING: Could not detect display name"
         DISPLAY_NAME="HDMI-1"  # Fallback default
@@ -210,10 +211,10 @@ log "Chromium kiosk started (PID: $KIOSK_PID)"
 # CONFIGURE TOUCHSCREEN (AFTER Chromium loads)
 # ============================================================================
 # CRITICAL: Touch transformation gets reset when Chromium loads or display rotates
-# Therefore, we apply it AFTER Chromium has fully initialized
+# Therefore, we apply it AFTER Chromium has fully initialized AND settled
 
-log "Waiting for Chromium to fully initialize..."
-sleep 10  # Wait for Chromium to complete initialization and rendering
+log "Waiting for Chromium to fully initialize and settle..."
+sleep 15  # Increased to 15s to ensure Chromium and all display events have settled
 
 if [ -n "$TOUCH_ID" ]; then
     log "Applying touch calibration (Matrix 6: inverts X and Y for ILITEK in portrait)..."
@@ -226,7 +227,7 @@ if [ -n "$TOUCH_ID" ]; then
         TOUCH_ID="$CURRENT_TOUCH_ID"
         log "Touchscreen verified (ID: $TOUCH_ID)"
 
-        # Map touchscreen to the display
+        # FIRST APPLICATION: Map and calibrate
         if [ -n "$DISPLAY_NAME" ]; then
             xinput map-to-output "$TOUCH_ID" "$DISPLAY_NAME" 2>/dev/null
             log "Touchscreen mapped to display: $DISPLAY_NAME"
@@ -237,10 +238,32 @@ if [ -n "$TOUCH_ID" ]; then
         xinput set-prop "$TOUCH_ID" "Coordinate Transformation Matrix" -1 0 1 0 -1 1 0 0 1 2>/dev/null
 
         if [ $? -eq 0 ]; then
-            log "✓ Touch calibration applied successfully!"
+            log "✓ Touch calibration applied (first pass)"
             log "  Matrix: -1 0 1 0 -1 1 0 0 1 (inverts X and Y)"
         else
-            log "WARNING: Failed to apply touch transformation matrix"
+            log "WARNING: Failed to apply touch transformation matrix (first pass)"
+        fi
+
+        # SECOND APPLICATION: Verify and re-apply to ensure it sticks
+        log "Verifying calibration and re-applying..."
+        sleep 2
+
+        # Re-map to display
+        if [ -n "$DISPLAY_NAME" ]; then
+            xinput map-to-output "$TOUCH_ID" "$DISPLAY_NAME" 2>/dev/null
+        fi
+
+        # Re-apply transformation matrix
+        xinput set-prop "$TOUCH_ID" "Coordinate Transformation Matrix" -1 0 1 0 -1 1 0 0 1 2>/dev/null
+
+        if [ $? -eq 0 ]; then
+            log "✓ Touch calibration re-applied successfully (second pass)"
+
+            # Verify the matrix actually stuck
+            APPLIED_MATRIX=$(xinput list-props "$TOUCH_ID" 2>/dev/null | grep "Coordinate Transformation Matrix" | sed 's/.*:\s*//' | tr -d ',' | xargs)
+            log "  Verified Matrix: $APPLIED_MATRIX"
+        else
+            log "WARNING: Failed to re-apply touch transformation matrix (second pass)"
         fi
     else
         log "WARNING: Touchscreen not found after Chromium load"
@@ -275,11 +298,11 @@ if [ -n "$TOUCH_ID" ]; then
         monitor_log "Calibration matrix: $CALIBRATION_MATRIX"
         monitor_log "Mode: FORCE (no comparison, always apply)"
 
-        # Initial delay to ensure everything is ready
-        sleep 5
+        # Minimal initial delay - protection starts almost immediately
+        sleep 1
 
         # Continuous force-apply loop
-        monitor_log "Starting continuous force-apply loop..."
+        monitor_log "Starting continuous force-apply loop (reduced 1s initial delay)..."
         while true; do
             # Find touchscreen device ID (may change, so re-detect each time)
             CURRENT_TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touchscreen|touch|ILITEK" | grep -v -i "mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
@@ -323,6 +346,32 @@ if [ -n "$TOUCH_ID" ]; then
     log "Touch calibration monitor started (PID: $MONITOR_PID)"
     log "Monitor will FORCE-APPLY Matrix 6 every 45 seconds (no comparison)"
     log "Monitor log: $MONITOR_LOG"
+
+    # FINAL SAFETY CALIBRATION: Apply one more time AFTER monitor starts
+    # This ensures calibration is the absolute LAST thing applied before kiosk runs
+    log "Applying final safety calibration (LAST APPLICATION)..."
+    sleep 2
+
+    # Re-verify touchscreen one last time
+    FINAL_TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touchscreen|touch|ILITEK" | grep -v -i "mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+
+    if [ -n "$FINAL_TOUCH_ID" ]; then
+        # Final mapping to display
+        if [ -n "$DISPLAY_NAME" ]; then
+            xinput map-to-output "$FINAL_TOUCH_ID" "$DISPLAY_NAME" 2>/dev/null
+        fi
+
+        # Final calibration apply
+        xinput set-prop "$FINAL_TOUCH_ID" "Coordinate Transformation Matrix" -1 0 1 0 -1 1 0 0 1 2>/dev/null
+
+        if [ $? -eq 0 ]; then
+            log "✓ FINAL calibration applied successfully - touch is now ready!"
+            FINAL_MATRIX=$(xinput list-props "$FINAL_TOUCH_ID" 2>/dev/null | grep "Coordinate Transformation Matrix" | sed 's/.*:\s*//' | tr -d ',' | xargs)
+            log "  Final verified matrix: $FINAL_MATRIX"
+        else
+            log "WARNING: Final calibration apply failed (monitor will correct it)"
+        fi
+    fi
 else
     log "Skipping touch monitor (no touchscreen detected)"
 fi
