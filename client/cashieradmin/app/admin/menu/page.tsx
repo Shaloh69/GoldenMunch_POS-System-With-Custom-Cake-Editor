@@ -523,8 +523,26 @@ export default function AdminMenuPage() {
   };
 
   const handleStatusToggle = async (itemId: number, currentStatus: string) => {
+    const item = items.find((i) => i.menu_item_id === itemId);
+    if (!item) return;
+
+    const stock = toNumber(item.stock_quantity, 0);
     const newStatus =
       currentStatus === "available" ? "sold_out" : "available";
+
+    // Prevent marking as sold_out when stock > 0 (unless infinite stock)
+    if (newStatus === "sold_out" && stock > 0 && !item.is_infinite_stock) {
+      setError("Cannot mark as Sold Out while stock is available. Reduce stock to 0 first.");
+      setTimeout(() => setError(null), 4000);
+      return;
+    }
+
+    // Prevent marking as available when stock is 0 (unless infinite stock)
+    if (newStatus === "available" && stock === 0 && !item.is_infinite_stock) {
+      setError("Cannot mark as Available while stock is 0. Increase stock first.");
+      setTimeout(() => setError(null), 4000);
+      return;
+    }
 
     try {
       const response = await MenuService.updateMenuItem(itemId, {
@@ -1125,23 +1143,44 @@ export default function AdminMenuPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Chip
-                          className="capitalize cursor-pointer"
-                          color={
-                            item.status === "available"
-                              ? "success"
-                              : item.status === "sold_out"
-                                ? "warning"
-                                : "danger"
+                        {(() => {
+                          const stock = toNumber(item.stock_quantity, 0);
+                          const minStock = item.min_stock_level || 0;
+                          const isLowStock = !item.is_infinite_stock && stock > 0 && stock <= minStock;
+                          const isSoldOut = item.status === "sold_out" || (!item.is_infinite_stock && stock === 0);
+
+                          // Determine display status
+                          let displayStatus: string;
+                          let chipColor: "success" | "warning" | "danger" | "default";
+
+                          if (item.status === "discontinued") {
+                            displayStatus = "Discontinued";
+                            chipColor = "danger";
+                          } else if (isSoldOut) {
+                            displayStatus = "Sold Out";
+                            chipColor = "warning";
+                          } else if (isLowStock) {
+                            displayStatus = "Low Stock";
+                            chipColor = "default";
+                          } else {
+                            displayStatus = "Available";
+                            chipColor = "success";
                           }
-                          size="sm"
-                          variant="flat"
-                          onClick={() =>
-                            handleStatusToggle(item.menu_item_id, item.status)
-                          }
-                        >
-                          {item.status === "sold_out" ? "Sold Out" : item.status === "discontinued" ? "Discontinued" : item.status === "available" ? "Available" : "Unknown"}
-                        </Chip>
+
+                          return (
+                            <Chip
+                              className="capitalize cursor-pointer"
+                              color={chipColor}
+                              size="sm"
+                              variant="flat"
+                              onClick={() =>
+                                handleStatusToggle(item.menu_item_id, item.status)
+                              }
+                            >
+                              {displayStatus}
+                            </Chip>
+                          );
+                        })()}
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-1.5 items-center justify-start">
