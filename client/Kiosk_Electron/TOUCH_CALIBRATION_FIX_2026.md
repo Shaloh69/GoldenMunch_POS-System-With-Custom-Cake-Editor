@@ -203,24 +203,34 @@ This provides an additional layer of protection at the X server level.
 | Monitor delay | 5s | 1s | Faster protection |
 | Display rotation wait | 2s | 3s | X server settling |
 | Verification | None | 2x checks | Confirm matrix |
-| **Calibration Matrix** | **Matrix 6** (`-1 0 1 0 -1 1 0 0 1`) | **Matrix 5** (`0 -1 1 1 0 0 0 0 1`) | **Correct for 90° CW rotation** |
+| **Calibration Matrix** | **Initially tested Matrix 5** | **Matrix 6** (`-1 0 1 0 -1 1 0 0 1`) | **Correct for 90° CW rotation** |
 
 ---
 
-## Matrix Update (Critical Fix)
+## Matrix Discovery Process (Critical Fix)
 
 **Date**: 2026-01-05
-**Issue**: Matrix 6 was being applied correctly but produced inverted Y-axis behavior (swipe down = goes up)
-**Solution**: Changed to Matrix 5 which swaps X,Y coordinates and inverts X axis - correct for 90° clockwise display rotation
 
-**Matrix 5 Values**: `0 -1 1 1 0 0 0 0 1`
-- Swaps X and Y coordinates
-- Inverts X axis
-- Perfect for ILITEK touchscreen with 90° clockwise (right) display rotation
+### Initial Attempt (WRONG)
+- **Issue**: Initially changed to Matrix 5 based on incomplete testing
+- **Problem**: Matrix 5 (`0 -1 1 1 0 0 0 0 1`) did NOT work correctly
+- **Symptom**: Sideways swipe would scroll upward instead of correct behavior
+
+### User Testing Discovery (CORRECT)
+- **User confirmed**: Matrix 6 (`-1 0 1 0 -1 1 0 0 1`) works perfectly when applied manually
+- **Root cause**: Matrix 6 was being overridden by scripts that were force-applying Matrix 5
+- **Symptom**: "Matrix 6 works but disappears immediately"
+
+### Final Solution - Matrix 6
+**Matrix 6 Values**: `-1 0 1 0 -1 1 0 0 1`
+- Inverts both X and Y coordinates
+- **CONFIRMED WORKING** by user testing
+- Correct for ILITEK touchscreen with 90° clockwise (right) display rotation
+- Device: ILITEK ILITEK-TP Mouse (ID 10)
 
 ---
 
 **Author**: Claude AI
 **Date**: 2026-01-05
-**Issue**: Touch calibration not working correctly (Y-axis inverted)
-**Status**: ✅ **FIXED - Matrix 5 Confirmed Working**
+**Issue**: Touch calibration testing process - Matrix 6 confirmed as correct
+**Status**: ✅ **FIXED - Matrix 6 Confirmed Working by User**
