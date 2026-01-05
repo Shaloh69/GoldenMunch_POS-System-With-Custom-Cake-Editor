@@ -11,8 +11,8 @@ CHECK_INTERVAL=30  # Check every 30 seconds
 # Create log directory
 mkdir -p "$LOG_DIR"
 
-# Matrix 6: Inverts both X and Y for ILITEK touchscreen in portrait mode
-CALIBRATION_MATRIX="-1 0 1 0 -1 1 0 0 1"
+# Matrix 5: Swaps X,Y and inverts X for ILITEK touchscreen in portrait mode (90° CW rotation)
+CALIBRATION_MATRIX="0 -1 1 1 0 0 0 0 1"
 
 # Logging function
 log() {

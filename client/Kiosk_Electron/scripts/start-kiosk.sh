@@ -217,7 +217,7 @@ log "Waiting for Chromium to fully initialize and settle..."
 sleep 15  # Increased to 15s to ensure Chromium and all display events have settled
 
 if [ -n "$TOUCH_ID" ]; then
-    log "Applying touch calibration (Matrix 6: inverts X and Y for ILITEK in portrait)..."
+    log "Applying touch calibration (Matrix 5: swap X,Y + invert X for ILITEK in portrait)..."
 
     # Re-verify touchscreen is still detected
     CURRENT_TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touchscreen|touch|ILITEK" | grep -v -i "mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
@@ -233,13 +233,13 @@ if [ -n "$TOUCH_ID" ]; then
             log "Touchscreen mapped to display: $DISPLAY_NAME"
         fi
 
-        # Apply transformation matrix (Matrix 6: -1 0 1 0 -1 1 0 0 1)
-        # This inverts both X and Y coordinates for ILITEK touchscreen in portrait mode
-        xinput set-prop "$TOUCH_ID" "Coordinate Transformation Matrix" -1 0 1 0 -1 1 0 0 1 2>/dev/null
+        # Apply transformation matrix (Matrix 5: 0 -1 1 1 0 0 0 0 1)
+        # This swaps X,Y and inverts X for ILITEK touchscreen in portrait mode (90° CW rotation)
+        xinput set-prop "$TOUCH_ID" "Coordinate Transformation Matrix" 0 -1 1 1 0 0 0 0 1 2>/dev/null
 
         if [ $? -eq 0 ]; then
             log "✓ Touch calibration applied (first pass)"
-            log "  Matrix: -1 0 1 0 -1 1 0 0 1 (inverts X and Y)"
+            log "  Matrix: 0 -1 1 1 0 0 0 0 1 (swap X,Y + invert X)"
         else
             log "WARNING: Failed to apply touch transformation matrix (first pass)"
         fi
@@ -254,7 +254,7 @@ if [ -n "$TOUCH_ID" ]; then
         fi
 
         # Re-apply transformation matrix
-        xinput set-prop "$TOUCH_ID" "Coordinate Transformation Matrix" -1 0 1 0 -1 1 0 0 1 2>/dev/null
+        xinput set-prop "$TOUCH_ID" "Coordinate Transformation Matrix" 0 -1 1 1 0 0 0 0 1 2>/dev/null
 
         if [ $? -eq 0 ]; then
             log "✓ Touch calibration re-applied successfully (second pass)"
@@ -284,7 +284,7 @@ if [ -n "$TOUCH_ID" ]; then
     # Configuration
     MONITOR_LOG="$LOG_DIR/touch-calibration-monitor.log"
     CHECK_INTERVAL=45  # Force-apply every 45 seconds
-    CALIBRATION_MATRIX="-1 0 1 0 -1 1 0 0 1"
+    CALIBRATION_MATRIX="0 -1 1 1 0 0 0 0 1"
 
     # Background monitoring function
     monitor_touch_calibration() {
@@ -344,7 +344,7 @@ if [ -n "$TOUCH_ID" ]; then
     monitor_touch_calibration &
     MONITOR_PID=$!
     log "Touch calibration monitor started (PID: $MONITOR_PID)"
-    log "Monitor will FORCE-APPLY Matrix 6 every 45 seconds (no comparison)"
+    log "Monitor will FORCE-APPLY Matrix 5 every 45 seconds (no comparison)"
     log "Monitor log: $MONITOR_LOG"
 
     # FINAL SAFETY CALIBRATION: Apply one more time AFTER monitor starts
@@ -362,7 +362,7 @@ if [ -n "$TOUCH_ID" ]; then
         fi
 
         # Final calibration apply
-        xinput set-prop "$FINAL_TOUCH_ID" "Coordinate Transformation Matrix" -1 0 1 0 -1 1 0 0 1 2>/dev/null
+        xinput set-prop "$FINAL_TOUCH_ID" "Coordinate Transformation Matrix" 0 -1 1 1 0 0 0 0 1 2>/dev/null
 
         if [ $? -eq 0 ]; then
             log "✓ FINAL calibration applied successfully - touch is now ready!"

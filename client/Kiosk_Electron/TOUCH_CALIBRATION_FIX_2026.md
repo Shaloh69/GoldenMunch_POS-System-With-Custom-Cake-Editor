@@ -203,10 +203,24 @@ This provides an additional layer of protection at the X server level.
 | Monitor delay | 5s | 1s | Faster protection |
 | Display rotation wait | 2s | 3s | X server settling |
 | Verification | None | 2x checks | Confirm matrix |
+| **Calibration Matrix** | **Matrix 6** (`-1 0 1 0 -1 1 0 0 1`) | **Matrix 5** (`0 -1 1 1 0 0 0 0 1`) | **Correct for 90° CW rotation** |
+
+---
+
+## Matrix Update (Critical Fix)
+
+**Date**: 2026-01-05
+**Issue**: Matrix 6 was being applied correctly but produced inverted Y-axis behavior (swipe down = goes up)
+**Solution**: Changed to Matrix 5 which swaps X,Y coordinates and inverts X axis - correct for 90° clockwise display rotation
+
+**Matrix 5 Values**: `0 -1 1 1 0 0 0 0 1`
+- Swaps X and Y coordinates
+- Inverts X axis
+- Perfect for ILITEK touchscreen with 90° clockwise (right) display rotation
 
 ---
 
 **Author**: Claude AI
-**Date**: 2026-01-04
-**Issue**: Touch calibration not persisting reliably
-**Status**: ✅ Fixed - Ready for Testing
+**Date**: 2026-01-05
+**Issue**: Touch calibration not working correctly (Y-axis inverted)
+**Status**: ✅ **FIXED - Matrix 5 Confirmed Working**
