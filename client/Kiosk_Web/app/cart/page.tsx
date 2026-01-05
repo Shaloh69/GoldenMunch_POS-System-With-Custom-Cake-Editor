@@ -74,6 +74,11 @@ export default function CartPage() {
   const [loadingQR, setLoadingQR] = useState(false);
   const [referenceNumber, setReferenceNumber] = useState("");
 
+  // Modal-specific keyboard state
+  const [modalKeyboardVisible, setModalKeyboardVisible] = useState(false);
+  const [modalLayoutName, setModalLayoutName] = useState("default");
+  const modalKeyboardRef = useRef<TouchKeyboardHandle>(null);
+
   // Track failed image URLs to show emoji fallback
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
 
@@ -118,11 +123,35 @@ export default function CartPage() {
 
   const handleShowQRCode = () => {
     if (qrCodeUrl) {
+      // Close external keyboard when opening modal
+      setKeyboardVisible(false);
+      setActiveInput(null);
       onQROpen();
     } else {
       setError(
         `No ${paymentMethod.toUpperCase()} QR code configured. Please contact staff.`
       );
+    }
+  };
+
+  // Modal keyboard handlers
+  const handleModalInputFocus = () => {
+    setModalKeyboardVisible(true);
+    if (modalKeyboardRef.current) {
+      modalKeyboardRef.current.setInput(referenceNumber);
+    }
+  };
+
+  const handleModalKeyboardChange = (input: string) => {
+    setReferenceNumber(input);
+  };
+
+  const handleModalKeyPress = (button: string) => {
+    if (button === "{shift}" || button === "{lock}") {
+      setModalLayoutName(modalLayoutName === "default" ? "shift" : "default");
+    } else if (button === "{enter}") {
+      // Hide keyboard when done
+      setModalKeyboardVisible(false);
     }
   };
 
@@ -787,18 +816,20 @@ export default function CartPage() {
           <Modal
             isOpen={isQROpen}
             onOpenChange={(open) => {
-              // Prevent modal from closing when keyboard is visible
-              if (!open && !keyboardVisible) {
+              // Prevent modal from closing when modal keyboard is visible
+              if (!open && !modalKeyboardVisible) {
+                setModalKeyboardVisible(false);
                 onQRClose();
               }
             }}
-            isDismissable={!keyboardVisible}
+            isDismissable={!modalKeyboardVisible}
+            size="full"
           >
             <ModalContent
-              size="2xl"
               classNames={{
-                backdrop: "bg-charcoal-gray/90",
-                base: "glass-card border-4 border-primary shadow-2xl",
+                backdrop: "bg-black/40 backdrop-blur-sm",
+                base: "glass-card border-4 border-primary shadow-2xl max-w-4xl mx-auto my-auto",
+                wrapper: "items-center justify-center",
               }}
             >
               <ModalHeader className="flex flex-col gap-1">
@@ -868,9 +899,7 @@ export default function CartPage() {
                         placeholder="Enter your reference number"
                         value={referenceNumber}
                         onChange={(e) => setReferenceNumber(e.target.value)}
-                        onFocus={() =>
-                          handleInputFocus("referenceNumber", referenceNumber)
-                        }
+                        onFocus={handleModalInputFocus}
                         readOnly
                         size="lg"
                         variant="bordered"
@@ -893,6 +922,19 @@ export default function CartPage() {
                         order
                       </p>
                     </div>
+
+                    {/* Modal Keyboard */}
+                    {modalKeyboardVisible && (
+                      <div className="mt-4">
+                        <TouchKeyboard
+                          ref={modalKeyboardRef}
+                          onChange={handleModalKeyboardChange}
+                          onKeyPress={handleModalKeyPress}
+                          inputName="referenceNumber"
+                          layoutName={modalLayoutName}
+                        />
+                      </div>
+                    )}
 
                     <div className="bg-yellow-500/20 p-3 rounded-lg border-2 border-yellow-500/60 shadow-md">
                       <p className="text-sm text-black text-center">
