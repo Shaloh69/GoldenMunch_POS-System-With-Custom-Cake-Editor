@@ -137,27 +137,48 @@ sleep 2
 # Find touchscreen device ID
 # CRITICAL: For ILITEK, the device with "Mouse" in the name IS the correct device to calibrate
 # Priority: ILITEK Mouse device, then touchscreen keyword, then other common devices
+
+log "=== DEVICE DETECTION (Initial) ==="
+log "All input devices:"
+xinput list 2>/dev/null | tee -a "$STARTUP_LOG"
+
 TOUCH_ID=$(xinput list 2>/dev/null | grep -i "ILITEK.*Mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+if [ -n "$TOUCH_ID" ]; then
+    TOUCH_DEVICE_NAME=$(xinput list 2>/dev/null | grep "id=$TOUCH_ID" | sed 's/.*↳//' | sed 's/id=.*//' | xargs)
+    log "✓ Found ILITEK Mouse device: ID=$TOUCH_ID, Name='$TOUCH_DEVICE_NAME'"
+fi
 
 # If not found, try general touchscreen (but keep Mouse devices - they may be the calibration target)
 if [ -z "$TOUCH_ID" ]; then
     TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touchscreen|touch" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+    if [ -n "$TOUCH_ID" ]; then
+        TOUCH_DEVICE_NAME=$(xinput list 2>/dev/null | grep "id=$TOUCH_ID" | sed 's/.*↳//' | sed 's/id=.*//' | xargs)
+        log "✓ Found touchscreen device: ID=$TOUCH_ID, Name='$TOUCH_DEVICE_NAME'"
+    fi
 fi
 
 # If still not found, try ILITEK without Mouse requirement
 if [ -z "$TOUCH_ID" ]; then
     TOUCH_ID=$(xinput list 2>/dev/null | grep -i "ILITEK" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+    if [ -n "$TOUCH_ID" ]; then
+        TOUCH_DEVICE_NAME=$(xinput list 2>/dev/null | grep "id=$TOUCH_ID" | sed 's/.*↳//' | sed 's/id=.*//' | xargs)
+        log "✓ Found ILITEK device: ID=$TOUCH_ID, Name='$TOUCH_DEVICE_NAME'"
+    fi
 fi
 
 # Last resort: try other common touchscreen names
 if [ -z "$TOUCH_ID" ]; then
     TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "eGalax|FT5406|Goodix|ADS7846|Capacitive" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+    if [ -n "$TOUCH_ID" ]; then
+        TOUCH_DEVICE_NAME=$(xinput list 2>/dev/null | grep "id=$TOUCH_ID" | sed 's/.*↳//' | sed 's/id=.*//' | xargs)
+        log "✓ Found touch device: ID=$TOUCH_ID, Name='$TOUCH_DEVICE_NAME'"
+    fi
 fi
 
 if [ -n "$TOUCH_ID" ]; then
-    log "Touchscreen detected (ID: $TOUCH_ID) - will configure after Chromium loads"
+    log "✓ INITIAL DETECTION: Touch device ID=$TOUCH_ID will be configured after Chromium loads"
 else
-    log "WARNING: Touchscreen not found"
+    log "❌ WARNING: No touchscreen found during initial detection!"
 fi
 
 # ============================================================================
