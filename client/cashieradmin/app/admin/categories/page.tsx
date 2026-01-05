@@ -126,7 +126,7 @@ export default function CategoriesPage() {
       name: category.name,
       description: category.description || "",
       display_order: category.display_order || 0,
-      is_active: category.is_active !== false,
+      is_active: Boolean(category.is_active),
     });
     onOpen();
   };
@@ -375,14 +375,14 @@ export default function CategoriesPage() {
                             </h3>
                             <Chip
                               color={
-                                category.is_active !== false
+                                Boolean(category.is_active)
                                   ? "success"
                                   : "default"
                               }
                               size="sm"
                               variant="flat"
                             >
-                              {category.is_active !== false
+                              {Boolean(category.is_active)
                                 ? "Active"
                                 : "Inactive"}
                             </Chip>
