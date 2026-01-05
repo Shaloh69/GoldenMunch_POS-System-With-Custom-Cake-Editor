@@ -18,6 +18,7 @@ interface TouchKeyboardProps {
   placeholder?: string;
   theme?: string;
   maxLength?: number;
+  variant?: "fixed" | "inline"; // Controls keyboard positioning
 }
 
 const TouchKeyboard = forwardRef<TouchKeyboardHandle, TouchKeyboardProps>(
@@ -31,6 +32,7 @@ const TouchKeyboard = forwardRef<TouchKeyboardHandle, TouchKeyboardProps>(
       placeholder,
       theme = "hg-theme-default hg-theme-kiosk",
       maxLength,
+      variant = "fixed",
     },
     ref
   ) => {
@@ -66,7 +68,7 @@ const TouchKeyboard = forwardRef<TouchKeyboardHandle, TouchKeyboardProps>(
     };
 
     return (
-      <div className="touch-keyboard-wrapper">
+      <div className={`touch-keyboard-wrapper touch-keyboard-${variant}`}>
         <Keyboard
           keyboardRef={(r) => (keyboardRef.current = r)}
           inputName={inputName}
@@ -123,20 +125,32 @@ const TouchKeyboard = forwardRef<TouchKeyboardHandle, TouchKeyboardProps>(
           mergeDisplay={true}
         />
         <style jsx global>{`
-          /* Keyboard Container Styling */
+          /* Keyboard Container Styling - Base */
           .touch-keyboard-wrapper {
             width: 100%;
+            background: transparent;
+            padding: 1rem;
+            pointer-events: auto;
+          }
+
+          /* Fixed variant - overlays content */
+          .touch-keyboard-fixed {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
             z-index: 999999;
-            background: transparent;
-            padding: 1rem;
             box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1);
             border-top: 1px solid rgba(0, 0, 0, 0.1);
             animation: slideUp 0.3s ease-out;
-            pointer-events: auto;
+          }
+
+          /* Inline variant - flows with content */
+          .touch-keyboard-inline {
+            position: relative;
+            z-index: 10;
+            margin-top: 1rem;
+            animation: fadeIn 0.3s ease-out;
           }
 
           @keyframes slideUp {
@@ -147,6 +161,17 @@ const TouchKeyboard = forwardRef<TouchKeyboardHandle, TouchKeyboardProps>(
             to {
               transform: translateY(0);
               opacity: 1;
+            }
+          }
+
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
             }
           }
 

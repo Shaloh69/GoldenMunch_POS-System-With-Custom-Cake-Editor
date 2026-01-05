@@ -135,10 +135,17 @@ export default function CartPage() {
   };
 
   // Modal keyboard handlers
-  const handleModalInputFocus = () => {
+  const handleModalInputFocus = (event?: React.FocusEvent<HTMLInputElement>) => {
     setModalKeyboardVisible(true);
     if (modalKeyboardRef.current) {
       modalKeyboardRef.current.setInput(referenceNumber);
+    }
+
+    // Scroll the input into view after keyboard renders
+    if (event?.target) {
+      setTimeout(() => {
+        event.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
     }
   };
 
@@ -236,11 +243,18 @@ export default function CartPage() {
   };
 
   // Touch Keyboard Handlers
-  const handleInputFocus = (inputName: string, value: string) => {
+  const handleInputFocus = (inputName: string, value: string, event?: React.FocusEvent<HTMLInputElement>) => {
     setActiveInput(inputName);
     setKeyboardVisible(true);
     if (keyboardRef.current) {
       keyboardRef.current.setInput(value);
+    }
+
+    // Scroll the input into view after a brief delay to account for keyboard rendering
+    if (event?.target) {
+      setTimeout(() => {
+        event.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
     }
   };
 
@@ -516,8 +530,8 @@ export default function CartPage() {
                       placeholder="Enter your name"
                       value={customerName}
                       onChange={(e) => setCustomerName(e.target.value)}
-                      onFocus={() =>
-                        handleInputFocus("customerName", customerName)
+                      onFocus={(e) =>
+                        handleInputFocus("customerName", customerName, e)
                       }
                       readOnly
                       size="lg"
@@ -534,8 +548,8 @@ export default function CartPage() {
                       placeholder="For order updates"
                       value={customerPhone}
                       onChange={(e) => setCustomerPhone(e.target.value)}
-                      onFocus={() =>
-                        handleInputFocus("customerPhone", customerPhone)
+                      onFocus={(e) =>
+                        handleInputFocus("customerPhone", customerPhone, e)
                       }
                       readOnly
                       size="lg"
@@ -656,10 +670,11 @@ export default function CartPage() {
                       placeholder="Any special requests?"
                       value={specialInstructions}
                       onChange={(e) => setSpecialInstructions(e.target.value)}
-                      onFocus={() =>
+                      onFocus={(e) =>
                         handleInputFocus(
                           "specialInstructions",
-                          specialInstructions
+                          specialInstructions,
+                          e
                         )
                       }
                       readOnly
@@ -830,6 +845,7 @@ export default function CartPage() {
                 backdrop: "bg-black/40 backdrop-blur-sm",
                 base: "glass-card border-4 border-primary shadow-2xl max-w-4xl mx-auto my-auto",
                 wrapper: "items-center justify-center",
+                body: "overflow-y-auto max-h-[85vh]",
               }}
             >
               <ModalHeader className="flex flex-col gap-1">
@@ -899,7 +915,7 @@ export default function CartPage() {
                         placeholder="Enter your reference number"
                         value={referenceNumber}
                         onChange={(e) => setReferenceNumber(e.target.value)}
-                        onFocus={handleModalInputFocus}
+                        onFocus={(e) => handleModalInputFocus(e)}
                         readOnly
                         size="lg"
                         variant="bordered"
@@ -932,6 +948,7 @@ export default function CartPage() {
                           onKeyPress={handleModalKeyPress}
                           inputName="referenceNumber"
                           layoutName={modalLayoutName}
+                          variant="inline"
                         />
                       </div>
                     )}
@@ -970,25 +987,28 @@ export default function CartPage() {
             </ModalContent>
           </Modal>
 
-          {/* Spacer */}
-          <div className={keyboardVisible ? "h-[400px]" : "h-20"}></div>
+          {/* Touch Keyboard - Inline at bottom of page */}
+          {keyboardVisible && (
+            <div className="w-full max-w-6xl mx-auto px-6 pb-6">
+              <TouchKeyboard
+                ref={keyboardRef}
+                onChange={handleKeyboardChange}
+                onKeyPress={handleKeyPress}
+                inputName={activeInput || "default"}
+                layoutName={layoutName}
+                variant="inline"
+              />
+            </div>
+          )}
+
+          {/* Spacer for better spacing */}
+          <div className="h-20"></div>
         </div>
       </div>
       <KioskAppSidebar
         selectedItem={selectedItem}
         onClose={handleCloseSidebar}
       />
-
-      {/* Touch Keyboard */}
-      {keyboardVisible && (
-        <TouchKeyboard
-          ref={keyboardRef}
-          onChange={handleKeyboardChange}
-          onKeyPress={handleKeyPress}
-          inputName={activeInput || "default"}
-          layoutName={layoutName}
-        />
-      )}
     </>
   );
 }
