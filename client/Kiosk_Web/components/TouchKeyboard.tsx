@@ -130,12 +130,13 @@ const TouchKeyboard = forwardRef<TouchKeyboardHandle, TouchKeyboardProps>(
             bottom: 0;
             left: 0;
             right: 0;
-            z-index: 9999;
+            z-index: 999999;
             background: transparent;
             padding: 1rem;
             box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.1);
             border-top: 1px solid rgba(0, 0, 0, 0.1);
             animation: slideUp 0.3s ease-out;
+            pointer-events: auto;
           }
 
           @keyframes slideUp {
