@@ -135,42 +135,10 @@ fi
 echo "Waiting for backend to initialize..."
 sleep 8
 
-# Start the kiosk frontend
-echo "Starting kiosk frontend..."
-cd "$PROJECT_DIR/client/Kiosk_Web"
-if [ -f "package.json" ]; then
-    # Kill any existing frontend processes
-    pkill -f "next-server.*3000" || true
-
-    # Start the frontend
-    npm run dev > "$HOME/frontend-output.log" 2>&1 &
-    FRONTEND_PID=$!
-    echo "Frontend started with PID: $FRONTEND_PID"
-else
-    echo "ERROR: Frontend package.json not found!"
-fi
-
-# Wait for frontend to start
-echo "Waiting for frontend to initialize..."
-sleep 12
-
-# Wait for the frontend to be accessible
-echo "Checking if frontend is ready..."
-MAX_RETRIES=30
-RETRY_COUNT=0
-while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-    if curl -s http://localhost:3000 > /dev/null 2>&1; then
-        echo "Frontend is ready!"
-        break
-    fi
-    echo "Waiting for frontend... ($((RETRY_COUNT + 1))/$MAX_RETRIES)"
-    sleep 2
-    RETRY_COUNT=$((RETRY_COUNT + 1))
-done
-
-if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
-    echo "WARNING: Frontend did not respond after $MAX_RETRIES attempts"
-fi
+# Note: Using hosted Kiosk_Web on Vercel - no local frontend needed
+echo "Using Kiosk_Web from Vercel: https://goldenkiosk-oan4wrmmp-sars-projects-66ed9bf4.vercel.app/"
+echo "Skipping local frontend startup..."
+FRONTEND_PID="N/A"
 
 # Hide cursor
 if command -v unclutter &> /dev/null; then
@@ -193,7 +161,7 @@ chromium-browser \
   --overscroll-history-navigation=0 \
   --ozone-platform=wayland \
   --enable-features=UseOzonePlatform \
-  --app=http://localhost:3000 \
+  --app=https://goldenkiosk-oan4wrmmp-sars-projects-66ed9bf4.vercel.app/ \
   > "$HOME/chromium-output.log" 2>&1 &
 
 CHROMIUM_PID=$!

@@ -1,9 +1,118 @@
-# Touch Calibration Still Reverting - Troubleshooting Guide
+# Touch Calibration Troubleshooting Guide
 ## For GoldenMunch Raspberry Pi Kiosk
 
 ---
 
-## 🔴 Problem: Touch Matrix 6 Reverts After Minutes/Hours
+## ⚡ **RASPBERRY PI 5 + ILITEK TOUCHSCREEN - FINAL FIX**
+
+### 🔥 The Problem
+On **Raspberry Pi 5 + Bookworm + X11 + ILITEK touchscreens**, ALL xinput matrices fail because:
+- Pi 5 uses **libinput first** in the input stack
+- ILITEK touchscreens ignore runtime X11 matrices
+- xinput applies **after libinput** → changes are ignored
+
+### ✅ The ONLY Working Solution: libinput Calibration
+
+This fix applies touch rotation at the **libinput layer** (before X11), not at the X11 layer.
+
+#### Step 1: Confirm Your Touch Device
+
+```bash
+libinput list-devices
+```
+
+Look for output like:
+```
+Device:           ILITEK ILITEK-TP
+Kernel:           /dev/input/eventX
+```
+
+Note: If you don't see `ILITEK ILITEK-TP`, your device name may be different. Use whatever name appears.
+
+#### Step 2: Create libinput Calibration Override
+
+```bash
+sudo nano /etc/X11/xorg.conf.d/99-touchscreen-calibration.conf
+```
+
+Paste this **EXACT CONFIG** for **Portrait Right** (90° clockwise):
+
+```xorg
+Section "InputClass"
+    Identifier "ILITEK Touch Portrait Right"
+    MatchProduct "ILITEK ILITEK-TP"
+    MatchIsTouchscreen "on"
+    Driver "libinput"
+    Option "CalibrationMatrix" "0 1 0 -1 0 1 0 0 1"
+EndSection
+```
+
+**Alternative: Use our pre-made config file:**
+```bash
+cd ~/GoldenMunch_POS-System-With-Custom-Cake-Editor
+sudo cp config/99-touchscreen-calibration.conf /etc/X11/xorg.conf.d/
+```
+
+Save and exit (Ctrl+X, then Y, then Enter).
+
+#### Step 3: REMOVE All xinput Hacks
+
+**IMPORTANT:** Do NOT rotate touch with xinput anymore.
+
+Delete or comment out from `~/.xprofile` or any startup scripts:
+```bash
+# xinput set-prop ...
+# xinput map-to-output ...
+```
+
+Keep ONLY the xrandr screen rotation:
+```bash
+xrandr --output HDMI-1 --rotate right
+```
+
+#### Step 4: Reboot
+
+```bash
+sudo reboot
+```
+
+### ✅ WHY THIS WORKS (and xinput doesn't)
+
+| Method | Layer | Result on Pi 5 |
+|--------|-------|----------------|
+| **xinput** | X11 runtime | ❌ **Ignored** - applies after libinput |
+| **libinput CalibrationMatrix** | libinput (pre-X11) | ✅ **Works** - applies before X11 |
+
+**Technical Details:**
+- Pi 5 uses **libinput first** in the input stack
+- ILITEK touchscreens bind to libinput early
+- xinput transformations are applied **too late** in the pipeline
+- **Xorg CalibrationMatrix** is read by libinput during initialization → **WORKS**
+
+This is a known Pi 5 + ILITEK behavior documented in libinput and X.Org documentation.
+
+### 🔍 Verify It's Working
+
+```bash
+# Check if config is loaded
+grep -r "ILITEK" /var/log/Xorg.0.log
+
+# Should see:
+# [libinput] ILITEK ILITEK-TP: Applying CalibrationMatrix
+```
+
+### 📝 Other Orientations
+
+See comments in `config/99-touchscreen-calibration.conf` for matrices for:
+- Portrait Left (270°)
+- Landscape Inverted (180°)
+- Normal Landscape (0°)
+
+---
+
+## 🔴 OLDER ISSUE: Touch Matrix Reverts After Minutes/Hours
+
+**Note:** This section applies to **older Pi models** or **non-ILITEK** touchscreens where xinput DOES work.
 
 If your touch calibration keeps reverting from Matrix 6 back to inverted state after a few minutes to an hour, this means the **monitor script is not running** or **not persisting**.
 
