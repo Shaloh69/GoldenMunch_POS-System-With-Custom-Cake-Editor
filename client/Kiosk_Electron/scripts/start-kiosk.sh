@@ -135,18 +135,23 @@ log "Detecting touchscreen..."
 sleep 2
 
 # Find touchscreen device ID
-# Look for touchscreen devices, excluding "Mouse" devices (which are emulation layers)
-# Priority: Touchscreen keyword, then common touch devices (ILITEK, eGalax, FT5406, etc.)
-TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touchscreen|touch" | grep -v -i "mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+# CRITICAL: For ILITEK, the device with "Mouse" in the name IS the correct device to calibrate
+# Priority: ILITEK Mouse device, then touchscreen keyword, then other common devices
+TOUCH_ID=$(xinput list 2>/dev/null | grep -i "ILITEK.*Mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
 
-# If not found, try ILITEK specifically (excluding Mouse)
+# If not found, try general touchscreen (but keep Mouse devices - they may be the calibration target)
 if [ -z "$TOUCH_ID" ]; then
-    TOUCH_ID=$(xinput list 2>/dev/null | grep -i "ILITEK" | grep -v -i "mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+    TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touchscreen|touch" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
 fi
 
-# If still not found, try other common touchscreen names
+# If still not found, try ILITEK without Mouse requirement
 if [ -z "$TOUCH_ID" ]; then
-    TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "eGalax|FT5406|Goodix|ADS7846|Capacitive" | grep -v -i "mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+    TOUCH_ID=$(xinput list 2>/dev/null | grep -i "ILITEK" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+fi
+
+# Last resort: try other common touchscreen names
+if [ -z "$TOUCH_ID" ]; then
+    TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "eGalax|FT5406|Goodix|ADS7846|Capacitive" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
 fi
 
 if [ -n "$TOUCH_ID" ]; then
@@ -220,7 +225,13 @@ if [ -n "$TOUCH_ID" ]; then
     log "Applying touch calibration (Matrix 6: invert both X,Y for ILITEK in portrait)..."
 
     # Re-verify touchscreen is still detected
-    CURRENT_TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touchscreen|touch|ILITEK" | grep -v -i "mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+    # CRITICAL: Prioritize ILITEK Mouse device (ID 10) - this IS the correct calibration target
+    CURRENT_TOUCH_ID=$(xinput list 2>/dev/null | grep -i "ILITEK.*Mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+
+    # Fallback: try general touchscreen/ILITEK
+    if [ -z "$CURRENT_TOUCH_ID" ]; then
+        CURRENT_TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touchscreen|touch|ILITEK" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+    fi
 
     if [ -n "$CURRENT_TOUCH_ID" ]; then
         # Update TOUCH_ID in case it changed
@@ -305,11 +316,17 @@ if [ -n "$TOUCH_ID" ]; then
         monitor_log "Starting continuous force-apply loop (reduced 1s initial delay)..."
         while true; do
             # Find touchscreen device ID (may change, so re-detect each time)
-            CURRENT_TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touchscreen|touch|ILITEK" | grep -v -i "mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+            # CRITICAL: Prioritize ILITEK Mouse device (ID 10) - this IS the correct calibration target
+            CURRENT_TOUCH_ID=$(xinput list 2>/dev/null | grep -i "ILITEK.*Mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
 
             if [ -z "$CURRENT_TOUCH_ID" ]; then
-                # Try other common touchscreen names
-                CURRENT_TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "eGalax|FT5406|Goodix|ADS7846|Capacitive" | grep -v -i "mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+                # Fallback: try general touchscreen/ILITEK
+                CURRENT_TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touchscreen|touch|ILITEK" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+            fi
+
+            if [ -z "$CURRENT_TOUCH_ID" ]; then
+                # Last resort: try other common touchscreen names
+                CURRENT_TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "eGalax|FT5406|Goodix|ADS7846|Capacitive" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
             fi
 
             if [ -n "$CURRENT_TOUCH_ID" ]; then
@@ -353,7 +370,13 @@ if [ -n "$TOUCH_ID" ]; then
     sleep 2
 
     # Re-verify touchscreen one last time
-    FINAL_TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touchscreen|touch|ILITEK" | grep -v -i "mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+    # CRITICAL: Prioritize ILITEK Mouse device (ID 10)
+    FINAL_TOUCH_ID=$(xinput list 2>/dev/null | grep -i "ILITEK.*Mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+
+    # Fallback: try general touchscreen/ILITEK
+    if [ -z "$FINAL_TOUCH_ID" ]; then
+        FINAL_TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touchscreen|touch|ILITEK" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+    fi
 
     if [ -n "$FINAL_TOUCH_ID" ]; then
         # Final mapping to display

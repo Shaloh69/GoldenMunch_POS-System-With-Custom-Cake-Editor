@@ -26,12 +26,18 @@ log "Target matrix: $CALIBRATION_MATRIX"
 # Function to apply calibration
 apply_calibration() {
     # Find touchscreen device ID
-    # Look for touchscreen devices, excluding "Mouse" devices
-    TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touchscreen|touch|ILITEK" | grep -v -i "mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+    # CRITICAL: For ILITEK, the device with "Mouse" in the name IS the correct device to calibrate
+    # Priority: ILITEK Mouse device (ID 10), then touchscreen keyword, then other devices
+    TOUCH_ID=$(xinput list 2>/dev/null | grep -i "ILITEK.*Mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
 
     if [ -z "$TOUCH_ID" ]; then
-        # Try other common touchscreen names
-        TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "eGalax|FT5406|Goodix|ADS7846|Capacitive" | grep -v -i "mouse" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+        # Fallback: try general touchscreen/ILITEK
+        TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "touchscreen|touch|ILITEK" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
+    fi
+
+    if [ -z "$TOUCH_ID" ]; then
+        # Last resort: try other common touchscreen names
+        TOUCH_ID=$(xinput list 2>/dev/null | grep -iE "eGalax|FT5406|Goodix|ADS7846|Capacitive" | grep -o 'id=[0-9]*' | head -1 | cut -d= -f2)
     fi
 
     if [ -n "$TOUCH_ID" ]; then
