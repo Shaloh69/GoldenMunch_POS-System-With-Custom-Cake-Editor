@@ -1061,7 +1061,7 @@ export const processPayment = async (req: AuthRequest, res: Response) => {
         subtotal, tax_amount, discount_amount, total_amount, final_amount,
         payment_method, payment_status, amount_paid, change_amount,
         special_instructions, cashier_id, scheduled_pickup_datetime)
-       VALUES (?, ?, 'custom_cake', 'pending', 'cashier',
+       VALUES (?, ?, 'custom_cake', 'completed', 'cashier',
                ?, 0, 0, ?, ?, ?, 'paid', ?, ?, ?, ?, ?)`,
       [
         orderNumber,
