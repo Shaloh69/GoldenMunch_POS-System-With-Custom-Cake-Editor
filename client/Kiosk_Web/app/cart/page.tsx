@@ -787,8 +787,12 @@ export default function CartPage() {
           <Modal
             isOpen={isQROpen}
             onOpenChange={(open) => {
-              if (!open) onQRClose();
+              // Prevent modal from closing when keyboard is visible
+              if (!open && !keyboardVisible) {
+                onQRClose();
+              }
             }}
+            isDismissable={!keyboardVisible}
           >
             <ModalContent
               size="2xl"
