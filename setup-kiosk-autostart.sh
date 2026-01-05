@@ -136,7 +136,7 @@ echo "Waiting for backend to initialize..."
 sleep 8
 
 # Note: Using hosted Kiosk_Web on Vercel - no local frontend needed
-echo "Using Kiosk_Web from Vercel: https://goldenkiosk-oan4wrmmp-sars-projects-66ed9bf4.vercel.app/"
+echo "Using Kiosk_Web from Vercel: https://goldenkiosk.vercel.app/"
 echo "Skipping local frontend startup..."
 FRONTEND_PID="N/A"
 
@@ -161,7 +161,7 @@ chromium-browser \
   --overscroll-history-navigation=0 \
   --ozone-platform=wayland \
   --enable-features=UseOzonePlatform \
-  --app=https://goldenkiosk-oan4wrmmp-sars-projects-66ed9bf4.vercel.app/ \
+  --app=https://goldenkiosk.vercel.app/ \
   > "$HOME/chromium-output.log" 2>&1 &
 
 CHROMIUM_PID=$!
