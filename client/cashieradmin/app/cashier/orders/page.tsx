@@ -6,7 +6,7 @@ import type {
   CustomerDiscountType,
 } from "@/types/api";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import {
   Table,
@@ -158,14 +158,14 @@ export default function UnifiedCashierPage() {
   // Track first load to prevent loading state on auto-refresh
   const isFirstLoad = useRef(true);
 
-  // Load data on mount and refresh every 10 seconds
+  // Load data on mount and refresh every 30 seconds (reduced from 10s for better performance)
   useEffect(() => {
     loadAllData();
     loadDiscounts();
     loadPrinterStatus();
 
-    const interval = setInterval(() => loadAllData(false), 10000);
-    const printerInterval = setInterval(loadPrinterStatus, 30000); // Check printer every 30 seconds
+    const interval = setInterval(() => loadAllData(false), 30000); // Increased to 30 seconds
+    const printerInterval = setInterval(loadPrinterStatus, 60000); // Check printer every 60 seconds
 
     return () => {
       clearInterval(interval);
@@ -561,25 +561,25 @@ export default function UnifiedCashierPage() {
     }
   };
 
-  const calculateDiscount = (
+  // Memoized calculation functions to prevent unnecessary re-computations
+  const calculateDiscount = useCallback((
     amount: number,
     discount: CustomerDiscountType,
   ): number => {
     return (amount * discount.discount_percentage) / 100;
-  };
+  }, []);
 
-  const calculateFinalAmount = (
+  const calculateFinalAmount = useCallback((
     amount: number,
     discount: CustomerDiscountType | null,
   ): number => {
     if (!discount) return amount;
+    return amount - (amount * (discount.discount_percentage || 0)) / 100;
+  }, []);
 
-    return amount - calculateDiscount(amount, discount);
-  };
-
-  const calculateChange = (tendered: number, amount: number): number => {
+  const calculateChange = useCallback((tendered: number, amount: number): number => {
     return Math.max(0, tendered - amount);
-  };
+  }, []);
 
   // Update change when amount tendered changes
   useEffect(() => {
@@ -606,7 +606,8 @@ export default function UnifiedCashierPage() {
     });
   };
 
-  const filterOrders = (orders: CustomerOrder[]) => {
+  // Memoized filter function to prevent unnecessary filtering
+  const filterOrders = useCallback((orders: CustomerOrder[]) => {
     if (!searchQuery) return orders;
 
     const query = searchQuery.toLowerCase();
@@ -617,7 +618,7 @@ export default function UnifiedCashierPage() {
         order.name?.toLowerCase().includes(query) ||
         order.phone?.toLowerCase().includes(query),
     );
-  };
+  }, [searchQuery]);
 
   const renderOrdersTable = (
     orders: CustomerOrder[],

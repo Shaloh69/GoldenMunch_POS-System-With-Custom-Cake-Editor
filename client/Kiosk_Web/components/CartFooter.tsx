@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 
 export const CartFooter: React.FC = () => {
   const pathname = usePathname();
-  const { getItemCount, getTotal } = useCart();
+  const { getItemCount, total } = useCart();
   const [isHidden, setIsHidden] = useState(false);
 
   // Hide footer on specific pages
@@ -21,7 +21,6 @@ export const CartFooter: React.FC = () => {
   }
 
   const itemCount = getItemCount();
-  const total = getTotal();
 
   return (
     <>

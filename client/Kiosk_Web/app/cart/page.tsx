@@ -43,9 +43,7 @@ export default function CartPage() {
     removeItem,
     clearCart,
     getItemCount,
-    getSubtotal,
-    getTax,
-    getTotal,
+    total,
     getOrderItems,
   } = useCart();
 
@@ -711,7 +709,7 @@ export default function CartPage() {
                             Total
                           </span>
                           <span className="text-4xl font-black text-gradient">
-                            ₱{getTotal().toFixed(2)}
+                            ₱{total.toFixed(2)}
                           </span>
                         </div>
                       </div>
@@ -724,7 +722,7 @@ export default function CartPage() {
                     >
                       {isProcessing
                         ? "Processing..."
-                        : `💳 Place Order - ₱${getTotal().toFixed(2)}`}
+                        : `💳 Place Order - ₱${total.toFixed(2)}`}
                     </Button>
 
                     <p className="text-sm text-black text-center mt-4 font-semibold">
@@ -880,7 +878,7 @@ export default function CartPage() {
                         Amount to Pay:
                       </p>
                       <p className="text-4xl font-bold text-black drop-shadow-sm">
-                        ₱{getTotal().toFixed(2)}
+                        ₱{total.toFixed(2)}
                       </p>
                     </div>
 
@@ -896,7 +894,7 @@ export default function CartPage() {
                         </li>
                         <li>Tap "Scan QR" in your app</li>
                         <li>Scan the QR code shown above</li>
-                        <li>Verify the amount: ₱{getTotal().toFixed(2)}</li>
+                        <li>Verify the amount: ₱{total.toFixed(2)}</li>
                         <li>Complete the payment in your app</li>
                         <li>
                           <strong>

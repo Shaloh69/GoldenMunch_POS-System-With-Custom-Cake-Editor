@@ -6,6 +6,8 @@ import React, {
   useState,
   useCallback,
   useEffect,
+  useMemo,
+  useRef,
 } from "react";
 import type {
   MenuItem,
@@ -34,9 +36,9 @@ interface CartContextType {
   updateQuantity: (menuItemId: number, quantity: number) => void;
   clearCart: () => void;
   getItemCount: () => number;
-  getSubtotal: () => number;
-  getTax: () => number;
-  getTotal: () => number;
+  subtotal: number;
+  tax: number;
+  total: number;
   getOrderItems: () => OrderItemRequest[];
 }
 
@@ -48,6 +50,7 @@ const CART_STORAGE_KEY = "goldenmunch_cart";
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -64,14 +67,29 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Save cart to localStorage whenever it changes
+  // Save cart to localStorage with debouncing (500ms) to reduce write frequency
   useEffect(() => {
     if (isInitialized && typeof window !== "undefined") {
-      try {
-        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-      } catch (error) {
-        console.error("Error saving cart to localStorage:", error);
+      // Clear previous timeout
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
       }
+
+      // Set new timeout for debounced save
+      saveTimeoutRef.current = setTimeout(() => {
+        try {
+          localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+        } catch (error) {
+          console.error("Error saving cart to localStorage:", error);
+        }
+      }, 500);
+
+      // Cleanup on unmount
+      return () => {
+        if (saveTimeoutRef.current) {
+          clearTimeout(saveTimeoutRef.current);
+        }
+      };
     }
   }, [items, isInitialized]);
 
@@ -166,11 +184,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems([]);
   }, []);
 
+  // Use useMemo for computed values instead of useCallback for better performance
   const getItemCount = useCallback(() => {
     return items.reduce((total, item) => total + item.quantity, 0);
   }, [items]);
 
-  const getSubtotal = useCallback(() => {
+  const getSubtotal = useMemo(() => {
     return items.reduce((total, item) => {
       const basePrice = item.menuItem.current_price || 0;
       const flavorCost = item.flavor?.additional_cost || 0;
@@ -197,12 +216,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }, 0);
   }, [items]);
 
-  const getTax = useCallback(() => {
-    return getSubtotal() * TAX_RATE;
+  const getTax = useMemo(() => {
+    return getSubtotal * TAX_RATE;
   }, [getSubtotal]);
 
-  const getTotal = useCallback(() => {
-    return getSubtotal() + getTax();
+  const getTotal = useMemo(() => {
+    return getSubtotal + getTax;
   }, [getSubtotal, getTax]);
 
   const getOrderItems = useCallback((): OrderItemRequest[] => {
@@ -216,18 +235,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }));
   }, [items]);
 
-  const value: CartContextType = {
+  // Memoize context value to prevent unnecessary re-renders
+  const value: CartContextType = useMemo(() => ({
     items,
     addItem,
     removeItem,
     updateQuantity,
     clearCart,
     getItemCount,
-    getSubtotal,
-    getTax,
-    getTotal,
+    subtotal: getSubtotal,
+    tax: getTax,
+    total: getTotal,
     getOrderItems,
-  };
+  }), [items, addItem, removeItem, updateQuantity, clearCart, getItemCount, getSubtotal, getTax, getTotal, getOrderItems]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

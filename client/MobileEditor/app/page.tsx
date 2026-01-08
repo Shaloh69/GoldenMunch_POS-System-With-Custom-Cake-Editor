@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, Suspense, useRef } from 'react';
+import { useEffect, useState, Suspense, useRef, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -238,16 +238,16 @@ function CakeEditorContent() {
     });
   };
 
-  // Auto-save design
+  // Auto-save design with longer debounce for better performance
   useEffect(() => {
     const timer = setTimeout(() => {
       if (sessionToken && sessionValid && currentStep > 0) {
         saveDraft();
       }
-    }, 3000); // Auto-save after 3 seconds of inactivity
+    }, 5000); // Auto-save after 5 seconds of inactivity (increased from 3s)
 
     return () => clearTimeout(timer);
-  }, [design, currentStep]);
+  }, [design, currentStep, sessionToken, sessionValid]);
 
   const saveDraft = async (): Promise<number | null> => {
     // Skip saving in debug mode
@@ -297,17 +297,18 @@ function CakeEditorContent() {
     }
   };
 
-  const handleNext = () => {
+  // Memoized navigation handlers
+  const handleNext = useCallback(() => {
     if (currentStep < STEPS.length - 1) {
       setCurrentStep(currentStep + 1);
     }
-  };
+  }, [currentStep]);
 
-  const handlePrevious = () => {
+  const handlePrevious = useCallback(() => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
-  };
+  }, [currentStep]);
 
   const captureScreenshots = async (): Promise<string[]> => {
     const screenshots: string[] = [];
@@ -434,9 +435,10 @@ function CakeEditorContent() {
     }
   };
 
-  const updateDesign = (updates: Partial<CakeDesign>) => {
-    setDesign({ ...design, ...updates });
-  };
+  // Memoized design update function
+  const updateDesign = useCallback((updates: Partial<CakeDesign>) => {
+    setDesign((prev) => ({ ...prev, ...updates }));
+  }, []);
 
   const tutorialSteps = [
     {
@@ -594,6 +596,9 @@ function CakeEditorContent() {
   const CurrentStepComponent = STEPS[currentStep].component;
   const progress = ((currentStep + 1) / STEPS.length) * 100;
 
+  // Memoize calculated price to prevent recalculation on every render
+  const estimatedPrice = useMemo(() => calculatePrice(design), [design]);
+
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-purple-50 via-pink-50 to-indigo-50 overflow-hidden">
       {/* Full Screen 3D Canvas */}
@@ -744,7 +749,7 @@ function CakeEditorContent() {
                   <PopoverTrigger>
                     <div className="bg-white/20 backdrop-blur-md rounded-lg px-3 py-2 ml-2">
                       <p className="text-xs font-bold">Est. Price</p>
-                      <p className="text-lg sm:text-xl font-bold">₱{calculatePrice(design)}</p>
+                      <p className="text-lg sm:text-xl font-bold">₱{estimatedPrice}</p>
                     </div>
                   </PopoverTrigger>
                   <PopoverContent className="bg-gradient-to-br from-purple-500 to-pink-500 text-white border-2 border-white max-w-xs">

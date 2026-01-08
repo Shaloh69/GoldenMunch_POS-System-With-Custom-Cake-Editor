@@ -19,7 +19,7 @@ export function KioskAppSidebar({
   onClose,
 }: KioskAppSidebarProps) {
   const pathname = usePathname();
-  const { addItem, items: cartItems, getItemCount, getTotal } = useCart();
+  const { addItem, items: cartItems, getItemCount, total } = useCart();
   const [quantity, setQuantity] = useState(1);
   const [isCartHidden, setIsCartHidden] = useState(false);
   const [isSidebarHidden, setIsSidebarHidden] = useState(false);
@@ -81,7 +81,6 @@ export function KioskAppSidebar({
   };
 
   const itemCount = getItemCount();
-  const total = getTotal();
   const isAvailable =
     selectedItem?.status === "available" &&
     (selectedItem?.is_infinite_stock ||

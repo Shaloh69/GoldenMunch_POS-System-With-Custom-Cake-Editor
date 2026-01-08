@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Button, Card, CardBody, Spinner } from "@/components/primitives";
 import { useCart } from "@/contexts/CartContext";
 import { MenuService } from "@/services/menu.service";
@@ -11,7 +11,6 @@ import { MenuCard } from "@/components/MenuCard";
 export default function HomePage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [filteredItems, setFilteredItems] = useState<MenuItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,8 +44,9 @@ export default function HomePage() {
 
     fetchData();
 
-    // Auto-refresh menu every 30 seconds
+    // Auto-refresh menu every 60 seconds (increased from 30s for better performance)
     const refreshInterval = setInterval(() => {
+      // Refresh menu items silently in background
       MenuService.getMenuItems()
         .then((items) => {
           setMenuItems(items);
@@ -55,20 +55,23 @@ export default function HomePage() {
           console.error("Auto-refresh failed:", err);
         });
 
-      MenuService.getCategories()
-        .then((cats) => {
-          setCategories(cats);
-        })
-        .catch((err) => {
-          console.error("Category refresh failed:", err);
-        });
-    }, 30000);
+      // Categories change less frequently, refresh every 2 minutes
+      if (Date.now() % 120000 < 60000) {
+        MenuService.getCategories()
+          .then((cats) => {
+            setCategories(cats);
+          })
+          .catch((err) => {
+            console.error("Category refresh failed:", err);
+          });
+      }
+    }, 60000); // Increased to 60 seconds
 
     return () => clearInterval(refreshInterval);
   }, []);
 
-  // Filter items by category and sort (sold_out items always last)
-  useEffect(() => {
+  // Filter items by category and sort (sold_out items always last) - Memoized for performance
+  const filteredItems = useMemo(() => {
     let filtered = menuItems;
 
     if (selectedCategory !== null) {
@@ -89,51 +92,53 @@ export default function HomePage() {
       return 0;
     });
 
-    setFilteredItems(sorted);
+    return sorted;
   }, [menuItems, selectedCategory]);
 
-  const getCartQuantity = (itemId: number): number => {
+  // Memoized function to get cart quantity for an item
+  const getCartQuantity = useCallback((itemId: number): number => {
     const cartItem = cartItems.find(
       (item) => item.menuItem.menu_item_id === itemId
     );
     return cartItem?.quantity || 0;
-  };
+  }, [cartItems]);
 
-  const handleItemClick = (item: MenuItem) => {
+  // Memoized event handlers
+  const handleItemClick = useCallback((item: MenuItem) => {
     setSelectedItem(item);
-  };
+  }, []);
 
-  const handleCloseSidebar = () => {
+  const handleCloseSidebar = useCallback(() => {
     setSelectedItem(null);
-  };
+  }, []);
 
-  // Check scroll position and update arrow visibility
-  const checkScrollPosition = () => {
+  // Check scroll position and update arrow visibility - Memoized
+  const checkScrollPosition = useCallback(() => {
     if (categoryScrollRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } =
         categoryScrollRef.current;
       setShowLeftArrow(scrollLeft > 5);
       setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 5);
     }
-  };
+  }, []);
 
-  // Scroll categories left
-  const scrollLeft = () => {
+  // Scroll categories left - Memoized
+  const scrollLeft = useCallback(() => {
     if (categoryScrollRef.current) {
       categoryScrollRef.current.scrollBy({ left: -300, behavior: "smooth" });
       // Recheck after scroll animation
       setTimeout(checkScrollPosition, 350);
     }
-  };
+  }, [checkScrollPosition]);
 
-  // Scroll categories right
-  const scrollRight = () => {
+  // Scroll categories right - Memoized
+  const scrollRight = useCallback(() => {
     if (categoryScrollRef.current) {
       categoryScrollRef.current.scrollBy({ left: 300, behavior: "smooth" });
       // Recheck after scroll animation
       setTimeout(checkScrollPosition, 350);
     }
-  };
+  }, [checkScrollPosition]);
 
   // Update arrow visibility when categories change
   useEffect(() => {

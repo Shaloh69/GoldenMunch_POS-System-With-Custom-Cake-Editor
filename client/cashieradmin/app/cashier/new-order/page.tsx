@@ -2,7 +2,7 @@
 
 import type { MenuItem, CustomerDiscountType } from "@/types/api";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { Card, CardBody, CardHeader } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
@@ -106,35 +106,46 @@ export default function NewOrderPage() {
     }
   };
 
-  // Cart Operations
-  const addToCart = (item: MenuItem) => {
-    const existingItem = cartItems.find(
-      (ci) => ci.menuItem.menu_item_id === item.menu_item_id,
-    );
+  // Cart Operations - Memoized to prevent unnecessary re-renders
+  const addToCart = useCallback((item: MenuItem) => {
+    setCartItems((prevItems) => {
+      const existingItem = prevItems.find(
+        (ci) => ci.menuItem.menu_item_id === item.menu_item_id,
+      );
 
-    if (existingItem) {
-      updateQuantity(item.menu_item_id, existingItem.quantity + 1);
-    } else {
-      setCartItems([
-        ...cartItems,
-        {
-          menuItem: item,
-          quantity: 1,
-          subtotal: Number(item.current_price),
-        },
-      ]);
-    }
-  };
+      if (existingItem) {
+        return prevItems.map((ci) =>
+          ci.menuItem.menu_item_id === item.menu_item_id
+            ? {
+                ...ci,
+                quantity: ci.quantity + 1,
+                subtotal: Number(ci.menuItem.current_price) * (ci.quantity + 1),
+              }
+            : ci,
+        );
+      } else {
+        return [
+          ...prevItems,
+          {
+            menuItem: item,
+            quantity: 1,
+            subtotal: Number(item.current_price),
+          },
+        ];
+      }
+    });
+  }, []);
 
-  const updateQuantity = (itemId: number, newQuantity: number) => {
+  const updateQuantity = useCallback((itemId: number, newQuantity: number) => {
     if (newQuantity <= 0) {
-      removeFromCart(itemId);
-
+      setCartItems((prevItems) =>
+        prevItems.filter((ci) => ci.menuItem.menu_item_id !== itemId)
+      );
       return;
     }
 
-    setCartItems(
-      cartItems.map((ci) =>
+    setCartItems((prevItems) =>
+      prevItems.map((ci) =>
         ci.menuItem.menu_item_id === itemId
           ? {
               ...ci,
@@ -144,13 +155,15 @@ export default function NewOrderPage() {
           : ci,
       ),
     );
-  };
+  }, []);
 
-  const removeFromCart = (itemId: number) => {
-    setCartItems(cartItems.filter((ci) => ci.menuItem.menu_item_id !== itemId));
-  };
+  const removeFromCart = useCallback((itemId: number) => {
+    setCartItems((prevItems) =>
+      prevItems.filter((ci) => ci.menuItem.menu_item_id !== itemId)
+    );
+  }, []);
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setCartItems([]);
     setOrderForm({
       customer_name: "",
@@ -161,29 +174,26 @@ export default function NewOrderPage() {
       amount_paid: 0,
     });
     setSelectedDiscount(null);
-  };
+  }, []);
 
-  // Calculations
-  const calculateSubtotal = () => {
+  // Calculations - Memoized to prevent recalculation on every render
+  const subtotal = useMemo(() => {
     return cartItems.reduce((sum, item) => sum + item.subtotal, 0);
-  };
+  }, [cartItems]);
 
-  const calculateDiscount = () => {
+  const discount = useMemo(() => {
     if (!selectedDiscount) return 0;
-    const subtotal = calculateSubtotal();
-
     return (subtotal * selectedDiscount.discount_percentage) / 100;
-  };
+  }, [subtotal, selectedDiscount]);
 
-  const calculateTotal = () => {
-    return calculateSubtotal() - calculateDiscount();
-  };
+  const total = useMemo(() => {
+    return subtotal - discount;
+  }, [subtotal, discount]);
 
-  const calculateChange = () => {
+  const change = useMemo(() => {
     if (orderForm.payment_method !== "cash") return 0;
-
-    return Math.max(0, orderForm.amount_paid - calculateTotal());
-  };
+    return Math.max(0, orderForm.amount_paid - total);
+  }, [orderForm.payment_method, orderForm.amount_paid, total]);
 
   // Handle discount selection
   const handleDiscountChange = (discountId: string) => {
@@ -224,7 +234,7 @@ export default function NewOrderPage() {
 
     if (
       orderForm.payment_method === "cash" &&
-      orderForm.amount_paid < calculateTotal()
+      orderForm.amount_paid < total
     ) {
       setErrorMessage("Amount paid is less than total");
 
@@ -250,7 +260,7 @@ export default function NewOrderPage() {
         amount_paid:
           orderForm.payment_method === "cash"
             ? orderForm.amount_paid
-            : calculateTotal(),
+            : total,
         order_source: "cashier",
       };
 
@@ -281,10 +291,12 @@ export default function NewOrderPage() {
     }
   };
 
-  // Filter menu items by search
-  const filteredMenuItems = menuItems.filter((item) =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  // Filter menu items by search - Memoized to prevent filtering on every render
+  const filteredMenuItems = useMemo(() => {
+    return menuItems.filter((item) =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+  }, [menuItems, searchTerm]);
 
   return (
     <div className="min-h-screen">
@@ -646,7 +658,7 @@ export default function NewOrderPage() {
                   <div className="flex justify-between">
                     <span className="text-warm-brown">Subtotal:</span>
                     <span className="font-bold">
-                      ₱{calculateSubtotal().toFixed(2)}
+                      ₱{subtotal.toFixed(2)}
                     </span>
                   </div>
 
@@ -656,7 +668,7 @@ export default function NewOrderPage() {
                         Discount ({selectedDiscount.discount_percentage}%):
                       </span>
                       <span className="font-bold">
-                        -₱{calculateDiscount().toFixed(2)}
+                        -₱{discount.toFixed(2)}
                       </span>
                     </div>
                   )}
@@ -666,7 +678,7 @@ export default function NewOrderPage() {
                   <div className="flex justify-between text-lg">
                     <span className="font-bold text-rich-brown">Total:</span>
                     <span className="font-bold text-success">
-                      ₱{calculateTotal().toFixed(2)}
+                      ₱{total.toFixed(2)}
                     </span>
                   </div>
 
@@ -680,7 +692,7 @@ export default function NewOrderPage() {
                         <div className="flex justify-between text-sm">
                           <span className="text-warm-brown">Change:</span>
                           <span className="font-bold text-warning">
-                            ₱{calculateChange().toFixed(2)}
+                            ₱{change.toFixed(2)}
                           </span>
                         </div>
                       </>

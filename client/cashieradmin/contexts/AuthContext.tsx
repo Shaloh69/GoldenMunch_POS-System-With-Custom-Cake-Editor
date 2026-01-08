@@ -2,7 +2,7 @@
 
 import type { AuthUser } from "@/types/api";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 import { AuthService } from "@/services/auth.service";
@@ -37,7 +37,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = async (
+  // Memoized login function to prevent unnecessary re-renders
+  const login = useCallback(async (
     username: string,
     password: string,
     isCashier: boolean = false,
@@ -56,26 +57,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       throw new Error(error.message || "Login failed");
     }
-  };
+  }, [router]);
 
-  const logout = () => {
+  // Memoized logout function
+  const logout = useCallback(() => {
     AuthService.logout();
     setUser(null);
     router.push("/login");
-  };
+  }, [router]);
 
-  const isAdmin = () => {
+  // Memoized role check functions
+  const isAdmin = useCallback(() => {
     return user?.type === "admin";
-  };
+  }, [user]);
 
-  const isCashier = () => {
+  const isCashier = useCallback(() => {
     return user?.type === "cashier";
-  };
+  }, [user]);
+
+  // Memoize context value to prevent unnecessary re-renders in consumers
+  const contextValue = useMemo(
+    () => ({ user, isLoading, login, logout, isAdmin, isCashier }),
+    [user, isLoading, login, logout, isAdmin, isCashier]
+  );
 
   return (
-    <AuthContext.Provider
-      value={{ user, isLoading, login, logout, isAdmin, isCashier }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
