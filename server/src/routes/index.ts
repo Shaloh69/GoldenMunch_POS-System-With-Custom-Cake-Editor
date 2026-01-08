@@ -21,6 +21,7 @@ import * as customCakeSessionController from '../controllers/customCakeSession.c
 import * as customCakeController from '../controllers/customCake.controller';
 import * as paymentQRController from '../controllers/paymentQR.controller';
 import * as capacityController from '../controllers/capacity.controller';
+import * as sseController from '../controllers/sse.controller';
 
 const router = Router();
 
@@ -364,6 +365,14 @@ router.get('/', (req, res) => {
 router.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+
+// ==== SSE ROUTES (Server-Sent Events for real-time updates) ====
+router.get('/sse/orders', authenticate, asyncHandler(sseController.streamOrders));
+router.get('/sse/menu', asyncHandler(sseController.streamMenu));
+router.get('/sse/inventory', authenticateAdmin, asyncHandler(sseController.streamInventory));
+router.get('/sse/custom-cakes', authenticate, asyncHandler(sseController.streamCustomCakes));
+router.get('/sse/notifications', authenticate, asyncHandler(sseController.streamNotifications));
+router.get('/sse/stats', authenticateAdmin, asyncHandler(sseController.getSSEStats));
 
 // ==== AUTH ROUTES ====
 router.post('/auth/admin/login', validate(schemas.adminLogin), asyncHandler(authController.adminLogin));

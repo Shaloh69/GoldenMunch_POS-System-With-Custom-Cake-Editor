@@ -5,6 +5,7 @@ import { successResponse, calculateOrderTotal, generateSessionId } from '../util
 import { AppError } from '../middleware/error.middleware';
 import { getFirstRow } from '../utils/typeGuards';
 import { PoolConnection } from 'mysql2/promise';
+import { sseService, SSEChannels, SSEEvents } from '../services/sse.service';
 
 // In-memory tracking for QR code scans
 const scannedQRCodes = new Set<number>();
@@ -188,6 +189,15 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
       total_amount: totals.total,
       items_count: orderItems.length,
     };
+  });
+
+  // Broadcast order created event to connected clients
+  sseService.broadcast(SSEChannels.ORDERS, SSEEvents.ORDER_CREATED, {
+    order_id: result.order_id,
+    order_number: result.order_number,
+    total_amount: result.total_amount,
+    items_count: result.items_count,
+    timestamp: new Date().toISOString(),
   });
 
   res.status(201).json(successResponse('Order created successfully', result));
@@ -631,6 +641,14 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response) => {
     );
 
     console.log('✓ Timeline entry added successfully');
+  });
+
+  // Broadcast order status change event
+  sseService.broadcast(SSEChannels.ORDERS, SSEEvents.ORDER_STATUS_CHANGED, {
+    order_id: parseInt(id, 10),
+    order_status,
+    updated_by: user_id,
+    timestamp: new Date().toISOString(),
   });
 
   res.json(successResponse('Order status updated', { order_status }));
