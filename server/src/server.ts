@@ -1,5 +1,6 @@
 import app from './app';
 import { testConnection } from './config/database';
+import { initRedis, closeRedis } from './config/redis';
 import logger from './utils/logger';
 import { logJWTDiagnostic } from './utils/jwtDiagnostic';
 import { emailService } from './services/email.service';
@@ -14,6 +15,9 @@ const startServer = async () => {
     // Test database connection
     await testConnection();
     logger.info('Database connection established');
+
+    // Initialize Redis cache
+    await initRedis();
 
     // Check JWT configuration
     logJWTDiagnostic();
@@ -54,15 +58,17 @@ process.on('unhandledRejection', (reason: any) => {
 });
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   logger.info('SIGTERM signal received: closing HTTP server');
   schedulerService.stopAll();
+  await closeRedis();
   process.exit(0);
 });
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   logger.info('SIGINT signal received: closing HTTP server');
   schedulerService.stopAll();
+  await closeRedis();
   process.exit(0);
 });
 

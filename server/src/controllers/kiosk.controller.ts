@@ -79,16 +79,52 @@ export const getMenuItems = async (req: AuthRequest, res: Response) => {
 
   const items = await query(sql, params);
 
-  // Fetch categories for each menu item
-  for (const item of items as any[]) {
-    const categories = await query(
-      `SELECT c.* FROM category c
+  // Fetch all categories for these menu items in a single query (fix N+1 problem)
+  if ((items as any[]).length > 0) {
+    const itemIds = (items as any[]).map((item) => item.menu_item_id);
+
+    // Get all category relationships in one query
+    const categoryRelations = await query(
+      `SELECT
+        chmi.menu_item_id,
+        c.category_id,
+        c.name,
+        c.description,
+        c.display_order as category_display_order,
+        c.is_active,
+        c.image_url,
+        c.created_at,
+        c.updated_at,
+        chmi.display_order
+       FROM category c
        INNER JOIN category_has_menu_item chmi ON c.category_id = chmi.category_id
-       WHERE chmi.menu_item_id = ?
-       ORDER BY chmi.display_order ASC`,
-      [item.menu_item_id]
-    );
-    item.categories = categories;
+       WHERE chmi.menu_item_id IN (${itemIds.map(() => '?').join(',')})
+       ORDER BY chmi.menu_item_id, chmi.display_order ASC`,
+      itemIds
+    ) as any[];
+
+    // Group categories by menu item ID
+    const categoriesByItem = categoryRelations.reduce((acc: any, relation: any) => {
+      if (!acc[relation.menu_item_id]) {
+        acc[relation.menu_item_id] = [];
+      }
+      acc[relation.menu_item_id].push({
+        category_id: relation.category_id,
+        name: relation.name,
+        description: relation.description,
+        display_order: relation.category_display_order,
+        is_active: relation.is_active,
+        image_url: relation.image_url,
+        created_at: relation.created_at,
+        updated_at: relation.updated_at,
+      });
+      return acc;
+    }, {});
+
+    // Attach categories to each item
+    for (const item of items as any[]) {
+      item.categories = categoriesByItem[item.menu_item_id] || [];
+    }
   }
 
   res.json(successResponse('Menu items retrieved', items));

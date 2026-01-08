@@ -3,6 +3,8 @@ import { asyncHandler } from '../middleware/error.middleware';
 import { authenticate, authenticateAdmin, authenticateCashier, optionalAuth } from '../middleware/auth.middleware';
 import { validate, schemas } from '../middleware/validation.middleware';
 import { uploadQRCode, uploadProductImage, uploadPaymentQR } from '../config/multer';
+import { cacheMiddleware, autoInvalidateCache, conditionalRequest } from '../middleware/cache.middleware';
+import { CacheTTL } from '../services/cache.service';
 
 // Controllers
 import * as authController from '../controllers/auth.controller';
@@ -21,6 +23,9 @@ import * as paymentQRController from '../controllers/paymentQR.controller';
 import * as capacityController from '../controllers/capacity.controller';
 
 const router = Router();
+
+// Apply auto-invalidation middleware globally for all mutation requests
+router.use(autoInvalidateCache());
 
 // ==== PUBLIC ROUTES ====
 
@@ -369,11 +374,12 @@ router.put('/auth/admin/username', authenticateAdmin, asyncHandler(authControlle
 router.put('/auth/admin/password', authenticateAdmin, asyncHandler(authController.updateAdminPassword));
 
 // ==== KIOSK ROUTES (Public/Optional Auth) ====
-router.get('/kiosk/menu', optionalAuth, asyncHandler(kioskController.getMenuItems));
-router.get('/kiosk/categories', asyncHandler(kioskController.getCategories));
-router.get('/kiosk/menu/:id', asyncHandler(kioskController.getItemDetails));
-router.get('/kiosk/promotions', asyncHandler(kioskController.getActivePromotions));
-router.get('/kiosk/capacity/check', asyncHandler(kioskController.checkCapacity));
+// Cache static/rarely changing data with longer TTL
+router.get('/kiosk/menu', cacheMiddleware(CacheTTL.LONG), optionalAuth, asyncHandler(kioskController.getMenuItems));
+router.get('/kiosk/categories', cacheMiddleware(CacheTTL.VERY_LONG), asyncHandler(kioskController.getCategories));
+router.get('/kiosk/menu/:id', cacheMiddleware(CacheTTL.LONG), asyncHandler(kioskController.getItemDetails));
+router.get('/kiosk/promotions', cacheMiddleware(CacheTTL.MEDIUM), asyncHandler(kioskController.getActivePromotions));
+router.get('/kiosk/capacity/check', cacheMiddleware(CacheTTL.SHORT), asyncHandler(kioskController.checkCapacity));
 
 // Kiosk Orders
 router.post('/kiosk/orders', validate(schemas.createOrder), asyncHandler(orderController.createOrder));
@@ -385,26 +391,26 @@ router.get('/kiosk/orders/:id/qr-status', asyncHandler(orderController.checkQRSt
 // Custom Cake Sessions (for QR code customization flow)
 // DEPRECATED: Old in-memory API - migrating to database-backed NEW API below
 router.post('/kiosk/custom-cake/session', asyncHandler(customCakeSessionController.createCustomCakeSession));
-router.get('/kiosk/custom-cake/session/:sessionId', asyncHandler(customCakeSessionController.getCustomCakeSession));
+router.get('/kiosk/custom-cake/session/:sessionId', cacheMiddleware(CacheTTL.VERY_SHORT), asyncHandler(customCakeSessionController.getCustomCakeSession));
 router.put('/kiosk/custom-cake/session/:sessionId', asyncHandler(customCakeSessionController.updateCustomCakeSession));
 router.post('/kiosk/custom-cake/session/:sessionId/complete', asyncHandler(customCakeSessionController.completeCustomCakeSession));
 // router.get('/kiosk/custom-cake/session/:sessionId/poll', asyncHandler(customCakeSessionController.pollCustomCakeSession)); // DISABLED: Using NEW API polling below
 router.delete('/kiosk/custom-cake/session/:sessionId', asyncHandler(customCakeSessionController.deleteCustomCakeSession));
 
 // Payment QR Codes (Public - for kiosk)
-router.get('/kiosk/payment-qr/:paymentMethod', asyncHandler(paymentQRController.getPaymentQR));
+router.get('/kiosk/payment-qr/:paymentMethod', cacheMiddleware(CacheTTL.VERY_LONG), asyncHandler(paymentQRController.getPaymentQR));
 
 // ==== CUSTOM CAKE COMPREHENSIVE SYSTEM ====
 
 // Kiosk - Generate QR Code & Poll for Completion
 router.post('/kiosk/custom-cake/generate-qr', asyncHandler(customCakeController.generateQRSession));
-router.get('/kiosk/custom-cake/session/:token/poll', asyncHandler(customCakeController.pollSessionForKiosk));
+router.get('/kiosk/custom-cake/session/:token/poll', conditionalRequest(), asyncHandler(customCakeController.pollSessionForKiosk));
 
 // Mobile Editor - Public Routes
-router.get('/custom-cake/session/:token', asyncHandler(customCakeController.validateSession));
+router.get('/custom-cake/session/:token', conditionalRequest(), asyncHandler(customCakeController.validateSession));
 router.get('/custom-cake/session/:token/debug', asyncHandler(customCakeController.debugSession));
-router.get('/custom-cake/sessions/recent', asyncHandler(customCakeController.listRecentSessions));
-router.get('/custom-cake/options', asyncHandler(customCakeController.getDesignOptions));
+router.get('/custom-cake/sessions/recent', conditionalRequest(), asyncHandler(customCakeController.listRecentSessions));
+router.get('/custom-cake/options', cacheMiddleware(CacheTTL.VERY_LONG), asyncHandler(customCakeController.getDesignOptions));
 router.post('/custom-cake/save-draft', asyncHandler(customCakeController.saveDraft));
 router.post('/custom-cake/upload-images', asyncHandler(customCakeController.uploadImages));
 router.post('/custom-cake/submit', asyncHandler(customCakeController.submitForReview));
@@ -426,16 +432,16 @@ router.post(
   asyncHandler(orderController.verifyPayment)
 );
 
-router.get('/cashier/orders', authenticateCashier, asyncHandler(orderController.getOrders));
-router.get('/cashier/orders/:id', authenticateCashier, asyncHandler(orderController.getOrderDetails));
+router.get('/cashier/orders', cacheMiddleware(CacheTTL.SHORT), authenticateCashier, asyncHandler(orderController.getOrders));
+router.get('/cashier/orders/:id', conditionalRequest(), authenticateCashier, asyncHandler(orderController.getOrderDetails));
 router.post('/cashier/orders/:id/mark-printed', authenticateCashier, asyncHandler(orderController.markOrderPrinted));
-router.get('/cashier/orders/:id/timeline', authenticateCashier, asyncHandler(additionalController.getOrderTimeline));
+router.get('/cashier/orders/:id/timeline', cacheMiddleware(CacheTTL.MEDIUM), authenticateCashier, asyncHandler(additionalController.getOrderTimeline));
 router.patch('/cashier/orders/:id/status', authenticateCashier, asyncHandler(orderController.updateOrderStatus));
 router.delete('/cashier/orders/:id', authenticateCashier, asyncHandler(orderController.deleteOrder));
 
 // Cashier - Waste Tracking
 router.post('/cashier/waste', authenticateCashier, asyncHandler(wasteController.createWasteEntry));
-router.get('/cashier/waste', authenticateCashier, asyncHandler(wasteController.getWasteEntries));
+router.get('/cashier/waste', cacheMiddleware(CacheTTL.MEDIUM), authenticateCashier, asyncHandler(wasteController.getWasteEntries));
 
 // Cashier - Feedback Recording
 router.post('/cashier/feedback', authenticateCashier, asyncHandler(feedbackController.submitFeedback));
@@ -446,13 +452,16 @@ router.get('/cashier/refund', authenticateCashier, asyncHandler(refundController
 router.get('/cashier/refund/:id', authenticateCashier, asyncHandler(refundController.getRefundDetails));
 
 // Cashier - Custom Cakes
-router.get('/cashier/custom-cakes/approved', authenticateCashier, asyncHandler(customCakeController.getApprovedOrders));
+router.get('/cashier/custom-cakes/approved', cacheMiddleware(CacheTTL.SHORT), authenticateCashier, asyncHandler(customCakeController.getApprovedOrders));
 router.post('/cashier/custom-cakes/:requestId/process-payment', authenticateCashier, asyncHandler(customCakeController.processPayment));
+
+// Cashier - Discounts
+router.get('/cashier/discounts', cacheMiddleware(CacheTTL.LONG), authenticateCashier, asyncHandler(discountController.getActiveDiscountTypes));
 
 // ==== ADMIN ROUTES ====
 
 // Menu Management
-router.get('/admin/menu', authenticateAdmin, asyncHandler(adminController.getAllMenuItems));
+router.get('/admin/menu', cacheMiddleware(CacheTTL.MEDIUM), authenticateAdmin, asyncHandler(adminController.getAllMenuItems));
 
 router.post(
   '/admin/menu',
@@ -476,7 +485,7 @@ router.delete('/admin/menu/:id', authenticateAdmin, asyncHandler(adminController
 router.post('/admin/menu/prices', authenticateAdmin, asyncHandler(adminController.addItemPrice));
 
 // Categories
-router.get('/admin/categories', authenticateAdmin, asyncHandler(adminController.getAllCategories));
+router.get('/admin/categories', cacheMiddleware(CacheTTL.LONG), authenticateAdmin, asyncHandler(adminController.getAllCategories));
 
 router.post(
   '/admin/categories',
@@ -491,10 +500,10 @@ router.post('/admin/categories/assign', authenticateAdmin, asyncHandler(adminCon
 router.post('/admin/categories/unassign', authenticateAdmin, asyncHandler(adminController.unassignItemFromCategory));
 
 // Inventory
-router.get('/admin/inventory/alerts', authenticateAdmin, asyncHandler(adminController.getInventoryAlerts));
+router.get('/admin/inventory/alerts', cacheMiddleware(CacheTTL.SHORT), authenticateAdmin, asyncHandler(adminController.getInventoryAlerts));
 router.patch('/admin/inventory/alerts/:id/acknowledge', authenticateAdmin, asyncHandler(adminController.acknowledgeAlert));
 router.post('/admin/inventory/adjust', authenticateAdmin, asyncHandler(adminController.adjustInventory));
-router.get('/admin/inventory/transactions', authenticateAdmin, asyncHandler(adminController.getInventoryTransactions));
+router.get('/admin/inventory/transactions', cacheMiddleware(CacheTTL.MEDIUM), authenticateAdmin, asyncHandler(adminController.getInventoryTransactions));
 
 // Stock Adjustment Reasons
 router.get('/admin/inventory/reasons', authenticateAdmin, asyncHandler(additionalController.getStockReasons));
@@ -512,8 +521,8 @@ router.get('/admin/stats/popularity-history', authenticateAdmin, asyncHandler(ad
 
 // Promotions
 router.post('/admin/promotions', authenticateAdmin, asyncHandler(adminController.createPromotion));
-router.get('/admin/promotions', authenticateAdmin, asyncHandler(adminController.getPromotions));
-router.get('/admin/promotions/:id', authenticateAdmin, asyncHandler(adminController.getPromotionById));
+router.get('/admin/promotions', cacheMiddleware(CacheTTL.MEDIUM), authenticateAdmin, asyncHandler(adminController.getPromotions));
+router.get('/admin/promotions/:id', cacheMiddleware(CacheTTL.MEDIUM), authenticateAdmin, asyncHandler(adminController.getPromotionById));
 router.put('/admin/promotions/:id', authenticateAdmin, asyncHandler(promotionController.updatePromotion));
 router.delete('/admin/promotions/:id', authenticateAdmin, asyncHandler(promotionController.deletePromotion));
 
@@ -525,9 +534,9 @@ router.get('/admin/promotions/:id/usage', authenticateAdmin, asyncHandler(promot
 router.get('/admin/promotions/applicable', authenticateAdmin, asyncHandler(promotionController.getApplicablePromotions));
 
 // Customer Discounts (Student, Senior, etc.)
-router.get('/admin/discounts', authenticateAdmin, asyncHandler(discountController.getDiscountTypes));
-router.get('/admin/discounts/stats', authenticateAdmin, asyncHandler(discountController.getDiscountStats));
-router.get('/admin/discounts/:id', authenticateAdmin, asyncHandler(discountController.getDiscountTypeById));
+router.get('/admin/discounts', cacheMiddleware(CacheTTL.LONG), authenticateAdmin, asyncHandler(discountController.getDiscountTypes));
+router.get('/admin/discounts/stats', cacheMiddleware(CacheTTL.MEDIUM), authenticateAdmin, asyncHandler(discountController.getDiscountStats));
+router.get('/admin/discounts/:id', cacheMiddleware(CacheTTL.LONG), authenticateAdmin, asyncHandler(discountController.getDiscountTypeById));
 router.post('/admin/discounts', authenticateAdmin, asyncHandler(discountController.createDiscountType));
 router.put('/admin/discounts/:id', authenticateAdmin, asyncHandler(discountController.updateDiscountType));
 router.delete('/admin/discounts/:id', authenticateAdmin, asyncHandler(discountController.deleteDiscountType));
@@ -576,23 +585,23 @@ router.put('/admin/tax-rules/:id', authenticateAdmin, asyncHandler(additionalCon
 // Cake Customization Management
 // Flavors
 router.post('/admin/cake/flavors', authenticateAdmin, uploadProductImage.single('image'), asyncHandler(additionalController.createFlavor));
-router.get('/admin/cake/flavors', authenticateAdmin, asyncHandler(additionalController.getFlavors));
+router.get('/admin/cake/flavors', cacheMiddleware(CacheTTL.VERY_LONG), authenticateAdmin, asyncHandler(additionalController.getFlavors));
 router.put('/admin/cake/flavors/:id', authenticateAdmin, uploadProductImage.single('image'), asyncHandler(additionalController.updateFlavor));
 
 // Sizes
 router.post('/admin/cake/sizes', authenticateAdmin, asyncHandler(additionalController.createSize));
-router.get('/admin/cake/sizes', authenticateAdmin, asyncHandler(additionalController.getSizes));
+router.get('/admin/cake/sizes', cacheMiddleware(CacheTTL.VERY_LONG), authenticateAdmin, asyncHandler(additionalController.getSizes));
 router.put('/admin/cake/sizes/:id', authenticateAdmin, asyncHandler(additionalController.updateSize));
 
 // Themes
 router.post('/admin/cake/themes', authenticateAdmin, uploadProductImage.single('image'), asyncHandler(additionalController.createTheme));
-router.get('/admin/cake/themes', authenticateAdmin, asyncHandler(additionalController.getThemes));
+router.get('/admin/cake/themes', cacheMiddleware(CacheTTL.VERY_LONG), authenticateAdmin, asyncHandler(additionalController.getThemes));
 router.put('/admin/cake/themes/:id', authenticateAdmin, uploadProductImage.single('image'), asyncHandler(additionalController.updateTheme));
 
 // Custom Cake Requests Management
-router.get('/admin/custom-cakes/pending', authenticateAdmin, asyncHandler(customCakeController.getPendingRequests));
-router.get('/admin/custom-cakes/all', authenticateAdmin, asyncHandler(customCakeController.getAllRequests));
-router.get('/admin/custom-cakes/:requestId', authenticateAdmin, asyncHandler(customCakeController.getRequestDetails));
+router.get('/admin/custom-cakes/pending', cacheMiddleware(CacheTTL.SHORT), authenticateAdmin, asyncHandler(customCakeController.getPendingRequests));
+router.get('/admin/custom-cakes/all', cacheMiddleware(CacheTTL.SHORT), authenticateAdmin, asyncHandler(customCakeController.getAllRequests));
+router.get('/admin/custom-cakes/:requestId', conditionalRequest(), authenticateAdmin, asyncHandler(customCakeController.getRequestDetails));
 router.post('/admin/custom-cakes/:requestId/approve', authenticateAdmin, asyncHandler(customCakeController.approveRequest));
 router.post('/admin/custom-cakes/:requestId/reject', authenticateAdmin, asyncHandler(customCakeController.rejectRequest));
 

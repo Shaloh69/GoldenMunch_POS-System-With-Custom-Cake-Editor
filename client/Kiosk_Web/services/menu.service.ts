@@ -19,10 +19,8 @@ export class MenuService {
    */
   static async getMenuItems(params?: MenuQueryParams): Promise<MenuItem[]> {
     try {
-      const cacheBustTimestamp = Date.now();
       console.log("📋 MenuService.getMenuItems() called", {
         params,
-        cacheBustTimestamp,
         timestamp: new Date().toISOString(),
       });
 
@@ -32,7 +30,6 @@ export class MenuService {
           params: {
             ...params,
             is_featured: params?.is_featured ? "true" : undefined,
-            _t: cacheBustTimestamp, // Cache-busting timestamp
           },
         },
       );
@@ -62,10 +59,7 @@ export class MenuService {
     try {
       const response = await apiClient.get<
         ApiResponse<MenuItemWithCustomization>
-      >(
-        `/kiosk/menu/${id}`,
-        { params: { _t: Date.now() } }, // Cache-busting timestamp
-      );
+      >(`/kiosk/menu/${id}`);
       if (!response.data.data) {
         throw new Error("Item not found");
       }
@@ -81,17 +75,12 @@ export class MenuService {
    */
   static async getCategories(): Promise<Category[]> {
     try {
-      const cacheBustTimestamp = Date.now();
       console.log("📂 MenuService.getCategories() called", {
-        cacheBustTimestamp,
         timestamp: new Date().toISOString(),
       });
 
       const response = await apiClient.get<ApiResponse<Category[]>>(
-        "/kiosk/categories",
-        {
-          params: { _t: cacheBustTimestamp }, // Cache-busting timestamp
-        },
+        "/kiosk/categories"
       );
 
       const categories = response.data.data || [];
@@ -117,10 +106,7 @@ export class MenuService {
   static async getActivePromotions(): Promise<PromotionRule[]> {
     try {
       const response = await apiClient.get<ApiResponse<PromotionRule[]>>(
-        "/kiosk/promotions",
-        {
-          params: { _t: Date.now() }, // Cache-busting timestamp
-        },
+        "/kiosk/promotions"
       );
       return response.data.data || [];
     } catch (error) {
