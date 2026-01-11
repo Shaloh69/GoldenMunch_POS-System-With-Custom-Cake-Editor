@@ -19,6 +19,7 @@ import * as promotionController from '../controllers/promotion.controller';
 import * as discountController from '../controllers/discount.controller';
 import * as customCakeSessionController from '../controllers/customCakeSession.controller';
 import * as customCakeController from '../controllers/customCake.controller';
+import * as customCakeMessageController from '../controllers/customCakeMessage.controller';
 import * as paymentQRController from '../controllers/paymentQR.controller';
 import * as capacityController from '../controllers/capacity.controller';
 import * as sseController from '../controllers/sse.controller';
@@ -613,6 +614,16 @@ router.get('/admin/custom-cakes/all', cacheMiddleware(CacheTTL.SHORT), authentic
 router.get('/admin/custom-cakes/:requestId', conditionalRequest(), authenticateAdmin, asyncHandler(customCakeController.getRequestDetails));
 router.post('/admin/custom-cakes/:requestId/approve', authenticateAdmin, asyncHandler(customCakeController.approveRequest));
 router.post('/admin/custom-cakes/:requestId/reject', authenticateAdmin, asyncHandler(customCakeController.rejectRequest));
+
+// Custom Cake Messaging (Admin/Cashier)
+router.get('/admin/custom-cakes/messages/unread-count', authenticateAdmin, asyncHandler(customCakeMessageController.getUnreadMessageCount));
+router.get('/admin/custom-cakes/:requestId/messages', authenticateAdmin, asyncHandler(customCakeMessageController.getMessagesByRequest));
+router.post('/admin/custom-cakes/:requestId/messages', authenticateAdmin, asyncHandler(customCakeMessageController.sendAdminMessage));
+router.put('/admin/custom-cakes/:requestId/messages/mark-read', authenticateAdmin, asyncHandler(customCakeMessageController.markMessagesAsRead));
+
+// Custom Cake Messaging (Customer-facing)
+router.get('/custom-cake/messages/:requestId', asyncHandler(customCakeMessageController.getCustomerMessages));
+router.post('/custom-cake/messages/:requestId/reply', asyncHandler(customCakeMessageController.sendCustomerReply));
 
 // Capacity Management (Admin)
 router.get('/admin/capacity/available-dates', authenticateAdmin, asyncHandler(capacityController.getAvailableDates));

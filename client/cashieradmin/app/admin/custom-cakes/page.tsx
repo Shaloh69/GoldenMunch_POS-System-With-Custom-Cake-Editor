@@ -42,6 +42,7 @@ import {
   type ApproveCustomCakeData,
   type RejectCustomCakeData,
 } from "@/services/customCakeRequest.service";
+import { MessagingPanel } from "@/components/MessagingPanel";
 
 // Stats Interface
 interface CustomCakeStats {
@@ -862,6 +863,15 @@ export default function CustomCakesPage() {
                       </p>
                     </div>
                   )}
+                </div>
+
+                {/* Messaging Panel */}
+                <Divider className="my-6" />
+                <div className="mt-6">
+                  <MessagingPanel
+                    requestId={requestDetails.request.request_id}
+                    customerName={requestDetails.request.customer_name}
+                  />
                 </div>
               </div>
             ) : (

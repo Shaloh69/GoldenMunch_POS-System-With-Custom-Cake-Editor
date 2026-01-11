@@ -278,6 +278,8 @@ export const SSEEvents = {
   CUSTOM_CAKE_APPROVED: 'custom_cake.approved',
   CUSTOM_CAKE_REJECTED: 'custom_cake.rejected',
   CUSTOM_CAKE_COMPLETED: 'custom_cake.completed',
+  CUSTOM_CAKE_MESSAGE_RECEIVED: 'custom_cake.message_received',
+  CUSTOM_CAKE_MESSAGES_READ: 'custom_cake.messages_read',
 
   // Generic events
   NOTIFICATION: 'notification',
