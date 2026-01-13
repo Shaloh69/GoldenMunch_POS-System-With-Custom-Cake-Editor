@@ -30,7 +30,6 @@ export const initRedis = async (): Promise<void> => {
         url: redisUrl,
         socket: {
           connectTimeout: 10000, // 10 second timeout
-          keepAlive: 30000,
           reconnectStrategy: (retries) => {
             // Stop reconnecting after 3 attempts to prevent blocking
             if (retries > 3) {
@@ -53,7 +52,6 @@ export const initRedis = async (): Promise<void> => {
           host: process.env.REDIS_HOST || 'localhost',
           port: parseInt(process.env.REDIS_PORT || '6379', 10),
           connectTimeout: 10000, // 10 second timeout
-          keepAlive: 30000,
           reconnectStrategy: (retries) => {
             if (retries > 3) {
               logger.error('Redis reconnection failed after 3 attempts, disabling Redis');
