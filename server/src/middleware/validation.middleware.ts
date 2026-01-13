@@ -159,14 +159,22 @@ export const schemas = {
     item_type: Joi.string()
       .valid(...ENUMS.item_type)
       .optional(),
+    unit_of_measure: Joi.string()
+      .valid(...ENUMS.unit_of_measure)
+      .optional(),
     stock_quantity: Joi.number().min(0).optional(),
+    is_infinite_stock: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
+    min_stock_level: Joi.number().min(0).optional(),
     status: Joi.string()
       .valid(...ENUMS.menu_status)
       .optional(),
-    is_featured: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
-    is_infinite_stock: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
     can_customize: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
     can_preorder: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
+    preparation_time_minutes: Joi.number().min(0).optional(),
+    supplier_id: Joi.number().optional(),
+    is_featured: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
+    allergen_info: Joi.string().optional().allow(''),
+    nutritional_info: Joi.string().optional().allow(''),
   }),
 
   // Feedback schema
