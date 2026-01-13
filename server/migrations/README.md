@@ -4,12 +4,18 @@ This directory contains SQL migration scripts for the GoldenMunch POS system.
 
 ## How to Run Migrations
 
-### Option 1: Using MySQL CLI
+### Option 1: Using the Node.js script (Recommended)
+```bash
+cd server
+node scripts/run-messaging-migration.js
+```
+
+### Option 2: Using MySQL CLI
 ```bash
 mysql -u your_username -p your_database_name < migrations/add_messaging_support.sql
 ```
 
-### Option 2: Using a MySQL client
+### Option 3: Using a MySQL client
 1. Open your MySQL client (MySQL Workbench, phpMyAdmin, etc.)
 2. Connect to your database
 3. Execute the SQL file: `migrations/add_messaging_support.sql`
