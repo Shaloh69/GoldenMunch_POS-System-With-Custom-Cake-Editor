@@ -2,11 +2,15 @@
 -- This enables threaded conversations between customers and admin
 
 -- Drop stored procedure if it exists
-DROP PROCEDURE IF EXISTS add_messaging_columns;
+DROP PROCEDURE IF EXISTS add_messaging_support;
 
 DELIMITER //
-CREATE PROCEDURE add_messaging_columns()
+CREATE PROCEDURE add_messaging_support()
 BEGIN
+    DECLARE CONTINUE HANDLER FOR SQLSTATE '42S21' BEGIN END; -- Duplicate column
+    DECLARE CONTINUE HANDLER FOR SQLSTATE '42000' BEGIN END; -- Syntax or access error
+    DECLARE CONTINUE HANDLER FOR SQLSTATE 'HY000' BEGIN END; -- General error (for duplicate keys)
+
     -- Check and add sender_type column
     IF NOT EXISTS (
         SELECT 1 FROM information_schema.COLUMNS
@@ -74,19 +78,45 @@ BEGIN
         FOREIGN KEY (parent_notification_id) REFERENCES custom_cake_notifications(notification_id)
         ON DELETE CASCADE;
     END IF;
+
+    -- Add indexes for efficient querying
+    -- Check and create idx_request_sender
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.STATISTICS
+        WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'custom_cake_notifications'
+        AND INDEX_NAME = 'idx_request_sender'
+    ) THEN
+        CREATE INDEX idx_request_sender ON custom_cake_notifications(request_id, sender_type);
+    END IF;
+
+    -- Check and create idx_request_unread
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.STATISTICS
+        WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'custom_cake_notifications'
+        AND INDEX_NAME = 'idx_request_unread'
+    ) THEN
+        CREATE INDEX idx_request_unread ON custom_cake_notifications(request_id, is_read);
+    END IF;
+
+    -- Check and create idx_parent_notification
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.STATISTICS
+        WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'custom_cake_notifications'
+        AND INDEX_NAME = 'idx_parent_notification'
+    ) THEN
+        CREATE INDEX idx_parent_notification ON custom_cake_notifications(parent_notification_id);
+    END IF;
 END//
 DELIMITER ;
 
 -- Execute the procedure
-CALL add_messaging_columns();
+CALL add_messaging_support();
 
 -- Drop the procedure after use
-DROP PROCEDURE IF EXISTS add_messaging_columns;
-
--- Add indexes for efficient querying
-CREATE INDEX IF NOT EXISTS idx_request_sender ON custom_cake_notifications(request_id, sender_type);
-CREATE INDEX IF NOT EXISTS idx_request_unread ON custom_cake_notifications(request_id, is_read);
-CREATE INDEX IF NOT EXISTS idx_parent_notification ON custom_cake_notifications(parent_notification_id);
+DROP PROCEDURE IF EXISTS add_messaging_support;
 
 -- Update existing notifications to have sender_type = 'system'
 UPDATE custom_cake_notifications
