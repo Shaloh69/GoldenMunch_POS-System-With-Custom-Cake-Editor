@@ -26,10 +26,13 @@ const imageFilter = (_req: any, file: Express.Multer.File, cb: multer.FileFilter
 
 // Multer configurations using memory storage
 // All files are uploaded to Supabase Storage instead of local disk
+// Trim MAX_FILE_SIZE to prevent parsing errors from whitespace
+const maxFileSize = parseInt((process.env.MAX_FILE_SIZE || '10485760').trim()); // 10MB default
+
 export const uploadQRCode = multer({
   storage: memoryStorage,
   limits: {
-    fileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760') // 10MB default
+    fileSize: maxFileSize
   },
   fileFilter: imageFilter
 });
@@ -37,7 +40,7 @@ export const uploadQRCode = multer({
 export const uploadProductImage = multer({
   storage: memoryStorage,
   limits: {
-    fileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760')
+    fileSize: maxFileSize
   },
   fileFilter: imageFilter
 });
@@ -46,7 +49,7 @@ export const uploadProductImage = multer({
 export const uploadMultipleProducts = multer({
   storage: memoryStorage,
   limits: {
-    fileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760'),
+    fileSize: maxFileSize,
     files: 5 // Maximum 5 files
   },
   fileFilter: imageFilter
@@ -56,7 +59,7 @@ export const uploadMultipleProducts = multer({
 export const uploadPaymentQR = multer({
   storage: memoryStorage,
   limits: {
-    fileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760')
+    fileSize: maxFileSize
   },
   fileFilter: imageFilter
 });
