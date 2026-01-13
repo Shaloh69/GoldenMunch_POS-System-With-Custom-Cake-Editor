@@ -1,19 +1,87 @@
 -- Migration: Add messaging support to custom_cake_notifications table
 -- This enables threaded conversations between customers and admin
 
--- Add new columns to support threaded messaging
-ALTER TABLE custom_cake_notifications
-ADD COLUMN IF NOT EXISTS sender_type ENUM('customer', 'admin', 'system') DEFAULT 'system' AFTER notification_type,
-ADD COLUMN IF NOT EXISTS parent_notification_id INT NULL AFTER notification_id,
-ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT FALSE AFTER status,
-ADD COLUMN IF NOT EXISTS read_at TIMESTAMP NULL AFTER sent_at,
-ADD COLUMN IF NOT EXISTS sender_name VARCHAR(255) NULL AFTER sender_type;
+-- Drop stored procedure if it exists
+DROP PROCEDURE IF EXISTS add_messaging_columns;
 
--- Add foreign key constraint for threaded replies
-ALTER TABLE custom_cake_notifications
-ADD CONSTRAINT fk_parent_notification
-FOREIGN KEY (parent_notification_id) REFERENCES custom_cake_notifications(notification_id)
-ON DELETE CASCADE;
+DELIMITER //
+CREATE PROCEDURE add_messaging_columns()
+BEGIN
+    -- Check and add sender_type column
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'custom_cake_notifications'
+        AND COLUMN_NAME = 'sender_type'
+    ) THEN
+        ALTER TABLE custom_cake_notifications
+        ADD COLUMN sender_type ENUM('customer', 'admin', 'system') DEFAULT 'system' AFTER notification_type;
+    END IF;
+
+    -- Check and add parent_notification_id column
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'custom_cake_notifications'
+        AND COLUMN_NAME = 'parent_notification_id'
+    ) THEN
+        ALTER TABLE custom_cake_notifications
+        ADD COLUMN parent_notification_id INT NULL AFTER notification_id;
+    END IF;
+
+    -- Check and add is_read column
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'custom_cake_notifications'
+        AND COLUMN_NAME = 'is_read'
+    ) THEN
+        ALTER TABLE custom_cake_notifications
+        ADD COLUMN is_read BOOLEAN DEFAULT FALSE AFTER status;
+    END IF;
+
+    -- Check and add read_at column
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'custom_cake_notifications'
+        AND COLUMN_NAME = 'read_at'
+    ) THEN
+        ALTER TABLE custom_cake_notifications
+        ADD COLUMN read_at TIMESTAMP NULL AFTER sent_at;
+    END IF;
+
+    -- Check and add sender_name column
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.COLUMNS
+        WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'custom_cake_notifications'
+        AND COLUMN_NAME = 'sender_name'
+    ) THEN
+        ALTER TABLE custom_cake_notifications
+        ADD COLUMN sender_name VARCHAR(255) NULL AFTER sender_type;
+    END IF;
+
+    -- Add foreign key constraint if it doesn't exist
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.TABLE_CONSTRAINTS
+        WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME = 'custom_cake_notifications'
+        AND CONSTRAINT_NAME = 'fk_parent_notification'
+    ) THEN
+        ALTER TABLE custom_cake_notifications
+        ADD CONSTRAINT fk_parent_notification
+        FOREIGN KEY (parent_notification_id) REFERENCES custom_cake_notifications(notification_id)
+        ON DELETE CASCADE;
+    END IF;
+END//
+DELIMITER ;
+
+-- Execute the procedure
+CALL add_messaging_columns();
+
+-- Drop the procedure after use
+DROP PROCEDURE IF EXISTS add_messaging_columns;
 
 -- Add indexes for efficient querying
 CREATE INDEX IF NOT EXISTS idx_request_sender ON custom_cake_notifications(request_id, sender_type);
