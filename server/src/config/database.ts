@@ -4,12 +4,13 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 // Database connection pool configuration
+// Trim all environment variables to prevent DNS errors from trailing whitespace/newlines
 const dbConfig: mysql.PoolOptions = {
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '3306'),
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'GoldenMunchPOS',
+  host: (process.env.DB_HOST || 'localhost').trim(),
+  port: parseInt((process.env.DB_PORT || '3306').trim()),
+  user: (process.env.DB_USER || 'root').trim(),
+  password: (process.env.DB_PASSWORD || '').trim(),
+  database: (process.env.DB_NAME || 'GoldenMunchPOS').trim(),
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -18,8 +19,8 @@ const dbConfig: mysql.PoolOptions = {
   // SSL Configuration for cloud databases (Aiven, AWS RDS, etc.)
   // Only enable SSL if DB_SSL environment variable is set to 'true'
   // Set DB_SSL_REJECT_UNAUTHORIZED=true to enforce strict certificate validation
-  ssl: process.env.DB_SSL === 'true' ? {
-    rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true',
+  ssl: process.env.DB_SSL?.trim() === 'true' ? {
+    rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED?.trim() === 'true',
   } : undefined,
 };
 

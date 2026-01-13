@@ -1,12 +1,19 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Validate environment variables
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+// Trim to remove any trailing whitespace or newlines that could cause DNS errors
+const supabaseUrl = process.env.SUPABASE_URL?.trim();
+const supabaseKey = process.env.SUPABASE_SERVICE_KEY?.trim();
 
 if (!supabaseUrl || !supabaseKey) {
   console.error('Missing Supabase configuration. Please set SUPABASE_URL and SUPABASE_SERVICE_KEY in environment variables.');
   console.error('You can get these from: https://app.supabase.com/project/_/settings/api');
+}
+
+// Log config for debugging (hide key for security)
+if (supabaseUrl) {
+  console.log(`📦 Supabase URL: ${supabaseUrl}`);
+  console.log(`📦 Supabase Key: ${supabaseKey ? '***' + supabaseKey.slice(-8) : 'missing'}`);
 }
 
 // Create Supabase client for storage operations
