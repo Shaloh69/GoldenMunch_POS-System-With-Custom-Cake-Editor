@@ -159,14 +159,22 @@ export const schemas = {
     item_type: Joi.string()
       .valid(...ENUMS.item_type)
       .optional(),
+    unit_of_measure: Joi.string()
+      .valid(...ENUMS.unit_of_measure)
+      .optional(),
     stock_quantity: Joi.number().min(0).optional(),
+    is_infinite_stock: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
+    min_stock_level: Joi.number().min(0).optional(),
     status: Joi.string()
       .valid(...ENUMS.menu_status)
       .optional(),
-    is_featured: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
-    is_infinite_stock: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
     can_customize: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
     can_preorder: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
+    preparation_time_minutes: Joi.number().min(0).optional(),
+    supplier_id: Joi.number().optional(),
+    is_featured: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
+    allergen_info: Joi.string().optional().allow(''),
+    nutritional_info: Joi.string().optional().allow(''),
   }),
 
   // Feedback schema
@@ -187,6 +195,91 @@ export const schemas = {
     phone: Joi.string().pattern(/^(\+63|0)?9\d{9}$/).required(),
     email: Joi.string().email().optional(),
     date_of_birth: Joi.date().optional(),
+  }),
+
+  updateCustomer: Joi.object({
+    name: Joi.string().optional(),
+    phone: Joi.string().pattern(/^(\+63|0)?9\d{9}$/).optional(),
+    email: Joi.string().email().optional().allow(''),
+    address: Joi.string().optional().allow(''),
+    notes: Joi.string().optional().allow(''),
+    is_active: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
+  }),
+
+  // Category schemas
+  updateCategory: Joi.object({
+    name: Joi.string().optional(),
+    description: Joi.string().optional().allow(''),
+    display_order: Joi.number().min(0).optional(),
+    is_active: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
+  }),
+
+  // Supplier schemas
+  updateSupplier: Joi.object({
+    supplier_name: Joi.string().optional(),
+    contact_person: Joi.string().optional().allow(''),
+    phone: Joi.string().optional().allow(''),
+    email: Joi.string().email().optional().allow(''),
+    address: Joi.string().optional().allow(''),
+    is_active: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
+  }),
+
+  // Cashier schemas
+  updateCashier: Joi.object({
+    name: Joi.string().optional(),
+    cashier_code: Joi.string().optional(),
+    pin: Joi.string().length(4).optional(),
+    phone: Joi.string().optional().allow(''),
+    email: Joi.string().email().optional().allow(''),
+    hire_date: Joi.date().optional(),
+    hourly_rate: Joi.number().min(0).optional(),
+    is_active: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
+  }),
+
+  // Tax Rule schemas
+  updateTaxRule: Joi.object({
+    tax_name: Joi.string().optional(),
+    tax_type: Joi.string()
+      .valid(...ENUMS.tax_type)
+      .optional(),
+    tax_rate: Joi.number().min(0).max(100).optional(),
+    is_inclusive: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
+    applicable_to: Joi.string().optional().allow(''),
+    is_active: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
+    start_date: Joi.date().optional(),
+    end_date: Joi.date().optional(),
+  }),
+
+  // Order status update
+  updateOrderStatus: Joi.object({
+    order_status: Joi.string()
+      .valid(...ENUMS.order_status)
+      .required(),
+    notes: Joi.string().optional().allow(''),
+  }),
+
+  // Admin password/username update
+  updateAdminUsername: Joi.object({
+    new_username: Joi.string().min(3).max(50).required(),
+    current_password: Joi.string().required(),
+  }),
+
+  updateAdminPassword: Joi.object({
+    current_password: Joi.string().required(),
+    new_password: Joi.string().min(8).required(),
+    confirm_password: Joi.string().valid(Joi.ref('new_password')).required()
+      .messages({ 'any.only': 'Passwords must match' }),
+  }),
+
+  // Inventory adjustment
+  adjustInventory: Joi.object({
+    menu_item_id: Joi.number().required(),
+    quantity: Joi.number().min(1).required(),
+    transaction_type: Joi.string()
+      .valid(...ENUMS.transaction_type)
+      .required(),
+    reason_id: Joi.number().optional(),
+    notes: Joi.string().optional().allow(''),
   }),
 
   // Pagination schema
