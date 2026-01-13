@@ -471,7 +471,8 @@ router.get('/cashier/discounts', cacheMiddleware(CacheTTL.LONG), authenticateCas
 // ==== ADMIN ROUTES ====
 
 // Menu Management
-router.get('/admin/menu', cacheMiddleware(CacheTTL.MEDIUM), authenticateAdmin, asyncHandler(adminController.getAllMenuItems));
+// Note: No caching for admin menu - admins need real-time data for stock updates
+router.get('/admin/menu', authenticateAdmin, asyncHandler(adminController.getAllMenuItems));
 
 router.post(
   '/admin/menu',
@@ -495,7 +496,8 @@ router.delete('/admin/menu/:id', authenticateAdmin, asyncHandler(adminController
 router.post('/admin/menu/prices', authenticateAdmin, asyncHandler(adminController.addItemPrice));
 
 // Categories
-router.get('/admin/categories', cacheMiddleware(CacheTTL.LONG), authenticateAdmin, asyncHandler(adminController.getAllCategories));
+// Note: No caching for admin categories - admins need real-time data
+router.get('/admin/categories', authenticateAdmin, asyncHandler(adminController.getAllCategories));
 
 router.post(
   '/admin/categories',
@@ -510,7 +512,8 @@ router.post('/admin/categories/assign', authenticateAdmin, asyncHandler(adminCon
 router.post('/admin/categories/unassign', authenticateAdmin, asyncHandler(adminController.unassignItemFromCategory));
 
 // Inventory
-router.get('/admin/inventory/alerts', cacheMiddleware(CacheTTL.SHORT), authenticateAdmin, asyncHandler(adminController.getInventoryAlerts));
+// Note: No caching for inventory alerts - need real-time stock alerts
+router.get('/admin/inventory/alerts', authenticateAdmin, asyncHandler(adminController.getInventoryAlerts));
 router.patch('/admin/inventory/alerts/:id/acknowledge', authenticateAdmin, asyncHandler(adminController.acknowledgeAlert));
 router.post('/admin/inventory/adjust', authenticateAdmin, asyncHandler(adminController.adjustInventory));
 router.get('/admin/inventory/transactions', cacheMiddleware(CacheTTL.MEDIUM), authenticateAdmin, asyncHandler(adminController.getInventoryTransactions));
@@ -530,9 +533,10 @@ router.get('/admin/stats/daily', authenticateAdmin, asyncHandler(additionalContr
 router.get('/admin/stats/popularity-history', authenticateAdmin, asyncHandler(additionalController.getPopularityHistory));
 
 // Promotions
+// Note: No caching for admin promotions - need real-time updates
 router.post('/admin/promotions', authenticateAdmin, asyncHandler(adminController.createPromotion));
-router.get('/admin/promotions', cacheMiddleware(CacheTTL.MEDIUM), authenticateAdmin, asyncHandler(adminController.getPromotions));
-router.get('/admin/promotions/:id', cacheMiddleware(CacheTTL.MEDIUM), authenticateAdmin, asyncHandler(adminController.getPromotionById));
+router.get('/admin/promotions', authenticateAdmin, asyncHandler(adminController.getPromotions));
+router.get('/admin/promotions/:id', authenticateAdmin, asyncHandler(adminController.getPromotionById));
 router.put('/admin/promotions/:id', authenticateAdmin, asyncHandler(promotionController.updatePromotion));
 router.delete('/admin/promotions/:id', authenticateAdmin, asyncHandler(promotionController.deletePromotion));
 
@@ -609,8 +613,9 @@ router.get('/admin/cake/themes', cacheMiddleware(CacheTTL.VERY_LONG), authentica
 router.put('/admin/cake/themes/:id', authenticateAdmin, uploadProductImage.single('image'), asyncHandler(additionalController.updateTheme));
 
 // Custom Cake Requests Management
-router.get('/admin/custom-cakes/pending', cacheMiddleware(CacheTTL.SHORT), authenticateAdmin, asyncHandler(customCakeController.getPendingRequests));
-router.get('/admin/custom-cakes/all', cacheMiddleware(CacheTTL.SHORT), authenticateAdmin, asyncHandler(customCakeController.getAllRequests));
+// Note: No caching for custom cake requests - need real-time order updates
+router.get('/admin/custom-cakes/pending', authenticateAdmin, asyncHandler(customCakeController.getPendingRequests));
+router.get('/admin/custom-cakes/all', authenticateAdmin, asyncHandler(customCakeController.getAllRequests));
 router.get('/admin/custom-cakes/:requestId', conditionalRequest(), authenticateAdmin, asyncHandler(customCakeController.getRequestDetails));
 router.post('/admin/custom-cakes/:requestId/approve', authenticateAdmin, asyncHandler(customCakeController.approveRequest));
 router.post('/admin/custom-cakes/:requestId/reject', authenticateAdmin, asyncHandler(customCakeController.rejectRequest));
