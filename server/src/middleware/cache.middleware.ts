@@ -132,48 +132,55 @@ export const autoInvalidateCache = () => {
         const patterns: string[] = [];
 
         // Determine which cache patterns to invalidate based on route
+        // IMPORTANT: Cache keys include /api/ prefix, so patterns must match that
         if (path.includes('/menu')) {
-          patterns.push('cache:*/kiosk/menu*');
-          patterns.push('cache:*/admin/menu*');
+          patterns.push('cache:/api/kiosk/menu*');
+          patterns.push('cache:/api/admin/menu*');
           patterns.push('menu:*');
         }
 
         if (path.includes('/categories')) {
-          patterns.push('cache:*/kiosk/categories*');
-          patterns.push('cache:*/admin/categories*');
+          patterns.push('cache:/api/kiosk/categories*');
+          patterns.push('cache:/api/admin/categories*');
           patterns.push('menu:categories*');
         }
 
         if (path.includes('/order')) {
-          patterns.push('cache:*/orders*');
-          patterns.push('cache:*/cashier/orders*');
-          patterns.push('cache:*/admin/orders*');
+          patterns.push('cache:/api/kiosk/orders*');
+          patterns.push('cache:/api/cashier/orders*');
+          patterns.push('cache:/api/admin/orders*');
           patterns.push('orders:*');
         }
 
         if (path.includes('/promotion')) {
-          patterns.push('cache:*/kiosk/promotions*');
-          patterns.push('cache:*/admin/promotions*');
+          patterns.push('cache:/api/kiosk/promotions*');
+          patterns.push('cache:/api/admin/promotions*');
           patterns.push('menu:promotions*');
         }
 
         if (path.includes('/inventory')) {
-          patterns.push('cache:*/admin/inventory*');
+          patterns.push('cache:/api/admin/inventory*');
           patterns.push('inventory:*');
         }
 
         if (path.includes('/discount')) {
-          patterns.push('cache:*/discounts*');
+          patterns.push('cache:/api/kiosk/discounts*');
+          patterns.push('cache:/api/cashier/discounts*');
+          patterns.push('cache:/api/admin/discounts*');
           patterns.push('discounts:*');
         }
 
         if (path.includes('/cake')) {
-          patterns.push('cache:*/cake/*');
+          patterns.push('cache:/api/kiosk/cake/*');
+          patterns.push('cache:/api/cashier/cake/*');
+          patterns.push('cache:/api/admin/cake/*');
           patterns.push('cake:*');
         }
 
         if (path.includes('/capacity')) {
-          patterns.push('cache:*/capacity*');
+          patterns.push('cache:/api/kiosk/capacity*');
+          patterns.push('cache:/api/cashier/capacity*');
+          patterns.push('cache:/api/admin/capacity*');
           patterns.push('capacity:*');
         }
 
