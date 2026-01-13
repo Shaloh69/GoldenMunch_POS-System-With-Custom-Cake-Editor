@@ -19,7 +19,7 @@ export const initRedis = async (): Promise<void> => {
 
   try {
     // Check if REDIS_URL is provided (for cloud providers like Render, Heroku, Redis Cloud)
-    const redisUrl = process.env.REDIS_URL;
+    const redisUrl = process.env.REDIS_URL?.trim();
 
     if (redisUrl) {
       // Use connection URL
@@ -47,10 +47,19 @@ export const initRedis = async (): Promise<void> => {
       logger.info('📦 Connecting to Redis using host/port configuration...');
       const useTLS = process.env.REDIS_TLS === 'true';
 
+      // Trim all environment variables to remove whitespace/newlines
+      const host = (process.env.REDIS_HOST || 'localhost').trim();
+      const port = parseInt((process.env.REDIS_PORT || '6379').trim(), 10);
+      const username = process.env.REDIS_USERNAME?.trim();
+      const password = process.env.REDIS_PASSWORD?.trim();
+      const database = parseInt((process.env.REDIS_DB || '0').trim(), 10);
+
+      logger.info(`📦 Redis config: host="${host}", port=${port}, username="${username}"`);
+
       redisClient = createClient({
         socket: {
-          host: process.env.REDIS_HOST || 'localhost',
-          port: parseInt(process.env.REDIS_PORT || '6379', 10),
+          host,
+          port,
           connectTimeout: 10000, // 10 second timeout
           reconnectStrategy: (retries) => {
             if (retries > 3) {
@@ -65,9 +74,9 @@ export const initRedis = async (): Promise<void> => {
             rejectUnauthorized: false, // For self-signed certificates
           }),
         },
-        username: process.env.REDIS_USERNAME || undefined,
-        password: process.env.REDIS_PASSWORD || undefined,
-        database: parseInt(process.env.REDIS_DB || '0', 10),
+        username: username || undefined,
+        password: password || undefined,
+        database,
       });
     }
 
