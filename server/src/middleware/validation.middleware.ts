@@ -197,6 +197,91 @@ export const schemas = {
     date_of_birth: Joi.date().optional(),
   }),
 
+  updateCustomer: Joi.object({
+    name: Joi.string().optional(),
+    phone: Joi.string().pattern(/^(\+63|0)?9\d{9}$/).optional(),
+    email: Joi.string().email().optional().allow(''),
+    address: Joi.string().optional().allow(''),
+    notes: Joi.string().optional().allow(''),
+    is_active: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
+  }),
+
+  // Category schemas
+  updateCategory: Joi.object({
+    name: Joi.string().optional(),
+    description: Joi.string().optional().allow(''),
+    display_order: Joi.number().min(0).optional(),
+    is_active: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
+  }),
+
+  // Supplier schemas
+  updateSupplier: Joi.object({
+    supplier_name: Joi.string().optional(),
+    contact_person: Joi.string().optional().allow(''),
+    phone: Joi.string().optional().allow(''),
+    email: Joi.string().email().optional().allow(''),
+    address: Joi.string().optional().allow(''),
+    is_active: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
+  }),
+
+  // Cashier schemas
+  updateCashier: Joi.object({
+    name: Joi.string().optional(),
+    cashier_code: Joi.string().optional(),
+    pin: Joi.string().length(4).optional(),
+    phone: Joi.string().optional().allow(''),
+    email: Joi.string().email().optional().allow(''),
+    hire_date: Joi.date().optional(),
+    hourly_rate: Joi.number().min(0).optional(),
+    is_active: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
+  }),
+
+  // Tax Rule schemas
+  updateTaxRule: Joi.object({
+    tax_name: Joi.string().optional(),
+    tax_type: Joi.string()
+      .valid(...ENUMS.tax_type)
+      .optional(),
+    tax_rate: Joi.number().min(0).max(100).optional(),
+    is_inclusive: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
+    applicable_to: Joi.string().optional().allow(''),
+    is_active: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
+    start_date: Joi.date().optional(),
+    end_date: Joi.date().optional(),
+  }),
+
+  // Order status update
+  updateOrderStatus: Joi.object({
+    order_status: Joi.string()
+      .valid(...ENUMS.order_status)
+      .required(),
+    notes: Joi.string().optional().allow(''),
+  }),
+
+  // Admin password/username update
+  updateAdminUsername: Joi.object({
+    new_username: Joi.string().min(3).max(50).required(),
+    current_password: Joi.string().required(),
+  }),
+
+  updateAdminPassword: Joi.object({
+    current_password: Joi.string().required(),
+    new_password: Joi.string().min(8).required(),
+    confirm_password: Joi.string().valid(Joi.ref('new_password')).required()
+      .messages({ 'any.only': 'Passwords must match' }),
+  }),
+
+  // Inventory adjustment
+  adjustInventory: Joi.object({
+    menu_item_id: Joi.number().required(),
+    quantity: Joi.number().min(1).required(),
+    transaction_type: Joi.string()
+      .valid(...ENUMS.transaction_type)
+      .required(),
+    reason_id: Joi.number().optional(),
+    notes: Joi.string().optional().allow(''),
+  }),
+
   // Pagination schema
   pagination: Joi.object({
     page: Joi.number().min(1).default(1),

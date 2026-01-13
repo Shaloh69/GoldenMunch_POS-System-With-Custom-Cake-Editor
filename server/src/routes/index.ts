@@ -380,8 +380,8 @@ router.post('/auth/admin/login', validate(schemas.adminLogin), asyncHandler(auth
 router.post('/auth/cashier/login', validate(schemas.cashierLogin), asyncHandler(authController.cashierLogin));
 router.get('/auth/verify', authenticate, asyncHandler(authController.verifyToken));
 router.get('/auth/diagnostic', asyncHandler(authController.diagnosticJWT));
-router.put('/auth/admin/username', authenticateAdmin, asyncHandler(authController.updateAdminUsername));
-router.put('/auth/admin/password', authenticateAdmin, asyncHandler(authController.updateAdminPassword));
+router.put('/auth/admin/username', authenticateAdmin, validate(schemas.updateAdminUsername), asyncHandler(authController.updateAdminUsername));
+router.put('/auth/admin/password', authenticateAdmin, validate(schemas.updateAdminPassword), asyncHandler(authController.updateAdminPassword));
 
 // ==== KIOSK ROUTES (Public/Optional Auth) ====
 // Cache static/rarely changing data with longer TTL
@@ -446,7 +446,7 @@ router.get('/cashier/orders', cacheMiddleware(CacheTTL.SHORT), authenticateCashi
 router.get('/cashier/orders/:id', conditionalRequest(), authenticateCashier, asyncHandler(orderController.getOrderDetails));
 router.post('/cashier/orders/:id/mark-printed', authenticateCashier, asyncHandler(orderController.markOrderPrinted));
 router.get('/cashier/orders/:id/timeline', cacheMiddleware(CacheTTL.MEDIUM), authenticateCashier, asyncHandler(additionalController.getOrderTimeline));
-router.patch('/cashier/orders/:id/status', authenticateCashier, asyncHandler(orderController.updateOrderStatus));
+router.patch('/cashier/orders/:id/status', authenticateCashier, validate(schemas.updateOrderStatus), asyncHandler(orderController.updateOrderStatus));
 router.delete('/cashier/orders/:id', authenticateCashier, asyncHandler(orderController.deleteOrder));
 
 // Cashier - Waste Tracking
@@ -504,7 +504,7 @@ router.post(
   asyncHandler(adminController.createCategory)
 );
 
-router.put('/admin/categories/:id', authenticateAdmin, asyncHandler(adminController.updateCategory));
+router.put('/admin/categories/:id', authenticateAdmin, uploadProductImage.single('image'), validate(schemas.updateCategory), asyncHandler(adminController.updateCategory));
 router.delete('/admin/categories/:id', authenticateAdmin, asyncHandler(adminController.deleteCategory));
 router.post('/admin/categories/assign', authenticateAdmin, asyncHandler(adminController.assignItemToCategory));
 router.post('/admin/categories/unassign', authenticateAdmin, asyncHandler(adminController.unassignItemFromCategory));
@@ -563,34 +563,34 @@ router.post('/admin/feedback/:id/respond', authenticateAdmin, asyncHandler(admin
 router.get('/admin/orders', authenticateAdmin, asyncHandler(orderController.getOrders));
 router.get('/admin/orders/:id', authenticateAdmin, asyncHandler(orderController.getOrderDetails));
 router.get('/admin/orders/:id/timeline', authenticateAdmin, asyncHandler(additionalController.getOrderTimeline));
-router.patch('/admin/orders/:id/status', authenticateAdmin, asyncHandler(orderController.updateOrderStatus));
+router.patch('/admin/orders/:id/status', authenticateAdmin, validate(schemas.updateOrderStatus), asyncHandler(orderController.updateOrderStatus));
 router.delete('/admin/orders/:id', authenticateAdmin, asyncHandler(orderController.deleteOrder));
 
 // Customer Management
 router.post('/admin/customers', authenticateAdmin, asyncHandler(additionalController.createCustomer));
 router.get('/admin/customers', authenticateAdmin, asyncHandler(additionalController.getCustomers));
 router.get('/admin/customers/:id', authenticateAdmin, asyncHandler(additionalController.getCustomer));
-router.put('/admin/customers/:id', authenticateAdmin, asyncHandler(additionalController.updateCustomer));
+router.put('/admin/customers/:id', authenticateAdmin, validate(schemas.updateCustomer), asyncHandler(additionalController.updateCustomer));
 
 // Supplier Management
 router.post('/admin/suppliers', authenticateAdmin, asyncHandler(additionalController.createSupplier));
 router.get('/admin/suppliers', authenticateAdmin, asyncHandler(additionalController.getSuppliers));
 router.get('/admin/suppliers/:id', authenticateAdmin, asyncHandler(additionalController.getSupplierById));
-router.put('/admin/suppliers/:id', authenticateAdmin, asyncHandler(additionalController.updateSupplier));
+router.put('/admin/suppliers/:id', authenticateAdmin, validate(schemas.updateSupplier), asyncHandler(additionalController.updateSupplier));
 router.delete('/admin/suppliers/:id', authenticateAdmin, asyncHandler(additionalController.deleteSupplier));
 
 // Cashier Management
 router.post('/admin/cashiers', authenticateAdmin, asyncHandler(additionalController.createCashier));
 router.get('/admin/cashiers', authenticateAdmin, asyncHandler(additionalController.getCashiers));
 router.get('/admin/cashiers/:id', authenticateAdmin, asyncHandler(additionalController.getCashierById));
-router.put('/admin/cashiers/:id', authenticateAdmin, asyncHandler(additionalController.updateCashier));
+router.put('/admin/cashiers/:id', authenticateAdmin, validate(schemas.updateCashier), asyncHandler(additionalController.updateCashier));
 router.delete('/admin/cashiers/:id', authenticateAdmin, asyncHandler(additionalController.deleteCashier));
 
 // Tax Rules
 router.post('/admin/tax-rules', authenticateAdmin, asyncHandler(additionalController.createTaxRule));
 router.get('/admin/tax-rules', authenticateAdmin, asyncHandler(additionalController.getTaxRules));
 router.get('/admin/tax-rules/:id', authenticateAdmin, asyncHandler(additionalController.getTaxRuleById));
-router.put('/admin/tax-rules/:id', authenticateAdmin, asyncHandler(additionalController.updateTaxRule));
+router.put('/admin/tax-rules/:id', authenticateAdmin, validate(schemas.updateTaxRule), asyncHandler(additionalController.updateTaxRule));
 
 // Cake Customization Management
 // Flavors
