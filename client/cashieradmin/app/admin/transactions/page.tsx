@@ -159,58 +159,156 @@ export default function TransactionsPage() {
 
   const exportToCSV = () => {
     const headers = [
+      // Order Identification
       "Order ID",
-      "Date",
+      "Order Number",
+      "Verification Code",
+      "Order Date & Time",
+
+      // Order Details
+      "Order Type",
+      "Order Source",
+      "Order Status",
+      "Is Pre-order",
+      "Scheduled Pickup",
+      "Actual Pickup",
+
+      // Customer Information
       "Customer Name",
+      "Customer Phone",
+      "Customer Discount Type",
+      "Customer Discount %",
+
+      // Items Summary
+      "Total Items",
+      "Items Detail",
+
+      // Payment Information
       "Payment Method",
-      "Status",
-      "Items",
+      "Payment Status",
       "Subtotal",
-      "Tax",
-      "Discount Type",
       "Discount Amount",
       "Final Amount",
       "Amount Paid",
-      "Change",
-      "Cashier",
+      "Change Given",
+
+      // Payment References
+      "GCash Reference",
+      "PayMaya Reference",
+      "Card Transaction Ref",
+
+      // Cashier & Verification
+      "Cashier Name",
+      "Cashier ID",
+      "Payment Verified By",
+      "Payment Verified At",
+
+      // Additional Info
+      "Special Instructions",
+      "Is Printed",
+      "Created At",
+      "Updated At",
     ];
 
     const rows = filteredTransactions.map((t) => {
       const transaction = t as any;
+      const itemsDetail = t.items
+        ?.map((item) => {
+          const itemData = item as any;
+          return `${itemData.item_name || "Item"} (₱${Number(item.unit_price || 0).toFixed(2)} x${item.quantity} = ₱${Number(item.item_total || Number(item.unit_price || 0) * Number(item.quantity || 0)).toFixed(2)})`;
+        })
+        .join(" | ") || "N/A";
 
       return [
-        t.order_number || t.order_id,
-        new Date(t.order_datetime).toLocaleString(),
+        // Order Identification
+        t.order_id,
+        t.order_number || "N/A",
+        t.verification_code || "N/A",
+        new Date(t.order_datetime).toLocaleString("en-US", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        }),
+
+        // Order Details
+        t.order_type?.replace("_", " ").toUpperCase() || "N/A",
+        t.order_source?.toUpperCase() || "N/A",
+        t.order_status?.toUpperCase() || "N/A",
+        t.is_preorder ? "Yes" : "No",
+        t.scheduled_pickup_datetime
+          ? new Date(t.scheduled_pickup_datetime).toLocaleString()
+          : "N/A",
+        t.actual_pickup_datetime
+          ? new Date(t.actual_pickup_datetime).toLocaleString()
+          : "N/A",
+
+        // Customer Information
         t.customer?.name || "Walk-in Customer",
-        t.payment_method,
-        t.payment_status,
-        t.items
-          ?.map(
-            (item) => `${(item as any).item_name || "Item"} x${item.quantity}`,
-          )
-          .join("; ") || "N/A",
-        Number(t.total_amount || 0).toFixed(2),
-        Number(t.tax_amount || 0).toFixed(2),
+        t.customer?.phone || t.phone || "N/A",
         t.customer_discount?.name || "None",
+        t.customer_discount_percentage
+          ? Number(t.customer_discount_percentage).toFixed(2) + "%"
+          : "0%",
+
+        // Items Summary
+        t.items?.length || 0,
+        itemsDetail,
+
+        // Payment Information
+        t.payment_method?.toUpperCase() || "N/A",
+        t.payment_status?.toUpperCase() || "N/A",
+        Number(t.total_amount || 0).toFixed(2),
         Number(t.discount_amount || 0).toFixed(2),
         Number(t.final_amount || 0).toFixed(2),
         Number(transaction.amount_paid || t.final_amount || 0).toFixed(2),
         Number(transaction.change_amount || 0).toFixed(2),
+
+        // Payment References
+        t.gcash_reference_number || "N/A",
+        t.paymaya_reference_number || "N/A",
+        t.card_transaction_ref || "N/A",
+
+        // Cashier & Verification
         transaction.cashier?.name || "N/A",
+        t.cashier_id || "N/A",
+        transaction.payment_verified_by || "N/A",
+        t.payment_verified_at
+          ? new Date(t.payment_verified_at).toLocaleString()
+          : "N/A",
+
+        // Additional Info
+        t.special_instructions || "None",
+        t.is_printed ? "Yes" : "No",
+        new Date(t.created_at).toLocaleString(),
+        new Date(t.updated_at).toLocaleString(),
       ];
     });
 
     const csvContent = [
       headers.join(","),
-      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
+      ...rows.map((row) =>
+        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+      ),
     ].join("\n");
 
-    const blob = new Blob([csvContent], { type: "text/csv" });
+    // Add BOM for Excel UTF-8 compatibility
+    const BOM = "\uFEFF";
+    const blob = new Blob([BOM + csvContent], {
+      type: "text/csv;charset=utf-8;",
+    });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
 
+    const dateRange =
+      dateFrom && dateTo
+        ? `${dateFrom}_to_${dateTo}`
+        : new Date().toISOString().split("T")[0];
+
     link.href = url;
-    link.download = `transactions_${new Date().toISOString().split("T")[0]}.csv`;
+    link.download = `GoldenMunch_Transactions_${dateRange}.csv`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -296,7 +394,7 @@ export default function TransactionsPage() {
                 <BanknotesIcon className="h-6 w-6 text-primary-600" />
               </div>
               <div>
-                <p className="text-sm text-default-500">Total Revenue</p>
+                <p className="text-sm text-default-500">Total Sales</p>
                 <p className="text-2xl font-bold">
                   {formatCurrency(getTotalAmount())}
                 </p>
@@ -328,7 +426,7 @@ export default function TransactionsPage() {
                 <FunnelIcon className="h-6 w-6 text-warning-600" />
               </div>
               <div>
-                <p className="text-sm text-default-500">Average Amount</p>
+                <p className="text-sm text-default-500">Average Per Sale</p>
                 <p className="text-2xl font-bold">
                   {formatCurrency(
                     filteredTransactions.length > 0
