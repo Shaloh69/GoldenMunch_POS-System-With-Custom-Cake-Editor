@@ -24,8 +24,24 @@ export const initRedis = async (): Promise<void> => {
     if (redisUrl) {
       // Use connection URL
       logger.info('📦 Connecting to Redis using REDIS_URL...');
+      logger.info(`📦 Redis URL protocol: ${redisUrl.split(':')[0]}`);
+
       redisClient = createClient({
         url: redisUrl,
+        socket: {
+          connectTimeout: 10000, // 10 second timeout
+          keepAlive: 30000,
+          reconnectStrategy: (retries) => {
+            // Stop reconnecting after 3 attempts to prevent blocking
+            if (retries > 3) {
+              logger.error('Redis reconnection failed after 3 attempts, disabling Redis');
+              isRedisEnabled = false;
+              return false; // Stop reconnecting
+            }
+            // Exponential backoff: 1s, 2s, 4s
+            return Math.min(retries * 1000, 3000);
+          },
+        },
       });
     } else {
       // Use individual configuration parameters
@@ -36,7 +52,20 @@ export const initRedis = async (): Promise<void> => {
         socket: {
           host: process.env.REDIS_HOST || 'localhost',
           port: parseInt(process.env.REDIS_PORT || '6379', 10),
-          ...(useTLS && { tls: true }),
+          connectTimeout: 10000, // 10 second timeout
+          keepAlive: 30000,
+          reconnectStrategy: (retries) => {
+            if (retries > 3) {
+              logger.error('Redis reconnection failed after 3 attempts, disabling Redis');
+              isRedisEnabled = false;
+              return false;
+            }
+            return Math.min(retries * 1000, 3000);
+          },
+          ...(useTLS && {
+            tls: true,
+            rejectUnauthorized: false, // For self-signed certificates
+          }),
         },
         username: process.env.REDIS_USERNAME || undefined,
         password: process.env.REDIS_PASSWORD || undefined,
@@ -63,14 +92,35 @@ export const initRedis = async (): Promise<void> => {
       logger.warn('📦 Redis client reconnecting...');
     });
 
-    await redisClient.connect();
+    redisClient.on('end', () => {
+      logger.warn('📦 Redis connection ended');
+      isRedisEnabled = false;
+    });
+
+    // Connect with timeout wrapper
+    await Promise.race([
+      redisClient.connect(),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Redis connection timeout after 15 seconds')), 15000)
+      ),
+    ]);
+
     logger.info('✅ Redis connection established');
     isRedisEnabled = true;
   } catch (error) {
     logger.error('Failed to connect to Redis:', error);
     logger.warn('⚠️  Continuing without Redis caching');
     isRedisEnabled = false;
-    redisClient = null;
+
+    // Cleanup failed client
+    if (redisClient) {
+      try {
+        await redisClient.disconnect();
+      } catch (e) {
+        // Ignore disconnect errors
+      }
+      redisClient = null;
+    }
   }
 };
 
