@@ -7,6 +7,8 @@ export default function OrderSuccessPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get("orderNumber");
+  const prepTime = searchParams.get("prepTime");
+  const estimatedMinutes = prepTime ? parseInt(prepTime, 10) : 0;
 
   const [redirectCountdown, setRedirectCountdown] = useState(15);
 
@@ -83,6 +85,28 @@ export default function OrderSuccessPage() {
                 </p>
               </div>
             </div>
+
+            {/* Preparation Time Notification */}
+            {estimatedMinutes > 0 && (
+              <div className="mb-12">
+                <div className="glass-card border-4 border-green-500 rounded-3xl p-10 max-w-3xl mx-auto shadow-2xl animate-pulse-gentle bg-gradient-to-r from-green-50 to-primary/10">
+                  <div className="text-center">
+                    <div className="text-8xl mb-4">⏱️</div>
+                    <p className="text-4xl font-black text-gradient mb-4">
+                      Your Order Will Be Ready In
+                    </p>
+                    <div className="bg-gradient-to-r from-primary to-secondary rounded-2xl px-12 py-8 inline-block shadow-xl">
+                      <p className="text-7xl font-black text-black drop-shadow-lg">
+                        {estimatedMinutes} {estimatedMinutes === 1 ? "Minute" : "Minutes"}
+                      </p>
+                    </div>
+                    <p className="text-2xl text-black mt-6 font-semibold">
+                      ✨ We're preparing your delicious order!
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Instructions */}
             <div className="space-y-6 mb-12">

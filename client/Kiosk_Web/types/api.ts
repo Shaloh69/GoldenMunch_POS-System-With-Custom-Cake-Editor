@@ -226,6 +226,7 @@ export interface CustomerOrder {
   is_deleted: boolean;
   created_at: Date;
   updated_at: Date;
+  estimated_preparation_minutes?: number; // Calculated preparation time (queue-aware)
 }
 
 // Request/Response DTOs

@@ -160,7 +160,8 @@ class ThermalPrinterService {
           verificationCode,
           customerName,
           specialInstructions,
-          referenceNumber
+          referenceNumber,
+          estimatedPreparationMinutes
         } = orderData;
 
         // Header
@@ -196,6 +197,23 @@ class ThermalPrinterService {
             .text(verificationCode)
             .size(1, 1)
             .style('normal')
+            .text('');
+        }
+
+        // Preparation Time
+        if (estimatedPreparationMinutes && estimatedPreparationMinutes > 0) {
+          this.printer
+            .text('')
+            .align('ct')
+            .style('b')
+            .size(1, 1)
+            .text('Estimated Preparation Time:')
+            .size(2, 2)
+            .text(`${estimatedPreparationMinutes} ${estimatedPreparationMinutes === 1 ? 'Minute' : 'Minutes'}`)
+            .size(1, 1)
+            .style('normal')
+            .text('')
+            .text('Your order will be ready soon!')
             .text('');
         }
 
