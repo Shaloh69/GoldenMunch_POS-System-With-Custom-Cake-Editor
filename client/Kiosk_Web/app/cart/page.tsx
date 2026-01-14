@@ -93,10 +93,14 @@ export default function CartPage() {
     }
   };
 
-  // Fetch QR code when payment method changes to GCash or PayMaya
+  // Fetch QR code when payment method changes to GCash, PayMaya, or Xendit
   useEffect(() => {
     if (paymentMethod === "gcash" || paymentMethod === "paymaya") {
       fetchQRCode();
+    } else if (paymentMethod === "xendit") {
+      // Xendit uses dynamic invoice creation, so we don't fetch a static QR code
+      // In production, this would create a Xendit invoice and redirect to payment page
+      setQrCodeUrl(null);
     } else {
       setQrCodeUrl(null);
       setReferenceNumber(""); // Clear reference number when switching away from digital payments
@@ -180,9 +184,9 @@ export default function CartPage() {
     setError(null);
 
     try {
-      // Validate reference number for GCash and PayMaya
+      // Validate reference number for GCash, PayMaya, and Xendit
       if (
-        (paymentMethod === "gcash" || paymentMethod === "paymaya") &&
+        (paymentMethod === "gcash" || paymentMethod === "paymaya" || paymentMethod === "xendit") &&
         !referenceNumber.trim()
       ) {
         setError(
@@ -207,6 +211,8 @@ export default function CartPage() {
         orderData.gcash_reference_number = referenceNumber.trim();
       } else if (paymentMethod === "paymaya" && referenceNumber.trim()) {
         orderData.paymaya_reference_number = referenceNumber.trim();
+      } else if (paymentMethod === "xendit" && referenceNumber.trim()) {
+        orderData.xendit_reference_number = referenceNumber.trim();
       }
 
       const order = await OrderService.createOrder(orderData);
@@ -647,11 +653,17 @@ export default function CartPage() {
                           💳 PayMaya Payment
                         </span>
                       </SelectItem>
+                      <SelectItem key="xendit" textValue="Xendit Payment">
+                        <span className="text-black font-semibold">
+                          💰 Xendit Payment
+                        </span>
+                      </SelectItem>
                     </Select>
 
-                    {/* Show QR code for GCash and PayMaya payments */}
+                    {/* Show QR code for GCash, PayMaya, and Xendit payments */}
                     {(paymentMethod === "gcash" ||
-                      paymentMethod === "paymaya") && (
+                      paymentMethod === "paymaya" ||
+                      paymentMethod === "xendit") && (
                       <Button
                         size="lg"
                         className="w-full bg-gradient-to-r from-primary to-secondary text-black font-bold shadow-lg hover:scale-105 transition-all"

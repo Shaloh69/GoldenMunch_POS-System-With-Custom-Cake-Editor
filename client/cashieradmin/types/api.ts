@@ -42,6 +42,7 @@ export enum PaymentMethod {
   DEBIT_CARD = "debit_card",
   GCASH = "gcash",
   PAYMAYA = "paymaya",
+  XENDIT = "xendit",
   BANK_TRANSFER = "bank_transfer",
   LOYALTY_POINTS = "loyalty_points",
   OTHER = "other",

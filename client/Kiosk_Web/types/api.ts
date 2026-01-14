@@ -50,6 +50,7 @@ export enum PaymentMethod {
   PAYMAYA = "paymaya",
   CARD = "card",
   BANK_TRANSFER = "bank_transfer",
+  XENDIT = "xendit",
 }
 
 export enum PaymentStatus {
@@ -241,6 +242,7 @@ export interface CreateOrderRequest {
   payment_reference_number?: string;
   gcash_reference_number?: string;
   paymaya_reference_number?: string;
+  xendit_reference_number?: string;
   special_instructions?: string;
   kiosk_session_id?: string;
   items: OrderItemRequest[];

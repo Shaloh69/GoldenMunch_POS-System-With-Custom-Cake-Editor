@@ -85,7 +85,8 @@ export enum PaymentMethod {
   GCASH = 'gcash',
   PAYMAYA = 'paymaya',
   CARD = 'card',
-  BANK_TRANSFER = 'bank_transfer'
+  BANK_TRANSFER = 'bank_transfer',
+  XENDIT = 'xendit'
 }
 
 export enum PaymentStatus {
@@ -430,6 +431,7 @@ export interface CustomerOrder {
   order_status: OrderStatus;
   gcash_reference_number: string | null;
   paymaya_reference_number: string | null;
+  xendit_reference_number: string | null;
   card_transaction_ref: string | null;
   payment_verified_at: Date | null;
   payment_verified_by: number | null;
@@ -652,6 +654,7 @@ export interface CreateOrderRequest {
   payment_reference_number?: string;
   gcash_reference_number?: string;
   paymaya_reference_number?: string;
+  xendit_reference_number?: string;
   special_instructions?: string;
   kiosk_session_id?: string;
   items: OrderItemRequest[];
