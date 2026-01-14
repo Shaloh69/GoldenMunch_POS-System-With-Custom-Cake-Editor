@@ -28,12 +28,13 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
       console.log(`✓ Created guest customer record (ID: ${customerId}) for kiosk order`);
     }
 
-    // Calculate order total
+    // Calculate order total and preparation time
     let subtotal = 0;
+    let maxPreparationTime = 0; // Track the longest preparation time (items prepared in parallel)
     const orderItems: any[] = [];
 
     for (const item of orderData.items) {
-      // Get item price
+      // Get item price and preparation time
       const [menuItem] = await conn.query(
         `SELECT mi.*,
           (SELECT unit_price FROM menu_item_price
@@ -51,6 +52,12 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
 
       if (!menuItemData) {
         throw new AppError(`Menu item ${item.menu_item_id} not found`, 404);
+      }
+
+      // Track maximum preparation time (items are prepared in parallel)
+      const itemPrepTime = menuItemData.preparation_time_minutes || 0;
+      if (itemPrepTime > maxPreparationTime) {
+        maxPreparationTime = itemPrepTime;
       }
 
       let itemPrice = menuItemData.current_price || 0;
@@ -124,6 +131,27 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
 
     const totals = calculateOrderTotal(subtotal, taxRate, 0);
 
+    // Calculate queue-aware preparation time
+    // Get total preparation time from pending/preparing orders
+    const [pendingOrdersRows] = await conn.query(
+      `SELECT SUM(mi.preparation_time_minutes) as queue_time
+       FROM customer_order co
+       JOIN order_item oi ON co.order_id = oi.order_id
+       JOIN menu_item mi ON oi.menu_item_id = mi.menu_item_id
+       WHERE co.order_status IN ('pending', 'preparing')
+       AND co.is_deleted = FALSE
+       AND DATE(co.created_at) = CURDATE()`
+    );
+
+    const queueTime = (Array.isArray(pendingOrdersRows) && pendingOrdersRows.length > 0)
+      ? (pendingOrdersRows[0] as any)?.queue_time || 0
+      : 0;
+
+    // Estimated time = queue time + this order's preparation time
+    const estimatedPreparationMinutes = Math.ceil(queueTime + maxPreparationTime);
+
+    console.log(`⏱️  Preparation time calculation: Queue: ${queueTime}min + Order: ${maxPreparationTime}min = ${estimatedPreparationMinutes}min`);
+
     // Generate order number and verification code
     const FrOrderRandSuff = Math.floor(Math.random() * 1000)
       .toString()
@@ -188,6 +216,7 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
       verification_code: verificationCode,
       total_amount: totals.total,
       items_count: orderItems.length,
+      estimated_preparation_minutes: estimatedPreparationMinutes,
     };
   });
 
@@ -197,6 +226,7 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
     order_number: result.order_number,
     total_amount: result.total_amount,
     items_count: result.items_count,
+    estimated_preparation_minutes: result.estimated_preparation_minutes,
     timestamp: new Date().toISOString(),
   });
 

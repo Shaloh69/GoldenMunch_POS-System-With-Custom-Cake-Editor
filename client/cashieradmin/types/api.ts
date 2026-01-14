@@ -240,6 +240,7 @@ export interface CustomerOrder {
   customer?: Customer;
   cashier?: Cashier;
   timeline?: OrderTimelineEntry[];
+  estimated_preparation_minutes?: number; // Calculated preparation time (queue-aware)
 }
 
 export interface OrderTimelineEntry {

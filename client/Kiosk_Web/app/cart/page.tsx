@@ -212,9 +212,10 @@ export default function CartPage() {
       const order = await OrderService.createOrder(orderData);
       clearCart();
 
-      // Redirect to order success page with QR code
+      // Redirect to order success page with preparation time
+      const prepTime = order.estimated_preparation_minutes || 0;
       router.push(
-        `/order-success?orderId=${order.order_id}&orderNumber=${order.order_number}`
+        `/order-success?orderId=${order.order_id}&orderNumber=${order.order_number}&prepTime=${prepTime}`
       );
     } catch (err: any) {
       console.error("Error creating order:", err);
