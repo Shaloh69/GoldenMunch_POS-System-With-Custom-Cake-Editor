@@ -82,11 +82,7 @@ export enum OrderSource {
 
 export enum PaymentMethod {
   CASH = 'cash',
-  GCASH = 'gcash',
-  PAYMAYA = 'paymaya',
-  CARD = 'card',
-  BANK_TRANSFER = 'bank_transfer',
-  XENDIT = 'xendit'
+  CASHLESS = 'cashless'
 }
 
 export enum PaymentStatus {
@@ -429,10 +425,7 @@ export interface CustomerOrder {
   payment_method: PaymentMethod;
   payment_status: PaymentStatus;
   order_status: OrderStatus;
-  gcash_reference_number: string | null;
-  paymaya_reference_number: string | null;
-  xendit_reference_number: string | null;
-  card_transaction_ref: string | null;
+  payment_reference_number: string | null;
   payment_verified_at: Date | null;
   payment_verified_by: number | null;
   is_printed: boolean;
@@ -652,9 +645,6 @@ export interface CreateOrderRequest {
   scheduled_pickup_datetime?: string;
   payment_method: PaymentMethod;
   payment_reference_number?: string;
-  gcash_reference_number?: string;
-  paymaya_reference_number?: string;
-  xendit_reference_number?: string;
   special_instructions?: string;
   kiosk_session_id?: string;
   items: OrderItemRequest[];

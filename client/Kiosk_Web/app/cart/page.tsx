@@ -93,35 +93,7 @@ export default function CartPage() {
     }
   };
 
-  // Fetch QR code when payment method changes to GCash, PayMaya, or Xendit
-  useEffect(() => {
-    if (paymentMethod === "gcash" || paymentMethod === "paymaya") {
-      fetchQRCode();
-    } else if (paymentMethod === "xendit") {
-      // Xendit uses dynamic invoice creation, so we don't fetch a static QR code
-      // In production, this would create a Xendit invoice and redirect to payment page
-      setQrCodeUrl(null);
-    } else {
-      setQrCodeUrl(null);
-      setReferenceNumber(""); // Clear reference number when switching away from digital payments
-    }
-  }, [paymentMethod]);
-
-  const fetchQRCode = async () => {
-    setLoadingQR(true);
-    try {
-      // Fetch QR code for the selected payment method
-      const url = await SettingsService.getPaymentQR(
-        paymentMethod as "gcash" | "paymaya"
-      );
-      setQrCodeUrl(url);
-    } catch (error) {
-      console.error(`Failed to fetch ${paymentMethod} payment QR code:`, error);
-      setQrCodeUrl(null);
-    } finally {
-      setLoadingQR(false);
-    }
-  };
+  // No QR code fetching needed - Xendit generates dynamic payment pages
 
   const handleShowQRCode = () => {
     if (qrCodeUrl) {
@@ -184,14 +156,9 @@ export default function CartPage() {
     setError(null);
 
     try {
-      // Validate reference number for GCash, PayMaya, and Xendit
-      if (
-        (paymentMethod === "gcash" || paymentMethod === "paymaya" || paymentMethod === "xendit") &&
-        !referenceNumber.trim()
-      ) {
-        setError(
-          `Please enter your ${paymentMethod.toUpperCase()} reference number`
-        );
+      // Validate reference number for cashless payments
+      if (paymentMethod === "cashless" && !referenceNumber.trim()) {
+        setError("Please enter your payment reference number");
         setIsProcessing(false);
         return;
       }
@@ -206,13 +173,9 @@ export default function CartPage() {
         items: getOrderItems(),
       };
 
-      // Add reference number based on payment method
-      if (paymentMethod === "gcash" && referenceNumber.trim()) {
-        orderData.gcash_reference_number = referenceNumber.trim();
-      } else if (paymentMethod === "paymaya" && referenceNumber.trim()) {
-        orderData.paymaya_reference_number = referenceNumber.trim();
-      } else if (paymentMethod === "xendit" && referenceNumber.trim()) {
-        orderData.xendit_reference_number = referenceNumber.trim();
+      // Add payment reference for cashless payments
+      if (paymentMethod === "cashless" && referenceNumber.trim()) {
+        orderData.payment_reference_number = referenceNumber.trim();
       }
 
       const order = await OrderService.createOrder(orderData);
@@ -643,37 +606,43 @@ export default function CartPage() {
                           💵 Cash Payment
                         </span>
                       </SelectItem>
-                      <SelectItem key="gcash" textValue="GCash Payment">
+                      <SelectItem key="cashless" textValue="Cashless Payment">
                         <span className="text-black font-semibold">
-                          📱 GCash Payment
-                        </span>
-                      </SelectItem>
-                      <SelectItem key="paymaya" textValue="PayMaya Payment">
-                        <span className="text-black font-semibold">
-                          💳 PayMaya Payment
-                        </span>
-                      </SelectItem>
-                      <SelectItem key="xendit" textValue="Xendit Payment">
-                        <span className="text-black font-semibold">
-                          💰 Xendit Payment
+                          💳 Cashless (GCash/PayMaya/Cards)
                         </span>
                       </SelectItem>
                     </Select>
 
-                    {/* Show QR code for GCash, PayMaya, and Xendit payments */}
-                    {(paymentMethod === "gcash" ||
-                      paymentMethod === "paymaya" ||
-                      paymentMethod === "xendit") && (
-                      <Button
-                        size="lg"
-                        className="w-full bg-gradient-to-r from-primary to-secondary text-black font-bold shadow-lg hover:scale-105 transition-all"
-                        onClick={handleShowQRCode}
-                        isLoading={loadingQR}
-                      >
-                        {loadingQR
-                          ? "Loading QR Code..."
-                          : "📱 Show Payment QR Code"}
-                      </Button>
+                    {/* Payment Instructions for Cashless */}
+                    {paymentMethod === "cashless" && (
+                      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 border-3 border-blue-400 shadow-lg">
+                        <div className="flex items-start gap-4">
+                          <div className="text-5xl">📱</div>
+                          <div className="flex-1">
+                            <h3 className="text-2xl font-black text-black mb-3">
+                              📝 Cashless Payment Steps
+                            </h3>
+                            <ol className="text-black space-y-2 text-lg">
+                              <li className="flex items-start gap-2">
+                                <span className="font-black">1.</span>
+                                <span>Complete your order to get the order number</span>
+                              </li>
+                              <li className="flex items-start gap-2">
+                                <span className="font-black">2.</span>
+                                <span>Show order number at counter for payment QR code</span>
+                              </li>
+                              <li className="flex items-start gap-2">
+                                <span className="font-black">3.</span>
+                                <span>Scan & pay via GCash, PayMaya, or Card</span>
+                              </li>
+                              <li className="flex items-start gap-2">
+                                <span className="font-black">4.</span>
+                                <span className="font-bold text-red-600">Enter your payment reference below</span>
+                              </li>
+                            </ol>
+                          </div>
+                        </div>
+                      </div>
                     )}
 
                     <Input

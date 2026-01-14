@@ -14,12 +14,12 @@ export const ENUMS = {
   design_complexity: ['simple', 'moderate', 'complex', 'intricate'],
   order_type: ['dine_in', 'takeout', 'delivery', 'kiosk', 'custom_cake'],
   order_source: ['kiosk', 'cashier', 'admin'],
-  payment_method: ['cash', 'cashless', 'credit_card', 'debit_card', 'gcash', 'paymaya', 'xendit', 'bank_transfer', 'loyalty_points', 'other'],
+  payment_method: ['cash', 'cashless'],
   payment_status: ['unpaid', 'partial', 'paid', 'refunded'],
   order_status: ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled'],
   refund_type: ['full', 'partial', 'item'],
   refund_reason: ['customer_request', 'wrong_item', 'quality_issue', 'delay', 'cancellation', 'other'],
-  refund_method: ['cash', 'gcash', 'paymaya', 'card', 'bank_transfer', 'store_credit'],
+  refund_method: ['cash', 'cashless', 'store_credit'],
   refund_status: ['pending', 'approved', 'rejected', 'completed'],
   feedback_type: ['positive', 'neutral', 'negative'],
   transaction_type: ['in', 'out', 'adjustment', 'return', 'waste', 'transfer'],
@@ -88,9 +88,7 @@ export const schemas = {
     payment_method: Joi.string()
       .valid(...ENUMS.payment_method)
       .required(),
-    gcash_reference_number: Joi.string().optional().allow(''),
-    paymaya_reference_number: Joi.string().optional().allow(''),
-    xendit_reference_number: Joi.string().optional().allow(''),
+    payment_reference_number: Joi.string().optional().allow(''),
     special_instructions: Joi.string().optional().allow(''),
     kiosk_session_id: Joi.string().optional(),
     items: Joi.array()
