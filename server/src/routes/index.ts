@@ -21,6 +21,7 @@ import * as customCakeSessionController from '../controllers/customCakeSession.c
 import * as customCakeController from '../controllers/customCake.controller';
 import * as customCakeMessageController from '../controllers/customCakeMessage.controller';
 import * as paymentQRController from '../controllers/paymentQR.controller';
+import * as paymentController from '../controllers/payment.controller';
 import * as capacityController from '../controllers/capacity.controller';
 import * as sseController from '../controllers/sse.controller';
 
@@ -397,6 +398,13 @@ router.get('/kiosk/orders/id/:id', asyncHandler(orderController.getOrderById));
 router.get('/kiosk/orders/:code', asyncHandler(orderController.getOrderByVerificationCode));
 router.post('/kiosk/orders/:id/mark-qr-scanned', asyncHandler(orderController.markQRScanned));
 router.get('/kiosk/orders/:id/qr-status', asyncHandler(orderController.checkQRStatus));
+
+// Payment - Xendit QR Code
+router.post('/payment/create-qr', paymentController.createPaymentQR);
+router.get('/payment/status/:orderId', paymentController.checkPaymentStatus);
+
+// Webhooks - Xendit Payment Notifications
+router.post('/webhooks/xendit/qr-payment', paymentController.handleXenditWebhook);
 
 // Custom Cake Sessions (for QR code customization flow)
 // DEPRECATED: Old in-memory API - migrating to database-backed NEW API below

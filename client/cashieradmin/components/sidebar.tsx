@@ -90,12 +90,6 @@ const adminNav: NavItem[] = [
     adminOnly: true,
   },
   {
-    name: "Payment QR",
-    href: "/admin/settings/payment-qr",
-    icon: QrCodeIcon,
-    adminOnly: true,
-  },
-  {
     name: "Settings",
     href: "/admin/settings",
     icon: Cog6ToothIcon,
