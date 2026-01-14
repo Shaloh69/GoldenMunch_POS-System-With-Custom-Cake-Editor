@@ -17,13 +17,15 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
+  Spinner,
 } from "@/components/primitives";
 import NextLink from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { QRCodeSVG } from "qrcode.react";
 import { useCart } from "@/contexts/CartContext";
 import { OrderService } from "@/services/order.service";
-import { SettingsService } from "@/services/settings.service";
+import PaymentService from "@/services/payment.service";
 import { getImageUrl } from "@/utils/imageUtils";
 import { KioskAppSidebar } from "@/components/KioskAppSidebar";
 import TouchKeyboard, { TouchKeyboardHandle } from "@/components/TouchKeyboard";
@@ -62,20 +64,17 @@ export default function CartPage() {
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
-  // QR Code state
+  // Xendit QR Code payment state
   const {
     isOpen: isQROpen,
     onOpen: onQROpen,
     onClose: onQRClose,
   } = useDisclosure();
-  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
-  const [loadingQR, setLoadingQR] = useState(false);
-  const [referenceNumber, setReferenceNumber] = useState("");
-
-  // Modal-specific keyboard state
-  const [modalKeyboardVisible, setModalKeyboardVisible] = useState(false);
-  const [modalLayoutName, setModalLayoutName] = useState("default");
-  const modalKeyboardRef = useRef<TouchKeyboardHandle>(null);
+  const [qrCodeString, setQrCodeString] = useState<string | null>(null);
+  const [qrOrderId, setQrOrderId] = useState<number | null>(null);
+  const [qrAmount, setQrAmount] = useState<number>(0);
+  const [isPollingPayment, setIsPollingPayment] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<string>("pending");
 
   // Track failed image URLs to show emoji fallback
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
@@ -90,49 +89,6 @@ export default function CartPage() {
   const handleImageError = (imageUrl: string | null) => {
     if (imageUrl) {
       setFailedImages((prev) => new Set(prev).add(imageUrl));
-    }
-  };
-
-  // No QR code fetching needed - Xendit generates dynamic payment pages
-
-  const handleShowQRCode = () => {
-    if (qrCodeUrl) {
-      // Close external keyboard when opening modal
-      setKeyboardVisible(false);
-      setActiveInput(null);
-      onQROpen();
-    } else {
-      setError(
-        `No ${paymentMethod.toUpperCase()} QR code configured. Please contact staff.`
-      );
-    }
-  };
-
-  // Modal keyboard handlers
-  const handleModalInputFocus = (event?: React.FocusEvent<HTMLInputElement>) => {
-    setModalKeyboardVisible(true);
-    if (modalKeyboardRef.current) {
-      modalKeyboardRef.current.setInput(referenceNumber);
-    }
-
-    // Scroll the input into view after keyboard renders
-    if (event?.target) {
-      setTimeout(() => {
-        event.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 300);
-    }
-  };
-
-  const handleModalKeyboardChange = (input: string) => {
-    setReferenceNumber(input);
-  };
-
-  const handleModalKeyPress = (button: string) => {
-    if (button === "{shift}" || button === "{lock}") {
-      setModalLayoutName(modalLayoutName === "default" ? "shift" : "default");
-    } else if (button === "{enter}") {
-      // Hide keyboard when done
-      setModalKeyboardVisible(false);
     }
   };
 
@@ -156,13 +112,6 @@ export default function CartPage() {
     setError(null);
 
     try {
-      // Validate reference number for cashless payments
-      if (paymentMethod === "cashless" && !referenceNumber.trim()) {
-        setError("Please enter your payment reference number");
-        setIsProcessing(false);
-        return;
-      }
-
       const orderData: CreateOrderRequest = {
         order_type: orderType,
         order_source: OrderSource.KIOSK,
@@ -173,23 +122,68 @@ export default function CartPage() {
         items: getOrderItems(),
       };
 
-      // Add payment reference for cashless payments
-      if (paymentMethod === "cashless" && referenceNumber.trim()) {
-        orderData.payment_reference_number = referenceNumber.trim();
-      }
-
       const order = await OrderService.createOrder(orderData);
       clearCart();
 
-      // Redirect to order success page with preparation time
-      const prepTime = order.estimated_preparation_minutes || 0;
-      router.push(
-        `/order-success?orderId=${order.order_id}&orderNumber=${order.order_number}&prepTime=${prepTime}`
-      );
+      // If cashless payment, generate QR code and wait for payment
+      if (paymentMethod === PaymentMethod.CASHLESS) {
+        try {
+          // Generate Xendit QR code
+          const qrData = await PaymentService.createPaymentQR(
+            order.order_id,
+            Number(order.final_amount)
+          );
+
+          // Store QR code data and show modal
+          setQrCodeString(qrData.qr_string);
+          setQrOrderId(order.order_id);
+          setQrAmount(qrData.amount);
+          setPaymentStatus("pending");
+          setIsProcessing(false);
+          onQROpen();
+
+          // Start polling payment status
+          setIsPollingPayment(true);
+          PaymentService.pollPaymentStatus(
+            order.order_id,
+            (status) => {
+              setPaymentStatus(status.payment_status);
+            }
+          )
+            .then((finalStatus) => {
+              // Payment complete - close QR and redirect
+              setIsPollingPayment(false);
+              onQRClose();
+              const prepTime = order.estimated_preparation_minutes || 0;
+              router.push(
+                `/order-success?orderId=${order.order_id}&orderNumber=${order.order_number}&prepTime=${prepTime}`
+              );
+            })
+            .catch((err) => {
+              setIsPollingPayment(false);
+              setError(
+                err.message ||
+                  "Payment verification timed out. Please check with staff."
+              );
+            });
+        } catch (err: any) {
+          console.error("Error generating QR code:", err);
+          setError(
+            err.message ||
+              "Failed to generate payment QR code. Please try again."
+          );
+          setIsProcessing(false);
+        }
+      } else {
+        // Cash payment - redirect immediately
+        const prepTime = order.estimated_preparation_minutes || 0;
+        router.push(
+          `/order-success?orderId=${order.order_id}&orderNumber=${order.order_number}&prepTime=${prepTime}`
+        );
+      }
     } catch (err: any) {
       console.error("Error creating order:", err);
       setError(err.message || "Failed to create order. Please try again.");
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -200,7 +194,10 @@ export default function CartPage() {
     setSpecialInstructions("");
     setOrderType(OrderType.TAKEOUT);
     setPaymentMethod(PaymentMethod.CASH);
-    setReferenceNumber("");
+    setQrCodeString(null);
+    setQrOrderId(null);
+    setQrAmount(0);
+    setPaymentStatus("pending");
     setCompletedOrder(null);
     onOpenChange();
     router.push("/");
@@ -246,9 +243,6 @@ export default function CartPage() {
         break;
       case "specialInstructions":
         setSpecialInstructions(input);
-        break;
-      case "referenceNumber":
-        setReferenceNumber(input);
         break;
     }
   };
@@ -620,26 +614,17 @@ export default function CartPage() {
                           <div className="text-5xl">📱</div>
                           <div className="flex-1">
                             <h3 className="text-2xl font-black text-black mb-3">
-                              📝 Cashless Payment Steps
+                              💳 Cashless Payment
                             </h3>
-                            <ol className="text-black space-y-2 text-lg">
-                              <li className="flex items-start gap-2">
-                                <span className="font-black">1.</span>
-                                <span>Complete your order to get the order number</span>
-                              </li>
-                              <li className="flex items-start gap-2">
-                                <span className="font-black">2.</span>
-                                <span>Show order number at counter for payment QR code</span>
-                              </li>
-                              <li className="flex items-start gap-2">
-                                <span className="font-black">3.</span>
-                                <span>Scan & pay via GCash, PayMaya, or Card</span>
-                              </li>
-                              <li className="flex items-start gap-2">
-                                <span className="font-black">4.</span>
-                                <span className="font-bold text-red-600">Enter your payment reference below</span>
-                              </li>
-                            </ol>
+                            <p className="text-black text-lg font-semibold">
+                              After placing your order, a QR code will appear on
+                              screen. Simply scan and pay using GCash, PayMaya,
+                              or your card!
+                            </p>
+                            <p className="text-black text-sm mt-3">
+                              ✨ Payment is verified automatically - no reference
+                              number needed!
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -807,163 +792,116 @@ export default function CartPage() {
             </ModalContent>
           </Modal>
 
-          {/* QR Code Payment Modal */}
+          {/* Xendit QR Code Payment Modal */}
           <Modal
             isOpen={isQROpen}
-            onOpenChange={(open) => {
-              // Prevent modal from closing when modal keyboard is visible
-              if (!open && !modalKeyboardVisible) {
-                setModalKeyboardVisible(false);
-                onQRClose();
-              }
+            onClose={onQRClose}
+            isDismissable={!isPollingPayment}
+            hideCloseButton={isPollingPayment}
+            size="2xl"
+            classNames={{
+              backdrop: "bg-black/60 backdrop-blur-md",
+              base: "glass-card border-4 border-primary shadow-2xl",
             }}
-            isDismissable={!modalKeyboardVisible}
-            size="full"
           >
-            <ModalContent
-              classNames={{
-                backdrop: "bg-black/40 backdrop-blur-sm",
-                base: "glass-card border-4 border-primary shadow-2xl max-w-4xl mx-auto my-auto",
-                wrapper: "items-center justify-center",
-                body: "overflow-y-auto max-h-[85vh]",
-              }}
-            >
-              <ModalHeader className="flex flex-col gap-1">
-                <h2 className="text-2xl font-bold capitalize text-black">
-                  {paymentMethod} Payment
+            <ModalContent>
+              <ModalHeader className="flex flex-col gap-1 text-center pt-8">
+                <h2 className="text-4xl font-black text-gradient">
+                  💳 Scan to Pay
                 </h2>
-                <p className="text-sm text-black font-normal">
-                  Scan this QR code with your{" "}
-                  {paymentMethod === "gcash" ? "GCash" : "PayMaya"} app
+                <p className="text-lg text-black font-semibold mt-2">
+                  GCash • PayMaya • Cards
                 </p>
               </ModalHeader>
-              <ModalBody className="py-6">
-                {qrCodeUrl ? (
+              <ModalBody className="py-8 px-8">
+                {qrCodeString ? (
                   <div className="space-y-6">
                     {/* QR Code Display */}
                     <div className="flex justify-center">
-                      <div className="relative w-full max-w-md aspect-square bg-card rounded-xl p-6 shadow-lg border-4 border-primary">
-                        <Image
-                          src={getImageUrl(qrCodeUrl) || ""}
-                          alt={`${paymentMethod.toUpperCase()} QR Code`}
-                          fill
-                          className="object-contain p-4"
-                          priority
-                          unoptimized
+                      <div className="bg-white p-8 rounded-3xl shadow-2xl border-4 border-primary/60 animate-scale-in">
+                        <QRCodeSVG
+                          value={qrCodeString}
+                          size={320}
+                          level="H"
+                          includeMargin={true}
                         />
                       </div>
                     </div>
 
                     {/* Amount Display */}
-                    <div className="bg-primary/20 p-6 rounded-xl border-2 border-primary/60 text-center shadow-md">
-                      <p className="text-sm text-black mb-2 font-semibold">
+                    <div className="bg-gradient-to-r from-primary/20 via-secondary/20 to-primary/20 p-6 rounded-2xl border-3 border-primary/60 text-center shadow-lg">
+                      <p className="text-lg text-black mb-2 font-bold">
                         Amount to Pay:
                       </p>
-                      <p className="text-4xl font-bold text-black drop-shadow-sm">
-                        ₱{total.toFixed(2)}
+                      <p className="text-5xl font-black text-gradient drop-shadow-lg">
+                        ₱{qrAmount.toFixed(2)}
                       </p>
                     </div>
 
-                    {/* Instructions */}
-                    <div className="glass-card p-4 rounded-lg border-2 border-primary/60 shadow-md">
-                      <h3 className="font-semibold text-black mb-3">
-                        Payment Instructions:
-                      </h3>
-                      <ol className="text-sm text-black space-y-2 list-decimal list-inside">
-                        <li>
-                          Open your{" "}
-                          {paymentMethod === "gcash" ? "GCash" : "PayMaya"} app
-                        </li>
-                        <li>Tap "Scan QR" in your app</li>
-                        <li>Scan the QR code shown above</li>
-                        <li>Verify the amount: ₱{total.toFixed(2)}</li>
-                        <li>Complete the payment in your app</li>
-                        <li>
-                          <strong>
-                            Copy the reference number from your payment
-                            confirmation
-                          </strong>
-                        </li>
-                        <li>Enter the reference number below</li>
-                      </ol>
-                    </div>
-
-                    {/* Reference Number Input */}
-                    <div className="glass-card p-6 rounded-xl border-2 border-primary/60 shadow-lg">
-                      <Input
-                        label={`${paymentMethod === "gcash" ? "GCash" : "PayMaya"} Reference Number`}
-                        placeholder="Enter your reference number"
-                        value={referenceNumber}
-                        onChange={(e) => setReferenceNumber(e.target.value)}
-                        onFocus={(e) => handleModalInputFocus(e)}
-                        readOnly
-                        size="lg"
-                        variant="bordered"
-                        isRequired
-                        classNames={{
-                          input:
-                            "text-black font-semibold text-lg cursor-pointer",
-                          label: "text-black font-bold text-base",
-                          inputWrapper:
-                            "border-3 border-primary/80 hover:border-primary bg-card shadow-md h-14 cursor-pointer",
-                        }}
-                        startContent={
-                          <div className="pointer-events-none flex items-center">
-                            <span className="text-2xl mr-2">📱</span>
+                    {/* Payment Status */}
+                    {isPollingPayment && (
+                      <div className="glass-card p-6 rounded-2xl border-3 border-blue-400 shadow-lg animate-pulse-slow">
+                        <div className="flex items-center justify-center gap-4">
+                          <Spinner size="lg" color="primary" />
+                          <div className="text-center">
+                            <p className="text-xl font-bold text-black">
+                              Waiting for payment...
+                            </p>
+                            <p className="text-sm text-black mt-2">
+                              Payment will be verified automatically
+                            </p>
                           </div>
-                        }
-                      />
-                      <p className="text-xs text-black mt-2 font-medium">
-                        ⚠️ This reference number is required to complete your
-                        order
-                      </p>
-                    </div>
-
-                    {/* Modal Keyboard */}
-                    {modalKeyboardVisible && (
-                      <div className="mt-4">
-                        <TouchKeyboard
-                          ref={modalKeyboardRef}
-                          onChange={handleModalKeyboardChange}
-                          onKeyPress={handleModalKeyPress}
-                          inputName="referenceNumber"
-                          layoutName={modalLayoutName}
-                          variant="inline"
-                        />
+                        </div>
                       </div>
                     )}
 
-                    <div className="bg-yellow-500/20 p-3 rounded-lg border-2 border-yellow-500/60 shadow-md">
-                      <p className="text-sm text-black text-center">
-                        ℹ️ <strong>Note:</strong> Please complete your payment
-                        and enter the reference number above. The cashier will
-                        verify this reference number when you pick up your
-                        order.
+                    {/* Instructions */}
+                    <div className="glass-card p-5 rounded-xl border-2 border-primary/50 shadow-md">
+                      <h3 className="font-bold text-black mb-3 text-lg">
+                        📱 How to Pay:
+                      </h3>
+                      <ol className="text-black space-y-2 list-decimal list-inside text-base">
+                        <li>Open your GCash, PayMaya, or banking app</li>
+                        <li>Tap "Scan QR" or "Pay via QR"</li>
+                        <li>Scan the QR code above</li>
+                        <li>Verify the amount and complete payment</li>
+                        <li>
+                          <strong>This screen will close automatically!</strong>
+                        </li>
+                      </ol>
+                    </div>
+
+                    <div className="bg-green-50 p-4 rounded-xl border-2 border-green-400 shadow-md">
+                      <p className="text-sm text-black text-center font-semibold">
+                        ✨ No reference number needed - payment is verified
+                        automatically!
                       </p>
                     </div>
                   </div>
                 ) : (
                   <div className="text-center py-12">
-                    <p className="text-lg text-black font-semibold">
-                      QR Code not available
+                    <div className="text-6xl mb-4">⚠️</div>
+                    <p className="text-xl text-black font-bold mb-2">
+                      QR Code Generation Failed
                     </p>
-                    <p className="text-sm text-black mt-2">
-                      Please contact staff for assistance with {paymentMethod}{" "}
-                      payments
+                    <p className="text-base text-black">
+                      Please contact staff for assistance
                     </p>
                   </div>
                 )}
               </ModalBody>
-              <ModalFooter>
-                <Button
-                  size="lg"
-                  className="bg-gradient-to-r from-primary to-secondary text-black font-bold shadow-lg hover:scale-105 transition-all"
-                  onClick={onQRClose}
-                  isDisabled={!qrCodeUrl || !referenceNumber.trim()}
-                >
-                  ✓ I've Entered My Reference Number
-                </Button>
-              </ModalFooter>
+              {!isPollingPayment && (
+                <ModalFooter className="justify-center pb-6">
+                  <Button
+                    size="lg"
+                    variant="bordered"
+                    className="border-2 border-primary/60 text-black hover:bg-primary/10 font-bold"
+                    onClick={onQRClose}
+                  >
+                    Cancel Payment
+                  </Button>
+                </ModalFooter>
+              )}
             </ModalContent>
           </Modal>
 
