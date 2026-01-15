@@ -131,7 +131,7 @@ export default function CartPage() {
           // Generate Xendit QR code
           const qrData = await PaymentService.createPaymentQR(
             order.order_id,
-            Number(order.final_amount)
+            Number(order.total_amount)
           );
 
           // Store QR code data and show modal
