@@ -30,7 +30,7 @@ export function useNotifications(params?: {
 
   // Listen for SSE events that should trigger notification refresh
   useSSE({
-    url: `${API_URL}/api/sse/orders`,
+    url: `${API_URL}/sse/orders`,
     enabled: true,
     events: {
       'order.created': () => mutate(),
@@ -39,7 +39,7 @@ export function useNotifications(params?: {
   });
 
   useSSE({
-    url: `${API_URL}/api/sse/custom-cakes`,
+    url: `${API_URL}/sse/custom-cakes`,
     enabled: true,
     events: {
       'custom_cake.submitted': () => mutate(),
@@ -50,7 +50,7 @@ export function useNotifications(params?: {
   });
 
   useSSE({
-    url: `${API_URL}/api/sse/menu`,
+    url: `${API_URL}/sse/menu`,
     enabled: true,
     events: {
       'menu.item.stock_changed': () => mutate(),
@@ -131,7 +131,7 @@ export function useUnreadNotificationCount() {
 
   // Listen for SSE events that should trigger count update
   useSSE({
-    url: `${API_URL}/api/sse/orders`,
+    url: `${API_URL}/sse/orders`,
     enabled: true,
     events: {
       'order.created': () => mutate(),
@@ -139,7 +139,7 @@ export function useUnreadNotificationCount() {
   });
 
   useSSE({
-    url: `${API_URL}/api/sse/custom-cakes`,
+    url: `${API_URL}/sse/custom-cakes`,
     enabled: true,
     events: {
       'custom_cake.submitted': () => mutate(),
@@ -149,7 +149,7 @@ export function useUnreadNotificationCount() {
   });
 
   useSSE({
-    url: `${API_URL}/api/sse/menu`,
+    url: `${API_URL}/sse/menu`,
     enabled: true,
     events: {
       'menu.item.stock_changed': () => mutate(),

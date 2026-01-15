@@ -62,7 +62,7 @@ export function useMessages(requestId: number | string | undefined) {
 
   // Listen for SSE events
   useSSE({
-    url: `${API_URL}/api/sse/custom-cakes`,
+    url: `${API_URL}/sse/custom-cakes`,
     enabled: !!requestId,
     events: {
       'custom_cake.message_received': (eventData: any) => {
@@ -180,7 +180,7 @@ export function useUnreadMessageCount() {
 
   // Listen for new messages
   useSSE({
-    url: `${API_URL}/api/sse/custom-cakes`,
+    url: `${API_URL}/sse/custom-cakes`,
     enabled: true,
     events: {
       'custom_cake.message_received': () => {

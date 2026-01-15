@@ -37,7 +37,7 @@ export function useOrders(status?: string) {
 
   // Set up SSE connection for real-time order updates
   useSSE({
-    url: `${process.env.NEXT_PUBLIC_API_URL}/api/sse/orders`,
+    url: `${process.env.NEXT_PUBLIC_API_URL}/sse/orders`,
     token: getToken(),
     enabled: true,
     events: {
@@ -120,7 +120,7 @@ export function useOrder(orderId: number | null) {
 
   // Listen for updates to this specific order
   useSSE({
-    url: `${process.env.NEXT_PUBLIC_API_URL}/api/sse/orders`,
+    url: `${process.env.NEXT_PUBLIC_API_URL}/sse/orders`,
     token: getToken(),
     enabled: orderId !== null,
     events: {
