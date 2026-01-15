@@ -2194,6 +2194,7 @@ ORDER BY ORDINAL_POSITION;
 
 SELECT '✅ Migration completed: Payment system refactored to Cash and Cashless only' as Status;
 
+ALTER TABLE customer DROP INDEX phone;
 
 -- ============================================================================
 -- COMPLETION MESSAGE - PRODUCTION SCHEMA
