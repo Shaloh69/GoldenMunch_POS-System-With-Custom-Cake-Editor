@@ -297,9 +297,14 @@ export default function AdminMenuPage() {
   const handleSubmit = async () => {
     try {
       // Validate required fields
-      if (!formData.name || !formData.item_type_id) {
-        setError("Name and Item Type are required");
+      if (!formData.name || !formData.item_type_id || !formData.unit_of_measure_id || formData.preparation_time_minutes === undefined) {
+        setError("Name, Item Type, Unit of Measure, and Preparation Time are required");
+        return;
+      }
 
+      // Validate image for new items
+      if (!editingItem && !imageFile) {
+        setError("Image is required for new menu items");
         return;
       }
 
@@ -722,7 +727,10 @@ export default function AdminMenuPage() {
   };
 
   const resetForm = () => {
-    setFormData({});
+    setFormData({
+      unit_of_measure_id: units.length > 0 ? units[0].unit_id : undefined,
+      preparation_time_minutes: 0,
+    });
     setImageFile(null);
     setError(null);
     setSuccessMessage(null);
@@ -1378,9 +1386,11 @@ export default function AdminMenuPage() {
                 ]}
               </Select>
               <Select
+                isRequired
                 label="Unit of Measure"
                 placeholder="Select unit of measure"
-                selectedKeys={formData.unit_of_measure_id ? [formData.unit_of_measure_id.toString()] : units.length > 0 ? [units[0].unit_id.toString()] : []}
+                selectedKeys={formData.unit_of_measure_id ? [formData.unit_of_measure_id.toString()] : []}
+                errorMessage={!formData.unit_of_measure_id && "Unit of measure is required"}
                 onChange={(e) => {
                   const value = e.target.value;
                   if (value === "add_new") {
@@ -1596,11 +1606,14 @@ export default function AdminMenuPage() {
               </div>
 
               <Input
+                isRequired
                 label="Preparation Time (minutes)"
                 min="0"
-                placeholder="Enter preparation time in minutes"
+                placeholder="Enter preparation time in minutes (e.g., 5)"
                 step="1"
                 type="number"
+                value={formData.preparation_time_minutes?.toString() || "0"}
+                errorMessage={formData.preparation_time_minutes === undefined && "Preparation time is required"}
                 onChange={(e) => {
                   const value = e.target.value;
 
@@ -1642,8 +1655,10 @@ export default function AdminMenuPage() {
               <Input
                 accept="image/*"
                 description="Upload an image of the menu item (JPG, PNG, max 10MB)"
-                label={editingItem?.image_url ? "Replace Image" : "Item Image"}
+                label={editingItem?.image_url ? "Replace Image (Optional)" : "Item Image"}
                 type="file"
+                isRequired={!editingItem?.image_url}
+                errorMessage={!editingItem?.image_url && !imageFile && "Image is required for new items"}
                 onChange={(e) => setImageFile(e.target.files?.[0] || null)}
               />
               {imageFile && (
@@ -1664,7 +1679,13 @@ export default function AdminMenuPage() {
             </Button>
             <Button
               color="primary"
-              isDisabled={!formData.name || !formData.item_type_id}
+              isDisabled={
+                !formData.name ||
+                !formData.item_type_id ||
+                !formData.unit_of_measure_id ||
+                formData.preparation_time_minutes === undefined ||
+                (!editingItem && !imageFile)
+              }
               isLoading={saving}
               onPress={handleSubmit}
             >
