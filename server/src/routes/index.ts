@@ -25,6 +25,7 @@ import * as paymentController from '../controllers/payment.controller';
 import * as capacityController from '../controllers/capacity.controller';
 import * as sseController from '../controllers/sse.controller';
 import * as notificationsController from '../controllers/notifications.controller';
+import * as emailController from '../controllers/email.controller';
 
 const router = Router();
 
@@ -655,6 +656,14 @@ router.post('/custom-cake/messages/:requestId/reply', asyncHandler(customCakeMes
 router.get('/notifications', authenticate, asyncHandler(notificationsController.getAllNotifications));
 router.get('/notifications/unread-count', authenticate, asyncHandler(notificationsController.getUnreadCount));
 router.put('/notifications/:id/read', authenticate, asyncHandler(notificationsController.markAsRead));
+
+// Email Management (Admin)
+router.get('/admin/emails', authenticateAdmin, asyncHandler(emailController.getAllEmails));
+router.get('/admin/emails/stats', authenticateAdmin, asyncHandler(emailController.getEmailStats));
+router.get('/admin/emails/:id', authenticateAdmin, asyncHandler(emailController.getEmailById));
+router.post('/admin/emails/send', authenticateAdmin, asyncHandler(emailController.sendCustomEmail));
+router.post('/admin/emails/:id/retry', authenticateAdmin, asyncHandler(emailController.retryEmail));
+router.delete('/admin/emails/:id', authenticateAdmin, asyncHandler(emailController.deleteEmail));
 
 // Capacity Management (Admin)
 router.get('/admin/capacity/available-dates', authenticateAdmin, asyncHandler(capacityController.getAvailableDates));

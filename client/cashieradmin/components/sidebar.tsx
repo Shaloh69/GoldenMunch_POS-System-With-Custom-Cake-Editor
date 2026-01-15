@@ -23,6 +23,7 @@ import {
   PlusCircleIcon,
   PercentBadgeIcon,
   BellIcon,
+  EnvelopeIcon,
 } from "@heroicons/react/24/outline";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -92,6 +93,12 @@ const adminNav: NavItem[] = [
     name: "Custom Cakes",
     href: "/admin/custom-cakes",
     icon: CakeIcon,
+    adminOnly: true,
+  },
+  {
+    name: "Emails",
+    href: "/admin/emails",
+    icon: EnvelopeIcon,
     adminOnly: true,
   },
   {
