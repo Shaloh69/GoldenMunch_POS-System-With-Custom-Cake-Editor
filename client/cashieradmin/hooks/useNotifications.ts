@@ -124,7 +124,7 @@ export function useUnreadNotificationCount() {
       return response.data || { unread_count: 0, breakdown: { custom_cake_messages: 0, pending_requests: 0, low_stock: 0, pending_orders: 0 } };
     },
     {
-      refreshInterval: 30000, // Refresh every 30 seconds
+      refreshInterval: 300000, // Reduced polling: 5 minutes (was 30s) - SSE handles real-time updates
       revalidateOnFocus: true,
     }
   );

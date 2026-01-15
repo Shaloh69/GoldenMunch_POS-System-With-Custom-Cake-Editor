@@ -173,7 +173,7 @@ export function useUnreadMessageCount() {
       return response.data?.data?.unread_count || 0;
     },
     {
-      refreshInterval: 30000, // Refresh every 30 seconds
+      refreshInterval: 300000, // Reduced polling: 5 minutes (was 30s) - SSE handles real-time updates
       revalidateOnFocus: true,
     }
   );

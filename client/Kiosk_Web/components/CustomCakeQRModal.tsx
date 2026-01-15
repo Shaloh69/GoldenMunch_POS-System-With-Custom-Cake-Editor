@@ -124,7 +124,7 @@ export const CustomCakeQRModal: React.FC<CustomCakeQRModalProps> = ({
       } catch (err) {
         console.error("❌ [QR Modal] Polling error:", err);
       }
-    }, 2000); // Poll every 2 seconds
+    }, 5000); // Poll every 5 seconds (optimized from 2s to reduce API load)
 
     setPollingInterval(interval);
   };
