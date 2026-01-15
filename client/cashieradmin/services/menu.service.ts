@@ -116,19 +116,8 @@ export class MenuService {
       return apiClient.postFormData<Category>("/admin/categories", formData);
     }
 
-    // Convert booleans to 0/1 for MySQL TINYINT compatibility
-    const normalizedData: Record<string, any> = {};
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        if (typeof value === "boolean") {
-          normalizedData[key] = value ? 1 : 0;
-        } else {
-          normalizedData[key] = value;
-        }
-      }
-    });
-
-    return apiClient.post<Category>("/admin/categories", normalizedData);
+    // Send data as-is - backend handles boolean conversion
+    return apiClient.post<Category>("/admin/categories", data);
   }
 
   static async updateCategory(
@@ -158,19 +147,8 @@ export class MenuService {
       );
     }
 
-    // Convert booleans to 0/1 for MySQL TINYINT compatibility
-    const normalizedData: Record<string, any> = {};
-    Object.entries(data).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        if (typeof value === "boolean") {
-          normalizedData[key] = value ? 1 : 0;
-        } else {
-          normalizedData[key] = value;
-        }
-      }
-    });
-
-    return apiClient.put<Category>(`/admin/categories/${id}`, normalizedData);
+    // Send data as-is - backend handles boolean conversion
+    return apiClient.put<Category>(`/admin/categories/${id}`, data);
   }
 
   static async assignItemToCategory(data: {
