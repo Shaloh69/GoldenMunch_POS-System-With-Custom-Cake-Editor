@@ -546,7 +546,8 @@ CREATE TABLE customer_order (
 
     -- Payment Status
     payment_status ENUM('unpaid', 'partial', 'paid', 'refunded') DEFAULT 'unpaid',
-    payment_method ENUM('cash', 'credit_card', 'debit_card', 'gcash', 'paymaya', 'bank_transfer', 'loyalty_points', 'other') NULL,
+    payment_method ENUM('cash', 'cashless') NULL COMMENT 'Simplified payment methods: cash or cashless (Xendit)',
+    payment_reference_number VARCHAR(255) NULL COMMENT 'Unified payment reference for cashless payments (Xendit QR code ID)',
     amount_paid DECIMAL(10,2) DEFAULT 0,
     change_amount DECIMAL(10,2) DEFAULT 0,
 
@@ -656,9 +657,9 @@ CREATE TABLE payment_transaction (
     transaction_id INT AUTO_INCREMENT PRIMARY KEY,
     order_id INT NOT NULL,
     transaction_type ENUM('payment', 'refund', 'adjustment') DEFAULT 'payment',
-    payment_method ENUM('cash', 'credit_card', 'debit_card', 'gcash', 'paymaya', 'bank_transfer', 'loyalty_points', 'other') NOT NULL,
+    payment_method ENUM('cash', 'cashless') NOT NULL COMMENT 'Simplified payment methods: cash or cashless (Xendit)',
     amount DECIMAL(10,2) NOT NULL,
-    reference_number VARCHAR(100) NULL COMMENT 'Bank ref, transaction ID, etc.',
+    reference_number VARCHAR(100) NULL COMMENT 'Xendit QR code ID, transaction reference, etc.',
     card_last_four VARCHAR(4) NULL,
 
     -- Status
@@ -2101,14 +2102,22 @@ SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN payment_re
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@col_exists = 0, '✓ Added column: payment_reference_number', '⊘ Column already exists: payment_reference_number') as Status;
 
--- Step 2: Migrate existing reference data to new column
+-- Step 2: Migrate existing reference data to new column (only if old columns exist)
 -- Priority: xendit > paymaya > gcash > card
-UPDATE customer_order
-SET payment_reference_number = COALESCE(xendit_reference_number, paymaya_reference_number, gcash_reference_number, card_transaction_ref)
-WHERE payment_reference_number IS NULL
-  AND (xendit_reference_number IS NOT NULL OR paymaya_reference_number IS NOT NULL OR gcash_reference_number IS NOT NULL OR card_transaction_ref IS NOT NULL);
+SET @old_cols_exist = (
+    SELECT COUNT(*) FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'customer_order'
+    AND COLUMN_NAME IN ('gcash_reference_number', 'paymaya_reference_number', 'xendit_reference_number', 'card_transaction_ref')
+);
 
-SELECT CONCAT('✓ Migrated ', ROW_COUNT(), ' payment references') as Status;
+SET @migrate_sql = IF(@old_cols_exist > 0,
+    'UPDATE customer_order SET payment_reference_number = COALESCE(xendit_reference_number, paymaya_reference_number, gcash_reference_number, card_transaction_ref) WHERE payment_reference_number IS NULL AND (xendit_reference_number IS NOT NULL OR paymaya_reference_number IS NOT NULL OR gcash_reference_number IS NOT NULL OR card_transaction_ref IS NOT NULL)',
+    'SELECT 1'
+);
+PREPARE stmt FROM @migrate_sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+
+SELECT IF(@old_cols_exist > 0, CONCAT('✓ Migrated payment references from old columns'), '⊘ No old columns to migrate (fresh database)') as Status;
 
 -- Step 3: Drop old reference columns
 SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'gcash_reference_number');
