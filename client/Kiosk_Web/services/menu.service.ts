@@ -108,7 +108,7 @@ export class MenuService {
   static async getItemTypes(): Promise<MenuItemType[]> {
     try {
       const response = await apiClient.get<ApiResponse<MenuItemType[]>>(
-        "/admin/menu/item-types"
+        "/kiosk/item-types"
       );
       return response.data.data || [];
     } catch (error) {
@@ -123,7 +123,7 @@ export class MenuService {
   static async getUnits(): Promise<UnitOfMeasure[]> {
     try {
       const response = await apiClient.get<ApiResponse<UnitOfMeasure[]>>(
-        "/admin/menu/units"
+        "/kiosk/units"
       );
       return response.data.data || [];
     } catch (error) {

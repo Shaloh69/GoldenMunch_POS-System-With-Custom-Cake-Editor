@@ -393,6 +393,10 @@ router.get('/kiosk/menu/:id', cacheMiddleware(CacheTTL.LONG), asyncHandler(kiosk
 router.get('/kiosk/promotions', cacheMiddleware(CacheTTL.MEDIUM), asyncHandler(kioskController.getActivePromotions));
 router.get('/kiosk/capacity/check', cacheMiddleware(CacheTTL.SHORT), asyncHandler(kioskController.checkCapacity));
 
+// Kiosk - Item Types and Units (for filtering)
+router.get('/kiosk/item-types', cacheMiddleware(CacheTTL.VERY_LONG), asyncHandler(adminController.getAllItemTypes));
+router.get('/kiosk/units', cacheMiddleware(CacheTTL.VERY_LONG), asyncHandler(adminController.getAllUnits));
+
 // Kiosk Orders
 router.post('/kiosk/orders', validate(schemas.createOrder), asyncHandler(orderController.createOrder));
 router.get('/kiosk/orders/id/:id', asyncHandler(orderController.getOrderById));
