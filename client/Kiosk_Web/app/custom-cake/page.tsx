@@ -98,7 +98,7 @@ export default function CustomCakePage() {
       } catch (err) {
         console.error("Polling error:", err);
       }
-    }, 2000); // Poll every 2 seconds
+    }, 5000); // Poll every 5 seconds (optimized from 2s to reduce API load)
 
     // Cleanup function
     return () => {

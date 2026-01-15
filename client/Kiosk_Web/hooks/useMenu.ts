@@ -26,7 +26,7 @@ export function useMenuItems(params?: MenuQueryParams) {
 
   // Set up SSE connection for real-time menu updates
   useSSE({
-    url: `${process.env.NEXT_PUBLIC_API_URL}/api/sse/menu`,
+    url: `${process.env.NEXT_PUBLIC_API_URL}/sse/menu`,
     enabled: true,
     events: {
       // When menu items are created/updated/deleted
@@ -90,7 +90,7 @@ export function useCategories() {
 
   // Listen for menu updates (categories might be affected)
   useSSE({
-    url: `${process.env.NEXT_PUBLIC_API_URL}/api/sse/menu`,
+    url: `${process.env.NEXT_PUBLIC_API_URL}/sse/menu`,
     enabled: true,
     events: {
       'menu.item.created': () => mutate(),

@@ -30,7 +30,7 @@ export function useNotifications(params?: {
 
   // Listen for SSE events that should trigger notification refresh
   useSSE({
-    url: `${API_URL}/api/sse/orders`,
+    url: `${API_URL}/sse/orders`,
     enabled: true,
     events: {
       'order.created': () => mutate(),
@@ -39,7 +39,7 @@ export function useNotifications(params?: {
   });
 
   useSSE({
-    url: `${API_URL}/api/sse/custom-cakes`,
+    url: `${API_URL}/sse/custom-cakes`,
     enabled: true,
     events: {
       'custom_cake.submitted': () => mutate(),
@@ -50,7 +50,7 @@ export function useNotifications(params?: {
   });
 
   useSSE({
-    url: `${API_URL}/api/sse/menu`,
+    url: `${API_URL}/sse/menu`,
     enabled: true,
     events: {
       'menu.item.stock_changed': () => mutate(),
@@ -124,14 +124,14 @@ export function useUnreadNotificationCount() {
       return response.data || { unread_count: 0, breakdown: { custom_cake_messages: 0, pending_requests: 0, low_stock: 0, pending_orders: 0 } };
     },
     {
-      refreshInterval: 30000, // Refresh every 30 seconds
+      refreshInterval: 300000, // Reduced polling: 5 minutes (was 30s) - SSE handles real-time updates
       revalidateOnFocus: true,
     }
   );
 
   // Listen for SSE events that should trigger count update
   useSSE({
-    url: `${API_URL}/api/sse/orders`,
+    url: `${API_URL}/sse/orders`,
     enabled: true,
     events: {
       'order.created': () => mutate(),
@@ -139,7 +139,7 @@ export function useUnreadNotificationCount() {
   });
 
   useSSE({
-    url: `${API_URL}/api/sse/custom-cakes`,
+    url: `${API_URL}/sse/custom-cakes`,
     enabled: true,
     events: {
       'custom_cake.submitted': () => mutate(),
@@ -149,7 +149,7 @@ export function useUnreadNotificationCount() {
   });
 
   useSSE({
-    url: `${API_URL}/api/sse/menu`,
+    url: `${API_URL}/sse/menu`,
     enabled: true,
     events: {
       'menu.item.stock_changed': () => mutate(),
