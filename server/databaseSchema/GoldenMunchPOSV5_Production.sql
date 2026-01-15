@@ -2096,28 +2096,47 @@ ORDER BY n.request_id, n.sent_at ASC;
 
 USE defaultdb;
 
--- Step 1: Add new payment_reference_number column
+-- Step 1: Add new payment_reference_number column (if needed)
 SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'payment_reference_number');
-SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN payment_reference_number VARCHAR(255) NULL COMMENT ''Unified payment reference for cashless payments (Xendit invoice ID)'' AFTER payment_status', 'SELECT 1');
+SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN payment_reference_number VARCHAR(255) NULL COMMENT ''Unified payment reference for cashless payments (Xendit QR code ID)'' AFTER payment_status', 'SELECT 1');
 PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@col_exists = 0, '✓ Added column: payment_reference_number', '⊘ Column already exists: payment_reference_number') as Status;
 
 -- Step 2: Migrate existing reference data to new column (only if old columns exist)
--- Priority: xendit > paymaya > gcash > card
-SET @old_cols_exist = (
-    SELECT COUNT(*) FROM information_schema.COLUMNS
+-- Use a stored procedure to avoid PREPARE errors with non-existent columns
+DROP PROCEDURE IF EXISTS migrate_payment_references;
+
+DELIMITER $$
+CREATE PROCEDURE migrate_payment_references()
+BEGIN
+    DECLARE old_cols_count INT;
+
+    -- Check if old columns exist
+    SELECT COUNT(*) INTO old_cols_count
+    FROM information_schema.COLUMNS
     WHERE TABLE_SCHEMA = DATABASE()
     AND TABLE_NAME = 'customer_order'
-    AND COLUMN_NAME IN ('gcash_reference_number', 'paymaya_reference_number', 'xendit_reference_number', 'card_transaction_ref')
-);
+    AND COLUMN_NAME IN ('gcash_reference_number', 'paymaya_reference_number', 'xendit_reference_number', 'card_transaction_ref');
 
-SET @migrate_sql = IF(@old_cols_exist > 0,
-    'UPDATE customer_order SET payment_reference_number = COALESCE(xendit_reference_number, paymaya_reference_number, gcash_reference_number, card_transaction_ref) WHERE payment_reference_number IS NULL AND (xendit_reference_number IS NOT NULL OR paymaya_reference_number IS NOT NULL OR gcash_reference_number IS NOT NULL OR card_transaction_ref IS NOT NULL)',
-    'SELECT 1'
-);
-PREPARE stmt FROM @migrate_sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
+    -- Only migrate if old columns exist
+    IF old_cols_count > 0 THEN
+        UPDATE customer_order
+        SET payment_reference_number = COALESCE(xendit_reference_number, paymaya_reference_number, gcash_reference_number, card_transaction_ref)
+        WHERE payment_reference_number IS NULL
+        AND (xendit_reference_number IS NOT NULL OR paymaya_reference_number IS NOT NULL OR gcash_reference_number IS NOT NULL OR card_transaction_ref IS NOT NULL);
 
-SELECT IF(@old_cols_exist > 0, CONCAT('✓ Migrated payment references from old columns'), '⊘ No old columns to migrate (fresh database)') as Status;
+        SELECT CONCAT('✓ Migrated ', ROW_COUNT(), ' payment references from old columns') as Status;
+    ELSE
+        SELECT '⊘ No old columns to migrate (fresh database)' as Status;
+    END IF;
+END$$
+DELIMITER ;
+
+-- Execute the migration procedure
+CALL migrate_payment_references();
+
+-- Clean up
+DROP PROCEDURE IF EXISTS migrate_payment_references;
 
 -- Step 3: Drop old reference columns
 SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'gcash_reference_number');
