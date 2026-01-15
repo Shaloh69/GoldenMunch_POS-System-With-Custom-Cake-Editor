@@ -476,18 +476,29 @@ CREATE TABLE custom_cake_request_images (
 -- Custom cake notifications (email log)
 CREATE TABLE custom_cake_notifications (
     notification_id INT AUTO_INCREMENT PRIMARY KEY,
+    parent_notification_id INT NULL COMMENT 'For threading messages/replies',
     request_id INT NOT NULL,
     notification_type ENUM('submission_received', 'approved', 'rejected', 'ready_for_pickup', 'reminder') NOT NULL,
+    sender_type ENUM('customer', 'admin', 'system') DEFAULT 'system' COMMENT 'Who sent this message',
+    sender_name VARCHAR(255) NULL COMMENT 'Name of the sender',
     recipient_email VARCHAR(100) NOT NULL,
     subject VARCHAR(200),
     message_body TEXT,
     sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    read_at TIMESTAMP NULL COMMENT 'When the message was read',
     status ENUM('pending', 'sent', 'failed') DEFAULT 'pending',
+    is_read BOOLEAN DEFAULT FALSE COMMENT 'Whether message has been read',
     error_message TEXT NULL,
+
     FOREIGN KEY (request_id) REFERENCES custom_cake_request(request_id) ON DELETE CASCADE,
+    CONSTRAINT fk_parent_notification FOREIGN KEY (parent_notification_id) REFERENCES custom_cake_notifications(notification_id) ON DELETE CASCADE,
+
     INDEX idx_ccn_request (request_id),
-    INDEX idx_ccn_status (status)
-) ENGINE=InnoDB;
+    INDEX idx_ccn_status (status),
+    INDEX idx_request_sender (request_id, sender_type),
+    INDEX idx_request_unread (request_id, is_read),
+    INDEX idx_parent_notification (parent_notification_id)
+) ENGINE=InnoDB COMMENT='Notifications and messages for custom cake requests';
 
 -- ============================================================================
 -- SECTION 7: CUSTOMERS & ORDERS
@@ -1932,139 +1943,11 @@ CREATE TABLE IF NOT EXISTS system_settings (
     FOREIGN KEY (updated_by) REFERENCES admin(admin_id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
--- Insert initial payment QR code settings (placeholders)
-INSERT INTO system_settings (setting_key, setting_type, description, is_public)
-VALUES
-    ('gcash_qr_code_url', 'string', 'GCash payment QR code image URL', TRUE),
-    ('paymaya_qr_code_url', 'string', 'PayMaya payment QR code image URL', TRUE)
-ON DUPLICATE KEY UPDATE setting_key = setting_key;
+-- ============================================================================
+-- VIEWS
+-- ============================================================================
 
--- Migration: Add messaging support to custom_cake_notifications table
--- This enables threaded conversations between customers and admin
-
--- Drop stored procedure if it exists
-DROP PROCEDURE IF EXISTS add_messaging_support;
-
-DELIMITER //
-CREATE PROCEDURE add_messaging_support()
-BEGIN
-    DECLARE CONTINUE HANDLER FOR SQLSTATE '42S21' BEGIN END; -- Duplicate column
-    DECLARE CONTINUE HANDLER FOR SQLSTATE '42000' BEGIN END; -- Syntax or access error
-    DECLARE CONTINUE HANDLER FOR SQLSTATE 'HY000' BEGIN END; -- General error (for duplicate keys)
-
-    -- Check and add sender_type column
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.COLUMNS
-        WHERE TABLE_SCHEMA = DATABASE()
-        AND TABLE_NAME = 'custom_cake_notifications'
-        AND COLUMN_NAME = 'sender_type'
-    ) THEN
-        ALTER TABLE custom_cake_notifications
-        ADD COLUMN sender_type ENUM('customer', 'admin', 'system') DEFAULT 'system' AFTER notification_type;
-    END IF;
-
-    -- Check and add parent_notification_id column
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.COLUMNS
-        WHERE TABLE_SCHEMA = DATABASE()
-        AND TABLE_NAME = 'custom_cake_notifications'
-        AND COLUMN_NAME = 'parent_notification_id'
-    ) THEN
-        ALTER TABLE custom_cake_notifications
-        ADD COLUMN parent_notification_id INT NULL AFTER notification_id;
-    END IF;
-
-    -- Check and add is_read column
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.COLUMNS
-        WHERE TABLE_SCHEMA = DATABASE()
-        AND TABLE_NAME = 'custom_cake_notifications'
-        AND COLUMN_NAME = 'is_read'
-    ) THEN
-        ALTER TABLE custom_cake_notifications
-        ADD COLUMN is_read BOOLEAN DEFAULT FALSE AFTER status;
-    END IF;
-
-    -- Check and add read_at column
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.COLUMNS
-        WHERE TABLE_SCHEMA = DATABASE()
-        AND TABLE_NAME = 'custom_cake_notifications'
-        AND COLUMN_NAME = 'read_at'
-    ) THEN
-        ALTER TABLE custom_cake_notifications
-        ADD COLUMN read_at TIMESTAMP NULL AFTER sent_at;
-    END IF;
-
-    -- Check and add sender_name column
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.COLUMNS
-        WHERE TABLE_SCHEMA = DATABASE()
-        AND TABLE_NAME = 'custom_cake_notifications'
-        AND COLUMN_NAME = 'sender_name'
-    ) THEN
-        ALTER TABLE custom_cake_notifications
-        ADD COLUMN sender_name VARCHAR(255) NULL AFTER sender_type;
-    END IF;
-
-    -- Add foreign key constraint if it doesn't exist
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.TABLE_CONSTRAINTS
-        WHERE TABLE_SCHEMA = DATABASE()
-        AND TABLE_NAME = 'custom_cake_notifications'
-        AND CONSTRAINT_NAME = 'fk_parent_notification'
-    ) THEN
-        ALTER TABLE custom_cake_notifications
-        ADD CONSTRAINT fk_parent_notification
-        FOREIGN KEY (parent_notification_id) REFERENCES custom_cake_notifications(notification_id)
-        ON DELETE CASCADE;
-    END IF;
-
-    -- Add indexes for efficient querying
-    -- Check and create idx_request_sender
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.STATISTICS
-        WHERE TABLE_SCHEMA = DATABASE()
-        AND TABLE_NAME = 'custom_cake_notifications'
-        AND INDEX_NAME = 'idx_request_sender'
-    ) THEN
-        CREATE INDEX idx_request_sender ON custom_cake_notifications(request_id, sender_type);
-    END IF;
-
-    -- Check and create idx_request_unread
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.STATISTICS
-        WHERE TABLE_SCHEMA = DATABASE()
-        AND TABLE_NAME = 'custom_cake_notifications'
-        AND INDEX_NAME = 'idx_request_unread'
-    ) THEN
-        CREATE INDEX idx_request_unread ON custom_cake_notifications(request_id, is_read);
-    END IF;
-
-    -- Check and create idx_parent_notification
-    IF NOT EXISTS (
-        SELECT 1 FROM information_schema.STATISTICS
-        WHERE TABLE_SCHEMA = DATABASE()
-        AND TABLE_NAME = 'custom_cake_notifications'
-        AND INDEX_NAME = 'idx_parent_notification'
-    ) THEN
-        CREATE INDEX idx_parent_notification ON custom_cake_notifications(parent_notification_id);
-    END IF;
-END//
-DELIMITER ;
-
--- Execute the procedure
-CALL add_messaging_support();
-
--- Drop the procedure after use
-DROP PROCEDURE IF EXISTS add_messaging_support;
-
--- Update existing notifications to have sender_type = 'system'
-UPDATE custom_cake_notifications
-SET sender_type = 'system', sender_name = 'GoldenMunch System'
-WHERE sender_type IS NULL;
-
--- Create a view for easier message thread queries
+-- Create view for easier message thread queries
 CREATE OR REPLACE VIEW message_threads AS
 SELECT
   n.notification_id,
@@ -2086,145 +1969,6 @@ SELECT
 FROM custom_cake_notifications n
 INNER JOIN custom_cake_request ccr ON n.request_id = ccr.request_id
 ORDER BY n.request_id, n.sent_at ASC;
-
--- ============================================================================
--- Migration: Refactor Payment System to Cash and Cashless Only
--- Date: 2026-01-14
--- Description: Simplifies payment system to use only Cash and Cashless (Xendit)
--- This migration consolidates all payment reference fields into one unified field
--- ============================================================================
-
-USE defaultdb;
-
--- Step 1: Add new payment_reference_number column (if needed)
-SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'payment_reference_number');
-SET @sql = IF(@col_exists = 0, 'ALTER TABLE customer_order ADD COLUMN payment_reference_number VARCHAR(255) NULL COMMENT ''Unified payment reference for cashless payments (Xendit QR code ID)'' AFTER payment_status', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SELECT IF(@col_exists = 0, '✓ Added column: payment_reference_number', '⊘ Column already exists: payment_reference_number') as Status;
-
--- Step 2: Migrate existing reference data to new column (only if old columns exist)
--- Use dynamic SQL inside stored procedure to avoid column validation errors
-DROP PROCEDURE IF EXISTS migrate_payment_references;
-
-DELIMITER $$
-CREATE PROCEDURE migrate_payment_references()
-BEGIN
-    DECLARE old_cols_count INT;
-    DECLARE migrate_stmt VARCHAR(1000);
-
-    -- Check if old columns exist
-    SELECT COUNT(*) INTO old_cols_count
-    FROM information_schema.COLUMNS
-    WHERE TABLE_SCHEMA = DATABASE()
-    AND TABLE_NAME = 'customer_order'
-    AND COLUMN_NAME IN ('gcash_reference_number', 'paymaya_reference_number', 'xendit_reference_number', 'card_transaction_ref');
-
-    -- Only migrate if old columns exist (use dynamic SQL to avoid validation errors)
-    IF old_cols_count > 0 THEN
-        SET migrate_stmt = 'UPDATE customer_order SET payment_reference_number = COALESCE(xendit_reference_number, paymaya_reference_number, gcash_reference_number, card_transaction_ref) WHERE payment_reference_number IS NULL AND (xendit_reference_number IS NOT NULL OR paymaya_reference_number IS NOT NULL OR gcash_reference_number IS NOT NULL OR card_transaction_ref IS NOT NULL)';
-
-        SET @sql = migrate_stmt;
-        PREPARE stmt FROM @sql;
-        EXECUTE stmt;
-        DEALLOCATE PREPARE stmt;
-
-        SELECT CONCAT('✓ Migrated payment references from old columns') as Status;
-    ELSE
-        SELECT '⊘ No old columns to migrate (fresh database)' as Status;
-    END IF;
-END$$
-DELIMITER ;
-
--- Execute the migration procedure
-CALL migrate_payment_references();
-
--- Clean up
-DROP PROCEDURE IF EXISTS migrate_payment_references;
-
--- Step 3: Drop old reference columns
-SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'gcash_reference_number');
-SET @sql = IF(@col_exists > 0, 'ALTER TABLE customer_order DROP COLUMN gcash_reference_number', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SELECT IF(@col_exists > 0, '✓ Dropped column: gcash_reference_number', '⊘ Column already removed: gcash_reference_number') as Status;
-
-SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'paymaya_reference_number');
-SET @sql = IF(@col_exists > 0, 'ALTER TABLE customer_order DROP COLUMN paymaya_reference_number', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SELECT IF(@col_exists > 0, '✓ Dropped column: paymaya_reference_number', '⊘ Column already removed: paymaya_reference_number') as Status;
-
-SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'xendit_reference_number');
-SET @sql = IF(@col_exists > 0, 'ALTER TABLE customer_order DROP COLUMN xendit_reference_number', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SELECT IF(@col_exists > 0, '✓ Dropped column: xendit_reference_number', '⊘ Column already removed: xendit_reference_number') as Status;
-
-SET @col_exists = (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND COLUMN_NAME = 'card_transaction_ref');
-SET @sql = IF(@col_exists > 0, 'ALTER TABLE customer_order DROP COLUMN card_transaction_ref', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SELECT IF(@col_exists > 0, '✓ Dropped column: card_transaction_ref', '⊘ Column already removed: card_transaction_ref') as Status;
-
--- Step 4: Drop old indexes
-SET @idx_exists = (SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND INDEX_NAME = 'idx_gcash_ref');
-SET @sql = IF(@idx_exists > 0, 'ALTER TABLE customer_order DROP INDEX idx_gcash_ref', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SELECT IF(@idx_exists > 0, '✓ Dropped index: idx_gcash_ref', '⊘ Index already removed: idx_gcash_ref') as Status;
-
-SET @idx_exists = (SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND INDEX_NAME = 'idx_paymaya_ref');
-SET @sql = IF(@idx_exists > 0, 'ALTER TABLE customer_order DROP INDEX idx_paymaya_ref', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SELECT IF(@idx_exists > 0, '✓ Dropped index: idx_paymaya_ref', '⊘ Index already removed: idx_paymaya_ref') as Status;
-
-SET @idx_exists = (SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND INDEX_NAME = 'idx_xendit_ref');
-SET @sql = IF(@idx_exists > 0, 'ALTER TABLE customer_order DROP INDEX idx_xendit_ref', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SELECT IF(@idx_exists > 0, '✓ Dropped index: idx_xendit_ref', '⊘ Index already removed: idx_xendit_ref') as Status;
-
--- Step 5: Add new index for payment_reference_number
-SET @idx_exists = (SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'customer_order' AND INDEX_NAME = 'idx_payment_ref');
-SET @sql = IF(@idx_exists = 0, 'ALTER TABLE customer_order ADD INDEX idx_payment_ref (payment_reference_number)', 'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SELECT IF(@idx_exists = 0, '✓ Added index: idx_payment_ref', '⊘ Index already exists: idx_payment_ref') as Status;
-
--- Step 6: Update payment_method ENUM to only allow 'cash' and 'cashless'
--- Note: This step should be done carefully as it will fail if there are existing invalid values
--- First, standardize existing payment methods
-UPDATE customer_order
-SET payment_method = 'cashless'
-WHERE payment_method IN ('gcash', 'paymaya', 'xendit', 'credit_card', 'debit_card', 'card', 'bank_transfer');
-
-SELECT CONCAT('✓ Standardized ', ROW_COUNT(), ' payment methods to cashless') as Status;
-
--- Now modify the ENUM (this will fail if there are still invalid values)
-ALTER TABLE customer_order MODIFY COLUMN payment_method ENUM('cash', 'cashless') NULL;
-SELECT '✓ Updated payment_method ENUM to (cash, cashless)' as Status;
-
--- Step 7: Do the same for payment_transaction table if it exists
-SET @table_exists = (SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'payment_transaction');
-
-SET @sql = IF(@table_exists > 0,
-  "UPDATE payment_transaction SET payment_method = 'cashless' WHERE payment_method IN ('gcash', 'paymaya', 'xendit', 'credit_card', 'debit_card', 'card', 'bank_transfer')",
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-
-SET @sql = IF(@table_exists > 0,
-  "ALTER TABLE payment_transaction MODIFY COLUMN payment_method ENUM('cash', 'cashless') NOT NULL",
-  'SELECT 1');
-PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
-SELECT IF(@table_exists > 0, '✓ Updated payment_transaction.payment_method ENUM', '⊘ payment_transaction table does not exist') as Status;
-
--- Final verification
-SELECT
-  COLUMN_NAME,
-  DATA_TYPE,
-  COLUMN_TYPE,
-  IS_NULLABLE
-FROM information_schema.COLUMNS
-WHERE TABLE_SCHEMA = DATABASE()
-  AND TABLE_NAME = 'customer_order'
-  AND COLUMN_NAME IN ('payment_method', 'payment_reference_number')
-ORDER BY ORDINAL_POSITION;
-
-SELECT '✅ Migration completed: Payment system refactored to Cash and Cashless only' as Status;
-
 
 -- ============================================================================
 -- COMPLETION MESSAGE - PRODUCTION SCHEMA
