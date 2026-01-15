@@ -3,6 +3,8 @@ import type {
   MenuItem,
   MenuItemWithCustomization,
   Category,
+  MenuItemType,
+  UnitOfMeasure,
   PromotionRule,
   ApiResponse,
   MenuQueryParams,
@@ -96,6 +98,36 @@ export class MenuService {
       return categories;
     } catch (error) {
       console.error("❌ MenuService.getCategories() error:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all active item types
+   */
+  static async getItemTypes(): Promise<MenuItemType[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<MenuItemType[]>>(
+        "/admin/menu/item-types"
+      );
+      return response.data.data || [];
+    } catch (error) {
+      console.error("Error fetching item types:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all active units of measure
+   */
+  static async getUnits(): Promise<UnitOfMeasure[]> {
+    try {
+      const response = await apiClient.get<ApiResponse<UnitOfMeasure[]>>(
+        "/admin/menu/units"
+      );
+      return response.data.data || [];
+    } catch (error) {
+      console.error("Error fetching units:", error);
       throw error;
     }
   }

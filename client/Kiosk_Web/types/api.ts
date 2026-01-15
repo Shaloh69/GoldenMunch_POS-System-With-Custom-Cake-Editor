@@ -82,13 +82,37 @@ export enum DesignComplexity {
 }
 
 // Database Models
+export interface MenuItemType {
+  type_id: number;
+  name: string;
+  display_name: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UnitOfMeasure {
+  unit_id: number;
+  name: string;
+  display_name: string;
+  abbreviation?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface MenuItem {
   menu_item_id: number;
   name: string;
   description: string | null;
   image_url: string | null;
-  item_type: ItemType;
-  unit_of_measure: UnitOfMeasure;
+  item_type_id: number;
+  item_type?: string;
+  item_type_display?: string;
+  unit_of_measure_id: number;
+  unit_of_measure?: string;
+  unit_of_measure_display?: string;
+  unit_abbreviation?: string;
   stock_quantity: number;
   is_infinite_stock: boolean;
   min_stock_level: number;
