@@ -22,9 +22,12 @@ import {
   QrCodeIcon,
   PlusCircleIcon,
   PercentBadgeIcon,
+  BellIcon,
 } from "@heroicons/react/24/outline";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useUnreadNotificationCount } from "@/hooks/useNotifications";
+import { Badge } from "@heroui/badge";
 
 interface NavItem {
   name: string;
@@ -36,6 +39,7 @@ interface NavItem {
 
 const cashierNav: NavItem[] = [
   { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
+  { name: "Notifications", href: "/cashier/notifications", icon: BellIcon },
   { name: "New Order", href: "/cashier/new-order", icon: PlusCircleIcon },
   {
     name: "Orders & Payments",
@@ -47,6 +51,7 @@ const cashierNav: NavItem[] = [
 
 const adminNav: NavItem[] = [
   { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
+  { name: "Notifications", href: "/admin/notifications", icon: BellIcon, adminOnly: true },
   {
     name: "Analytics",
     href: "/admin/analytics",
@@ -101,6 +106,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { user, logout, isAdmin } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { unreadCount } = useUnreadNotificationCount();
 
   const navItems = isAdmin() ? adminNav : cashierNav;
 
@@ -181,6 +187,7 @@ export function Sidebar() {
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
+            const isNotification = item.icon === BellIcon;
 
             const navButton = (
               <Link
@@ -197,11 +204,23 @@ export function Sidebar() {
                 `}
                 href={item.href}
               >
-                <Icon
-                  className={`h-5 w-5 flex-shrink-0 ${active ? "animate-pulse-slow" : ""}`}
-                />
+                <div className="relative">
+                  <Icon
+                    className={`h-5 w-5 flex-shrink-0 ${active ? "animate-pulse-slow" : ""}`}
+                  />
+                  {isNotification && unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </div>
                 {!isCollapsed && (
                   <span className="text-sm font-semibold">{item.name}</span>
+                )}
+                {!isCollapsed && isNotification && unreadCount > 0 && (
+                  <span className="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+                    {unreadCount}
+                  </span>
                 )}
               </Link>
             );
