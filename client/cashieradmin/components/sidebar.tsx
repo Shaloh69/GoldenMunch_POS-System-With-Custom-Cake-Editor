@@ -24,11 +24,13 @@ import {
   PercentBadgeIcon,
   BellIcon,
   EnvelopeIcon,
+  ArrowsRightLeftIcon,
 } from "@heroicons/react/24/outline";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useUnreadNotificationCount } from "@/hooks/useNotifications";
 import { Badge } from "@heroui/badge";
+import { Chip } from "@heroui/chip";
 
 interface NavItem {
   name: string;
@@ -111,11 +113,12 @@ const adminNav: NavItem[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, currentMode, switchMode, canSwitchMode } = useAuth();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { unreadCount } = useUnreadNotificationCount();
 
-  const navItems = isAdmin() ? adminNav : cashierNav;
+  // Use current mode to determine navigation
+  const navItems = currentMode === "admin" ? adminNav : cashierNav;
 
   const isActive = (href: string) => {
     if (href === "/dashboard") {
@@ -161,7 +164,7 @@ export function Sidebar() {
                   GoldenMunch
                 </h2>
                 <p className="text-xs font-medium text-warm-beige">
-                  {isAdmin() ? "Admin Portal" : "Cashier Portal"}
+                  {currentMode === "admin" ? "Admin Portal" : "Cashier Portal"}
                 </p>
               </div>
             )}
@@ -188,6 +191,60 @@ export function Sidebar() {
             )}
           </div>
         </div>
+
+        {/* Mode Switcher (Admin Only) */}
+        {canSwitchMode() && (
+          <div className="p-4 border-b border-light-caramel/20 bg-gradient-to-r from-soft-sand/20 to-transparent">
+            {!isCollapsed ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <ArrowsRightLeftIcon className="h-4 w-4 text-muted-clay" />
+                  <span className="text-xs font-semibold text-muted-clay">Switch Mode</span>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    className={`flex-1 ${
+                      currentMode === "admin"
+                        ? "bg-gradient-to-r from-light-caramel to-muted-clay text-white shadow-md"
+                        : "bg-soft-sand/50 text-muted-clay hover:bg-soft-sand"
+                    }`}
+                    size="sm"
+                    onClick={() => switchMode("admin")}
+                  >
+                    Admin
+                  </Button>
+                  <Button
+                    className={`flex-1 ${
+                      currentMode === "cashier"
+                        ? "bg-gradient-to-r from-light-caramel to-muted-clay text-white shadow-md"
+                        : "bg-soft-sand/50 text-muted-clay hover:bg-soft-sand"
+                    }`}
+                    size="sm"
+                    onClick={() => switchMode("cashier")}
+                  >
+                    Cashier
+                  </Button>
+                </div>
+                {currentMode === "cashier" && (
+                  <Chip size="sm" className="w-full justify-center bg-blue-100 text-blue-700 border border-blue-200 mt-2" variant="flat">
+                    Cashier Mode Active
+                  </Chip>
+                )}
+              </div>
+            ) : (
+              <Tooltip content={`Switch to ${currentMode === "admin" ? "Cashier" : "Admin"} Mode`} placement="right">
+                <Button
+                  isIconOnly
+                  className="w-full bg-gradient-to-r from-light-caramel to-muted-clay text-white shadow-md"
+                  size="sm"
+                  onClick={() => switchMode(currentMode === "admin" ? "cashier" : "admin")}
+                >
+                  <ArrowsRightLeftIcon className="h-5 w-5" />
+                </Button>
+              </Tooltip>
+            )}
+          </div>
+        )}
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto p-4 space-y-2">
