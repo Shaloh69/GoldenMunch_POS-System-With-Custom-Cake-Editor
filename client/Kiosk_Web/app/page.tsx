@@ -4,14 +4,18 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Button, Card, CardBody, Spinner } from "@/components/primitives";
 import { useCart } from "@/contexts/CartContext";
 import { MenuService } from "@/services/menu.service";
-import type { MenuItem, Category } from "@/types/api";
+import type { MenuItem, Category, MenuItemType, UnitOfMeasure } from "@/types/api";
 import { KioskAppSidebar } from "@/components/KioskAppSidebar";
 import { MenuCard } from "@/components/MenuCard";
 
 export default function HomePage() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [itemTypes, setItemTypes] = useState<MenuItemType[]>([]);
+  const [units, setUnits] = useState<UnitOfMeasure[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [selectedItemType, setSelectedItemType] = useState<number | null>(null);
+  const [selectedUnit, setSelectedUnit] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
@@ -20,21 +24,24 @@ export default function HomePage() {
   const { items: cartItems } = useCart();
   const categoryScrollRef = useRef<HTMLDivElement>(null);
 
-  // Fetch menu items and categories
+  // Fetch menu items, categories, item types, and units
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        const [items, cats] = await Promise.all([
+        const [items, cats, types, unitsData] = await Promise.all([
           MenuService.getMenuItems(),
           MenuService.getCategories(),
+          MenuService.getItemTypes(),
+          MenuService.getUnits(),
         ]);
 
         setMenuItems(items);
         setCategories(cats);
-        setFilteredItems(items);
+        setItemTypes(types);
+        setUnits(unitsData);
       } catch (err: any) {
         setError(err.message || "Failed to load menu. Please try again.");
       } finally {
@@ -70,14 +77,25 @@ export default function HomePage() {
     return () => clearInterval(refreshInterval);
   }, []);
 
-  // Filter items by category and sort (sold_out items always last) - Memoized for performance
+  // Filter items by category, item type, unit, and sort (sold_out items always last) - Memoized for performance
   const filteredItems = useMemo(() => {
     let filtered = menuItems;
 
+    // Filter by category
     if (selectedCategory !== null) {
-      filtered = menuItems.filter((item) =>
+      filtered = filtered.filter((item) =>
         item.categories?.some((cat) => cat.category_id === selectedCategory)
       );
+    }
+
+    // Filter by item type
+    if (selectedItemType !== null) {
+      filtered = filtered.filter((item) => item.item_type_id === selectedItemType);
+    }
+
+    // Filter by unit of measure
+    if (selectedUnit !== null) {
+      filtered = filtered.filter((item) => item.unit_of_measure_id === selectedUnit);
     }
 
     // Sort: Always put sold_out/discontinued items last
@@ -93,7 +111,7 @@ export default function HomePage() {
     });
 
     return sorted;
-  }, [menuItems, selectedCategory]);
+  }, [menuItems, selectedCategory, selectedItemType, selectedUnit]);
 
   // Memoized function to get cart quantity for an item
   const getCartQuantity = useCallback((itemId: number): number => {
@@ -344,6 +362,62 @@ export default function HomePage() {
                 </div>
               )}
 
+              {/* Item Type and Unit of Measure Filters - Smaller, side by side */}
+              <div className="mb-6 animate-fade-in-up animation-delay-300 flex gap-4">
+                {/* Item Type Filter */}
+                {itemTypes.length > 0 && (
+                  <div className="flex-1">
+                    <select
+                      value={selectedItemType || ""}
+                      onChange={(e) => setSelectedItemType(e.target.value ? Number(e.target.value) : null)}
+                      className="w-full glass-button px-6 py-4 rounded-xl text-lg font-semibold cursor-pointer hover:scale-102 transition-transform"
+                    >
+                      <option value="">All Types</option>
+                      {itemTypes.map((type) => (
+                        <option key={type.type_id} value={type.type_id}>
+                          {type.display_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Unit of Measure Filter */}
+                {units.length > 0 && (
+                  <div className="flex-1">
+                    <select
+                      value={selectedUnit || ""}
+                      onChange={(e) => setSelectedUnit(e.target.value ? Number(e.target.value) : null)}
+                      className="w-full glass-button px-6 py-4 rounded-xl text-lg font-semibold cursor-pointer hover:scale-102 transition-transform"
+                    >
+                      <option value="">All Units</option>
+                      {units.map((unit) => (
+                        <option key={unit.unit_id} value={unit.unit_id}>
+                          {unit.display_name} {unit.abbreviation ? `(${unit.abbreviation})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              {/* Clear Filters Button - Show when any filter is active */}
+              {(selectedCategory !== null || selectedItemType !== null || selectedUnit !== null) && (
+                <div className="mb-6 text-center animate-fade-in-up">
+                  <Button
+                    size="md"
+                    className="glass-button px-8 py-3 rounded-xl text-base font-semibold"
+                    onClick={() => {
+                      setSelectedCategory(null);
+                      setSelectedItemType(null);
+                      setSelectedUnit(null);
+                    }}
+                  >
+                    Clear All Filters
+                  </Button>
+                </div>
+              )}
+
               {/* Menu Items Grid or Empty State */}
               {filteredItems.length === 0 ? (
                 <div className="animate-fade-in-up">
@@ -355,15 +429,19 @@ export default function HomePage() {
                       No items found
                     </h3>
                     <p className="text-2xl text-black mb-10">
-                      No items in this category
+                      No items match the selected filters
                     </p>
-                    {selectedCategory !== null && (
+                    {(selectedCategory !== null || selectedItemType !== null || selectedUnit !== null) && (
                       <Button
                         size="lg"
                         className="btn-gradient text-2xl px-12 py-8 shadow-xl touch-target"
-                        onClick={() => setSelectedCategory(null)}
+                        onClick={() => {
+                          setSelectedCategory(null);
+                          setSelectedItemType(null);
+                          setSelectedUnit(null);
+                        }}
                       >
-                        Clear Filter
+                        Clear All Filters
                       </Button>
                     )}
                   </div>

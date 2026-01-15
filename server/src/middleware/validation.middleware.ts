@@ -134,18 +134,14 @@ export const schemas = {
   createMenuItem: Joi.object({
     name: Joi.string().required(),
     description: Joi.string().optional().allow(''),
-    item_type: Joi.string()
-      .valid(...ENUMS.item_type)
-      .required(),
-    unit_of_measure: Joi.string()
-      .valid(...ENUMS.unit_of_measure)
-      .default('piece'),
+    item_type_id: Joi.number().integer().positive().required(),
+    unit_of_measure_id: Joi.number().integer().positive().required(),
     stock_quantity: Joi.number().min(0).default(0),
     is_infinite_stock: Joi.boolean().truthy('1', 'true').falsy('0', 'false').default(false),
     min_stock_level: Joi.number().min(0).default(5),
     can_customize: Joi.boolean().truthy('1', 'true').falsy('0', 'false').default(false),
     can_preorder: Joi.boolean().truthy('1', 'true').falsy('0', 'false').default(false),
-    preparation_time_minutes: Joi.number().min(0).default(0),
+    preparation_time_minutes: Joi.number().min(0).required(),
     supplier_id: Joi.number().optional(),
     is_featured: Joi.boolean().truthy('1', 'true').falsy('0', 'false').default(false),
     allergen_info: Joi.string().optional().allow(''),
@@ -155,12 +151,8 @@ export const schemas = {
   updateMenuItem: Joi.object({
     name: Joi.string().optional(),
     description: Joi.string().optional().allow(''),
-    item_type: Joi.string()
-      .valid(...ENUMS.item_type)
-      .optional(),
-    unit_of_measure: Joi.string()
-      .valid(...ENUMS.unit_of_measure)
-      .optional(),
+    item_type_id: Joi.number().integer().positive().optional(),
+    unit_of_measure_id: Joi.number().integer().positive().optional(),
     stock_quantity: Joi.number().min(0).optional(),
     is_infinite_stock: Joi.boolean().truthy('1', 'true').falsy('0', 'false').optional(),
     min_stock_level: Joi.number().min(0).optional(),
