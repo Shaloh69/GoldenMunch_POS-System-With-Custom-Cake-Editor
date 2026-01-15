@@ -24,6 +24,7 @@ import * as paymentQRController from '../controllers/paymentQR.controller';
 import * as paymentController from '../controllers/payment.controller';
 import * as capacityController from '../controllers/capacity.controller';
 import * as sseController from '../controllers/sse.controller';
+import * as notificationsController from '../controllers/notifications.controller';
 
 const router = Router();
 
@@ -392,6 +393,10 @@ router.get('/kiosk/menu/:id', cacheMiddleware(CacheTTL.LONG), asyncHandler(kiosk
 router.get('/kiosk/promotions', cacheMiddleware(CacheTTL.MEDIUM), asyncHandler(kioskController.getActivePromotions));
 router.get('/kiosk/capacity/check', cacheMiddleware(CacheTTL.SHORT), asyncHandler(kioskController.checkCapacity));
 
+// Kiosk - Item Types and Units (for filtering)
+router.get('/kiosk/item-types', cacheMiddleware(CacheTTL.VERY_LONG), asyncHandler(adminController.getAllItemTypes));
+router.get('/kiosk/units', cacheMiddleware(CacheTTL.VERY_LONG), asyncHandler(adminController.getAllUnits));
+
 // Kiosk Orders
 router.post('/kiosk/orders', validate(schemas.createOrder), asyncHandler(orderController.createOrder));
 router.get('/kiosk/orders/id/:id', asyncHandler(orderController.getOrderById));
@@ -645,6 +650,11 @@ router.put('/admin/custom-cakes/:requestId/messages/mark-read', authenticateAdmi
 // Custom Cake Messaging (Customer-facing)
 router.get('/custom-cake/messages/:requestId', asyncHandler(customCakeMessageController.getCustomerMessages));
 router.post('/custom-cake/messages/:requestId/reply', asyncHandler(customCakeMessageController.sendCustomerReply));
+
+// Notifications (Admin/Cashier)
+router.get('/notifications', authenticate, asyncHandler(notificationsController.getAllNotifications));
+router.get('/notifications/unread-count', authenticate, asyncHandler(notificationsController.getUnreadCount));
+router.put('/notifications/:id/read', authenticate, asyncHandler(notificationsController.markAsRead));
 
 // Capacity Management (Admin)
 router.get('/admin/capacity/available-dates', authenticateAdmin, asyncHandler(capacityController.getAvailableDates));
