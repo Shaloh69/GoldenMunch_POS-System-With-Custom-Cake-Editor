@@ -140,13 +140,37 @@ export enum PriceType {
 }
 
 // Entity Types
+export interface MenuItemType {
+  type_id: number;
+  name: string;
+  display_name: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UnitOfMeasure {
+  unit_id: number;
+  name: string;
+  display_name: string;
+  abbreviation?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface MenuItem {
   menu_item_id: number;
   name: string;
   description: string;
   image_url?: string;
-  item_type: ItemType;
-  unit_of_measure: string;
+  item_type_id: number;
+  item_type?: string; // Populated by JOIN
+  item_type_display?: string; // Populated by JOIN
+  unit_of_measure_id: number;
+  unit_of_measure?: string; // Populated by JOIN
+  unit_of_measure_display?: string; // Populated by JOIN
+  unit_abbreviation?: string; // Populated by JOIN
   stock_quantity: number;
   is_infinite_stock: boolean;
   min_stock_level: number;
@@ -547,8 +571,8 @@ export interface LoginRequest {
 export interface CreateMenuItemRequest {
   name: string;
   description: string;
-  item_type: ItemType;
-  unit_of_measure: string;
+  item_type_id: number;
+  unit_of_measure_id: number;
   stock_quantity: number;
   is_infinite_stock?: boolean;
   min_stock_level?: number;
@@ -562,6 +586,17 @@ export interface CreateMenuItemRequest {
 
 export interface UpdateMenuItemRequest extends Partial<CreateMenuItemRequest> {
   status?: "available" | "sold_out" | "discontinued";
+}
+
+export interface CreateItemTypeRequest {
+  name: string;
+  display_name: string;
+}
+
+export interface CreateUnitRequest {
+  name: string;
+  display_name: string;
+  abbreviation?: string;
 }
 
 export interface CreateCategoryRequest {

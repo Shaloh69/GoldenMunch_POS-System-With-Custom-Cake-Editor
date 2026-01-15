@@ -500,6 +500,14 @@ router.put(
 
 router.delete('/admin/menu/:id', authenticateAdmin, asyncHandler(adminController.deleteMenuItem));
 
+// Menu Item Types
+router.get('/admin/menu/item-types', authenticateAdmin, asyncHandler(adminController.getAllItemTypes));
+router.post('/admin/menu/item-types', authenticateAdmin, asyncHandler(adminController.createItemType));
+
+// Units of Measure
+router.get('/admin/menu/units', authenticateAdmin, asyncHandler(adminController.getAllUnits));
+router.post('/admin/menu/units', authenticateAdmin, asyncHandler(adminController.createUnit));
+
 // Pricing
 router.post('/admin/menu/prices', authenticateAdmin, asyncHandler(adminController.addItemPrice));
 

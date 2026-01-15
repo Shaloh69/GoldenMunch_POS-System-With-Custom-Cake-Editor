@@ -107,14 +107,37 @@ CREATE TABLE category (
     INDEX idx_category_order (display_order)
 ) ENGINE=InnoDB;
 
+-- Menu item types (dynamic)
+CREATE TABLE menu_item_type (
+    type_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    display_name VARCHAR(100) NOT NULL,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_type_active (is_active)
+) ENGINE=InnoDB;
+
+-- Unit of measure (dynamic)
+CREATE TABLE unit_of_measure (
+    unit_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    display_name VARCHAR(100) NOT NULL,
+    abbreviation VARCHAR(10),
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_unit_active (is_active)
+) ENGINE=InnoDB;
+
 -- Menu items (products)
 CREATE TABLE menu_item (
     menu_item_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     description TEXT,
     image_url VARCHAR(255) COMMENT 'Product image for kiosk display',
-    item_type ENUM('cake', 'pastry', 'beverage', 'snack', 'main_dish', 'appetizer', 'dessert', 'bread', 'other') NOT NULL DEFAULT 'other',
-    unit_of_measure ENUM('piece', 'dozen', 'half_dozen', 'kilogram', 'gram', 'liter', 'milliliter', 'serving', 'box', 'pack') DEFAULT 'piece',
+    item_type_id INT NOT NULL COMMENT 'References menu_item_type table',
+    unit_of_measure_id INT NOT NULL COMMENT 'References unit_of_measure table',
     stock_quantity INT NOT NULL DEFAULT 0,
     is_infinite_stock BOOLEAN DEFAULT FALSE COMMENT 'True for items that never run out',
     min_stock_level INT DEFAULT 5,
@@ -132,7 +155,10 @@ CREATE TABLE menu_item (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (supplier_id) REFERENCES suppliers(supplier_id) ON DELETE SET NULL,
-    INDEX idx_menu_item_type (item_type),
+    FOREIGN KEY (item_type_id) REFERENCES menu_item_type(type_id) ON DELETE RESTRICT,
+    FOREIGN KEY (unit_of_measure_id) REFERENCES unit_of_measure(unit_id) ON DELETE RESTRICT,
+    INDEX idx_menu_item_type (item_type_id),
+    INDEX idx_menu_item_unit (unit_of_measure_id),
     INDEX idx_menu_item_status (status),
     INDEX idx_menu_item_featured (is_featured),
     INDEX idx_menu_item_popularity (popularity_score),
@@ -1241,6 +1267,31 @@ INSERT INTO category (name, description, image_url, display_order, is_active, ad
 ('Breads', 'Fresh baked breads daily', '/images/categories/breads.jpg', 3, TRUE, 1),
 ('Beverages', 'Hot and cold beverages', '/images/categories/beverages.jpg', 4, TRUE, 1),
 ('Custom Cakes', 'Personalized cakes for special events', '/images/categories/custom-cakes.jpg', 5, TRUE, 1);
+
+-- Insert Menu Item Types
+INSERT INTO menu_item_type (name, display_name, is_active) VALUES
+('cake', 'Cake', TRUE),
+('pastry', 'Pastry', TRUE),
+('beverage', 'Beverage', TRUE),
+('snack', 'Snack', TRUE),
+('main_dish', 'Main Dish', TRUE),
+('appetizer', 'Appetizer', TRUE),
+('dessert', 'Dessert', TRUE),
+('bread', 'Bread', TRUE),
+('other', 'Other', TRUE);
+
+-- Insert Units of Measure
+INSERT INTO unit_of_measure (name, display_name, abbreviation, is_active) VALUES
+('piece', 'Piece', 'pc', TRUE),
+('dozen', 'Dozen', 'dz', TRUE),
+('half_dozen', 'Half Dozen', '½dz', TRUE),
+('kilogram', 'Kilogram', 'kg', TRUE),
+('gram', 'Gram', 'g', TRUE),
+('liter', 'Liter', 'L', TRUE),
+('milliliter', 'Milliliter', 'mL', TRUE),
+('serving', 'Serving', 'srv', TRUE),
+('box', 'Box', 'box', TRUE),
+('pack', 'Pack', 'pack', TRUE);
 
 -- Insert Cake Flavors
 INSERT INTO cake_flavors (flavor_name, description, flavor_category, base_price_per_tier, is_available) VALUES
