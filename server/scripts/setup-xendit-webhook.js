@@ -15,7 +15,10 @@ require('dotenv').config({ path: require('path').join(__dirname, '../.env.produc
 const axios = require('axios');
 
 const WEBHOOK_URL = 'https://goldenmunch-server.onrender.com/api/webhooks/xendit/qr-payment';
-const XENDIT_API_URL = 'https://api.xendit.co/v2/webhooks';
+
+// Xendit callback URLs API endpoint
+// Docs: https://docs.xendit.co/apidocs/set-webhook-url
+const XENDIT_API_URL = 'https://api.xendit.co/callback_urls/qr_code';
 
 // Get API key from environment
 const API_KEY = process.env.XENDIT_SECRET_KEY;
@@ -37,58 +40,75 @@ console.log(`Webhook URL: ${WEBHOOK_URL}\n`);
 
 async function setupWebhook() {
   try {
-    // Step 1: Get existing webhooks
-    console.log('📋 Step 1: Checking existing webhooks...');
+    // Step 1: Get existing webhook URL
+    console.log('📋 Step 1: Checking existing webhook URL...');
 
-    const getResponse = await axios.get(XENDIT_API_URL, {
-      auth: {
-        username: API_KEY,
-        password: ''
+    try {
+      const getResponse = await axios.get(XENDIT_API_URL, {
+        auth: {
+          username: API_KEY,
+          password: ''
+        },
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'GoldenMunch-POS/1.0',
+          'Host': 'api.xendit.co'
+        }
+      });
+
+      const currentUrl = getResponse.data?.url;
+      console.log(`✓ Current webhook URL: ${currentUrl || 'Not set'}\n`);
+
+      if (currentUrl === WEBHOOK_URL) {
+        console.log('ℹ️  Webhook is already configured correctly!');
+        console.log(`   URL: ${currentUrl}`);
+        console.log('   Status: ACTIVE\n');
+        console.log('✓ No changes needed\n');
+      } else {
+        // Step 2: Update webhook URL
+        console.log('📝 Step 2: Setting webhook URL...');
+
+        const createResponse = await axios.post(XENDIT_API_URL, {
+          url: WEBHOOK_URL
+        }, {
+          auth: {
+            username: API_KEY,
+            password: ''
+          },
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': 'GoldenMunch-POS/1.0',
+            'Host': 'api.xendit.co'
+          }
+        });
+
+        console.log('✓ Webhook URL set successfully!');
+        console.log(`   Status: ${createResponse.data.status}`);
+        console.log(`   URL: ${WEBHOOK_URL}\n`);
       }
-    });
+    } catch (checkError) {
+      // If GET fails, try to set the URL directly
+      console.log('⚠️  Could not check existing webhook, attempting to set URL...\n');
 
-    const webhooks = getResponse.data.data || getResponse.data || [];
-    console.log(`✓ Found ${webhooks.length} existing webhook(s)\n`);
-
-    // Check if our webhook already exists
-    const existingWebhook = webhooks.find(webhook =>
-      webhook.url === WEBHOOK_URL
-    );
-
-    if (existingWebhook) {
-      console.log('ℹ️  Webhook already exists!');
-      console.log(`   ID: ${existingWebhook.id}`);
-      console.log(`   URL: ${existingWebhook.url}`);
-      console.log(`   Status: ${existingWebhook.status || 'ACTIVE'}\n`);
-
-      console.log('✓ Webhook is already configured correctly');
-      console.log('   No changes needed\n');
-    } else {
-      // Step 2: Create new webhook
-      console.log('📝 Step 2: Creating new webhook...');
+      console.log('📝 Step 2: Setting webhook URL...');
 
       const createResponse = await axios.post(XENDIT_API_URL, {
-        type: 'payment',
-        url: WEBHOOK_URL,
-        events: [
-          'qr_code.payment.paid',
-          'payment.succeeded',
-          'payment.paid'
-        ]
+        url: WEBHOOK_URL
       }, {
         auth: {
           username: API_KEY,
           password: ''
         },
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'User-Agent': 'GoldenMunch-POS/1.0',
+          'Host': 'api.xendit.co'
         }
       });
 
-      console.log('✓ Webhook created successfully!');
-      console.log(`   ID: ${createResponse.data.id}`);
-      console.log(`   URL: ${createResponse.data.url}`);
-      console.log(`   Events: ${createResponse.data.events ? createResponse.data.events.join(', ') : 'qr_code.payment.paid'}\n`);
+      console.log('✓ Webhook URL set successfully!');
+      console.log(`   Status: ${createResponse.data.status}`);
+      console.log(`   URL: ${WEBHOOK_URL}\n`);
     }
 
     // Step 3: Test the webhook
