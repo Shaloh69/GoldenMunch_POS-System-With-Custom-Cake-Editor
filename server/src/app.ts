@@ -96,12 +96,19 @@ app.use(cors({
 }));
 
 // Rate limiting - General API rate limiter
+// Increased limits to accommodate multiple clients with polling
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '1000'), // Increased from 100 to 1000
   message: 'Too many requests from this IP, please try again later',
   standardHeaders: true,
   legacyHeaders: false,
+  // Skip rate limiting for specific endpoints that need frequent polling
+  skip: (req) => {
+    // Allow more frequent requests for real-time features
+    const allowedPaths = ['/api/sse', '/api/health'];
+    return allowedPaths.some(path => req.path.startsWith(path));
+  },
 });
 
 // Stricter rate limiter for authentication endpoints to prevent brute force attacks

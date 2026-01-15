@@ -64,8 +64,9 @@ export default function CashierCustomCakesPage() {
   useEffect(() => {
     fetchApprovedCakes();
 
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchApprovedCakes, 30000);
+    // Auto-refresh at optimized interval to reduce API load
+    // Increased from 30s to 2 minutes to reduce rate limiting issues
+    const interval = setInterval(fetchApprovedCakes, 120000); // 2 minutes
 
     return () => clearInterval(interval);
   }, []);

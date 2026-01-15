@@ -51,30 +51,25 @@ export default function HomePage() {
 
     fetchData();
 
-    // Auto-refresh menu every 60 seconds (increased from 30s for better performance)
-    const refreshInterval = setInterval(() => {
-      // Refresh menu items silently in background
-      MenuService.getMenuItems()
-        .then((items) => {
-          setMenuItems(items);
-        })
-        .catch((err) => {
-          console.error("Auto-refresh failed:", err);
-        });
+    // Menu auto-refresh disabled to reduce API load
+    // Consider using SSE (Server-Sent Events) for real-time menu updates instead
+    // For kiosk use case, initial load is sufficient as menu items don't change frequently
 
-      // Categories change less frequently, refresh every 2 minutes
-      if (Date.now() % 120000 < 60000) {
-        MenuService.getCategories()
-          .then((cats) => {
-            setCategories(cats);
-          })
-          .catch((err) => {
-            console.error("Category refresh failed:", err);
-          });
+    // Optional: Refresh only on page visibility change (when user returns to app)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('Page visible - refreshing menu data');
+        MenuService.getMenuItems()
+          .then((items) => setMenuItems(items))
+          .catch((err) => console.error("Visibility refresh failed:", err));
       }
-    }, 60000); // Increased to 60 seconds
+    };
 
-    return () => clearInterval(refreshInterval);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   // Filter items by category, item type, unit, and sort (sold_out items always last) - Memoized for performance

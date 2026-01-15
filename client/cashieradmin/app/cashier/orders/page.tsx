@@ -158,14 +158,15 @@ export default function UnifiedCashierPage() {
   // Track first load to prevent loading state on auto-refresh
   const isFirstLoad = useRef(true);
 
-  // Load data on mount and refresh every 30 seconds (reduced from 10s for better performance)
+  // Load data on mount and refresh at optimized intervals to reduce API load
   useEffect(() => {
     loadAllData();
     loadDiscounts();
     loadPrinterStatus();
 
-    const interval = setInterval(() => loadAllData(false), 30000); // Increased to 30 seconds
-    const printerInterval = setInterval(loadPrinterStatus, 60000); // Check printer every 60 seconds
+    // Increased intervals to reduce rate limiting issues
+    const interval = setInterval(() => loadAllData(false), 120000); // 2 minutes (was 30s)
+    const printerInterval = setInterval(loadPrinterStatus, 300000); // 5 minutes (was 60s)
 
     return () => {
       clearInterval(interval);
