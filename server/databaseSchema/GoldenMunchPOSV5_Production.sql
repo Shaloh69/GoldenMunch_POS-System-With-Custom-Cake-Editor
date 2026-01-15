@@ -2103,13 +2103,14 @@ PREPARE stmt FROM @sql; EXECUTE stmt; DEALLOCATE PREPARE stmt;
 SELECT IF(@col_exists = 0, '✓ Added column: payment_reference_number', '⊘ Column already exists: payment_reference_number') as Status;
 
 -- Step 2: Migrate existing reference data to new column (only if old columns exist)
--- Use a stored procedure to avoid PREPARE errors with non-existent columns
+-- Use dynamic SQL inside stored procedure to avoid column validation errors
 DROP PROCEDURE IF EXISTS migrate_payment_references;
 
 DELIMITER $$
 CREATE PROCEDURE migrate_payment_references()
 BEGIN
     DECLARE old_cols_count INT;
+    DECLARE migrate_stmt VARCHAR(1000);
 
     -- Check if old columns exist
     SELECT COUNT(*) INTO old_cols_count
@@ -2118,14 +2119,16 @@ BEGIN
     AND TABLE_NAME = 'customer_order'
     AND COLUMN_NAME IN ('gcash_reference_number', 'paymaya_reference_number', 'xendit_reference_number', 'card_transaction_ref');
 
-    -- Only migrate if old columns exist
+    -- Only migrate if old columns exist (use dynamic SQL to avoid validation errors)
     IF old_cols_count > 0 THEN
-        UPDATE customer_order
-        SET payment_reference_number = COALESCE(xendit_reference_number, paymaya_reference_number, gcash_reference_number, card_transaction_ref)
-        WHERE payment_reference_number IS NULL
-        AND (xendit_reference_number IS NOT NULL OR paymaya_reference_number IS NOT NULL OR gcash_reference_number IS NOT NULL OR card_transaction_ref IS NOT NULL);
+        SET migrate_stmt = 'UPDATE customer_order SET payment_reference_number = COALESCE(xendit_reference_number, paymaya_reference_number, gcash_reference_number, card_transaction_ref) WHERE payment_reference_number IS NULL AND (xendit_reference_number IS NOT NULL OR paymaya_reference_number IS NOT NULL OR gcash_reference_number IS NOT NULL OR card_transaction_ref IS NOT NULL)';
 
-        SELECT CONCAT('✓ Migrated ', ROW_COUNT(), ' payment references from old columns') as Status;
+        SET @sql = migrate_stmt;
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+        SELECT CONCAT('✓ Migrated payment references from old columns') as Status;
     ELSE
         SELECT '⊘ No old columns to migrate (fresh database)' as Status;
     END IF;
