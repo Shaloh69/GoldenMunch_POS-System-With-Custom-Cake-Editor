@@ -5,6 +5,10 @@ import type {
   CreateMenuItemRequest,
   UpdateMenuItemRequest,
   CreateCategoryRequest,
+  MenuItemType,
+  UnitOfMeasure,
+  CreateItemTypeRequest,
+  CreateUnitRequest,
 } from "@/types/api";
 
 import { apiClient } from "@/lib/api-client";
@@ -186,5 +190,23 @@ export class MenuService {
 
   static async deleteCategory(id: number) {
     return apiClient.delete(`/admin/categories/${id}`);
+  }
+
+  // Item Types
+  static async getItemTypes() {
+    return apiClient.get<MenuItemType[]>("/admin/menu/item-types");
+  }
+
+  static async createItemType(data: CreateItemTypeRequest) {
+    return apiClient.post<MenuItemType>("/admin/menu/item-types", data);
+  }
+
+  // Units of Measure
+  static async getUnits() {
+    return apiClient.get<UnitOfMeasure[]>("/admin/menu/units");
+  }
+
+  static async createUnit(data: CreateUnitRequest) {
+    return apiClient.post<UnitOfMeasure>("/admin/menu/units", data);
   }
 }

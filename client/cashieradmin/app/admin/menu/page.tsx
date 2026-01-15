@@ -1,8 +1,9 @@
 "use client";
 
-import type { MenuItem, CreateMenuItemRequest, Category } from "@/types/api";
+import type { MenuItem, CreateMenuItemRequest, Category, MenuItemType, UnitOfMeasure } from "@/types/api";
 
 import { useEffect, useState, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { Card, CardBody } from "@heroui/card";
 import {
   Table,
@@ -38,6 +39,16 @@ import { Checkbox } from "@heroui/checkbox";
 
 import { MenuService } from "@/services/menu.service";
 import { getImageUrl } from "@/utils/imageUtils";
+
+// Dynamically import modals
+const AddItemTypeModal = dynamic(
+  () => import("@/components/admin/menu/AddItemTypeModal"),
+  { ssr: false }
+);
+const AddUnitModal = dynamic(
+  () => import("@/components/admin/menu/AddUnitModal"),
+  { ssr: false }
+);
 
 // Utility function to safely format price
 const formatPrice = (price: any): string => {
@@ -91,6 +102,10 @@ export default function AdminMenuPage() {
     isOpen: boolean;
     item: MenuItem | null;
   }>({ isOpen: false, item: null });
+  const [itemTypes, setItemTypes] = useState<MenuItemType[]>([]);
+  const [units, setUnits] = useState<UnitOfMeasure[]>([]);
+  const [isAddItemTypeModalOpen, setIsAddItemTypeModalOpen] = useState(false);
+  const [isAddUnitModalOpen, setIsAddUnitModalOpen] = useState(false);
   const [bulkDeleteConfirmModal, setBulkDeleteConfirmModal] = useState(false);
   const [stockAdjusting, setStockAdjusting] = useState<Record<number, boolean>>(
     {},
@@ -114,6 +129,8 @@ export default function AdminMenuPage() {
   useEffect(() => {
     loadMenuItems();
     loadCategories();
+    loadItemTypes();
+    loadUnits();
   }, []);
 
   // Analytics stats
@@ -253,10 +270,34 @@ export default function AdminMenuPage() {
     }
   };
 
+  const loadItemTypes = async () => {
+    try {
+      const response = await MenuService.getItemTypes();
+
+      if (response.success && response.data) {
+        setItemTypes(response.data);
+      }
+    } catch (error: any) {
+      console.error("Failed to load item types:", error);
+    }
+  };
+
+  const loadUnits = async () => {
+    try {
+      const response = await MenuService.getUnits();
+
+      if (response.success && response.data) {
+        setUnits(response.data);
+      }
+    } catch (error: any) {
+      console.error("Failed to load units:", error);
+    }
+  };
+
   const handleSubmit = async () => {
     try {
       // Validate required fields
-      if (!formData.name || !formData.item_type) {
+      if (!formData.name || !formData.item_type_id) {
         setError("Name and Item Type are required");
 
         return;
@@ -269,8 +310,8 @@ export default function AdminMenuPage() {
       const sanitizedData: any = {
         name: formData.name.trim(),
         description: formData.description?.trim() || "",
-        item_type: formData.item_type,
-        unit_of_measure: formData.unit_of_measure?.trim() || "piece",
+        item_type_id: formData.item_type_id,
+        unit_of_measure_id: formData.unit_of_measure_id || (units.length > 0 ? units[0].unit_id : 1),
         stock_quantity: toNumber(formData.stock_quantity, 0),
         min_stock_level: toNumber(formData.min_stock_level, 0),
         is_infinite_stock: Boolean(formData.is_infinite_stock),
@@ -428,8 +469,8 @@ export default function AdminMenuPage() {
     setFormData({
       name: item.name,
       description: item.description,
-      item_type: item.item_type,
-      unit_of_measure: item.unit_of_measure,
+      item_type_id: item.item_type_id,
+      unit_of_measure_id: item.unit_of_measure_id,
       stock_quantity: item.stock_quantity,
       min_stock_level: item.min_stock_level,
       is_infinite_stock: item.is_infinite_stock,
@@ -1312,47 +1353,53 @@ export default function AdminMenuPage() {
               />
               <Select
                 isRequired
-                errorMessage={!formData.item_type && "Item type is required"}
+                errorMessage={!formData.item_type_id && "Item type is required"}
                 label="Item Type"
                 placeholder="Select item type"
-                selectedKeys={formData.item_type ? [formData.item_type] : []}
-                onChange={(e) =>
-                  setFormData({ ...formData, item_type: e.target.value as any })
-                }
+                selectedKeys={formData.item_type_id ? [formData.item_type_id.toString()] : []}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === "add_new") {
+                    setIsAddItemTypeModalOpen(true);
+                  } else {
+                    setFormData({ ...formData, item_type_id: parseInt(value) });
+                  }
+                }}
               >
-                <SelectItem key="cake">Cake</SelectItem>
-                <SelectItem key="pastry">Pastry</SelectItem>
-                <SelectItem key="beverage">Beverage</SelectItem>
-                <SelectItem key="snack">Snack</SelectItem>
-                <SelectItem key="main_dish">Main Dish</SelectItem>
-                <SelectItem key="appetizer">Appetizer</SelectItem>
-                <SelectItem key="dessert">Dessert</SelectItem>
-                <SelectItem key="bread">Bread</SelectItem>
-                <SelectItem key="other">Other</SelectItem>
+                {[
+                  <SelectItem key="add_new" className="text-primary font-semibold">
+                    + Add New Item Type
+                  </SelectItem>,
+                  ...itemTypes.map((type) => (
+                    <SelectItem key={type.type_id.toString()}>
+                      {type.display_name}
+                    </SelectItem>
+                  ))
+                ]}
               </Select>
               <Select
-                defaultSelectedKeys={["piece"]}
                 label="Unit of Measure"
                 placeholder="Select unit of measure"
-                selectedKeys={
-                  formData.unit_of_measure
-                    ? [formData.unit_of_measure]
-                    : ["piece"]
-                }
-                onChange={(e) =>
-                  setFormData({ ...formData, unit_of_measure: e.target.value })
-                }
+                selectedKeys={formData.unit_of_measure_id ? [formData.unit_of_measure_id.toString()] : units.length > 0 ? [units[0].unit_id.toString()] : []}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === "add_new") {
+                    setIsAddUnitModalOpen(true);
+                  } else {
+                    setFormData({ ...formData, unit_of_measure_id: parseInt(value) });
+                  }
+                }}
               >
-                <SelectItem key="piece">Piece</SelectItem>
-                <SelectItem key="dozen">Dozen</SelectItem>
-                <SelectItem key="half_dozen">Half Dozen</SelectItem>
-                <SelectItem key="kilogram">Kilogram</SelectItem>
-                <SelectItem key="gram">Gram</SelectItem>
-                <SelectItem key="liter">Liter</SelectItem>
-                <SelectItem key="milliliter">Milliliter</SelectItem>
-                <SelectItem key="serving">Serving</SelectItem>
-                <SelectItem key="box">Box</SelectItem>
-                <SelectItem key="pack">Pack</SelectItem>
+                {[
+                  <SelectItem key="add_new" className="text-primary font-semibold">
+                    + Add New Unit of Measure
+                  </SelectItem>,
+                  ...units.map((unit) => (
+                    <SelectItem key={unit.unit_id.toString()}>
+                      {unit.display_name} {unit.abbreviation ? `(${unit.abbreviation})` : ""}
+                    </SelectItem>
+                  ))
+                ]}
               </Select>
 
               {/* Categories Selection */}
@@ -1617,7 +1664,7 @@ export default function AdminMenuPage() {
             </Button>
             <Button
               color="primary"
-              isDisabled={!formData.name || !formData.item_type}
+              isDisabled={!formData.name || !formData.item_type_id}
               isLoading={saving}
               onPress={handleSubmit}
             >
@@ -1764,6 +1811,24 @@ export default function AdminMenuPage() {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/* Add Item Type Modal */}
+      <AddItemTypeModal
+        isOpen={isAddItemTypeModalOpen}
+        onClose={() => setIsAddItemTypeModalOpen(false)}
+        onSuccess={() => {
+          loadItemTypes();
+        }}
+      />
+
+      {/* Add Unit Modal */}
+      <AddUnitModal
+        isOpen={isAddUnitModalOpen}
+        onClose={() => setIsAddUnitModalOpen(false)}
+        onSuccess={() => {
+          loadUnits();
+        }}
+      />
     </div>
   );
 }

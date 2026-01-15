@@ -24,7 +24,7 @@ export const createMenuItem = async (req: AuthRequest, res: Response) => {
 
   const result = await query(
     `INSERT INTO menu_item
-     (name, description, item_type, unit_of_measure, stock_quantity,
+     (name, description, item_type_id, unit_of_measure_id, stock_quantity,
       is_infinite_stock, min_stock_level, can_customize, can_preorder,
       preparation_time_minutes, supplier_id, is_featured, allergen_info,
       nutritional_info, image_url)
@@ -32,8 +32,8 @@ export const createMenuItem = async (req: AuthRequest, res: Response) => {
     [
       itemData.name,
       itemData.description || null,
-      itemData.item_type,
-      itemData.unit_of_measure || 'piece',
+      itemData.item_type_id,
+      itemData.unit_of_measure_id || 1, // Default to 'piece' (id 1)
       itemData.stock_quantity || 100,
       itemData.is_infinite_stock !== undefined ? itemData.is_infinite_stock : true,
       itemData.min_stock_level || 5,
@@ -75,7 +75,7 @@ export const updateMenuItem = async (req: AuthRequest, res: Response) => {
   }
 
   const allowedColumns = [
-    'name', 'description', 'item_type', 'unit_of_measure', 'stock_quantity',
+    'name', 'description', 'item_type_id', 'unit_of_measure_id', 'stock_quantity',
     'is_infinite_stock', 'min_stock_level', 'status', 'can_customize',
     'can_preorder', 'preparation_time_minutes', 'supplier_id', 'is_featured',
     'allergen_info', 'nutritional_info', 'image_url'
@@ -119,6 +119,11 @@ export const getAllMenuItems = async (req: AuthRequest, res: Response) => {
   let sql = `
     SELECT
       mi.*,
+      mit.name as item_type,
+      mit.display_name as item_type_display,
+      uom.name as unit_of_measure,
+      uom.display_name as unit_of_measure_display,
+      uom.abbreviation as unit_abbreviation,
       (SELECT unit_price FROM menu_item_price
        WHERE menu_item_id = mi.menu_item_id
        AND is_active = TRUE
@@ -126,6 +131,8 @@ export const getAllMenuItems = async (req: AuthRequest, res: Response) => {
        ORDER BY price_type = 'base' DESC, created_at DESC
        LIMIT 1) as current_price
     FROM menu_item mi
+    LEFT JOIN menu_item_type mit ON mi.item_type_id = mit.type_id
+    LEFT JOIN unit_of_measure uom ON mi.unit_of_measure_id = uom.unit_id
     WHERE 1=1
   `;
 
@@ -150,8 +157,15 @@ export const getAllMenuItems = async (req: AuthRequest, res: Response) => {
   }
 
   if (item_type) {
-    sql += ` AND mi.item_type = ?`;
-    params.push(String(item_type));
+    // Support both ID (number) and name (string) for backward compatibility
+    const itemTypeNum = parseInt(item_type as string, 10);
+    if (!Number.isNaN(itemTypeNum)) {
+      sql += ` AND mi.item_type_id = ?`;
+      params.push(itemTypeNum);
+    } else {
+      sql += ` AND mit.name = ?`;
+      params.push(String(item_type));
+    }
   }
 
   if (status) {
@@ -671,4 +685,93 @@ export const respondToFeedback = async (req: AuthRequest, res: Response) => {
   );
 
   res.json(successResponse('Response added to feedback'));
+};
+
+// ==== MENU ITEM TYPES MANAGEMENT ====
+
+// Get all menu item types
+export const getAllItemTypes = async (req: AuthRequest, res: Response) => {
+  const types = await query(
+    'SELECT type_id, name, display_name, is_active, created_at FROM menu_item_type WHERE is_active = TRUE ORDER BY display_name ASC'
+  );
+
+  res.json(successResponse('Item types retrieved', types));
+};
+
+// Create new menu item type
+export const createItemType = async (req: AuthRequest, res: Response) => {
+  const { name, display_name } = req.body;
+
+  if (!name || !display_name) {
+    throw new AppError('Name and display name are required', 400);
+  }
+
+  // Convert name to lowercase and replace spaces with underscores
+  const normalizedName = name.toLowerCase().replace(/\s+/g, '_');
+
+  // Check if type already exists
+  const existing = await query(
+    'SELECT type_id FROM menu_item_type WHERE name = ?',
+    [normalizedName]
+  );
+
+  if (Array.isArray(existing) && existing.length > 0) {
+    throw new AppError('Item type already exists', 400);
+  }
+
+  const result = await query(
+    'INSERT INTO menu_item_type (name, display_name, is_active) VALUES (?, ?, TRUE)',
+    [normalizedName, display_name]
+  );
+
+  const insertId = getInsertId(result);
+
+  res.json(successResponse('Item type created', { type_id: insertId, name: normalizedName, display_name }));
+};
+
+// ==== UNITS OF MEASURE MANAGEMENT ====
+
+// Get all units of measure
+export const getAllUnits = async (req: AuthRequest, res: Response) => {
+  const units = await query(
+    'SELECT unit_id, name, display_name, abbreviation, is_active, created_at FROM unit_of_measure WHERE is_active = TRUE ORDER BY display_name ASC'
+  );
+
+  res.json(successResponse('Units of measure retrieved', units));
+};
+
+// Create new unit of measure
+export const createUnit = async (req: AuthRequest, res: Response) => {
+  const { name, display_name, abbreviation } = req.body;
+
+  if (!name || !display_name) {
+    throw new AppError('Name and display name are required', 400);
+  }
+
+  // Convert name to lowercase and replace spaces with underscores
+  const normalizedName = name.toLowerCase().replace(/\s+/g, '_');
+
+  // Check if unit already exists
+  const existing = await query(
+    'SELECT unit_id FROM unit_of_measure WHERE name = ?',
+    [normalizedName]
+  );
+
+  if (Array.isArray(existing) && existing.length > 0) {
+    throw new AppError('Unit of measure already exists', 400);
+  }
+
+  const result = await query(
+    'INSERT INTO unit_of_measure (name, display_name, abbreviation, is_active) VALUES (?, ?, ?, TRUE)',
+    [normalizedName, display_name, abbreviation || null]
+  );
+
+  const insertId = getInsertId(result);
+
+  res.json(successResponse('Unit of measure created', {
+    unit_id: insertId,
+    name: normalizedName,
+    display_name,
+    abbreviation
+  }));
 };
