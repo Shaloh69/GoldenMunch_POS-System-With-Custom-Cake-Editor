@@ -160,17 +160,21 @@ export const createOrder = async (req: AuthRequest, res: Response) => {
     const orderNumber = `ORD-${FrOrderRandSuff}`;
     const verificationCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
 
+    // Get cashier/admin ID if authenticated
+    const cashierId = req.user?.id || null;
+
     // Create order
     const [orderResult] = await conn.query(
       `INSERT INTO customer_order
-       (order_number, verification_code, customer_id, order_type, payment_method, payment_status, order_status,
+       (order_number, verification_code, customer_id, cashier_id, order_type, payment_method, payment_status, order_status,
         subtotal, total_amount, discount_amount, tax_amount, final_amount,
         special_instructions, kiosk_session_id, is_preorder, payment_reference_number)
-       VALUES (?, ?, ?, ?, ?, 'unpaid', 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, 'unpaid', 'pending', ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         orderNumber,
         verificationCode,
         customerId,
+        cashierId,
         orderData.order_type,
         orderData.payment_method,
         totals.subtotal,
@@ -242,9 +246,13 @@ export const getOrderById = async (req: AuthRequest, res: Response) => {
   }
 
   const orders = await query(
-    `SELECT co.*, c.name, c.phone
+    `SELECT co.*, c.name, c.phone,
+     COALESCE(a.name, ca.name) as cashier_name,
+     COALESCE(a.username, ca.username) as cashier_username
      FROM customer_order co
      LEFT JOIN customer c ON co.customer_id = c.customer_id
+     LEFT JOIN admin a ON co.cashier_id = a.admin_id
+     LEFT JOIN cashier ca ON co.cashier_id = ca.cashier_id
      WHERE co.order_id = ?`,
     [orderId]
   );

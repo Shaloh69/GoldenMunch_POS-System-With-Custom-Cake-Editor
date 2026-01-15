@@ -839,29 +839,24 @@ export const approveRequest = async (req: AuthRequest, res: Response) => {
 
     const request = getFirstRow<CustomCakeRequestRow>(requests);
 
+    // Send approval email with improved template
     if (request?.customer_email) {
-      // Create notification
-      await conn.query(
-        `INSERT INTO custom_cake_notifications
-         (request_id, notification_type, recipient_email, subject, message_body, status)
-         VALUES (?, 'approved', ?, ?, ?, 'pending')`,
-        [
-          requestId,
-          request.customer_email,
-          'Your Custom Cake Request is Approved!',
-          `Great news! Your custom cake request has been approved. Price: ₱${approved_price}. Pickup: ${scheduled_pickup_date}.`,
-        ]
-      );
+      emailService.sendApprovalEmail(parseInt(requestId), {
+        customer_email: request.customer_email,
+        customer_name: request.customer_name,
+        approved_price,
+        scheduled_pickup_date,
+        scheduled_pickup_time,
+        preparation_days,
+        admin_notes,
+      }).catch((error) => {
+        console.error('Failed to send approval notification:', error);
+      });
     }
   });
 
   // Reserve capacity slot for the pickup date
   await capacityService.reserveSlot(scheduled_pickup_date);
-
-  // Process pending notifications (send approval email)
-  emailService.processPendingNotifications().catch((error) => {
-    console.error('Failed to send approval notification:', error);
-  });
 
   res.json(successResponse('Request approved successfully'));
 };
@@ -904,25 +899,17 @@ export const rejectRequest = async (req: AuthRequest, res: Response) => {
 
     const request = getFirstRow<CustomCakeRequestRow>(requests);
 
+    // Send rejection email with improved template
     if (request?.customer_email) {
-      // Create notification
-      await conn.query(
-        `INSERT INTO custom_cake_notifications
-         (request_id, notification_type, recipient_email, subject, message_body, status)
-         VALUES (?, 'rejected', ?, ?, ?, 'pending')`,
-        [
-          requestId,
-          request.customer_email,
-          'Custom Cake Request Update',
-          `Unfortunately, we cannot fulfill your custom cake request. Reason: ${rejection_reason}`,
-        ]
-      );
+      emailService.sendRejectionEmail(parseInt(requestId), {
+        customer_email: request.customer_email,
+        customer_name: request.customer_name,
+        rejection_reason,
+        admin_notes,
+      }).catch((error) => {
+        console.error('Failed to send rejection notification:', error);
+      });
     }
-  });
-
-  // Process pending notifications (send rejection email)
-  emailService.processPendingNotifications().catch((error) => {
-    console.error('Failed to send rejection notification:', error);
   });
 
   res.json(successResponse('Request rejected'));

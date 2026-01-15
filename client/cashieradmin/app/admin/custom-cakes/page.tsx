@@ -34,6 +34,7 @@ import {
   EyeIcon,
   CurrencyDollarIcon,
   SparklesIcon,
+  EnvelopeIcon,
 } from "@heroicons/react/24/outline";
 
 import {
@@ -43,6 +44,7 @@ import {
   type RejectCustomCakeData,
 } from "@/services/customCakeRequest.service";
 import { MessagingPanel } from "@/components/MessagingPanel";
+import { EmailComposer } from "@/components/EmailComposer";
 
 // Stats Interface
 interface CustomCakeStats {
@@ -72,6 +74,7 @@ export default function CustomCakesPage() {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showApproveConfirmModal, setShowApproveConfirmModal] = useState(false);
   const [showRejectConfirmModal, setShowRejectConfirmModal] = useState(false);
+  const [showEmailComposer, setShowEmailComposer] = useState(false);
   const [selectedRequest, setSelectedRequest] =
     useState<CustomCakeRequest | null>(null);
   const [requestDetails, setRequestDetails] =
@@ -119,7 +122,7 @@ export default function CustomCakesPage() {
 
   // Filtered Requests
   const filteredRequests = useMemo(() => {
-    return requests.filter((request) => {
+    const filtered = requests.filter((request) => {
       const search = searchTerm.toLowerCase();
 
       return (
@@ -127,6 +130,26 @@ export default function CustomCakesPage() {
         request.customer_email?.toLowerCase().includes(search) ||
         request.request_id?.toString().includes(search)
       );
+    });
+
+    // Sort by status: pending_review first, then approved, then completed/rejected last
+    return filtered.sort((a, b) => {
+      const statusOrder: { [key: string]: number } = {
+        'pending_review': 1,
+        'approved': 2,
+        'completed': 3,
+        'rejected': 4,
+      };
+
+      const orderA = statusOrder[a.status] || 5;
+      const orderB = statusOrder[b.status] || 5;
+
+      if (orderA !== orderB) {
+        return orderA - orderB;
+      }
+
+      // Secondary sort by submitted_at (newest first) within same status
+      return new Date(b.submitted_at || 0).getTime() - new Date(a.submitted_at || 0).getTime();
     });
   }, [requests, searchTerm]);
 
@@ -882,9 +905,30 @@ export default function CustomCakesPage() {
             <Button variant="flat" onPress={() => setShowDetailsModal(false)}>
               Close
             </Button>
+            {requestDetails && (
+              <Button
+                color="primary"
+                startContent={<EnvelopeIcon className="w-4 h-4" />}
+                onPress={() => setShowEmailComposer(true)}
+              >
+                Send Email
+              </Button>
+            )}
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/* Email Composer Modal */}
+      <EmailComposer
+        defaultCustomerName={selectedRequest?.customer_name}
+        defaultRecipient={selectedRequest?.customer_email}
+        defaultRequestId={selectedRequest?.request_id}
+        isOpen={showEmailComposer}
+        onClose={() => setShowEmailComposer(false)}
+        onEmailSent={() => {
+          alert("Email sent successfully!");
+        }}
+      />
 
       {/* Approve Modal */}
       <Modal
