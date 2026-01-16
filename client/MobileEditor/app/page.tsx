@@ -89,37 +89,9 @@ function CakeEditorContent() {
   const searchParams = useSearchParams();
   const sessionToken = searchParams?.get('session');
   const debugMode = searchParams?.get('debug') === 'true';
-  const canvasRef = useRef<any>(null);
 
-  const [currentStep, setCurrentStep] = useState(0);
   const [sessionValid, setSessionValid] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [requestId, setRequestId] = useState<number | null>(null);
-  const [showControls, setShowControls] = useState(true);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showTutorial, setShowTutorial] = useState(true);
-  const [tutorialStep, setTutorialStep] = useState(0);
-  const [showFullscreenTip, setShowFullscreenTip] = useState(false);
-  const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
-
-  // Design Options from API
-  const [options, setOptions] = useState<any>(null);
-
-  // Cake Design State
-  const [design, setDesign] = useState<CakeDesign>({
-    customer_name: '',
-    customer_email: '',
-    customer_phone: '',
-    num_layers: 1,
-    frosting_type: 'buttercream',
-    frosting_color: '#FFFFFF',
-    candles_count: 0,
-    candle_type: 'regular',
-    decorations_3d: [],
-  });
 
   // Validate session on mount
   useEffect(() => {
@@ -128,7 +100,6 @@ function CakeEditorContent() {
       console.log('🔧 DEBUG MODE: Bypassing session validation');
       setSessionValid(true);
       setLoading(false);
-      fetchDesignOptions();
       return;
     }
 
@@ -139,7 +110,6 @@ function CakeEditorContent() {
     }
 
     validateSession();
-    fetchDesignOptions();
   }, [sessionToken, debugMode]);
 
   const validateSession = async () => {
@@ -189,6 +159,147 @@ function CakeEditorContent() {
       setLoading(false);
     }
   };
+
+  // Loading state - EARLY RETURN BEFORE OTHER HOOKS
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 to-orange-100">
+        <div className="text-center">
+          <Spinner size="lg" color="warning" />
+          <p className="mt-4 text-gray-600">Loading cake editor...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // No session token - show landing page (unless in debug mode)
+  if (!sessionToken && !(debugMode && process.env.NODE_ENV !== 'production')) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-orange-50 to-pink-50 p-4">
+        <Card className="max-w-md">
+          <CardBody className="text-center p-8">
+            <div className="w-20 h-20 mx-auto mb-4">
+              <span className="text-6xl">🎂</span>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">GoldenMunch</h1>
+            <h2 className="text-xl font-semibold text-amber-600 mb-4">Custom Cake Designer</h2>
+            <p className="text-gray-600 mb-6">
+              Please scan the QR code from our kiosk to start designing your custom cake!
+            </p>
+            <div className="bg-amber-50 p-4 rounded-lg border-2 border-amber-200">
+              <p className="text-sm text-gray-700">
+                📍 Visit our kiosk and select "Custom Cake" to get started
+              </p>
+            </div>
+          </CardBody>
+        </Card>
+      </div>
+    );
+  }
+
+  // Invalid session
+  if (!sessionValid) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100 p-4">
+        <Card className="max-w-lg">
+          <CardBody className="text-center p-8">
+            <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
+              <span className="text-5xl">❌</span>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-3">Session Expired</h1>
+            <p className="text-gray-600 mb-4">
+              Your design session has expired or is invalid.
+            </p>
+            <p className="text-gray-600 mb-6">
+              Please generate a new QR code from the kiosk.
+            </p>
+
+            {/* Help Instructions */}
+            <div className="bg-amber-50 border-2 border-amber-200 p-4 rounded-lg mb-6 text-left">
+              <p className="text-sm font-semibold text-amber-900 mb-2">📍 How to get a new QR code:</p>
+              <ol className="text-sm text-gray-700 space-y-1 ml-4 list-decimal">
+                <li>Go back to the kiosk</li>
+                <li>Select "Custom Cake" from the menu</li>
+                <li>Tap "Design Your Cake"</li>
+                <li>Scan the new QR code with your phone</li>
+              </ol>
+            </div>
+
+            {/* Debug Info */}
+            {sessionToken && (
+              <details className="text-left mb-6 bg-gray-50 p-3 rounded border">
+                <summary className="text-xs font-medium text-gray-600 cursor-pointer">▶ Debug Info (for staff)</summary>
+                <div className="mt-2 text-xs font-mono text-gray-500 space-y-1">
+                  <p><strong>Session Token:</strong> {sessionToken.substring(0, 40)}...</p>
+                  <p><strong>API URL:</strong> {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api (DEFAULT - NOT CONFIGURED!)'}</p>
+                  <p><strong>Current URL:</strong> {typeof window !== 'undefined' ? window.location.href : 'N/A'}</p>
+                  <p><strong>Timestamp:</strong> {new Date().toLocaleString()}</p>
+                  <p><strong>Timezone:</strong> {Intl.DateTimeFormat().resolvedOptions().timeZone}</p>
+                  {!process.env.NEXT_PUBLIC_API_URL && (
+                    <div className="mt-2 p-2 bg-red-100 border border-red-300 rounded">
+                      <p className="text-red-700 font-semibold">⚠️ CONFIGURATION ISSUE:</p>
+                      <p className="text-red-600">NEXT_PUBLIC_API_URL environment variable is not set!</p>
+                      <p className="text-red-600 mt-1">Session validation may fail if API server is on a different host.</p>
+                    </div>
+                  )}
+                </div>
+              </details>
+            )}
+
+            <Button
+              color="warning"
+              size="lg"
+              className="w-full"
+              onClick={() => window.location.href = '/'}
+            >
+              Return to Kiosk
+            </Button>
+          </CardBody>
+        </Card>
+      </div>
+    );
+  }
+
+  // Session is valid - render main editor
+  return <CakeEditorMain sessionToken={sessionToken} debugMode={debugMode} />;
+}
+
+// Separate component for main editor to avoid hook ordering issues
+function CakeEditorMain({ sessionToken, debugMode }: { sessionToken: string; debugMode: boolean }) {
+  const canvasRef = useRef<any>(null);
+
+  const [currentStep, setCurrentStep] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [requestId, setRequestId] = useState<number | null>(null);
+  const [showControls, setShowControls] = useState(true);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(true);
+  const [tutorialStep, setTutorialStep] = useState(0);
+  const [showFullscreenTip, setShowFullscreenTip] = useState(false);
+  const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
+
+  // Design Options from API
+  const [options, setOptions] = useState<any>(null);
+
+  // Cake Design State
+  const [design, setDesign] = useState<CakeDesign>({
+    customer_name: '',
+    customer_email: '',
+    customer_phone: '',
+    num_layers: 1,
+    frosting_type: 'buttercream',
+    frosting_color: '#FFFFFF',
+    candles_count: 0,
+    candle_type: 'regular',
+    decorations_3d: [],
+  });
+
+  // Fetch design options on mount (session already validated by parent)
+  useEffect(() => {
+    fetchDesignOptions();
+  }, []);
 
   const fetchDesignOptions = async () => {
     try {
@@ -241,13 +352,13 @@ function CakeEditorContent() {
   // Auto-save design with longer debounce for better performance
   useEffect(() => {
     const timer = setTimeout(() => {
-      if (sessionToken && sessionValid && currentStep > 0) {
+      if (sessionToken && currentStep > 0) {
         saveDraft();
       }
     }, 5000); // Auto-save after 5 seconds of inactivity (increased from 3s)
 
     return () => clearTimeout(timer);
-  }, [design, currentStep, sessionToken, sessionValid]);
+  }, [design, currentStep, sessionToken]);
 
   const saveDraft = async (): Promise<number | null> => {
     // Skip saving in debug mode
@@ -256,7 +367,7 @@ function CakeEditorContent() {
       return null;
     }
 
-    if (!sessionToken || !sessionValid) return null;
+    if (!sessionToken) return null;
 
     try {
       setSaving(true);
@@ -492,106 +603,6 @@ function CakeEditorContent() {
       setShowTutorial(false);
     }
   }, []);
-
-  // Loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 to-orange-100">
-        <div className="text-center">
-          <Spinner size="lg" color="warning" />
-          <p className="mt-4 text-gray-600">Loading cake editor...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // No session token - show landing page (unless in debug mode)
-  if (!sessionToken && !(debugMode && process.env.NODE_ENV !== 'production')) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-orange-50 to-pink-50 p-4">
-        <Card className="max-w-md">
-          <CardBody className="text-center p-8">
-            <div className="w-20 h-20 mx-auto mb-4">
-              <span className="text-6xl">🎂</span>
-            </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">GoldenMunch</h1>
-            <h2 className="text-xl font-semibold text-amber-600 mb-4">Custom Cake Designer</h2>
-            <p className="text-gray-600 mb-6">
-              Please scan the QR code from our kiosk to start designing your custom cake!
-            </p>
-            <div className="bg-amber-50 p-4 rounded-lg border-2 border-amber-200">
-              <p className="text-sm text-gray-700">
-                📍 Visit our kiosk and select "Custom Cake" to get started
-              </p>
-            </div>
-          </CardBody>
-        </Card>
-      </div>
-    );
-  }
-
-  // Invalid session
-  if (!sessionValid) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100 p-4">
-        <Card className="max-w-lg">
-          <CardBody className="text-center p-8">
-            <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
-              <span className="text-5xl">❌</span>
-            </div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-3">Session Expired</h1>
-            <p className="text-gray-600 mb-4">
-              Your design session has expired or is invalid.
-            </p>
-            <p className="text-gray-600 mb-6">
-              Please generate a new QR code from the kiosk.
-            </p>
-
-            {/* Help Instructions */}
-            <div className="bg-amber-50 border-2 border-amber-200 p-4 rounded-lg mb-6 text-left">
-              <p className="text-sm font-semibold text-amber-900 mb-2">📍 How to get a new QR code:</p>
-              <ol className="text-sm text-gray-700 space-y-1 ml-4 list-decimal">
-                <li>Go back to the kiosk</li>
-                <li>Select "Custom Cake" from the menu</li>
-                <li>Tap "Design Your Cake"</li>
-                <li>Scan the new QR code with your phone</li>
-              </ol>
-            </div>
-
-            {/* Debug Info */}
-            {sessionToken && (
-              <details className="text-left mb-6 bg-gray-50 p-3 rounded border">
-                <summary className="text-xs font-medium text-gray-600 cursor-pointer">▶ Debug Info (for staff)</summary>
-                <div className="mt-2 text-xs font-mono text-gray-500 space-y-1">
-                  <p><strong>Session Token:</strong> {sessionToken.substring(0, 40)}...</p>
-                  <p><strong>API URL:</strong> {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api (DEFAULT - NOT CONFIGURED!)'}</p>
-                  <p><strong>Current URL:</strong> {typeof window !== 'undefined' ? window.location.href : 'N/A'}</p>
-                  <p><strong>Timestamp:</strong> {new Date().toLocaleString()}</p>
-                  <p><strong>Timezone:</strong> {Intl.DateTimeFormat().resolvedOptions().timeZone}</p>
-                  {!process.env.NEXT_PUBLIC_API_URL && (
-                    <div className="mt-2 p-2 bg-red-100 border border-red-300 rounded">
-                      <p className="text-red-700 font-semibold">⚠️ CONFIGURATION ISSUE:</p>
-                      <p className="text-red-600">NEXT_PUBLIC_API_URL environment variable is not set!</p>
-                      <p className="text-red-600 mt-1">Session validation may fail if API server is on a different host.</p>
-                    </div>
-                  )}
-                </div>
-              </details>
-            )}
-
-            <Button
-              color="warning"
-              size="lg"
-              className="w-full"
-              onClick={() => window.location.href = '/'}
-            >
-              Return to Kiosk
-            </Button>
-          </CardBody>
-        </Card>
-      </div>
-    );
-  }
 
   const CurrentStepComponent = STEPS[currentStep].component;
   const progress = ((currentStep + 1) / STEPS.length) * 100;
