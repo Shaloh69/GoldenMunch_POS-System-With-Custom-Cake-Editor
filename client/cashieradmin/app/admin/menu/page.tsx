@@ -1524,7 +1524,7 @@ export default function AdminMenuPage() {
                   Item Features
                 </p>
                 <div className="space-y-2">
-                  <label className="flex items-center gap-3 cursor-pointer">
+                  {/* <label className="flex items-center gap-3 cursor-pointer">
                     <input
                       checked={formData.is_infinite_stock || false}
                       className="w-4 h-4 rounded border-default-300 text-primary focus:ring-2 focus:ring-primary"
@@ -1579,7 +1579,7 @@ export default function AdminMenuPage() {
                         Feature disabled - Enable pre-ordering for this item
                       </p>
                     </div>
-                  </label>
+                  </label> */}
 
                   <label className="flex items-center gap-3 cursor-pointer">
                     <input
