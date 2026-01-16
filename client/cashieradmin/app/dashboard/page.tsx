@@ -119,7 +119,7 @@ export default function DashboardPage() {
           title="Today's Orders"
           value={loading ? "..." : stats.todayOrders.toString()}
         />
-        <StatCard
+        {/* <StatCard
           color="from-muted-clay to-light-caramel"
           icon={CurrencyDollarIcon}
           title="Revenue"
@@ -128,14 +128,14 @@ export default function DashboardPage() {
               ? "..."
               : `₱${stats.todayRevenue.toLocaleString("en-PH", { minimumFractionDigits: 2 })}`
           }
-        />
+        /> */}
         <StatCard
           color="from-warm-beige to-soft-sand"
           icon={UserGroupIcon}
           title="Customers"
           value={loading ? "..." : stats.totalCustomers.toString()}
         />
-        <StatCard
+        {/* <StatCard
           color="from-soft-sand to-light-caramel"
           icon={ChartBarIcon}
           title="Avg Order Value"
@@ -144,7 +144,7 @@ export default function DashboardPage() {
               ? "..."
               : `₱${stats.avgOrderValue.toLocaleString("en-PH", { minimumFractionDigits: 2 })}`
           }
-        />
+        /> */}
       </div>
 
       {/* Recent Activity */}
