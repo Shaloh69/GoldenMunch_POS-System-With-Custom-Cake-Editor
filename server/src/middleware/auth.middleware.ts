@@ -10,14 +10,16 @@ export const authenticate = (
   next: NextFunction
 ) => {
   try {
-    // Get token from header
+    // Get token from header or query parameter (for SSE endpoints)
     const authHeader = req.headers.authorization;
+    let token: string | undefined;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new AppError('No token provided', 401);
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7).trim(); // Remove 'Bearer ' prefix and trim whitespace
+    } else if (req.query.token && typeof req.query.token === 'string') {
+      // For SSE connections which cannot set custom headers
+      token = req.query.token.trim();
     }
-
-    const token = authHeader.substring(7).trim(); // Remove 'Bearer ' prefix and trim whitespace
 
     if (!token) {
       throw new AppError('No token provided', 401);
@@ -55,13 +57,16 @@ export const authenticateAdmin = (
   next: NextFunction
 ) => {
   try {
+    // Get token from header or query parameter (for SSE endpoints)
     const authHeader = req.headers.authorization;
+    let token: string | undefined;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new AppError('No token provided', 401);
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7).trim(); // Remove 'Bearer ' prefix and trim whitespace
+    } else if (req.query.token && typeof req.query.token === 'string') {
+      // For SSE connections which cannot set custom headers
+      token = req.query.token.trim();
     }
-
-    const token = authHeader.substring(7).trim(); // Remove 'Bearer ' prefix and trim whitespace
 
     if (!token) {
       throw new AppError('No token provided', 401);
@@ -101,13 +106,16 @@ export const authenticateCashier = (
   next: NextFunction
 ) => {
   try {
+    // Get token from header or query parameter (for SSE endpoints)
     const authHeader = req.headers.authorization;
+    let token: string | undefined;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new AppError('No token provided', 401);
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7).trim(); // Remove 'Bearer ' prefix and trim whitespace
+    } else if (req.query.token && typeof req.query.token === 'string') {
+      // For SSE connections which cannot set custom headers
+      token = req.query.token.trim();
     }
-
-    const token = authHeader.substring(7).trim(); // Remove 'Bearer ' prefix and trim whitespace
 
     if (!token) {
       throw new AppError('No token provided', 401);
@@ -148,10 +156,18 @@ export const optionalAuth = (
   next: NextFunction
 ) => {
   try {
+    // Get token from header or query parameter (for SSE endpoints)
     const authHeader = req.headers.authorization;
+    let token: string | undefined;
 
     if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.substring(7);
+      token = authHeader.substring(7);
+    } else if (req.query.token && typeof req.query.token === 'string') {
+      // For SSE connections which cannot set custom headers
+      token = req.query.token.trim();
+    }
+
+    if (token) {
       const decoded = jwt.verify(
         token,
         process.env.JWT_SECRET || 'secret'
