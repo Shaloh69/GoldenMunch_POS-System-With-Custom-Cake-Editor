@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Textarea } from "@heroui/input";
@@ -170,11 +170,11 @@ export function EmailComposer({
   };
 
   // Update recipient when defaultRecipient changes
-  useState(() => {
+  useEffect(() => {
     if (defaultRecipient && defaultRecipient !== formData.recipient_email) {
       setFormData((prev) => ({ ...prev, recipient_email: defaultRecipient }));
     }
-  });
+  }, [defaultRecipient]);
 
   return (
     <Modal
@@ -199,12 +199,17 @@ export function EmailComposer({
                 Email Template
               </label>
               <Select
-                selectedKeys={[selectedTemplate]}
+                selectedKeys={new Set([selectedTemplate])}
                 placeholder="Select a template"
-                onChange={(e) => handleTemplateChange(e.target.value as keyof typeof EMAIL_TEMPLATES)}
+                onSelectionChange={(keys) => {
+                  const selectedKey = Array.from(keys)[0] as keyof typeof EMAIL_TEMPLATES;
+                  if (selectedKey) {
+                    handleTemplateChange(selectedKey);
+                  }
+                }}
               >
                 {Object.entries(EMAIL_TEMPLATES).map(([key, template]) => (
-                  <SelectItem key={key}>
+                  <SelectItem key={key} value={key}>
                     {template.label}
                   </SelectItem>
                 ))}
