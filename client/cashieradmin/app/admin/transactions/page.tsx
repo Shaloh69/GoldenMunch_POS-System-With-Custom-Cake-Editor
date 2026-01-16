@@ -419,7 +419,7 @@ export default function TransactionsPage() {
           </CardBody>
         </Card>
 
-        <Card>
+        {/* <Card>
           <CardBody>
             <div className="flex items-center gap-3">
               <div className="p-3 bg-warning-100 rounded-lg">
@@ -456,7 +456,7 @@ export default function TransactionsPage() {
               </div>
             </div>
           </CardBody>
-        </Card>
+        </Card> */}
       </div>
 
       {/* Filters */}

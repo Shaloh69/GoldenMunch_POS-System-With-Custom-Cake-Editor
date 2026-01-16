@@ -845,7 +845,7 @@ export default function AdminMenuPage() {
           </CardBody>
         </Card>
 
-        <Card>
+        {/* <Card>
           <CardBody className="p-4">
             <div className="flex items-center justify-between">
               <div>
@@ -871,7 +871,7 @@ export default function AdminMenuPage() {
               </div>
             </div>
           </CardBody>
-        </Card>
+        </Card> */}
       </div>
 
       {error && (
