@@ -261,7 +261,8 @@ function CakeEditorContent() {
   }
 
   // Session is valid - render main editor
-  return <CakeEditorMain sessionToken={sessionToken} debugMode={debugMode} />;
+  // TypeScript: sessionToken is guaranteed to be non-null here due to early returns above
+  return <CakeEditorMain sessionToken={sessionToken!} debugMode={debugMode} />;
 }
 
 // Separate component for main editor to avoid hook ordering issues
