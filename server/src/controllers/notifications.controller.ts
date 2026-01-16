@@ -110,10 +110,10 @@ export const getAllNotifications = async (req: AuthRequest, res: Response) => {
         name,
         stock_quantity,
         min_stock_level,
-        is_active,
+        status,
         updated_at
       FROM menu_item
-      WHERE is_active = TRUE
+      WHERE status = 'available'
       AND is_infinite_stock = FALSE
       AND stock_quantity <= min_stock_level
       AND stock_quantity > 0
@@ -233,7 +233,7 @@ export const getUnreadCount = async (req: AuthRequest, res: Response) => {
     const [lowStock] = await pool.query<RowDataPacket[]>(
       `SELECT COUNT(*) as count
       FROM menu_item
-      WHERE is_active = TRUE
+      WHERE status = 'available'
       AND is_infinite_stock = FALSE
       AND stock_quantity <= min_stock_level`
     );
