@@ -93,24 +93,23 @@ class XenditPaymentService {
         };
       }
 
-      // Determine payment method - default to GCash for QR payments
-      const paymentMethod = request.paymentMethod || 'GCASH';
+      // Use QRPH (QR Philippines) for kiosk payments - returns scannable QR code
+      // QRPH supports GCash, PayMaya, UnionBank, and all Philippine banks/e-wallets
+      // Documentation: https://docs.xendit.co/docs/qrph
+      const paymentMethod = request.paymentMethod || 'QRPH';
 
       // Create Payment Request using v3 API
-      // Documentation: https://docs.xendit.co/apidocs/create-payment-request
+      // For KIOSK: Use QR_CODE type with QRPH channel (returns QR string)
+      // For WEB/MOBILE: Use EWALLET type with GCASH/PAYMAYA (returns redirect URL)
       const requestBody = {
         reference_id: request.externalId,
         amount: request.amount,
         currency: 'PHP',
         country: 'PH',
         payment_method: {
-          type: 'EWALLET',
-          ewallet: {
-            channel_code: paymentMethod,
-            channel_properties: {
-              success_redirect_url: `${this.webhookUrl}/payment/success`,
-              failure_redirect_url: `${this.webhookUrl}/payment/failure`,
-            },
+          type: 'QR_CODE', // Changed from EWALLET to QR_CODE for actual QR scanning
+          qr_code: {
+            channel_code: paymentMethod, // QRPH for Philippines QR standard
           },
           reusability: 'ONE_TIME_USE',
         },
@@ -119,9 +118,10 @@ class XenditPaymentService {
         },
       };
 
-      logger.info(`📤 Creating ${paymentMethod} payment request:`, {
+      logger.info(`📤 Creating ${paymentMethod} payment request for KIOSK:`, {
         reference_id: request.externalId,
         amount: request.amount,
+        type: 'QR_CODE',
       });
 
       const response = await this.xenditClient.post('/payment_requests', requestBody);
@@ -137,17 +137,32 @@ class XenditPaymentService {
 
       if (paymentData.actions && paymentData.actions.length > 0) {
         for (const action of paymentData.actions) {
-          // For QR codes (QRPH, QRIS)
-          if (action.url_type === 'QR' || action.qr_checkout_string) {
-            qrString = action.qr_checkout_string || action.url;
+          logger.info(`Action found:`, {
+            type: action.type,
+            descriptor: action.descriptor,
+            value: action.value ? `${action.value.substring(0, 50)}...` : undefined,
+          });
+
+          // For QR codes (QRPH, QRIS) - action.descriptor === "QR_STRING"
+          if (action.descriptor === 'QR_STRING' || action.type === 'PRESENT_TO_CUSTOMER') {
+            qrString = action.value; // The QR code string is in action.value
             logger.info(`✓ QR Code extracted from payment request`);
           }
-          // For e-wallets that require redirect (GCash, PayMaya)
-          else if (action.url_type === 'WEB' || action.url_type === 'DEEPLINK') {
-            redirectUrl = action.url;
+          // For e-wallets that require redirect (GCash, PayMaya) - action.descriptor === "WEB_URL"
+          else if (action.descriptor === 'WEB_URL' || action.descriptor === 'DEEPLINK_URL') {
+            redirectUrl = action.value; // The redirect URL is in action.value
             logger.info(`✓ Redirect URL extracted: ${redirectUrl}`);
           }
         }
+      }
+
+      // Log what we extracted
+      if (qrString) {
+        logger.info(`✅ QR Payment: User will scan QR code to pay`);
+      } else if (redirectUrl) {
+        logger.info(`✅ Redirect Payment: User will be redirected to ${redirectUrl}`);
+      } else {
+        logger.warn(`⚠️ No QR code or redirect URL found in response`);
       }
 
       return {
@@ -209,7 +224,7 @@ class XenditPaymentService {
         status: this.mapPaymentStatus(paymentData.status),
         amount: paymentData.amount,
         transactionDate: paymentData.updated || paymentData.created,
-        paymentMethod: paymentData.payment_method?.ewallet?.channel_code || 'UNKNOWN',
+        paymentMethod: paymentData.payment_method?.qr_code?.channel_code || paymentData.payment_method?.ewallet?.channel_code || 'UNKNOWN',
         message: isPaid ? 'Payment completed' : `Payment ${paymentData.status.toLowerCase()}`,
       };
     } catch (error: any) {
