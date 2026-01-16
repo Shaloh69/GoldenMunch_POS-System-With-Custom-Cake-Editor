@@ -3,7 +3,7 @@
 import { Input } from '@nextui-org/input';
 import { Select, SelectItem } from '@nextui-org/select';
 import { Switch } from '@nextui-org/switch';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { CakeDesign } from '@/app/page';
 
 interface StepTextProps {
@@ -14,6 +14,17 @@ interface StepTextProps {
 
 export default function StepText({ design, updateDesign }: StepTextProps) {
   const [enableText, setEnableText] = useState(!!design.cake_text);
+
+  // Memoize selectedKeys to prevent infinite re-renders
+  const selectedTextFont = useMemo(
+    () => new Set(design.text_font ? [design.text_font] : ['script']),
+    [design.text_font]
+  );
+
+  const selectedTextPosition = useMemo(
+    () => new Set(design.text_position ? [design.text_position] : ['top']),
+    [design.text_position]
+  );
 
   const handleToggleText = (enabled: boolean) => {
     setEnableText(enabled);
@@ -79,8 +90,11 @@ export default function StepText({ design, updateDesign }: StepTextProps) {
           {/* Text Font */}
           <Select
             label="Text Font"
-            selectedKeys={design.text_font ? [design.text_font] : ['script']}
-            onChange={(e) => updateDesign({ text_font: e.target.value })}
+            selectedKeys={selectedTextFont}
+            onSelectionChange={(keys) => {
+              const selected = Array.from(keys)[0] as string;
+              updateDesign({ text_font: selected });
+            }}
             variant="bordered"
           >
             <SelectItem key="script" value="script">Script (Elegant)</SelectItem>
@@ -93,8 +107,11 @@ export default function StepText({ design, updateDesign }: StepTextProps) {
           {/* Text Position */}
           <Select
             label="Text Position"
-            selectedKeys={design.text_position ? [design.text_position] : ['top']}
-            onChange={(e) => updateDesign({ text_position: e.target.value })}
+            selectedKeys={selectedTextPosition}
+            onSelectionChange={(keys) => {
+              const selected = Array.from(keys)[0] as string;
+              updateDesign({ text_position: selected });
+            }}
             variant="bordered"
           >
             <SelectItem key="top" value="top">Top of Cake</SelectItem>
