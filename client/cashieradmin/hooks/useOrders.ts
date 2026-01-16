@@ -32,7 +32,7 @@ export function useOrders(status?: string) {
   // Get token from localStorage (assuming it's stored there)
   const getToken = useCallback(() => {
     if (typeof window === 'undefined') return undefined;
-    return localStorage.getItem('token') || undefined;
+    return localStorage.getItem('auth_token') || undefined;
   }, []);
 
   // Set up SSE connection for real-time order updates
@@ -115,7 +115,7 @@ export function useOrder(orderId: number | null) {
   // Get token from localStorage
   const getToken = useCallback(() => {
     if (typeof window === 'undefined') return undefined;
-    return localStorage.getItem('token') || undefined;
+    return localStorage.getItem('auth_token') || undefined;
   }, []);
 
   // Listen for updates to this specific order

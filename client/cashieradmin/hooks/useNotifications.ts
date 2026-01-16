@@ -1,10 +1,19 @@
 "use client";
 
 import useSWR from 'swr';
+import { useCallback } from 'react';
 import { useSSE } from './useSSE';
 import { NotificationsService, Notification, NotificationsResponse, UnreadCountResponse } from '@/services/notifications.service';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+/**
+ * Get auth token from localStorage
+ */
+const getToken = (): string | undefined => {
+  if (typeof window === 'undefined') return undefined;
+  return localStorage.getItem('auth_token') || undefined;
+};
 
 /**
  * Hook to fetch and manage all notifications
@@ -31,6 +40,7 @@ export function useNotifications(params?: {
   // Listen for SSE events that should trigger notification refresh
   useSSE({
     url: `${API_URL}/sse/orders`,
+    token: getToken(),
     enabled: true,
     events: {
       'order.created': () => mutate(),
@@ -40,6 +50,7 @@ export function useNotifications(params?: {
 
   useSSE({
     url: `${API_URL}/sse/custom-cakes`,
+    token: getToken(),
     enabled: true,
     events: {
       'custom_cake.submitted': () => mutate(),
@@ -132,6 +143,7 @@ export function useUnreadNotificationCount() {
   // Listen for SSE events that should trigger count update
   useSSE({
     url: `${API_URL}/sse/orders`,
+    token: getToken(),
     enabled: true,
     events: {
       'order.created': () => mutate(),
@@ -140,6 +152,7 @@ export function useUnreadNotificationCount() {
 
   useSSE({
     url: `${API_URL}/sse/custom-cakes`,
+    token: getToken(),
     enabled: true,
     events: {
       'custom_cake.submitted': () => mutate(),

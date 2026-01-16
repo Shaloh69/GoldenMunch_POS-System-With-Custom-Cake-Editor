@@ -6,6 +6,14 @@ import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
+/**
+ * Get auth token from localStorage
+ */
+const getToken = (): string | undefined => {
+  if (typeof window === 'undefined') return undefined;
+  return localStorage.getItem('auth_token') || undefined;
+};
+
 export interface Message {
   notification_id: number;
   request_id: number;
@@ -40,7 +48,7 @@ export function useMessages(requestId: number | string | undefined) {
     async () => {
       if (!requestId) return null;
 
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('auth_token');
       const response = await axios.get(
         `${API_URL}/api/admin/custom-cakes/${requestId}/messages`,
         {
@@ -63,6 +71,7 @@ export function useMessages(requestId: number | string | undefined) {
   // Listen for SSE events
   useSSE({
     url: `${API_URL}/sse/custom-cakes`,
+    token: getToken(),
     enabled: !!requestId,
     events: {
       'custom_cake.message_received': (eventData: any) => {
@@ -90,7 +99,7 @@ export function useMessages(requestId: number | string | undefined) {
     if (!requestId) return null;
 
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('auth_token');
       const response = await axios.post(
         `${API_URL}/api/admin/custom-cakes/${requestId}/messages`,
         {
@@ -122,7 +131,7 @@ export function useMessages(requestId: number | string | undefined) {
     if (!requestId || notificationIds.length === 0) return;
 
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('auth_token');
       await axios.put(
         `${API_URL}/api/admin/custom-cakes/${requestId}/messages/mark-read`,
         { notification_ids: notificationIds },
@@ -160,7 +169,7 @@ export function useUnreadMessageCount() {
   const { data, error, isLoading, mutate } = useSWR<number>(
     'unread-message-count',
     async () => {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('auth_token');
       const response = await axios.get(
         `${API_URL}/api/admin/custom-cakes/messages/unread-count`,
         {
@@ -181,6 +190,7 @@ export function useUnreadMessageCount() {
   // Listen for new messages
   useSSE({
     url: `${API_URL}/sse/custom-cakes`,
+    token: getToken(),
     enabled: true,
     events: {
       'custom_cake.message_received': () => {
