@@ -3,6 +3,7 @@
 import { Card, CardBody } from '@nextui-org/card';
 import { Select, SelectItem } from '@nextui-org/select';
 import { Input } from '@nextui-org/input';
+import { useMemo } from 'react';
 import type { CakeDesign } from '@/app/page';
 
 interface StepFrostingProps {
@@ -31,6 +32,12 @@ const PRESET_COLORS = [
 ];
 
 export default function StepFrosting({ design, updateDesign }: StepFrostingProps) {
+  // Memoize selectedKeys to prevent infinite re-renders
+  const selectedCandleType = useMemo(
+    () => new Set(design.candle_type ? [design.candle_type] : []),
+    [design.candle_type]
+  );
+
   return (
     <div className="space-y-6">
       <div>
@@ -115,8 +122,11 @@ export default function StepFrosting({ design, updateDesign }: StepFrostingProps
           />
           <Select
             label="Candle Type"
-            selectedKeys={design.candle_type ? [design.candle_type] : []}
-            onChange={(e) => updateDesign({ candle_type: e.target.value })}
+            selectedKeys={selectedCandleType}
+            onSelectionChange={(keys) => {
+              const selected = Array.from(keys)[0] as string;
+              updateDesign({ candle_type: selected });
+            }}
             variant="bordered"
           >
             <SelectItem key="regular" value="regular">Regular</SelectItem>

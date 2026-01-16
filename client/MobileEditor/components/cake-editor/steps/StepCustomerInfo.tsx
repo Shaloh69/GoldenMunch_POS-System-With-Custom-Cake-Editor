@@ -2,6 +2,7 @@
 
 import { Input } from '@nextui-org/input';
 import { Select, SelectItem } from '@nextui-org/select';
+import { useMemo } from 'react';
 import type { CakeDesign } from '@/app/page';
 
 interface StepCustomerInfoProps {
@@ -11,6 +12,12 @@ interface StepCustomerInfoProps {
 }
 
 export default function StepCustomerInfo({ design, updateDesign }: StepCustomerInfoProps) {
+  // Memoize selectedKeys to prevent infinite re-renders
+  const selectedEventType = useMemo(
+    () => new Set(design.event_type ? [design.event_type] : []),
+    [design.event_type]
+  );
+
   return (
     <div className="space-y-6">
       <div>
@@ -51,8 +58,11 @@ export default function StepCustomerInfo({ design, updateDesign }: StepCustomerI
         <Select
           label="Event Type"
           placeholder="Select occasion"
-          selectedKeys={design.event_type ? [design.event_type] : []}
-          onChange={(e) => updateDesign({ event_type: e.target.value })}
+          selectedKeys={selectedEventType}
+          onSelectionChange={(keys) => {
+            const selected = Array.from(keys)[0] as string;
+            updateDesign({ event_type: selected });
+          }}
           variant="bordered"
         >
           <SelectItem key="birthday" value="birthday">Birthday</SelectItem>
