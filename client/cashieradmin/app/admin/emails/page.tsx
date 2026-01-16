@@ -35,6 +35,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 import { EmailService, type EmailRecord } from "@/services/email.service";
+import { EmailComposer } from "@/components/EmailComposer";
 
 interface EmailStats {
   total_emails: number;
@@ -500,27 +501,15 @@ export default function EmailManagementPage() {
         </ModalContent>
       </Modal>
 
-      {/* Compose Email Modal - Placeholder for now */}
-      <Modal
+      {/* Compose Email Modal */}
+      <EmailComposer
         isOpen={showComposeModal}
-        size="2xl"
         onClose={() => setShowComposeModal(false)}
-      >
-        <ModalContent>
-          <ModalHeader>Compose Email</ModalHeader>
-          <ModalBody>
-            <p className="text-gray-600">
-              Email composer will be available here. For now, use the "Send Email" button
-              in the Custom Cake details page.
-            </p>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="flat" onPress={() => setShowComposeModal(false)}>
-              Close
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+        onEmailSent={() => {
+          fetchEmails();
+          fetchStats();
+        }}
+      />
     </div>
   );
 }
