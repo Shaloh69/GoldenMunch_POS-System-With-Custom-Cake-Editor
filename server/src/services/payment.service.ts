@@ -98,6 +98,26 @@ class XenditPaymentService {
       // Documentation: https://docs.xendit.co/docs/qrph
       const paymentMethod = request.paymentMethod || 'QRPH';
 
+      // Validate QRPH amount limits (₱1.00 to ₱50,000.00)
+      if (paymentMethod === 'QRPH') {
+        if (request.amount < 1.00) {
+          logger.error(`QRPH minimum amount is ₱1.00, received: ₱${request.amount}`);
+          return {
+            success: false,
+            status: 'FAILED',
+            error: 'Payment amount must be at least ₱1.00 for QRPH',
+          };
+        }
+        if (request.amount > 50000.00) {
+          logger.error(`QRPH maximum amount is ₱50,000.00, received: ₱${request.amount}`);
+          return {
+            success: false,
+            status: 'FAILED',
+            error: 'Payment amount cannot exceed ₱50,000.00 for QRPH',
+          };
+        }
+      }
+
       // Create Payment Request using v3 API
       // For KIOSK: Use QR_CODE type with QRPH channel (returns QR string)
       // For WEB/MOBILE: Use EWALLET type with GCASH/PAYMAYA (returns redirect URL)
