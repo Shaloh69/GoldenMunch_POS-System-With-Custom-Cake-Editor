@@ -558,12 +558,6 @@ export const saveDraft = async (req: AuthRequest, res: Response) => {
       ]
     );
 
-    // Link request to QR session
-    await query(
-      `UPDATE qr_code_sessions SET request_id = ? WHERE session_token = ?`,
-      [getInsertId(result), draftData.session_token]
-    );
-
     res.status(201).json(
       successResponse('Draft saved', {
         request_id: getInsertId(result),
