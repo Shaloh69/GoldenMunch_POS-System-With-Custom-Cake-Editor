@@ -271,7 +271,7 @@ class EmailService {
           <p style="margin: 10px 0;"><strong>🕐 Time:</strong> ${pickupTime}</p>
           ${request.order_number ? `<p style="margin: 10px 0;"><strong>📋 Order Number:</strong> ${request.order_number}</p>` : ''}
           ${request.verification_code ? `<p style="margin: 10px 0;"><strong>🔑 Verification Code:</strong> ${request.verification_code}</p>` : ''}
-          <p style="margin: 10px 0;"><strong>💰 Total Amount:</strong> ₱${request.approved_price?.toFixed(2) || '0.00'}</p>
+          <p style="margin: 10px 0;"><strong>💰 Total Amount:</strong> ₱${request.approved_price ? Number(request.approved_price).toFixed(2) : '0.00'}</p>
         </div>
 
         <p><strong>Important Notes:</strong></p>
@@ -361,7 +361,7 @@ class EmailService {
             <p><strong>Email:</strong> ${request.customer_email}</p>
             <p><strong>Phone:</strong> ${request.customer_phone}</p>
             <p><strong>Layers:</strong> ${request.num_layers}</p>
-            <p><strong>Estimated Price:</strong> ₱${request.estimated_price?.toFixed(2) || '0.00'}</p>
+            <p><strong>Estimated Price:</strong> ₱${request.estimated_price ? Number(request.estimated_price).toFixed(2) : '0.00'}</p>
             <p><strong>Submitted:</strong> ${new Date(request.submitted_at).toLocaleString()}</p>
           </div>
 
@@ -421,7 +421,7 @@ class EmailService {
 
           <div style="background-color: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10B981;">
             <h3 style="margin-top: 0; color: #059669;">Order Summary:</h3>
-            <p style="margin: 10px 0;"><strong>💰 Final Price:</strong> ₱${approvalData.approved_price.toFixed(2)}</p>
+            <p style="margin: 10px 0;"><strong>💰 Final Price:</strong> ₱${Number(approvalData.approved_price).toFixed(2)}</p>
             <p style="margin: 10px 0;"><strong>📅 Pickup Date:</strong> ${pickupDate}</p>
             <p style="margin: 10px 0;"><strong>🕐 Pickup Time:</strong> ${pickupTime}</p>
             <p style="margin: 10px 0;"><strong>⏱️ Preparation Time:</strong> ${approvalData.preparation_days} day(s)</p>
