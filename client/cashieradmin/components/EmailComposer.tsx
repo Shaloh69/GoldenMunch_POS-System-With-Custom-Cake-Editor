@@ -209,7 +209,7 @@ export function EmailComposer({
                 }}
               >
                 {Object.entries(EMAIL_TEMPLATES).map(([key, template]) => (
-                  <SelectItem key={key} value={key}>
+                  <SelectItem key={key}>
                     {template.label}
                   </SelectItem>
                 ))}
