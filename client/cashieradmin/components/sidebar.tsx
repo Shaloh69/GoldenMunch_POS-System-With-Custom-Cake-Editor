@@ -235,7 +235,7 @@ export function Sidebar() {
               <Tooltip content={`Switch to ${currentMode === "admin" ? "Cashier" : "Admin"} Mode`} placement="right">
                 <Button
                   isIconOnly
-                  className="w-full bg-gradient-to-r from-light-caramel to-muted-clay text-white shadow-md"
+                  className="w-full bg-gradient-to-r from-light-caramel to-muted-clay text-black shadow-md"
                   size="sm"
                   onClick={() => switchMode(currentMode === "admin" ? "cashier" : "admin")}
                 >
