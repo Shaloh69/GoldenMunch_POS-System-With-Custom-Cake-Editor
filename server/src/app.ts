@@ -105,8 +105,8 @@ const limiter = rateLimit({
   legacyHeaders: false,
   // Skip rate limiting for specific endpoints that need frequent polling
   skip: (req) => {
-    // Allow more frequent requests for real-time features
-    const allowedPaths = ['/api/sse', '/api/health'];
+    // Allow more frequent requests for real-time features (SSE, health checks)
+    const allowedPaths = ['/api/sse', '/sse', '/api/health', '/health'];
     return allowedPaths.some(path => req.path.startsWith(path));
   },
 });
