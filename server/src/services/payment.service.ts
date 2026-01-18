@@ -58,22 +58,21 @@ class XenditPaymentService {
         timeout: 30000,
         headers: {
           'Content-Type': 'application/json',
-          'api-version': '2022-07-31', // Payment Request API version
         },
         auth: {
           username: process.env.XENDIT_SECRET_KEY,
           password: '', // Xendit uses API key as username with empty password
         },
       });
-      logger.info('✓ Xendit Payment Request API v3 initialized');
+      logger.info('✓ Xendit QR Codes API (V1) initialized for QRPH');
     } else {
       logger.warn('⚠ Xendit configuration missing - using mock mode for development');
     }
   }
 
   /**
-   * Create Xendit Payment Request for GCash/PayMaya
-   * Returns QR code string or redirect URL depending on payment method
+   * Create Xendit QR Code for QRPH payments (V1 API)
+   * Returns QR code string that can be scanned with GCash, PayMaya, or any PH bank app
    */
   async createQRCode(request: CreateQRCodeRequest): Promise<QRCodeResponse> {
     try {
@@ -93,126 +92,81 @@ class XenditPaymentService {
         };
       }
 
-      // Use QRPH (QR Philippines) for kiosk payments - returns scannable QR code
-      // QRPH supports GCash, PayMaya, UnionBank, and all Philippine banks/e-wallets
-      // Documentation: https://docs.xendit.co/docs/qrph
-      const paymentMethod = request.paymentMethod || 'QRPH';
+      // Use QR Codes V1 API for QRPH (simpler, more reliable)
+      // This API directly returns qr_string in the response
+      // Documentation: https://developers.xendit.co/api-reference/#create-qr-code
+
+      const paymentMethod = 'QRPH'; // QR Philippines standard
 
       // Validate QRPH amount limits (₱1.00 to ₱50,000.00)
-      if (paymentMethod === 'QRPH') {
-        if (request.amount < 1.00) {
-          logger.error(`QRPH minimum amount is ₱1.00, received: ₱${request.amount}`);
-          return {
-            success: false,
-            status: 'FAILED',
-            error: 'Payment amount must be at least ₱1.00 for QRPH',
-          };
-        }
-        if (request.amount > 50000.00) {
-          logger.error(`QRPH maximum amount is ₱50,000.00, received: ₱${request.amount}`);
-          return {
-            success: false,
-            status: 'FAILED',
-            error: 'Payment amount cannot exceed ₱50,000.00 for QRPH',
-          };
-        }
-      }
-
-      // Create Payment Request using v3 API
-      // For KIOSK: Use QR_CODE type with QRPH channel (returns QR string)
-      // For WEB/MOBILE: Use EWALLET type with GCASH/PAYMAYA (returns redirect URL)
-      const requestBody = {
-        reference_id: request.externalId,
-        amount: request.amount,
-        currency: 'PHP',
-        country: 'PH',
-        payment_method: {
-          type: 'QR_CODE', // Changed from EWALLET to QR_CODE for actual QR scanning
-          qr_code: {
-            channel_code: paymentMethod, // QRPH for Philippines QR standard
-          },
-          reusability: 'ONE_TIME_USE',
-        },
-        metadata: {
-          order_number: request.externalId,
-        },
-      };
-
-      logger.info(`📤 Creating ${paymentMethod} payment request for KIOSK:`, {
-        reference_id: request.externalId,
-        amount: request.amount,
-        type: 'QR_CODE',
-      });
-
-      const response = await this.xenditClient.post('/payment_requests', requestBody);
-
-      const paymentData = response.data;
-
-      logger.info(`✓ Xendit Payment Request created: ${paymentData.id}`);
-      logger.info(`Payment Status: ${paymentData.status}`);
-      logger.info(`Full Xendit Response:`, JSON.stringify(paymentData, null, 2));
-
-      // Extract QR code or redirect URL from actions
-      let qrString: string | undefined;
-      let redirectUrl: string | undefined;
-
-      if (paymentData.actions && paymentData.actions.length > 0) {
-        logger.info(`Found ${paymentData.actions.length} actions in response`);
-        for (const action of paymentData.actions) {
-          logger.info(`Action found:`, {
-            type: action.type,
-            descriptor: action.descriptor,
-            method: action.method,
-            url: action.url ? action.url.substring(0, 100) : undefined,
-            value: action.value ? `${action.value.substring(0, 100)}...` : undefined,
-          });
-
-          // For QR codes (QRPH, QRIS) - action.descriptor === "QR_STRING"
-          if (action.descriptor === 'QR_STRING' || action.type === 'PRESENT_TO_CUSTOMER') {
-            qrString = action.value || action.url; // Try both value and url fields
-            logger.info(`✓ QR Code extracted from payment request (length: ${qrString?.length})`);
-          }
-          // For e-wallets that require redirect (GCash, PayMaya) - action.descriptor === "WEB_URL"
-          else if (action.descriptor === 'WEB_URL' || action.descriptor === 'DEEPLINK_URL' || action.method === 'GET') {
-            redirectUrl = action.url || action.value; // Try both url and value fields
-            logger.info(`✓ Redirect URL extracted: ${redirectUrl}`);
-          }
-        }
-      } else {
-        logger.warn(`⚠️ No actions array found in Xendit response. Full response:`, JSON.stringify(paymentData, null, 2));
-      }
-
-      // Log what we extracted
-      if (qrString) {
-        logger.info(`✅ QR Payment: User will scan QR code to pay (QR length: ${qrString.length})`);
-      } else if (redirectUrl) {
-        logger.info(`✅ Redirect Payment: User will be redirected to ${redirectUrl}`);
-      } else {
-        logger.error(`❌ CRITICAL: No QR code or redirect URL found in response!`);
-        logger.error(`Payment Request ID: ${paymentData.id}`);
-        logger.error(`Payment Status: ${paymentData.status}`);
-        logger.error(`Payment Method: ${JSON.stringify(paymentData.payment_method)}`);
-        logger.error(`Actions: ${JSON.stringify(paymentData.actions)}`);
-
-        // Return error instead of success with missing QR
+      if (request.amount < 1.00) {
+        logger.error(`QRPH minimum amount is ₱1.00, received: ₱${request.amount}`);
         return {
           success: false,
           status: 'FAILED',
-          error: 'Xendit did not return QR code data. Check payment method configuration and Xendit account settings.',
-          rawResponse: paymentData,
+          error: 'Payment amount must be at least ₱1.00 for QRPH',
+        };
+      }
+      if (request.amount > 50000.00) {
+        logger.error(`QRPH maximum amount is ₱50,000.00, received: ₱${request.amount}`);
+        return {
+          success: false,
+          status: 'FAILED',
+          error: 'Payment amount cannot exceed ₱50,000.00 for QRPH',
         };
       }
 
+      // Create QR Code using V1 API (simpler structure)
+      const requestBody = {
+        reference_id: request.externalId,
+        type: 'DYNAMIC',
+        currency: 'PHP',
+        channel_code: paymentMethod,
+        amount: request.amount,
+      };
+
+      logger.info(`📤 Creating ${paymentMethod} QR code:`, {
+        reference_id: request.externalId,
+        amount: request.amount,
+        channel_code: paymentMethod,
+      });
+
+      const response = await this.xenditClient.post('/qr_codes', requestBody);
+
+      const qrData = response.data;
+
+      logger.info(`✓ Xendit QR Code created: ${qrData.id}`);
+      logger.info(`QR Status: ${qrData.status}`);
+      logger.info(`Full Xendit Response:`, JSON.stringify(qrData, null, 2));
+
+      // Extract QR string from root level (V1 API structure)
+      const qrString = qrData.qr_string;
+
+      if (!qrString) {
+        logger.error(`❌ CRITICAL: No qr_string in response!`);
+        logger.error(`QR ID: ${qrData.id}`);
+        logger.error(`QR Status: ${qrData.status}`);
+        logger.error(`Full response:`, JSON.stringify(qrData, null, 2));
+
+        return {
+          success: false,
+          status: 'FAILED',
+          error: 'Xendit did not return QR code data. Check payment method configuration.',
+          rawResponse: qrData,
+        };
+      }
+
+      logger.info(`✅ QR Code extracted successfully (length: ${qrString.length})`);
+
       return {
         success: true,
-        qrId: paymentData.id,
+        qrId: qrData.id,
         qrString: qrString,
-        redirectUrl: redirectUrl,
-        externalId: paymentData.reference_id,
-        amount: paymentData.amount,
-        status: paymentData.status,
-        message: 'Payment request created successfully',
-        rawResponse: paymentData, // Store for debugging
+        externalId: qrData.reference_id,
+        amount: qrData.amount,
+        status: qrData.status,
+        message: 'QR code created successfully',
+        rawResponse: qrData,
       };
     } catch (error: any) {
       // Log the ACTUAL Xendit error, not our wrapped message
@@ -236,9 +190,9 @@ class XenditPaymentService {
   }
 
   /**
-   * Get payment request status
+   * Get QR code status (V1 API)
    */
-  async getQRCodeStatus(paymentRequestId: string): Promise<PaymentVerificationResult> {
+  async getQRCodeStatus(qrCodeId: string): Promise<PaymentVerificationResult> {
     try {
       if (!this.xenditClient) {
         // Mock mode - return pending status
@@ -249,28 +203,31 @@ class XenditPaymentService {
         };
       }
 
-      const response = await this.xenditClient.get(`/payment_requests/${paymentRequestId}`);
-      const paymentData = response.data;
+      const response = await this.xenditClient.get(`/qr_codes/${qrCodeId}`);
+      const qrData = response.data;
 
-      logger.info(`Payment Request ${paymentRequestId} status: ${paymentData.status}`);
+      logger.info(`QR Code ${qrCodeId} status: ${qrData.status}`);
 
       // Check if payment has been completed
-      const isPaid = paymentData.status === 'SUCCEEDED';
+      // V1 API statuses: ACTIVE, INACTIVE, DELETED
+      // For QRPH, when scanned and paid, the callback webhook is triggered
+      // The status might remain ACTIVE, so we need to check via callback/webhook
+      const isPaid = qrData.status === 'COMPLETED' || qrData.status === 'PAID';
 
       return {
         success: isPaid,
-        status: this.mapPaymentStatus(paymentData.status),
-        amount: paymentData.amount,
-        transactionDate: paymentData.updated || paymentData.created,
-        paymentMethod: paymentData.payment_method?.qr_code?.channel_code || paymentData.payment_method?.ewallet?.channel_code || 'UNKNOWN',
-        message: isPaid ? 'Payment completed' : `Payment ${paymentData.status.toLowerCase()}`,
+        status: this.mapQRCodeStatus(qrData.status),
+        amount: qrData.amount,
+        transactionDate: qrData.updated || qrData.created,
+        paymentMethod: qrData.channel_code || 'QRPH',
+        message: isPaid ? 'Payment completed' : `QR code ${qrData.status.toLowerCase()}`,
       };
     } catch (error: any) {
-      logger.error('❌ Failed to get payment status:', error.response?.data || error.message);
+      logger.error('❌ Failed to get QR code status:', error.response?.data || error.message);
       return {
         success: false,
         status: 'failed',
-        error: error.response?.data?.message || error.message || 'Failed to check payment status',
+        error: error.response?.data?.message || error.message || 'Failed to check QR code status',
       };
     }
   }
@@ -311,7 +268,22 @@ class XenditPaymentService {
   }
 
   /**
-   * Map Xendit Payment Request status to standard status
+   * Map Xendit QR Code status to standard status (V1 API)
+   */
+  private mapQRCodeStatus(status: string): 'pending' | 'completed' | 'failed' {
+    const statusMap: Record<string, 'pending' | 'completed' | 'failed'> = {
+      'ACTIVE': 'pending',
+      'COMPLETED': 'completed',
+      'PAID': 'completed',
+      'INACTIVE': 'failed',
+      'DELETED': 'failed',
+      'EXPIRED': 'failed',
+    };
+    return statusMap[status] || 'pending';
+  }
+
+  /**
+   * Map Xendit Payment Request status to standard status (V3 API - legacy)
    */
   private mapPaymentStatus(status: string): 'pending' | 'completed' | 'failed' {
     const statusMap: Record<string, 'pending' | 'completed' | 'failed'> = {
