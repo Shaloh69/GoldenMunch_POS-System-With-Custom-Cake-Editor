@@ -123,7 +123,6 @@ export default function CartPage() {
       };
 
       const order = await OrderService.createOrder(orderData);
-      clearCart();
 
       // If cashless payment, generate QR code and wait for payment
       if (paymentMethod === PaymentMethod.CASHLESS) {
@@ -151,8 +150,9 @@ export default function CartPage() {
             }
           )
             .then((finalStatus) => {
-              // Payment complete - close QR and redirect to thank you page
+              // Payment complete - clear cart, close QR and redirect to thank you page
               setIsPollingPayment(false);
+              clearCart();
               onQRClose();
               const prepTime = order.estimated_preparation_minutes || 0;
               router.push(
@@ -176,7 +176,8 @@ export default function CartPage() {
           setIsProcessing(false);
         }
       } else {
-        // Cash payment - redirect immediately
+        // Cash payment - clear cart and redirect immediately
+        clearCart();
         const prepTime = order.estimated_preparation_minutes || 0;
         router.push(
           `/order-success?orderId=${order.order_id}&orderNumber=${order.order_number}&prepTime=${prepTime}`
@@ -197,6 +198,11 @@ export default function CartPage() {
     setPaymentStatus("pending");
     setIsPollingPayment(false);
     onQRClose();
+    clearCart();
+    // Navigate back to home after cancelling payment
+    setTimeout(() => {
+      router.push("/");
+    }, 300);
   };
 
   const handleNewOrder = () => {
