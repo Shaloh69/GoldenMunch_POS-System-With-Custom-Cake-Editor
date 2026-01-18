@@ -45,6 +45,7 @@ import {
 } from "@/services/customCakeRequest.service";
 import { MessagingPanel } from "@/components/MessagingPanel";
 import { EmailComposer } from "@/components/EmailComposer";
+import { ImageViewer } from "@/components/ImageViewer";
 
 // Stats Interface
 interface CustomCakeStats {
@@ -75,6 +76,8 @@ export default function CustomCakesPage() {
   const [showApproveConfirmModal, setShowApproveConfirmModal] = useState(false);
   const [showRejectConfirmModal, setShowRejectConfirmModal] = useState(false);
   const [showEmailComposer, setShowEmailComposer] = useState(false);
+  const [showImageViewer, setShowImageViewer] = useState(false);
+  const [imageViewerIndex, setImageViewerIndex] = useState(0);
   const [selectedRequest, setSelectedRequest] =
     useState<CustomCakeRequest | null>(null);
   const [requestDetails, setRequestDetails] =
@@ -759,13 +762,24 @@ export default function CustomCakesPage() {
                     <div>
                       <h3 className="font-semibold text-lg mb-3">
                         3D Preview Images
+                        <span className="text-sm font-normal text-gray-500 ml-2">
+                          (Click to view with zoom & rotate)
+                        </span>
                       </h3>
                       <div className="grid grid-cols-3 gap-4">
-                        {requestDetails.images.map((img) => (
-                          <div key={img.image_id} className="relative group">
+                        {requestDetails.images.map((img, index) => (
+                          <button
+                            key={img.image_id}
+                            className="relative group cursor-pointer hover:scale-105 transition-transform"
+                            type="button"
+                            onClick={() => {
+                              setImageViewerIndex(index);
+                              setShowImageViewer(true);
+                            }}
+                          >
                             <img
                               alt={`${img.view_angle} view`}
-                              className="w-full h-32 object-cover rounded-lg border-2 border-gray-200"
+                              className="w-full h-32 object-cover rounded-lg border-2 border-gray-200 group-hover:border-amber-500"
                               src={img.image_url}
                               onError={(e) => {
                                 (e.target as HTMLImageElement).src =
@@ -783,7 +797,11 @@ export default function CustomCakesPage() {
                                 {img.view_angle}
                               </Chip>
                             </div>
-                          </div>
+                            {/* Hover overlay */}
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                              <EyeIcon className="w-8 h-8 text-white" />
+                            </div>
+                          </button>
                         ))}
                       </div>
                     </div>
@@ -1259,6 +1277,19 @@ export default function CustomCakesPage() {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/* Image Viewer Modal */}
+      {requestDetails && requestDetails.images.length > 0 && (
+        <ImageViewer
+          images={requestDetails.images.map((img) => ({
+            url: img.image_url,
+            label: `${img.view_angle.charAt(0).toUpperCase() + img.view_angle.slice(1)} View`,
+          }))}
+          initialIndex={imageViewerIndex}
+          isOpen={showImageViewer}
+          onClose={() => setShowImageViewer(false)}
+        />
+      )}
     </div>
   );
 }
