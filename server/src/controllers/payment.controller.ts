@@ -59,6 +59,19 @@ export const createPaymentQR = asyncHandler(async (req: AuthRequest, res: Respon
       throw new AppError(qrCodeResult.error || 'Failed to create QR code', 500);
     }
 
+    // Validate that we got a QR string or redirect URL
+    if (!qrCodeResult.qrString && !qrCodeResult.redirectUrl) {
+      logger.error(`❌ QR code created but no QR string or redirect URL returned!`);
+      logger.error(`QR ID: ${qrCodeResult.qrId}`);
+      logger.error(`Raw response:`, JSON.stringify(qrCodeResult.rawResponse, null, 2));
+      throw new AppError(
+        'Payment request created but no QR code data was returned. ' +
+        'This may indicate a Xendit account configuration issue. ' +
+        'Please verify that QRPH (QR Philippines) is enabled on your Xendit account.',
+        500
+      );
+    }
+
     // Store QR code ID in order
     await conn.query(
       `UPDATE customer_order
@@ -69,9 +82,19 @@ export const createPaymentQR = asyncHandler(async (req: AuthRequest, res: Respon
 
     logger.info(`✓ QR code created for order ${order.order_number}: ${qrCodeResult.qrId}`);
 
+    // Log what we're returning to frontend
+    logger.info(`Returning to frontend:`, {
+      qr_id: qrCodeResult.qrId,
+      qr_string_length: qrCodeResult.qrString?.length || 0,
+      redirect_url: qrCodeResult.redirectUrl ? 'present' : 'not present',
+      order_number: order.order_number,
+      amount: qrCodeResult.amount,
+    });
+
     res.json(successResponse('QR code created successfully', {
       qr_id: qrCodeResult.qrId,
       qr_string: qrCodeResult.qrString,
+      redirect_url: qrCodeResult.redirectUrl,
       order_number: order.order_number,
       amount: qrCodeResult.amount,
     }));
