@@ -151,19 +151,20 @@ export default function CartPage() {
             }
           )
             .then((finalStatus) => {
-              // Payment complete - close QR and redirect
+              // Payment complete - close QR and redirect to thank you page
               setIsPollingPayment(false);
               onQRClose();
               const prepTime = order.estimated_preparation_minutes || 0;
               router.push(
-                `/order-success?orderId=${order.order_id}&orderNumber=${order.order_number}&prepTime=${prepTime}`
+                `/thank-you?orderId=${order.order_id}&orderNumber=${order.order_number}&prepTime=${prepTime}`
               );
             })
             .catch((err) => {
+              // Payment failed or timed out - keep modal open, show error
               setIsPollingPayment(false);
               setError(
                 err.message ||
-                  "Payment verification timed out. Please check with staff."
+                  "Payment verification timed out. Please try again or contact staff for assistance."
               );
             });
         } catch (err: any) {
@@ -186,6 +187,16 @@ export default function CartPage() {
       setError(err.message || "Failed to create order. Please try again.");
       setIsProcessing(false);
     }
+  };
+
+  const handleCancelPayment = () => {
+    setError(null);
+    setQrCodeString(null);
+    setQrOrderId(null);
+    setQrAmount(0);
+    setPaymentStatus("pending");
+    setIsPollingPayment(false);
+    onQRClose();
   };
 
   const handleNewOrder = () => {
@@ -855,6 +866,26 @@ export default function CartPage() {
                       </div>
                     )}
 
+                    {/* Payment Error */}
+                    {error && !isPollingPayment && qrCodeString && (
+                      <div className="bg-red-50 p-6 rounded-2xl border-3 border-red-500 shadow-lg">
+                        <div className="flex flex-col items-center gap-4">
+                          <div className="text-6xl">⚠️</div>
+                          <div className="text-center">
+                            <p className="text-xl font-bold text-red-900 mb-2">
+                              Payment Issue
+                            </p>
+                            <p className="text-base text-red-800">
+                              {error}
+                            </p>
+                            <p className="text-sm text-red-700 mt-3">
+                              You can try scanning the QR code again or cancel to return to the menu.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Instructions */}
                     <div className="glass-card p-5 rounded-xl border-2 border-primary/50 shadow-md">
                       <h3 className="font-bold text-black mb-3 text-lg">
@@ -896,7 +927,7 @@ export default function CartPage() {
                     size="lg"
                     variant="bordered"
                     className="border-2 border-primary/60 text-black hover:bg-primary/10 font-bold"
-                    onClick={onQRClose}
+                    onClick={handleCancelPayment}
                   >
                     Cancel Payment
                   </Button>
