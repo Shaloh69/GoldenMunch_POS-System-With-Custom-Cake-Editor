@@ -49,10 +49,12 @@ const getApiBaseUrl = (): string => {
         "Set NEXT_PUBLIC_API_URL in your .env file for production deployment.",
     );
 
-    return "http://localhost:5000";
+    return "http://localhost:5000/api";
   }
 
-  return apiUrl;
+  // Append /api to the base URL if not already present
+  // The server mounts all routes under /api prefix
+  return apiUrl.endsWith('/api') ? apiUrl : `${apiUrl}/api`;
 };
 
 class ApiClient {
