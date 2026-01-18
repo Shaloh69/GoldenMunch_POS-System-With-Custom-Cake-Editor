@@ -10,7 +10,7 @@ export default function OrderSuccessPage() {
   const prepTime = searchParams.get("prepTime");
   const estimatedMinutes = prepTime ? parseInt(prepTime, 10) : 0;
 
-  const [redirectCountdown, setRedirectCountdown] = useState(15);
+  const [redirectCountdown, setRedirectCountdown] = useState(10);
 
   // Redirect to home after countdown
   useEffect(() => {

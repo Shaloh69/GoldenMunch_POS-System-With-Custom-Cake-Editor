@@ -18,9 +18,7 @@ export function getImageUrl(
   }
 
   // Get backend URL from environment or use default
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-  // Remove '/api' suffix to get base URL
-  const baseUrl = apiUrl.replace("/api", "");
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
   // Ensure imageUrl starts with /
   const path = imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`;

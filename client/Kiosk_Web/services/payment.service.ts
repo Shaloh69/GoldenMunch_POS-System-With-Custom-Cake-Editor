@@ -3,7 +3,7 @@
  * Handles Xendit QR code generation and payment status checking
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 interface CreateQRResponse {
   qr_id: string;

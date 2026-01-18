@@ -16,7 +16,7 @@ const getApiBaseUrl = (): string => {
   }
 
   // Development fallback
-  return apiUrl || "http://localhost:5000/api";
+  return apiUrl || "http://localhost:5000";
 };
 
 /**
@@ -35,9 +35,7 @@ export function getImageUrl(
   }
 
   // Get backend URL from environment
-  const apiUrl = getApiBaseUrl();
-  // Remove '/api' suffix to get base URL
-  const baseUrl = apiUrl.replace("/api", "");
+  const baseUrl = getApiBaseUrl();
 
   // Ensure imageUrl starts with /
   const path = imageUrl.startsWith("/") ? imageUrl : `/${imageUrl}`;

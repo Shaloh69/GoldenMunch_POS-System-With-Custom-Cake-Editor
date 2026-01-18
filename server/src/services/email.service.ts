@@ -347,6 +347,63 @@ class EmailService {
 
       const request = requests[0];
 
+      // Get associated images
+      const [images] = await pool.query<RowDataPacket[]>(
+        `SELECT image_url, image_type, view_angle FROM custom_cake_images
+         WHERE request_id = ? ORDER BY uploaded_at ASC`,
+        [requestId]
+      );
+
+      const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+
+      // Build image gallery HTML
+      let imageGalleryHtml = '';
+      if (images.length > 0) {
+        const imageRows = images.map((img: any) => {
+          const fullImageUrl = img.image_url.startsWith('http')
+            ? img.image_url
+            : `${backendUrl}${img.image_url}`;
+
+          return `
+            <div style="display: inline-block; margin: 10px; text-align: center; vertical-align: top;">
+              <img src="${fullImageUrl}"
+                   alt="${img.view_angle} view"
+                   style="width: 180px; height: 180px; object-fit: cover; border-radius: 8px; border: 2px solid #ddd; display: block;" />
+              <p style="margin: 5px 0 0 0; font-size: 12px; color: #666; text-transform: capitalize;">${img.view_angle}</p>
+            </div>
+          `;
+        }).join('');
+
+        imageGalleryHtml = `
+          <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin-top: 0; color: #FF6B35;">3D Preview Images:</h3>
+            <div style="text-align: center;">
+              ${imageRows}
+            </div>
+          </div>
+        `;
+      }
+
+      // Add reference image if exists
+      let referenceImageHtml = '';
+      if (request.reference_image) {
+        const refImageUrl = request.reference_image.startsWith('http')
+          ? request.reference_image
+          : `${backendUrl}${request.reference_image}`;
+
+        referenceImageHtml = `
+          <div style="background-color: #fff7ed; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #fed7aa;">
+            <h3 style="margin-top: 0; color: #ea580c;">Customer Reference Image:</h3>
+            <p style="font-size: 14px; color: #9a3412; margin-bottom: 10px;">📸 Customer provided this for design inspiration</p>
+            <div style="text-align: center;">
+              <img src="${refImageUrl}"
+                   alt="Reference design"
+                   style="max-width: 100%; max-height: 300px; border-radius: 8px; border: 2px solid #fed7aa;" />
+            </div>
+          </div>
+        `;
+      }
+
       const subject = `🔔 New Custom Cake Request #${requestId}`;
       const messageBody = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -365,9 +422,12 @@ class EmailService {
             <p><strong>Submitted:</strong> ${new Date(request.submitted_at).toLocaleString()}</p>
           </div>
 
+          ${referenceImageHtml}
+          ${imageGalleryHtml}
+
           <p><strong>Action Required:</strong> Please review this request in the admin panel and approve or reject it.</p>
 
-          <a href="${process.env.BACKEND_URL}/admin/custom-cakes/${requestId}"
+          <a href="${backendUrl}/admin/custom-cakes/${requestId}"
              style="display: inline-block; background-color: #FF6B35; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin-top: 20px;">
             Review Request
           </a>
