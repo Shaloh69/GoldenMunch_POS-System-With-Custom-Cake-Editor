@@ -1,5 +1,27 @@
 import { ApiError } from '@/types/api';
 
+// Retry configuration
+const MAX_RETRIES = 4;
+const RETRY_DELAY_MS = 2000; // Start with 2 seconds
+
+// Sleep utility for retry delays
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Check if error should be retried
+const shouldRetry = (error: any, status?: number): boolean => {
+  // Network errors (fetch failures)
+  if (!status && error instanceof TypeError) {
+    return true;
+  }
+
+  // Server errors (5xx) are retryable
+  if (status && status >= 500) {
+    return true;
+  }
+
+  return false;
+};
+
 // Validate and get API URL
 const getApiBaseUrl = (): string => {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -40,7 +62,8 @@ class ApiClient {
     method: string,
     url: string,
     data?: any,
-    options?: RequestInit
+    options?: RequestInit,
+    retryCount: number = 0
   ): Promise<{ data: T }> {
     const fullUrl = url.startsWith('http') ? url : `${this.baseURL}${url}`;
 
@@ -70,20 +93,68 @@ class ApiClient {
       }
 
       if (!response.ok) {
-        throw new ApiError(
+        const apiError = new ApiError(
           responseData?.message || responseData?.error || 'Request failed',
           response.status,
           responseData
         );
+
+        // Retry on server errors (5xx)
+        if (shouldRetry(null, response.status) && retryCount < MAX_RETRIES) {
+          const delay = RETRY_DELAY_MS * Math.pow(2, retryCount);
+          console.warn(`🔄 Retrying request (${retryCount + 1}/${MAX_RETRIES}) after ${delay}ms:`, {
+            url: fullUrl,
+            method,
+            status: response.status,
+          });
+          await sleep(delay);
+          return this.request<T>(method, url, data, options, retryCount + 1);
+        }
+
+        throw apiError;
       }
 
       return { data: responseData };
     } catch (error) {
+      // If it's already an ApiError, check if we should retry
       if (error instanceof ApiError) {
+        if (shouldRetry(error, error.statusCode) && retryCount < MAX_RETRIES) {
+          const delay = RETRY_DELAY_MS * Math.pow(2, retryCount);
+          console.warn(`🔄 Retrying request (${retryCount + 1}/${MAX_RETRIES}) after ${delay}ms:`, {
+            url: fullUrl,
+            method,
+            error: error.message,
+          });
+          await sleep(delay);
+          return this.request<T>(method, url, data, options, retryCount + 1);
+        }
         throw error;
       }
+
+      // Network errors (TypeError from fetch)
+      if (error instanceof TypeError && retryCount < MAX_RETRIES) {
+        const delay = RETRY_DELAY_MS * Math.pow(2, retryCount);
+        console.warn(`🔄 Retrying request (${retryCount + 1}/${MAX_RETRIES}) after ${delay}ms:`, {
+          url: fullUrl,
+          method,
+          error: 'Network error',
+        });
+        await sleep(delay);
+        return this.request<T>(method, url, data, options, retryCount + 1);
+      }
+
+      // Create user-friendly error message
+      let errorMessage = 'Network error';
+      if (error instanceof TypeError) {
+        if (error.message.includes('fetch')) {
+          errorMessage = 'Unable to connect to the server. Please check your internet connection and try again.';
+        } else if (error.message.includes('timeout')) {
+          errorMessage = 'Connection timed out. The server may be experiencing issues. Please try again in a moment.';
+        }
+      }
+
       throw new ApiError(
-        error instanceof Error ? error.message : 'Network error',
+        error instanceof Error ? errorMessage : 'Network error',
         undefined,
         error
       );
