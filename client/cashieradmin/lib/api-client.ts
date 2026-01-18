@@ -21,7 +21,7 @@ const getApiBaseUrl = (): string => {
         "Set NEXT_PUBLIC_API_URL in your .env file for production deployment.",
     );
 
-    return "http://localhost:5000/api";
+    return "http://localhost:5000";
   }
 
   return apiUrl;
