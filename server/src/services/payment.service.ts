@@ -150,39 +150,57 @@ class XenditPaymentService {
 
       logger.info(`✓ Xendit Payment Request created: ${paymentData.id}`);
       logger.info(`Payment Status: ${paymentData.status}`);
+      logger.info(`Full Xendit Response:`, JSON.stringify(paymentData, null, 2));
 
       // Extract QR code or redirect URL from actions
       let qrString: string | undefined;
       let redirectUrl: string | undefined;
 
       if (paymentData.actions && paymentData.actions.length > 0) {
+        logger.info(`Found ${paymentData.actions.length} actions in response`);
         for (const action of paymentData.actions) {
           logger.info(`Action found:`, {
             type: action.type,
             descriptor: action.descriptor,
-            value: action.value ? `${action.value.substring(0, 50)}...` : undefined,
+            method: action.method,
+            url: action.url ? action.url.substring(0, 100) : undefined,
+            value: action.value ? `${action.value.substring(0, 100)}...` : undefined,
           });
 
           // For QR codes (QRPH, QRIS) - action.descriptor === "QR_STRING"
           if (action.descriptor === 'QR_STRING' || action.type === 'PRESENT_TO_CUSTOMER') {
-            qrString = action.value; // The QR code string is in action.value
-            logger.info(`✓ QR Code extracted from payment request`);
+            qrString = action.value || action.url; // Try both value and url fields
+            logger.info(`✓ QR Code extracted from payment request (length: ${qrString?.length})`);
           }
           // For e-wallets that require redirect (GCash, PayMaya) - action.descriptor === "WEB_URL"
-          else if (action.descriptor === 'WEB_URL' || action.descriptor === 'DEEPLINK_URL') {
-            redirectUrl = action.value; // The redirect URL is in action.value
+          else if (action.descriptor === 'WEB_URL' || action.descriptor === 'DEEPLINK_URL' || action.method === 'GET') {
+            redirectUrl = action.url || action.value; // Try both url and value fields
             logger.info(`✓ Redirect URL extracted: ${redirectUrl}`);
           }
         }
+      } else {
+        logger.warn(`⚠️ No actions array found in Xendit response. Full response:`, JSON.stringify(paymentData, null, 2));
       }
 
       // Log what we extracted
       if (qrString) {
-        logger.info(`✅ QR Payment: User will scan QR code to pay`);
+        logger.info(`✅ QR Payment: User will scan QR code to pay (QR length: ${qrString.length})`);
       } else if (redirectUrl) {
         logger.info(`✅ Redirect Payment: User will be redirected to ${redirectUrl}`);
       } else {
-        logger.warn(`⚠️ No QR code or redirect URL found in response`);
+        logger.error(`❌ CRITICAL: No QR code or redirect URL found in response!`);
+        logger.error(`Payment Request ID: ${paymentData.id}`);
+        logger.error(`Payment Status: ${paymentData.status}`);
+        logger.error(`Payment Method: ${JSON.stringify(paymentData.payment_method)}`);
+        logger.error(`Actions: ${JSON.stringify(paymentData.actions)}`);
+
+        // Return error instead of success with missing QR
+        return {
+          success: false,
+          status: 'FAILED',
+          error: 'Xendit did not return QR code data. Check payment method configuration and Xendit account settings.',
+          rawResponse: paymentData,
+        };
       }
 
       return {

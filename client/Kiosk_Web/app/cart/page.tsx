@@ -133,6 +133,14 @@ export default function CartPage() {
             Number(order.total_amount)
           );
 
+          // Validate that we received a QR string
+          if (!qrData.qr_string) {
+            throw new Error(
+              "QR code generation failed: No QR code data received from payment server. " +
+              "Please contact staff for assistance or try paying with cash."
+            );
+          }
+
           // Store QR code data and show modal
           setQrCodeString(qrData.qr_string);
           setQrOrderId(order.order_id);
