@@ -118,17 +118,19 @@ class XenditPaymentService {
 
       // Create QR Code using V1 API (simpler structure)
       const requestBody = {
-        reference_id: request.externalId,
+        external_id: request.externalId,
         type: 'DYNAMIC',
         currency: 'PHP',
         channel_code: paymentMethod,
         amount: request.amount,
+        callback_url: `${this.webhookUrl}/api/webhooks/xendit/qr-payment`,
       };
 
       logger.info(`📤 Creating ${paymentMethod} QR code:`, {
-        reference_id: request.externalId,
+        external_id: request.externalId,
         amount: request.amount,
         channel_code: paymentMethod,
+        callback_url: requestBody.callback_url,
       });
 
       const response = await this.xenditClient.post('/qr_codes', requestBody);
