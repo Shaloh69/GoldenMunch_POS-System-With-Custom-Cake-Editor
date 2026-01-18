@@ -1,4 +1,9 @@
-import axios from "axios";
+import axios, { AxiosError, AxiosRequestConfig } from "axios";
+
+// Retry configuration
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 1000; // Start with 1 second
+const RETRY_TIMEOUT_ERRORS = ['ECONNREFUSED', 'ENOTFOUND', 'ETIMEDOUT', 'ECONNRESET'];
 
 // Validate and get API URL
 const getApiBaseUrl = (): string => {
@@ -31,6 +36,64 @@ export const API_CONFIG = {
 };
 
 export const API_BASE_URL = API_CONFIG.baseURL;
+
+// Sleep utility for retry delays
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Check if error is retryable
+const isRetryableError = (error: AxiosError): boolean => {
+  // Network errors (no response from server)
+  if (!error.response && error.code) {
+    return RETRY_TIMEOUT_ERRORS.includes(error.code);
+  }
+
+  // Server errors (5xx) are retryable
+  if (error.response && error.response.status >= 500) {
+    return true;
+  }
+
+  // Timeout errors
+  if (error.code === 'ECONNABORTED') {
+    return true;
+  }
+
+  return false;
+};
+
+// Retry function with exponential backoff
+const retryRequest = async (error: AxiosError): Promise<any> => {
+  const config = error.config as AxiosRequestConfig & { retryCount?: number };
+
+  if (!config) {
+    return Promise.reject(error);
+  }
+
+  // Initialize retry count
+  config.retryCount = config.retryCount || 0;
+
+  // Check if we should retry
+  if (!isRetryableError(error) || config.retryCount >= MAX_RETRIES) {
+    return Promise.reject(error);
+  }
+
+  // Increment retry count
+  config.retryCount += 1;
+
+  // Calculate delay with exponential backoff
+  const delay = RETRY_DELAY_MS * Math.pow(2, config.retryCount - 1);
+
+  console.warn(`🔄 Retrying request (${config.retryCount}/${MAX_RETRIES}) after ${delay}ms:`, {
+    url: config.url,
+    method: config.method,
+    error: error.code || error.message,
+  });
+
+  // Wait before retrying
+  await sleep(delay);
+
+  // Retry the request
+  return apiClient(config);
+};
 
 // Create axios instance
 export const apiClient = axios.create({
@@ -95,7 +158,7 @@ apiClient.interceptors.response.use(
     });
     return response;
   },
-  (error) => {
+  async (error: AxiosError) => {
     // Handle errors globally
     if (error.response) {
       // Server responded with error
@@ -103,17 +166,26 @@ apiClient.interceptors.response.use(
         status: error.response.status,
         url: error.config?.url,
         data: error.response.data,
+        retryCount: (error.config as any)?.retryCount || 0,
       });
     } else if (error.request) {
       // Request made but no response
       console.error("🔴 API ERROR (Network):", {
         url: error.config?.url,
         message: error.message,
+        code: error.code,
+        retryCount: (error.config as any)?.retryCount || 0,
       });
     } else {
       // Something else happened
       console.error("🔴 API ERROR (Unknown):", error.message);
     }
+
+    // Try to retry if error is retryable
+    if (isRetryableError(error)) {
+      return retryRequest(error);
+    }
+
     return Promise.reject(error);
   },
 );

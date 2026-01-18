@@ -24,39 +24,62 @@ class PaymentService {
    * Create Xendit QR code for order payment
    */
   async createPaymentQR(orderId: number, amount: number): Promise<CreateQRResponse> {
-    const response = await fetch(`${API_BASE_URL}/payment/create-qr`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        order_id: orderId,
-        amount: amount,
-      }),
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/payment/create-qr`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          order_id: orderId,
+          amount: amount,
+        }),
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to create payment QR code');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create payment QR code');
+      }
+
+      const result = await response.json();
+      return result.data;
+    } catch (error: any) {
+      // Network/fetch errors
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        throw new Error(
+          'Unable to connect to payment server. Please check your internet connection and try again.'
+        );
+      }
+
+      // Re-throw other errors with original message
+      throw error;
     }
-
-    const result = await response.json();
-    return result.data;
   }
 
   /**
    * Check payment status for an order
    */
   async checkPaymentStatus(orderId: number): Promise<PaymentStatusResponse> {
-    const response = await fetch(`${API_BASE_URL}/payment/status/${orderId}`);
+    try {
+      const response = await fetch(`${API_BASE_URL}/payment/status/${orderId}`);
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to check payment status');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to check payment status');
+      }
+
+      const result = await response.json();
+      return result.data;
+    } catch (error: any) {
+      // Network/fetch errors - silently fail and retry (handled by polling logic)
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        console.warn('Network error checking payment status, will retry...');
+        throw new Error('Network error - retrying...');
+      }
+
+      // Re-throw other errors
+      throw error;
     }
-
-    const result = await response.json();
-    return result.data;
   }
 
   /**
