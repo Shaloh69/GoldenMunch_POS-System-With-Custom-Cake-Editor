@@ -26,7 +26,9 @@ const getApiBaseUrl = (): string => {
     return "http://localhost:5000/api";
   }
 
-  return apiUrl;
+  // Append /api to the base URL if not already present
+  // The server mounts all routes under /api prefix
+  return apiUrl.endsWith('/api') ? apiUrl : `${apiUrl}/api`;
 };
 
 // API Configuration
