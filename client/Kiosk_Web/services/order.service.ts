@@ -26,9 +26,38 @@ export class OrderService {
       return response.data.data;
     } catch (error: any) {
       console.error("Error creating order:", error);
+
+      // Network/connection errors
+      if (!error.response) {
+        if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+          throw new Error(
+            "Unable to connect to the server. Please check your internet connection and try again. " +
+            "If the problem persists, please contact staff for assistance."
+          );
+        }
+        if (error.code === 'ETIMEDOUT' || error.code === 'ECONNABORTED') {
+          throw new Error(
+            "Connection timed out. The server may be experiencing issues. " +
+            "Please try again in a moment or contact staff for assistance."
+          );
+        }
+        throw new Error(
+          "Network error occurred. Please check your connection and try again."
+        );
+      }
+
+      // Server errors with custom message
       if (error.response?.data?.error) {
         throw new Error(error.response.data.error);
       }
+
+      // Generic server error
+      if (error.response?.status >= 500) {
+        throw new Error(
+          "Server error occurred. Please try again or contact staff for assistance."
+        );
+      }
+
       throw error;
     }
   }
