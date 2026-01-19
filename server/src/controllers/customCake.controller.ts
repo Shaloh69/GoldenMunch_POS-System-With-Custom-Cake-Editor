@@ -675,10 +675,29 @@ export const submitForReview = async (req: AuthRequest, res: Response) => {
     );
   });
 
+  // Get the submitted request details for customer notification
+  const [submittedRequests] = await query<any[]>(
+    `SELECT * FROM custom_cake_request WHERE request_id = ?`,
+    [request_id]
+  );
+  const submittedRequest = submittedRequests[0];
+
   // Send admin notification email (async, don't wait for it)
   emailService.notifyAdminNewRequest(request_id).catch((error) => {
     console.error('Failed to send admin notification email:', error);
   });
+
+  // Send "Under Review" confirmation email to customer
+  if (submittedRequest?.customer_email) {
+    emailService.sendUnderReviewEmail(request_id, {
+      customer_email: submittedRequest.customer_email,
+      customer_name: submittedRequest.customer_name || 'Customer',
+      submitted_at: submittedRequest.submitted_at || new Date().toISOString(),
+      estimated_review_hours: 48, // 24-48 hour review time
+    }).catch((error) => {
+      console.error('Failed to send under review email:', error);
+    });
+  }
 
   res.json(successResponse('Request submitted for review'));
 };
@@ -907,6 +926,71 @@ export const rejectRequest = async (req: AuthRequest, res: Response) => {
   });
 
   res.json(successResponse('Request rejected'));
+};
+
+// ============================================================================
+// 10a. ADMIN - NOTIFY IN PROGRESS
+// ============================================================================
+
+/**
+ * Send "In Progress" notification to customer (doesn't change status, just sends email)
+ * POST /api/admin/custom-cakes/:requestId/notify-in-progress
+ */
+export const notifyInProgress = async (req: AuthRequest, res: Response) => {
+  const { requestId } = req.params;
+  const { progress_notes, estimated_completion_date, estimated_completion_time } = req.body;
+
+  // Get request details
+  const requests = await query<any[]>(
+    `SELECT * FROM custom_cake_request WHERE request_id = ?`,
+    [requestId]
+  );
+
+  const request = getFirstRow<CustomCakeRequestRow>(requests);
+
+  if (!request) {
+    throw new AppError('Request not found', 404);
+  }
+
+  if (request.status !== 'approved') {
+    throw new AppError('Can only send in-progress notifications for approved requests', 400);
+  }
+
+  // Calculate estimated completion date from scheduled pickup if not provided
+  const completionDate = estimated_completion_date || request.scheduled_pickup_date;
+
+  if (!completionDate) {
+    throw new AppError('Estimated completion date or scheduled pickup date is required', 400);
+  }
+
+  // Send In Progress email
+  if (request.customer_email) {
+    await emailService.sendInProgressEmail(parseInt(requestId), {
+      customer_email: request.customer_email,
+      customer_name: request.customer_name || 'Customer',
+      started_at: new Date().toISOString(),
+      estimated_completion_date: completionDate,
+      estimated_completion_time: estimated_completion_time || request.scheduled_pickup_time || undefined,
+      progress_notes: progress_notes || undefined,
+    }).catch((error) => {
+      console.error('Failed to send in progress notification:', error);
+      throw error;
+    });
+
+    // Optionally update admin notes with progress information
+    if (progress_notes) {
+      const updatedNotes = request.admin_notes
+        ? `${request.admin_notes}\n\n[In Progress - ${new Date().toLocaleDateString()}]: ${progress_notes}`
+        : `[In Progress - ${new Date().toLocaleDateString()}]: ${progress_notes}`;
+
+      await query(
+        `UPDATE custom_cake_request SET admin_notes = ? WHERE request_id = ?`,
+        [updatedNotes, requestId]
+      );
+    }
+  }
+
+  res.json(successResponse('In-progress notification sent successfully'));
 };
 
 // ============================================================================
