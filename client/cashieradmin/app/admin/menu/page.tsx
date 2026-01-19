@@ -1837,8 +1837,11 @@ export default function AdminMenuPage() {
       <AddItemTypeModal
         isOpen={isAddItemTypeModalOpen}
         onClose={() => setIsAddItemTypeModalOpen(false)}
-        onSuccess={() => {
+        onSuccess={(typeId) => {
           loadItemTypes();
+          if (typeId) {
+            setFormData({ ...formData, item_type_id: typeId });
+          }
         }}
       />
 
@@ -1846,8 +1849,11 @@ export default function AdminMenuPage() {
       <AddUnitModal
         isOpen={isAddUnitModalOpen}
         onClose={() => setIsAddUnitModalOpen(false)}
-        onSuccess={() => {
+        onSuccess={(unitId) => {
           loadUnits();
+          if (unitId) {
+            setFormData({ ...formData, unit_of_measure_id: unitId });
+          }
         }}
       />
     </div>

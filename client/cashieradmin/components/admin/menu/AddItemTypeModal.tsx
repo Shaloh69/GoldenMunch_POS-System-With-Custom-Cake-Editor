@@ -16,7 +16,7 @@ import toast from "react-hot-toast";
 interface AddItemTypeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (typeId?: number) => void;
 }
 
 export default function AddItemTypeModal({
@@ -38,14 +38,14 @@ export default function AddItemTypeModal({
       // Generate name from display name (lowercase, underscores)
       const name = displayName.toLowerCase().replace(/\s+/g, "_");
 
-      await MenuService.createItemType({
+      const response = await MenuService.createItemType({
         name,
         display_name: displayName,
       });
 
       toast.success("Item type created successfully");
       setDisplayName("");
-      onSuccess();
+      onSuccess(response.data?.type_id);
       onClose();
     } catch (error: any) {
       console.error("Failed to create item type:", error);
