@@ -405,12 +405,15 @@ router.get('/kiosk/orders/:code', asyncHandler(orderController.getOrderByVerific
 router.post('/kiosk/orders/:id/mark-qr-scanned', asyncHandler(orderController.markQRScanned));
 router.get('/kiosk/orders/:id/qr-status', asyncHandler(orderController.checkQRStatus));
 
-// Payment - Xendit QR Code
+// Payment - Xendit Invoice with QR Code
 router.post('/payment/create-qr', paymentController.createPaymentQR);
 router.get('/payment/status/:orderId', paymentController.checkPaymentStatus);
+router.get('/payment/success', paymentController.paymentSuccessPage);
+router.get('/payment/failed', paymentController.paymentFailedPage);
 
 // Webhooks - Xendit Payment Notifications
 router.post('/webhooks/xendit/qr-payment', paymentController.handleXenditWebhook);
+router.post('/webhooks/xendit/invoice', paymentController.handleXenditWebhook);
 
 // Custom Cake Sessions (for QR code customization flow)
 // DEPRECATED: Old in-memory API - migrating to database-backed NEW API below
