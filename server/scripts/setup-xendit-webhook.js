@@ -14,7 +14,7 @@
 require('dotenv').config({ path: require('path').join(__dirname, '../.env.production') });
 const axios = require('axios');
 
-const WEBHOOK_URL = 'https://goldenmunch-server.onrender.com/api/webhooks/xendit/qr-payment';
+const WEBHOOK_URL = 'https://goldenmunchserver.onrender.com/api/webhooks/xendit/qr-payment';
 
 // Xendit callback URLs API endpoint
 // Docs: https://docs.xendit.co/apidocs/set-webhook-url
