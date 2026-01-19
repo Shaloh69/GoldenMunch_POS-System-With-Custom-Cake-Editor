@@ -40,14 +40,17 @@ class EmailService {
     }
 
     try {
-      // IMPORTANT: Render.com and many cloud platforms block SMTP ports on free tier
-      // Port 465 (SSL) is more reliable than 587 (STARTTLS) on cloud platforms
-      // Alternative: Use SendGrid/Mailgun API instead of SMTP
+      // IMPORTANT: Based on AutoHub_ project - proven working on Render free tier
+      // Port 587 with STARTTLS works on Render (port 465 with SSL may be blocked)
+      // Configuration matches AutoHub_: port 587, secure: false, requireTLS: true
 
       const emailConfig = {
         host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-        port: parseInt(process.env.EMAIL_PORT || '465'),
-        secure: process.env.EMAIL_SECURE !== 'false', // true for 465 (SSL), false for 587 (STARTTLS)
+        port: parseInt(process.env.EMAIL_PORT || '587'),
+        // CRITICAL: For port 587, use secure: false with requireTLS: true (STARTTLS)
+        // For port 465, use secure: true with requireTLS: false (implicit SSL)
+        secure: parseInt(process.env.EMAIL_PORT || '587') === 465,
+        requireTLS: parseInt(process.env.EMAIL_PORT || '587') !== 465,
         auth: {
           user: process.env.EMAIL_USER,
           pass: process.env.EMAIL_PASSWORD,
@@ -68,12 +71,13 @@ class EmailService {
       this.transporter = nodemailer.createTransport(emailConfig);
       this.isConfigured = true;
       console.log('✅ Email service initialized successfully');
-      console.log(`📧 SMTP Config: ${emailConfig.host}:${emailConfig.port} (SSL: ${emailConfig.secure})`);
+      console.log(`📧 SMTP Config: ${emailConfig.host}:${emailConfig.port} (secure: ${emailConfig.secure}, requireTLS: ${emailConfig.requireTLS})`);
 
-      // Note: Render.com blocks SMTP on free tier - emails will fail until upgrade
-      if (process.env.RENDER === 'true' && !process.env.RENDER_SERVICE_TYPE?.includes('paid')) {
-        console.warn('⚠️  WARNING: Render free tier blocks SMTP ports. Email will fail.');
-        console.warn('   Solutions: 1) Upgrade to paid instance, 2) Use SendGrid/Mailgun API instead');
+      // Log configuration mode
+      if (emailConfig.port === 587) {
+        console.log('📧 Using port 587 with STARTTLS (proven working on Render free tier)');
+      } else if (emailConfig.port === 465) {
+        console.log('📧 Using port 465 with SSL (may be blocked on some cloud platforms)');
       }
     } catch (error) {
       console.error('❌ Failed to initialize email service:', error);
