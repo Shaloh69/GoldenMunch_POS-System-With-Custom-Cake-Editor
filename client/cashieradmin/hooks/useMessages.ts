@@ -104,7 +104,7 @@ export function useMessages(requestId: number | string | undefined) {
     try {
       const token = localStorage.getItem('auth_token');
       const response = await axios.post(
-        `${API_URL}/api/admin/custom-cakes/${requestId}/messages`,
+        `${API_URL}/admin/custom-cakes/${requestId}/messages`,
         {
           message_body: messageBody,
           subject,
@@ -136,7 +136,7 @@ export function useMessages(requestId: number | string | undefined) {
     try {
       const token = localStorage.getItem('auth_token');
       await axios.put(
-        `${API_URL}/api/admin/custom-cakes/${requestId}/messages/mark-read`,
+        `${API_URL}/admin/custom-cakes/${requestId}/messages/mark-read`,
         { notification_ids: notificationIds },
         {
           headers: {
@@ -174,7 +174,7 @@ export function useUnreadMessageCount() {
     async () => {
       const token = localStorage.getItem('auth_token');
       const response = await axios.get(
-        `${API_URL}/api/admin/custom-cakes/messages/unread-count`,
+        `${API_URL}/admin/custom-cakes/messages/unread-count`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

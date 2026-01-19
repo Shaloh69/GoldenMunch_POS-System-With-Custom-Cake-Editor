@@ -3,7 +3,7 @@
  * Handles Xendit Invoice QR code generation and payment status checking
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+import { API_BASE_URL } from '@/config/api';
 
 interface CreateQRResponse {
   invoice_id: string;

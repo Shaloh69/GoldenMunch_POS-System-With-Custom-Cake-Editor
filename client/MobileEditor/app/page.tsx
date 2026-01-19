@@ -305,7 +305,7 @@ function CakeEditorMain({ sessionToken, debugMode }: { sessionToken: string; deb
   const fetchDesignOptions = async () => {
     try {
       // Fetch real options from API
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/custom-cake/options`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/custom-cake/options`);
 
       if (response.ok) {
         const data = await response.json();
@@ -374,7 +374,7 @@ function CakeEditorMain({ sessionToken, debugMode }: { sessionToken: string; deb
       setSaving(true);
 
       // Call real API to save draft
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/custom-cake/save-draft`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/custom-cake/save-draft`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -492,7 +492,7 @@ function CakeEditorMain({ sessionToken, debugMode }: { sessionToken: string; deb
             view_angle: ['front', 'side', 'top', '3d_perspective'][index] || 'front',
           }));
 
-          await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/custom-cake/upload-images`, {
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/custom-cake/upload-images`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -509,7 +509,7 @@ function CakeEditorMain({ sessionToken, debugMode }: { sessionToken: string; deb
       }
 
       // Step 4: Submit for review
-      const submitResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/custom-cake/submit`, {
+      const submitResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/custom-cake/submit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
