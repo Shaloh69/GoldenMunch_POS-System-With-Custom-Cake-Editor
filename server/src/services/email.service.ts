@@ -170,7 +170,7 @@ class EmailService {
       const [notifications] = await pool.query<RowDataPacket[]>(
         `SELECT * FROM custom_cake_notifications
          WHERE status = 'failed'
-         AND sent_at > DATE_SUB(NOW(), INTERVAL 24 HOURS)
+         AND sent_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)
          ORDER BY sent_at ASC
          LIMIT 20`
       );
