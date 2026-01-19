@@ -447,7 +447,7 @@ export default function AdminMenuPage() {
         }
 
         onClose();
-        loadMenuItems();
+        await loadMenuItems();
         resetForm();
       } else {
         setError(
@@ -513,7 +513,7 @@ export default function AdminMenuPage() {
       if (response.success) {
         setSuccessMessage("Menu item deleted successfully!");
         setTimeout(() => setSuccessMessage(null), 5000);
-        loadMenuItems();
+        await loadMenuItems();
       } else {
         setError(response.message || "Failed to delete item");
       }
@@ -556,7 +556,7 @@ export default function AdminMenuPage() {
         const statusChanged = updateData.status ? ` (${updateData.status})` : "";
         setSuccessMessage(`Stock updated to ${newStock}${statusChanged}`);
         setTimeout(() => setSuccessMessage(null), 3000);
-        loadMenuItems();
+        await loadMenuItems();
       } else {
         setError(response.message || "Failed to update stock");
       }
@@ -598,7 +598,7 @@ export default function AdminMenuPage() {
       if (response.success) {
         setSuccessMessage(`Status updated to ${newStatus === "sold_out" ? "Sold Out" : "Available"}`);
         setTimeout(() => setSuccessMessage(null), 3000);
-        loadMenuItems();
+        await loadMenuItems();
       } else {
         setError(response.message || "Failed to update status");
       }
@@ -647,7 +647,7 @@ export default function AdminMenuPage() {
       setTimeout(() => setSuccessMessage(null), 5000);
       setPriceModalItem(null);
       setNewPrice("");
-      loadMenuItems();
+      await loadMenuItems();
     } catch (error: any) {
       console.error("Failed to update price:", error);
       setError(error?.message || "An error occurred while updating price");
@@ -695,7 +695,7 @@ export default function AdminMenuPage() {
       setSuccessMessage(`Successfully deleted ${selectedItems.size} items`);
       setTimeout(() => setSuccessMessage(null), 5000);
       setSelectedItems(new Set());
-      loadMenuItems();
+      await loadMenuItems();
     } catch (error: any) {
       console.error("Failed to delete items:", error);
       setError(error?.message || "An error occurred while deleting items");
@@ -719,7 +719,7 @@ export default function AdminMenuPage() {
       );
       setTimeout(() => setSuccessMessage(null), 5000);
       setSelectedItems(new Set());
-      loadMenuItems();
+      await loadMenuItems();
     } catch (error: any) {
       console.error("Failed to update status:", error);
       setError(error?.message || "An error occurred while updating status");
