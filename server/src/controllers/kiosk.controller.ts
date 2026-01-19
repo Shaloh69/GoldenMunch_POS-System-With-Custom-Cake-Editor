@@ -27,6 +27,8 @@ export const getMenuItems = async (req: AuthRequest, res: Response) => {
   let sql = `
     SELECT
       mi.*,
+      mit.name as item_type,
+      mit.display_name as item_type_display,
       (SELECT unit_price FROM menu_item_price
        WHERE menu_item_id = mi.menu_item_id
        AND is_active = TRUE
@@ -34,6 +36,7 @@ export const getMenuItems = async (req: AuthRequest, res: Response) => {
        ORDER BY price_type = 'base' DESC, created_at DESC
        LIMIT 1) as current_price
     FROM menu_item mi
+    LEFT JOIN menu_item_type mit ON mi.item_type_id = mit.type_id
     WHERE mi.status = 'available'
       AND (mi.is_infinite_stock = TRUE OR mi.stock_quantity > 0)
   `;
@@ -53,8 +56,15 @@ export const getMenuItems = async (req: AuthRequest, res: Response) => {
   }
 
   if (item_type) {
-    sql += ` AND mi.item_type = ?`;
-    params.push(String(item_type));
+    // Support both ID (number) and name (string) for backward compatibility
+    const itemTypeNum = parseInt(item_type as string, 10);
+    if (!Number.isNaN(itemTypeNum)) {
+      sql += ` AND mi.item_type_id = ?`;
+      params.push(itemTypeNum);
+    } else {
+      sql += ` AND mit.name = ?`;
+      params.push(String(item_type));
+    }
   }
 
   if (is_featured === 'true') {
