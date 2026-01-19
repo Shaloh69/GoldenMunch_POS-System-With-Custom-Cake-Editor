@@ -1467,7 +1467,7 @@ export default function AdminMenuPage() {
               {!editingItem && (
                 <Input
                   description="Set the base price for this item. You can adjust it later."
-                  label="Initial Price (₱)"
+                  label="Selling Price (₱)"
                   min="0"
                   placeholder="Enter price (e.g., 99.00)"
                   startContent={
