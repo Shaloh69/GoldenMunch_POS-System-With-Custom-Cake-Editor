@@ -22,7 +22,6 @@ import {
 import NextLink from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { QRCodeSVG } from "qrcode.react";
 import { useCart } from "@/contexts/CartContext";
 import { OrderService } from "@/services/order.service";
 import PaymentService from "@/services/payment.service";
@@ -133,8 +132,8 @@ export default function CartPage() {
             Number(order.total_amount)
           );
 
-          // Validate that we received a QR string
-          if (!qrData.qr_string) {
+          // Validate that we received a QR code image
+          if (!qrData.qr_code_image) {
             throw new Error(
               "QR code generation failed: No QR code data received from payment server. " +
               "Please contact staff for assistance or try paying with cash."
@@ -142,7 +141,7 @@ export default function CartPage() {
           }
 
           // Store QR code data and show modal
-          setQrCodeString(qrData.qr_string);
+          setQrCodeString(qrData.qr_code_image);
           setQrOrderId(order.order_id);
           setQrAmount(qrData.amount);
           setPaymentStatus("pending");
@@ -844,11 +843,13 @@ export default function CartPage() {
                     {/* QR Code Display */}
                     <div className="flex justify-center">
                       <div className="bg-white p-8 rounded-3xl shadow-2xl border-4 border-primary/60 animate-scale-in">
-                        <QRCodeSVG
-                          value={qrCodeString}
-                          size={320}
-                          level="H"
-                          includeMargin={true}
+                        <Image
+                          src={qrCodeString}
+                          alt="Payment QR Code"
+                          width={320}
+                          height={320}
+                          className="rounded-lg"
+                          priority
                         />
                       </div>
                     </div>

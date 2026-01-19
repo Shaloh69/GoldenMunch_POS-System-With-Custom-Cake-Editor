@@ -1,15 +1,17 @@
 /**
  * Payment Service
- * Handles Xendit QR code generation and payment status checking
+ * Handles Xendit Invoice QR code generation and payment status checking
  */
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 interface CreateQRResponse {
-  qr_id: string;
-  qr_string: string;
+  invoice_id: string;
+  invoice_url: string;
+  qr_code_image: string; // Base64 QR code image
   order_number: string;
   amount: number;
+  expiry_date: string;
 }
 
 interface PaymentStatusResponse {
