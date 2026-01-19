@@ -1,29 +1,30 @@
 /**
  * Xendit Payment Gateway Service
- * Handles cashless payments via Xendit Payment Request API v3
- * Supports GCash, PayMaya, and other payment methods in the Philippines
+ * Handles cashless payments via Xendit Invoice API
+ * Supports QRPH and other payment methods in the Philippines
  */
 
 import axios, { AxiosInstance } from 'axios';
 import logger from '../utils/logger';
-import { randomUUID } from 'crypto';
+import QRCode from 'qrcode';
 
 // Payment Request/Response Types
-interface CreateQRCodeRequest {
+interface CreateInvoiceRequest {
   externalId: string;
   amount: number;
-  callbackUrl?: string;
-  paymentMethod?: 'GCASH' | 'PAYMAYA';
+  description?: string;
+  payerEmail?: string;
 }
 
-interface QRCodeResponse {
+interface InvoiceResponse {
   success: boolean;
-  qrId?: string;
-  qrString?: string; // The QR code data to display
-  redirectUrl?: string; // For e-wallets like GCash that redirect
+  invoiceId?: string;
+  invoiceUrl?: string; // Xendit checkout page URL
+  qrCodeDataUrl?: string; // Base64 QR code image to display on kiosk
   externalId?: string;
   amount?: number;
   status?: string;
+  expiryDate?: string;
   message?: string;
   error?: string;
   rawResponse?: any; // Store full Xendit response for debugging
@@ -41,10 +42,10 @@ interface PaymentVerificationResult {
 
 class XenditPaymentService {
   private xenditClient: AxiosInstance | null = null;
-  private webhookUrl: string;
+  private baseUrl: string;
 
   constructor() {
-    this.webhookUrl = process.env.API_URL || 'http://localhost:5000';
+    this.baseUrl = process.env.API_URL || 'http://localhost:5000';
     this.initializeGateway();
   }
 
@@ -64,39 +65,42 @@ class XenditPaymentService {
           password: '', // Xendit uses API key as username with empty password
         },
       });
-      logger.info('✓ Xendit QR Codes API (V1) initialized for QRPH');
+      logger.info('✓ Xendit Invoice API initialized for QRPH payments');
     } else {
       logger.warn('⚠ Xendit configuration missing - using mock mode for development');
     }
   }
 
   /**
-   * Create Xendit QR Code for QRPH payments (V1 API)
-   * Returns QR code string that can be scanned with GCash, PayMaya, or any PH bank app
+   * Create Xendit Invoice for QRPH payments
+   * Returns invoice URL and generates QR code for kiosk display
    */
-  async createQRCode(request: CreateQRCodeRequest): Promise<QRCodeResponse> {
+  async createInvoice(request: CreateInvoiceRequest): Promise<InvoiceResponse> {
     try {
       if (!this.xenditClient) {
         // Mock mode for development
-        const mockQRString = `XENDIT_MOCK_${Date.now()}_${request.externalId}`;
-        logger.info(`🧪 Mock Payment Request created: ${mockQRString}`);
+        const mockInvoiceUrl = `https://checkout.xendit.co/web/mock_${Date.now()}`;
+        logger.info(`🧪 Mock Invoice created: ${mockInvoiceUrl}`);
+
+        // Generate QR code for mock URL
+        const qrCodeDataUrl = await QRCode.toDataURL(mockInvoiceUrl, {
+          errorCorrectionLevel: 'M',
+          type: 'image/png',
+          width: 300,
+          margin: 2,
+        });
 
         return {
           success: true,
-          qrId: `pr_mock_${Date.now()}`,
-          qrString: mockQRString,
+          invoiceId: `invoice_mock_${Date.now()}`,
+          invoiceUrl: mockInvoiceUrl,
+          qrCodeDataUrl: qrCodeDataUrl,
           externalId: request.externalId,
           amount: request.amount,
           status: 'PENDING',
-          message: 'Mock payment request created (API not configured)',
+          message: 'Mock invoice created (API not configured)',
         };
       }
-
-      // Use QR Codes V1 API for QRPH (simpler, more reliable)
-      // This API directly returns qr_string in the response
-      // Documentation: https://developers.xendit.co/api-reference/#create-qr-code
-
-      const paymentMethod = 'QRPH'; // QR Philippines standard
 
       // Validate QRPH amount limits (₱1.00 to ₱50,000.00)
       if (request.amount < 1.00) {
@@ -116,85 +120,77 @@ class XenditPaymentService {
         };
       }
 
-      // Create QR Code using V1 API (simpler structure)
+      // Create Invoice using Xendit Invoice API
       const requestBody = {
         external_id: request.externalId,
-        type: 'DYNAMIC',
-        currency: 'PHP',
-        channel_code: paymentMethod,
         amount: request.amount,
-        callback_url: `${this.webhookUrl}/api/webhooks/xendit/qr-payment`,
+        currency: 'PHP',
+        payer_email: request.payerEmail || 'customer@goldenmunch.com',
+        description: request.description || 'GoldenMunch Order Payment',
+        payment_methods: ['QRPH'],
+        success_redirect_url: `${this.baseUrl}/api/payment/success`,
+        failure_redirect_url: `${this.baseUrl}/api/payment/failed`,
+        invoice_duration: 172800, // 48 hours
       };
 
-      logger.info(`📤 Creating ${paymentMethod} QR code:`, {
+      logger.info(`📤 Creating Xendit Invoice:`, {
         external_id: request.externalId,
         amount: request.amount,
-        channel_code: paymentMethod,
-        callback_url: requestBody.callback_url,
+        payment_methods: ['QRPH'],
       });
 
-      const response = await this.xenditClient.post('/qr_codes', requestBody);
+      const response = await this.xenditClient.post('/v2/invoices', requestBody);
+      const invoiceData = response.data;
 
-      const qrData = response.data;
+      logger.info(`✓ Xendit Invoice created: ${invoiceData.id}`);
+      logger.info(`Invoice Status: ${invoiceData.status}`);
+      logger.info(`Invoice URL: ${invoiceData.invoice_url}`);
 
-      logger.info(`✓ Xendit QR Code created: ${qrData.id}`);
-      logger.info(`QR Status: ${qrData.status}`);
-      logger.info(`Full Xendit Response:`, JSON.stringify(qrData, null, 2));
+      // Generate QR code from invoice URL for kiosk display
+      const qrCodeDataUrl = await QRCode.toDataURL(invoiceData.invoice_url, {
+        errorCorrectionLevel: 'M',
+        type: 'image/png',
+        width: 300,
+        margin: 2,
+      });
 
-      // Extract QR string from root level (V1 API structure)
-      const qrString = qrData.qr_string;
-
-      if (!qrString) {
-        logger.error(`❌ CRITICAL: No qr_string in response!`);
-        logger.error(`QR ID: ${qrData.id}`);
-        logger.error(`QR Status: ${qrData.status}`);
-        logger.error(`Full response:`, JSON.stringify(qrData, null, 2));
-
-        return {
-          success: false,
-          status: 'FAILED',
-          error: 'Xendit did not return QR code data. Check payment method configuration.',
-          rawResponse: qrData,
-        };
-      }
-
-      logger.info(`✅ QR Code extracted successfully (length: ${qrString.length})`);
+      logger.info(`✅ QR Code generated from invoice URL`);
 
       return {
         success: true,
-        qrId: qrData.id,
-        qrString: qrString,
-        externalId: qrData.reference_id,
-        amount: qrData.amount,
-        status: qrData.status,
-        message: 'QR code created successfully',
-        rawResponse: qrData,
+        invoiceId: invoiceData.id,
+        invoiceUrl: invoiceData.invoice_url,
+        qrCodeDataUrl: qrCodeDataUrl,
+        externalId: invoiceData.external_id,
+        amount: invoiceData.amount,
+        status: invoiceData.status,
+        expiryDate: invoiceData.expiry_date,
+        message: 'Invoice created successfully',
+        rawResponse: invoiceData,
       };
     } catch (error: any) {
-      // Log the ACTUAL Xendit error, not our wrapped message
       const xenditError = error.response?.data;
-      logger.error('❌ Xendit Payment Request creation failed:');
+      logger.error('❌ Xendit Invoice creation failed:');
       logger.error('Status:', error.response?.status);
       logger.error('Xendit Error:', JSON.stringify(xenditError, null, 2));
       logger.error('Request details:', {
         externalId: request.externalId,
         amount: request.amount,
-        paymentMethod: request.paymentMethod,
       });
 
       return {
         success: false,
         status: 'FAILED',
-        error: xenditError?.message || xenditError?.error_code || error.message || 'Failed to create payment request',
-        rawResponse: xenditError, // Return actual Xendit error
+        error: xenditError?.message || xenditError?.error_code || error.message || 'Failed to create invoice',
+        rawResponse: xenditError,
       };
     }
   }
 
   /**
-   * Get QR code status (V1 API)
+   * Get Invoice status
    */
-  async getQRCodeStatus(qrCodeId: string): Promise<PaymentVerificationResult> {
+  async getInvoiceStatus(invoiceId: string): Promise<PaymentVerificationResult> {
     try {
       if (!this.xenditClient) {
         // Mock mode - return pending status
@@ -205,31 +201,28 @@ class XenditPaymentService {
         };
       }
 
-      const response = await this.xenditClient.get(`/qr_codes/${qrCodeId}`);
-      const qrData = response.data;
+      const response = await this.xenditClient.get(`/v2/invoices/${invoiceId}`);
+      const invoiceData = response.data;
 
-      logger.info(`QR Code ${qrCodeId} status: ${qrData.status}`);
+      logger.info(`Invoice ${invoiceId} status: ${invoiceData.status}`);
 
-      // Check if payment has been completed
-      // V1 API statuses: ACTIVE, INACTIVE, DELETED
-      // For QRPH, when scanned and paid, the callback webhook is triggered
-      // The status might remain ACTIVE, so we need to check via callback/webhook
-      const isPaid = qrData.status === 'COMPLETED' || qrData.status === 'PAID';
+      // Invoice API statuses: PENDING, PAID, EXPIRED, SETTLED
+      const isPaid = invoiceData.status === 'PAID' || invoiceData.status === 'SETTLED';
 
       return {
         success: isPaid,
-        status: this.mapQRCodeStatus(qrData.status),
-        amount: qrData.amount,
-        transactionDate: qrData.updated || qrData.created,
-        paymentMethod: qrData.channel_code || 'QRPH',
-        message: isPaid ? 'Payment completed' : `QR code ${qrData.status.toLowerCase()}`,
+        status: this.mapInvoiceStatus(invoiceData.status),
+        amount: invoiceData.amount,
+        transactionDate: invoiceData.updated || invoiceData.created,
+        paymentMethod: 'QRPH',
+        message: isPaid ? 'Payment completed' : `Invoice ${invoiceData.status.toLowerCase()}`,
       };
     } catch (error: any) {
-      logger.error('❌ Failed to get QR code status:', error.response?.data || error.message);
+      logger.error('❌ Failed to get invoice status:', error.response?.data || error.message);
       return {
         success: false,
         status: 'failed',
-        error: error.response?.data?.message || error.message || 'Failed to check QR code status',
+        error: error.response?.data?.message || error.message || 'Failed to check invoice status',
       };
     }
   }
@@ -270,31 +263,14 @@ class XenditPaymentService {
   }
 
   /**
-   * Map Xendit QR Code status to standard status (V1 API)
+   * Map Xendit Invoice status to standard status
    */
-  private mapQRCodeStatus(status: string): 'pending' | 'completed' | 'failed' {
-    const statusMap: Record<string, 'pending' | 'completed' | 'failed'> = {
-      'ACTIVE': 'pending',
-      'COMPLETED': 'completed',
-      'PAID': 'completed',
-      'INACTIVE': 'failed',
-      'DELETED': 'failed',
-      'EXPIRED': 'failed',
-    };
-    return statusMap[status] || 'pending';
-  }
-
-  /**
-   * Map Xendit Payment Request status to standard status (V3 API - legacy)
-   */
-  private mapPaymentStatus(status: string): 'pending' | 'completed' | 'failed' {
+  private mapInvoiceStatus(status: string): 'pending' | 'completed' | 'failed' {
     const statusMap: Record<string, 'pending' | 'completed' | 'failed'> = {
       'PENDING': 'pending',
-      'AWAITING_CAPTURE': 'pending',
-      'SUCCEEDED': 'completed',
-      'FAILED': 'failed',
+      'PAID': 'completed',
+      'SETTLED': 'completed',
       'EXPIRED': 'failed',
-      'VOIDED': 'failed',
     };
     return statusMap[status] || 'pending';
   }
@@ -302,14 +278,17 @@ class XenditPaymentService {
   /**
    * Simulate payment (for testing/mock mode)
    */
-  async simulatePayment(paymentRequestId: string): Promise<boolean> {
-    if (paymentRequestId.startsWith('pr_mock_')) {
-      logger.info(`🧪 Simulating payment completion for mock payment request: ${paymentRequestId}`);
+  async simulatePayment(invoiceId: string): Promise<boolean> {
+    if (invoiceId.startsWith('invoice_mock_')) {
+      logger.info(`🧪 Simulating payment completion for mock invoice: ${invoiceId}`);
       return true;
     }
     return false;
   }
 }
+
+// Export types
+export type { CreateInvoiceRequest, InvoiceResponse, PaymentVerificationResult };
 
 // Export singleton instance
 export const paymentService = new XenditPaymentService();
