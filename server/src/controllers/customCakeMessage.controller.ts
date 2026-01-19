@@ -4,6 +4,7 @@ import { pool } from '../config/database';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { successResponse, errorResponse } from '../utils/helpers';
 import { sseService, SSEChannels, SSEEvents } from '../services/sse.service';
+import { emailService } from '../services/email.service';
 
 interface Message extends RowDataPacket {
   notification_id: number;
@@ -149,12 +150,42 @@ export const sendAdminMessage = async (req: AuthRequest, res: Response) => {
       timestamp: new Date().toISOString(),
     });
 
-    // TODO: Optionally send email notification to customer
-    // await emailService.sendEmail({
-    //   to: request.customer_email,
-    //   subject: messageSubject,
-    //   html: message_body,
-    // });
+    // Send email notification to customer with beautiful template
+    const emailTemplate = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 28px;">💬 New Message from GoldenMunch</h1>
+        </div>
+
+        <div style="background-color: #ffffff; padding: 30px; border: 1px solid #e5e5e5;">
+          <p style="font-size: 16px;">Dear ${request.customer_name},</p>
+
+          <p style="font-size: 16px;">You have received a new message regarding your custom cake request <strong>#${requestId}</strong>:</p>
+
+          <div style="background-color: #f9f9f9; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #FF6B35;">
+            ${message_body}
+          </div>
+
+          <p style="font-size: 14px; color: #666; margin-top: 30px;">
+            This is an automated notification. You can reply to this email or contact us directly for any questions.
+          </p>
+        </div>
+
+        <div style="background-color: #f5f5f5; padding: 20px; text-align: center; color: #666; font-size: 12px; border-radius: 0 0 10px 10px;">
+          <p style="margin: 0 0 10px 0;">Best regards,<br><strong>The GoldenMunch Team</strong></p>
+          <p style="margin: 0;">📧 ${process.env.EMAIL_FROM_ADDRESS || 'goldenmunch@example.com'}</p>
+          <p style="margin: 5px 0 0 0;">📞 ${process.env.BUSINESS_PHONE || 'Contact us'}</p>
+        </div>
+      </div>
+    `;
+
+    await emailService.sendEmail({
+      to: request.customer_email,
+      subject: messageSubject,
+      html: emailTemplate,
+    }).catch((error) => {
+      console.error('Failed to send message email notification:', error);
+    });
 
     res.status(201).json(successResponse('Message sent successfully', newMessage[0]));
   } catch (error) {

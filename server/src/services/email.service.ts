@@ -420,33 +420,122 @@ class EmailService {
         `;
       }
 
-      const subject = `🔔 New Custom Cake Request #${requestId}`;
+      // Format submission date nicely
+      const submittedDate = new Date(request.submitted_at).toLocaleString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+      // Format event date if provided
+      let eventDateHtml = '';
+      if (request.event_date) {
+        const eventDate = new Date(request.event_date).toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+        eventDateHtml = `<p style="margin: 10px 0;"><strong>🎉 Event Date:</strong> ${eventDate}</p>`;
+      }
+
+      // Build customization details
+      let customizationHtml = '';
+      if (request.frosting_type || request.cake_text || request.theme_id || request.special_instructions) {
+        const details = [];
+        if (request.frosting_type) details.push(`Frosting: ${request.frosting_type}`);
+        if (request.frosting_color) details.push(`Color: ${request.frosting_color}`);
+        if (request.cake_text) details.push(`Text: "${request.cake_text}"`);
+        if (request.candles_count && request.candles_count > 0) details.push(`Candles: ${request.candles_count}`);
+        if (request.event_type) details.push(`Event: ${request.event_type}`);
+
+        if (details.length > 0) {
+          customizationHtml = `
+            <div style="background-color: #FFF7ED; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #F97316;">
+              <h3 style="margin-top: 0; color: #EA580C;">🎨 Customization Details:</h3>
+              <ul style="margin: 10px 0; padding-left: 20px; line-height: 1.8;">
+                ${details.map(detail => `<li>${detail}</li>`).join('')}
+              </ul>
+            </div>
+          `;
+        }
+      }
+
+      // Special instructions
+      let instructionsHtml = '';
+      if (request.special_instructions) {
+        instructionsHtml = `
+          <div style="background-color: #FEF3C7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #F59E0B;">
+            <p style="margin: 0; color: #92400E;"><strong>📝 Special Instructions:</strong></p>
+            <p style="margin: 10px 0 0 0; color: #92400E;">${request.special_instructions}</p>
+          </div>
+        `;
+      }
+
+      // Dietary restrictions
+      let dietaryHtml = '';
+      if (request.dietary_restrictions) {
+        dietaryHtml = `
+          <div style="background-color: #ECFDF5; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10B981;">
+            <p style="margin: 0; color: #065F46;"><strong>🥗 Dietary Restrictions:</strong></p>
+            <p style="margin: 10px 0 0 0; color: #065F46;">${request.dietary_restrictions}</p>
+          </div>
+        `;
+      }
+
+      const subject = `🔔 New Custom Cake Request #${requestId} - Review Required`;
       const messageBody = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #FF6B35;">🔔 New Custom Cake Request</h2>
-
-          <p>A new custom cake request has been submitted and is awaiting your review.</p>
-
-          <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
-            <h3 style="margin-top: 0; color: #FF6B35;">Request Details:</h3>
-            <p><strong>Request ID:</strong> ${request.request_id}</p>
-            <p><strong>Customer:</strong> ${request.customer_name}</p>
-            <p><strong>Email:</strong> ${request.customer_email}</p>
-            <p><strong>Phone:</strong> ${request.customer_phone}</p>
-            <p><strong>Layers:</strong> ${request.num_layers}</p>
-            <p><strong>Estimated Price:</strong> ₱${request.estimated_price ? Number(request.estimated_price).toFixed(2) : '0.00'}</p>
-            <p><strong>Submitted:</strong> ${new Date(request.submitted_at).toLocaleString()}</p>
+          <div style="background: linear-gradient(135deg, #FF6B35 0%, #F7931E 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">🔔 New Request!</h1>
           </div>
 
-          ${referenceImageHtml}
-          ${imageGalleryHtml}
+          <div style="background-color: #ffffff; padding: 30px; border: 1px solid #e5e5e5;">
+            <p style="font-size: 16px;">A new custom cake request has been submitted and is awaiting your review.</p>
 
-          <p><strong>Action Required:</strong> Please review this request in the admin panel and approve or reject it.</p>
+            <div style="background-color: #F5F5F5; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #FF6B35;">
+              <h3 style="margin-top: 0; color: #FF6B35;">👤 Customer Information:</h3>
+              <p style="margin: 10px 0;"><strong>Request ID:</strong> #${request.request_id}</p>
+              <p style="margin: 10px 0;"><strong>Name:</strong> ${request.customer_name}</p>
+              <p style="margin: 10px 0;"><strong>📧 Email:</strong> ${request.customer_email}</p>
+              <p style="margin: 10px 0;"><strong>📞 Phone:</strong> ${request.customer_phone || 'Not provided'}</p>
+              <p style="margin: 10px 0;"><strong>📅 Submitted:</strong> ${submittedDate}</p>
+              ${eventDateHtml}
+            </div>
 
-          <a href="${backendUrl}/admin/custom-cakes/${requestId}"
-             style="display: inline-block; background-color: #FF6B35; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin-top: 20px;">
-            Review Request
-          </a>
+            <div style="background-color: #EFF6FF; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3B82F6;">
+              <h3 style="margin-top: 0; color: #1D4ED8;">🎂 Cake Specifications:</h3>
+              <p style="margin: 10px 0;"><strong>Number of Layers:</strong> ${request.num_layers}</p>
+              <p style="margin: 10px 0;"><strong>💰 Estimated Price:</strong> ₱${request.estimated_price ? Number(request.estimated_price).toFixed(2) : '0.00'}</p>
+              ${request.total_height_cm ? `<p style="margin: 10px 0;"><strong>Height:</strong> ${request.total_height_cm} cm</p>` : ''}
+              ${request.base_diameter_cm ? `<p style="margin: 10px 0;"><strong>Base Diameter:</strong> ${request.base_diameter_cm} cm</p>` : ''}
+            </div>
+
+            ${customizationHtml}
+            ${instructionsHtml}
+            ${dietaryHtml}
+            ${referenceImageHtml}
+            ${imageGalleryHtml}
+
+            <div style="background-color: #DBEAFE; padding: 15px; border-radius: 8px; margin: 20px 0; text-align: center;">
+              <p style="margin: 0; color: #1E3A8A; font-weight: bold;">⚠️ Action Required: Please review and respond within 24-48 hours</p>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+              <a href="${backendUrl}/admin/custom-cakes/${requestId}"
+                 style="display: inline-block; background-color: #FF6B35; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">
+                📋 Review Request Now
+              </a>
+            </div>
+          </div>
+
+          <div style="background-color: #f5f5f5; padding: 20px; text-align: center; color: #666; font-size: 12px; border-radius: 0 0 10px 10px;">
+            <p style="margin: 0;">GoldenMunch Admin Panel</p>
+            <p style="margin: 5px 0 0 0;">Respond promptly to maintain customer satisfaction!</p>
+          </div>
         </div>
       `;
 
@@ -705,6 +794,194 @@ class EmailService {
       }
     } catch (error) {
       console.error('Error sending ready for pickup email:', error);
+    }
+  }
+
+  /**
+   * Send "Under Review" status email
+   */
+  async sendUnderReviewEmail(requestId: number, requestData: {
+    customer_email: string;
+    customer_name: string;
+    submitted_at: string;
+    estimated_review_hours?: number;
+  }): Promise<void> {
+    const submittedDate = new Date(requestData.submitted_at).toLocaleString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    // Calculate estimated review completion time (default 24-48 hours)
+    const reviewHours = requestData.estimated_review_hours || 48;
+    const estimatedReviewDate = new Date(requestData.submitted_at);
+    estimatedReviewDate.setHours(estimatedReviewDate.getHours() + reviewHours);
+    const estimatedDate = estimatedReviewDate.toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    });
+
+    const subject = '🔍 Your Custom Cake Request is Under Review';
+    const messageBody = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 28px;">🔍 Under Review</h1>
+        </div>
+
+        <div style="background-color: #ffffff; padding: 30px; border: 1px solid #e5e5e5;">
+          <p style="font-size: 16px;">Dear ${requestData.customer_name},</p>
+
+          <p style="font-size: 16px;">Thank you for submitting your custom cake request <strong>#${requestId}</strong>!</p>
+
+          <div style="background-color: #EFF6FF; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3B82F6;">
+            <h3 style="margin-top: 0; color: #1D4ED8;">📋 Request Status:</h3>
+            <p style="margin: 10px 0;"><strong>Status:</strong> <span style="color: #3B82F6; font-weight: bold;">Under Review</span></p>
+            <p style="margin: 10px 0;"><strong>📅 Submitted:</strong> ${submittedDate}</p>
+            <p style="margin: 10px 0;"><strong>⏱️ Estimated Review Time:</strong> ${reviewHours} hours</p>
+            <p style="margin: 10px 0;"><strong>📆 Expected Response By:</strong> ${estimatedDate}</p>
+          </div>
+
+          <h3 style="color: #1D4ED8; margin-top: 30px;">What's Next:</h3>
+          <ol style="line-height: 1.8; font-size: 15px;">
+            <li>Our team is carefully reviewing your design requirements</li>
+            <li>We're calculating the final pricing based on your specifications</li>
+            <li>We're checking our schedule for optimal preparation time</li>
+            <li>You'll receive an email with approval details or clarification questions</li>
+          </ol>
+
+          <div style="background-color: #FEF3C7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #F59E0B;">
+            <p style="margin: 0; color: #92400E;"><strong>💡 Tip:</strong> We typically respond within 24-48 hours. You'll receive an email as soon as we've completed the review!</p>
+          </div>
+
+          <p style="font-size: 14px; color: #666; margin-top: 30px;">
+            <strong>Need to make changes?</strong> Contact us immediately if you need to modify your request before we start the review process.
+          </p>
+        </div>
+
+        <div style="background-color: #f5f5f5; padding: 20px; text-align: center; color: #666; font-size: 12px; border-radius: 0 0 10px 10px;">
+          <p style="margin: 0 0 10px 0;">Best regards,<br><strong>The GoldenMunch Team</strong></p>
+          <p style="margin: 0;">📧 ${process.env.EMAIL_FROM_ADDRESS || 'goldenmunch@example.com'}</p>
+          <p style="margin: 5px 0 0 0;">📞 ${process.env.BUSINESS_PHONE || 'Contact us'}</p>
+        </div>
+      </div>
+    `;
+
+    try {
+      const success = await this.sendEmail({
+        to: requestData.customer_email,
+        subject,
+        html: messageBody,
+      });
+
+      if (success) {
+        console.log(`✅ Under review email sent to ${requestData.customer_email}`);
+      }
+    } catch (error) {
+      console.error('Error sending under review email:', error);
+    }
+  }
+
+  /**
+   * Send "In Progress" status email
+   */
+  async sendInProgressEmail(requestId: number, progressData: {
+    customer_email: string;
+    customer_name: string;
+    started_at: string;
+    estimated_completion_date: string;
+    estimated_completion_time?: string;
+    progress_notes?: string;
+  }): Promise<void> {
+    const startedDate = new Date(progressData.started_at).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
+    const completionDate = new Date(progressData.estimated_completion_date).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
+    const completionTime = progressData.estimated_completion_time || 'during business hours';
+
+    // Calculate days until completion
+    const now = new Date();
+    const completion = new Date(progressData.estimated_completion_date);
+    const daysUntilReady = Math.ceil((completion.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+    const subject = '👨‍🍳 Your Custom Cake is Being Prepared!';
+    const messageBody = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="color: white; margin: 0; font-size: 28px;">👨‍🍳 In Progress!</h1>
+        </div>
+
+        <div style="background-color: #ffffff; padding: 30px; border: 1px solid #e5e5e5;">
+          <p style="font-size: 16px;">Dear ${progressData.customer_name},</p>
+
+          <p style="font-size: 16px;">Exciting news! Our bakers have started working on your custom cake <strong>#${requestId}</strong>!</p>
+
+          <div style="background-color: #F5F3FF; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #8B5CF6;">
+            <h3 style="margin-top: 0; color: #6D28D9;">🎂 Production Status:</h3>
+            <p style="margin: 10px 0;"><strong>Status:</strong> <span style="color: #8B5CF6; font-weight: bold;">In Progress</span></p>
+            <p style="margin: 10px 0;"><strong>🚀 Started:</strong> ${startedDate}</p>
+            <p style="margin: 10px 0;"><strong>📅 Estimated Completion:</strong> ${completionDate}</p>
+            <p style="margin: 10px 0;"><strong>🕐 Expected Ready Time:</strong> ${completionTime}</p>
+            ${daysUntilReady > 0 ? `<p style="margin: 10px 0;"><strong>⏳ Days Until Ready:</strong> ${daysUntilReady} day(s)</p>` : ''}
+          </div>
+
+          ${progressData.progress_notes ? `
+            <div style="background-color: #FEF3C7; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #F59E0B;">
+              <p style="margin: 0; color: #92400E;"><strong>📝 From Our Bakers:</strong></p>
+              <p style="margin: 10px 0 0 0; color: #92400E;">${progressData.progress_notes}</p>
+            </div>
+          ` : ''}
+
+          <h3 style="color: #6D28D9; margin-top: 30px;">What's Happening Now:</h3>
+          <ul style="line-height: 1.8; font-size: 15px;">
+            <li>🥣 Preparing premium ingredients</li>
+            <li>🎨 Creating your custom design elements</li>
+            <li>👨‍🍳 Baking with love and attention to detail</li>
+            <li>✨ Adding your special decorations and personalization</li>
+          </ul>
+
+          <div style="background-color: #DBEAFE; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3B82F6;">
+            <p style="margin: 0; color: #1E3A8A;"><strong>💡 Next Step:</strong> You'll receive another email when your cake is ready for pickup!</p>
+          </div>
+
+          <p style="font-size: 14px; color: #666; margin-top: 30px;">
+            <strong>Questions?</strong> Feel free to contact us anytime during the preparation process.
+          </p>
+        </div>
+
+        <div style="background-color: #f5f5f5; padding: 20px; text-align: center; color: #666; font-size: 12px; border-radius: 0 0 10px 10px;">
+          <p style="margin: 0 0 10px 0;">Best regards,<br><strong>The GoldenMunch Team</strong></p>
+          <p style="margin: 0;">📧 ${process.env.EMAIL_FROM_ADDRESS || 'goldenmunch@example.com'}</p>
+          <p style="margin: 5px 0 0 0;">📞 ${process.env.BUSINESS_PHONE || 'Contact us'}</p>
+        </div>
+      </div>
+    `;
+
+    try {
+      const success = await this.sendEmail({
+        to: progressData.customer_email,
+        subject,
+        html: messageBody,
+      });
+
+      if (success) {
+        console.log(`✅ In progress email sent to ${progressData.customer_email}`);
+      }
+    } catch (error) {
+      console.error('Error sending in progress email:', error);
     }
   }
 

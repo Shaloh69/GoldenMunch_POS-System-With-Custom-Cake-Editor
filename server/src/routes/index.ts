@@ -644,6 +644,7 @@ router.get('/admin/custom-cakes/all', authenticateAdmin, asyncHandler(customCake
 router.get('/admin/custom-cakes/:requestId', conditionalRequest(), authenticateAdmin, asyncHandler(customCakeController.getRequestDetails));
 router.post('/admin/custom-cakes/:requestId/approve', authenticateAdmin, asyncHandler(customCakeController.approveRequest));
 router.post('/admin/custom-cakes/:requestId/reject', authenticateAdmin, asyncHandler(customCakeController.rejectRequest));
+router.post('/admin/custom-cakes/:requestId/notify-in-progress', authenticateAdmin, asyncHandler(customCakeController.notifyInProgress));
 
 // Custom Cake Messaging (Admin/Cashier)
 router.get('/admin/custom-cakes/messages/unread-count', authenticateAdmin, asyncHandler(customCakeMessageController.getUnreadMessageCount));
