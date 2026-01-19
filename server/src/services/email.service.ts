@@ -32,27 +32,53 @@ class EmailService {
   }
 
   private initialize(): void {
-    const emailConfig = {
-      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.EMAIL_PORT || '587'),
-      secure: process.env.EMAIL_SECURE === 'true', // true for 465, false for other ports
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
-      },
-    };
-
     // Check if email is properly configured
-    if (!emailConfig.auth.user || !emailConfig.auth.pass) {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
       console.warn('⚠️  Email service not configured. Set EMAIL_USER and EMAIL_PASSWORD in .env');
       this.isConfigured = false;
       return;
     }
 
     try {
+      // IMPORTANT: Based on AutoHub_ project - proven working on Render free tier
+      // Port 587 with STARTTLS works on Render (port 465 with SSL may be blocked)
+      // Configuration matches AutoHub_: port 587, secure: false, requireTLS: true
+
+      const emailConfig = {
+        host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+        port: parseInt(process.env.EMAIL_PORT || '587'),
+        // CRITICAL: For port 587, use secure: false with requireTLS: true (STARTTLS)
+        // For port 465, use secure: true with requireTLS: false (implicit SSL)
+        secure: parseInt(process.env.EMAIL_PORT || '587') === 465,
+        requireTLS: parseInt(process.env.EMAIL_PORT || '587') !== 465,
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASSWORD,
+        },
+        // Connection timeout settings (important for cloud platforms)
+        connectionTimeout: 10000, // 10 seconds
+        greetingTimeout: 10000,
+        socketTimeout: 20000,
+        // Enable debug output to troubleshoot connection issues
+        logger: process.env.NODE_ENV === 'development',
+        debug: process.env.NODE_ENV === 'development',
+        // Pool configuration for better performance
+        pool: true,
+        maxConnections: 5,
+        maxMessages: 100,
+      };
+
       this.transporter = nodemailer.createTransport(emailConfig);
       this.isConfigured = true;
       console.log('✅ Email service initialized successfully');
+      console.log(`📧 SMTP Config: ${emailConfig.host}:${emailConfig.port} (secure: ${emailConfig.secure}, requireTLS: ${emailConfig.requireTLS})`);
+
+      // Log configuration mode
+      if (emailConfig.port === 587) {
+        console.log('📧 Using port 587 with STARTTLS (proven working on Render free tier)');
+      } else if (emailConfig.port === 465) {
+        console.log('📧 Using port 465 with SSL (may be blocked on some cloud platforms)');
+      }
     } catch (error) {
       console.error('❌ Failed to initialize email service:', error);
       this.isConfigured = false;
@@ -60,7 +86,7 @@ class EmailService {
   }
 
   /**
-   * Send an email
+   * Send an email with timeout protection
    */
   async sendEmail(options: EmailOptions): Promise<boolean> {
     if (!this.isConfigured || !this.transporter) {
@@ -77,11 +103,27 @@ class EmailService {
         html: options.html,
       };
 
-      const info = await this.transporter.sendMail(mailOptions);
+      // Add timeout wrapper to prevent hanging connections
+      const sendPromise = this.transporter.sendMail(mailOptions);
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Email send timeout after 30 seconds')), 30000);
+      });
+
+      const info = await Promise.race([sendPromise, timeoutPromise]);
       console.log('✅ Email sent successfully:', info.messageId);
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Failed to send email:', error);
+
+      // Provide helpful error messages
+      if (error.code === 'ETIMEDOUT' || error.code === 'ECONNECTION') {
+        console.error('   💡 Connection timeout - SMTP ports may be blocked by your hosting provider');
+        console.error('   💡 Render free tier blocks SMTP - upgrade to paid or use SendGrid/Mailgun API');
+      } else if (error.code === 'EAUTH') {
+        console.error('   💡 Authentication failed - check EMAIL_USER and EMAIL_PASSWORD');
+        console.error('   💡 For Gmail, use App Password (not regular password)');
+      }
+
       return false;
     }
   }
