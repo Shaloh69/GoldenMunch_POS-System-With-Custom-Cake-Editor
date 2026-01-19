@@ -599,9 +599,66 @@ export default function CustomCakesPage() {
               </div>
             ) : requestDetails ? (
               <div className="space-y-6">
+                {/* 3D Preview Images - PROMINENTLY AT TOP */}
+                {requestDetails.images.length > 0 && (
+                  <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-6 rounded-xl border-2 border-amber-300">
+                    <h3 className="font-semibold text-xl mb-4 text-amber-900 flex items-center gap-2">
+                      <SparklesIcon className="w-6 h-6" />
+                      3D Custom Cake Preview
+                      <span className="text-sm font-normal text-gray-600 ml-2">
+                        (Click to enlarge)
+                      </span>
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {requestDetails.images.map((img, index) => (
+                        <button
+                          key={img.image_id}
+                          className="relative group cursor-pointer hover:scale-105 transition-all duration-200 hover:shadow-2xl"
+                          type="button"
+                          onClick={() => {
+                            setImageViewerIndex(index);
+                            setShowImageViewer(true);
+                          }}
+                        >
+                          <div className="aspect-square rounded-lg overflow-hidden border-4 border-amber-200 group-hover:border-amber-500 shadow-lg">
+                            <img
+                              alt={`${img.view_angle} view`}
+                              className="w-full h-full object-cover"
+                              src={img.image_url}
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src =
+                                  "/placeholder-cake.png";
+                                (e.target as HTMLImageElement).alt =
+                                  "Image not available";
+                              }}
+                            />
+                          </div>
+                          <div className="absolute bottom-3 left-3 right-3">
+                            <Chip
+                              className="bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold w-full"
+                              size="sm"
+                              variant="solid"
+                            >
+                              {img.view_angle.toUpperCase()}
+                            </Chip>
+                          </div>
+                          {/* Hover overlay */}
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                            <div className="text-center text-white">
+                              <EyeIcon className="w-10 h-10 mx-auto mb-1" />
+                              <p className="text-xs font-medium">Click to View</p>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Customer Info */}
                 <div>
-                  <h3 className="font-semibold text-lg mb-3">
+                  <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                    <span className="text-2xl">👤</span>
                     Customer Information
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
@@ -613,7 +670,7 @@ export default function CustomCakesPage() {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Email</p>
-                      <p className="font-medium">
+                      <p className="font-medium text-sm break-all">
                         {requestDetails.request.customer_email}
                       </p>
                     </div>
@@ -625,10 +682,23 @@ export default function CustomCakesPage() {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Event Type</p>
-                      <p className="font-medium">
+                      <p className="font-medium capitalize">
                         {requestDetails.request.event_type || "N/A"}
                       </p>
                     </div>
+                    {requestDetails.request.event_date && (
+                      <div className="col-span-2">
+                        <p className="text-sm text-gray-500">Event Date</p>
+                        <p className="font-medium text-purple-700">
+                          📅 {new Date(requestDetails.request.event_date).toLocaleDateString("en-US", {
+                            weekday: 'long',
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -636,27 +706,65 @@ export default function CustomCakesPage() {
 
                 {/* Cake Details */}
                 <div>
-                  <h3 className="font-semibold text-lg mb-3">
-                    Cake Configuration
+                  <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                    <span className="text-2xl">🎂</span>
+                    Cake Configuration & Dimensions
                   </h3>
+
+                  {/* Overall Dimensions */}
+                  <div className="bg-blue-50 p-4 rounded-lg mb-4 border-2 border-blue-200">
+                    <h4 className="font-semibold text-blue-900 mb-3">Overall Dimensions</h4>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-600">Layers</p>
+                        <p className="font-bold text-lg text-blue-700">
+                          {requestDetails.request.num_layers}
+                        </p>
+                      </div>
+                      {requestDetails.request.total_height_cm && (
+                        <div>
+                          <p className="text-sm text-gray-600">Total Height</p>
+                          <p className="font-bold text-lg text-blue-700">
+                            {requestDetails.request.total_height_cm} cm
+                          </p>
+                        </div>
+                      )}
+                      {requestDetails.request.base_diameter_cm && (
+                        <div>
+                          <p className="text-sm text-gray-600">Base Diameter</p>
+                          <p className="font-bold text-lg text-blue-700">
+                            {requestDetails.request.base_diameter_cm} cm
+                          </p>
+                        </div>
+                      )}
+                      {requestDetails.request.theme_name && (
+                        <div className="col-span-3">
+                          <p className="text-sm text-gray-600">Theme</p>
+                          <p className="font-semibold text-purple-700 text-lg">
+                            ✨ {requestDetails.request.theme_name}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Layer Details */}
                   <div className="space-y-2">
-                    <p>
-                      <span className="text-gray-500">Layers:</span>{" "}
-                      <span className="font-medium">
-                        {requestDetails.request.num_layers}
-                      </span>
-                    </p>
+                    <h4 className="font-semibold text-gray-700 mb-2">Layer Breakdown</h4>
                     {requestDetails.layers.map((layer, idx) => (
                       <div
                         key={idx}
-                        className="pl-4 border-l-2 border-amber-200"
+                        className="pl-4 py-2 border-l-4 border-amber-300 bg-amber-50 rounded-r-lg"
                       >
-                        <p className="text-sm font-medium">
+                        <p className="text-sm font-bold text-amber-900">
                           Layer {layer.layer_number}
                         </p>
-                        <p className="text-sm text-gray-600">
-                          {layer.flavor_name || "No flavor"} •{" "}
-                          {layer.size_name || "No size"} ({layer.diameter_cm}cm)
+                        <p className="text-sm text-gray-700">
+                          <span className="font-medium">Flavor:</span> {layer.flavor_name || "Not specified"}
+                        </p>
+                        <p className="text-sm text-gray-700">
+                          <span className="font-medium">Size:</span> {layer.size_name || "Not specified"}
+                          {layer.diameter_cm && ` (${layer.diameter_cm}cm diameter)`}
                         </p>
                       </div>
                     ))}
@@ -667,67 +775,165 @@ export default function CustomCakesPage() {
 
                 {/* Decorations */}
                 <div>
-                  <h3 className="font-semibold text-lg mb-3">Decorations</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Frosting Type</p>
-                      <p className="font-medium capitalize">
-                        {requestDetails.request.frosting_type?.replace(
-                          "_",
-                          " ",
-                        )}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Frosting Color</p>
-                      <p className="font-medium">
-                        {requestDetails.request.frosting_color || "N/A"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Candles</p>
-                      <p className="font-medium">
-                        {requestDetails.request.candles_count} (
-                        {requestDetails.request.candle_type})
-                      </p>
-                    </div>
-                    {requestDetails.request.cake_text && (
+                  <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                    <span className="text-2xl">🎨</span>
+                    Decorations & Styling
+                  </h3>
+
+                  {/* Frosting */}
+                  <div className="bg-pink-50 p-4 rounded-lg mb-4 border-2 border-pink-200">
+                    <h4 className="font-semibold text-pink-900 mb-3">Frosting</h4>
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm text-gray-500">Cake Text</p>
-                        <p className="font-medium">
-                          {requestDetails.request.cake_text}
+                        <p className="text-sm text-gray-600">Type</p>
+                        <p className="font-medium capitalize text-pink-700">
+                          {requestDetails.request.frosting_type?.replace("_", " ") || "N/A"}
                         </p>
                       </div>
-                    )}
+                      <div>
+                        <p className="text-sm text-gray-600">Color</p>
+                        <div className="flex items-center gap-2">
+                          {requestDetails.request.frosting_color && (
+                            <div
+                              className="w-8 h-8 rounded-full border-2 border-gray-300 shadow-sm"
+                              style={{ backgroundColor: requestDetails.request.frosting_color }}
+                            />
+                          )}
+                          <p className="font-medium text-pink-700">
+                            {requestDetails.request.frosting_color || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Text on Cake */}
+                  {requestDetails.request.cake_text && (
+                    <div className="bg-purple-50 p-4 rounded-lg mb-4 border-2 border-purple-200">
+                      <h4 className="font-semibold text-purple-900 mb-3">Text on Cake</h4>
+                      <div className="bg-white p-3 rounded border-2 border-purple-300 mb-3">
+                        <p className="font-bold text-lg text-purple-800 text-center">
+                          "{requestDetails.request.cake_text}"
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3">
+                        {requestDetails.request.text_color && (
+                          <div>
+                            <p className="text-sm text-gray-600">Color</p>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-6 h-6 rounded border-2 border-gray-300"
+                                style={{ backgroundColor: requestDetails.request.text_color }}
+                              />
+                              <p className="font-medium text-sm">
+                                {requestDetails.request.text_color}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-sm text-gray-600">Font</p>
+                          <p className="font-medium capitalize text-purple-700">
+                            {requestDetails.request.text_font?.replace("_", " ") || "N/A"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Position</p>
+                          <p className="font-medium capitalize text-purple-700">
+                            {requestDetails.request.text_position || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Candles */}
+                  <div className="bg-yellow-50 p-4 rounded-lg mb-4 border-2 border-yellow-200">
+                    <h4 className="font-semibold text-yellow-900 mb-3">🕯️ Candles</h4>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-600">Count</p>
+                        <p className="font-bold text-xl text-yellow-700">
+                          {requestDetails.request.candles_count}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Type</p>
+                        <p className="font-medium capitalize text-yellow-700">
+                          {requestDetails.request.candle_type?.replace("_", " ")}
+                        </p>
+                      </div>
+                      {requestDetails.request.candle_numbers && (
+                        <div>
+                          <p className="text-sm text-gray-600">Numbers</p>
+                          <p className="font-bold text-lg text-yellow-700">
+                            {requestDetails.request.candle_numbers}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 3D Decorations */}
+                  {requestDetails.request.decorations_3d &&
+                   Array.isArray(requestDetails.request.decorations_3d) &&
+                   requestDetails.request.decorations_3d.length > 0 && (
+                    <div className="bg-green-50 p-4 rounded-lg border-2 border-green-200">
+                      <h4 className="font-semibold text-green-900 mb-3">🎭 3D Decorations</h4>
+                      <div className="space-y-2">
+                        {requestDetails.request.decorations_3d.map((decoration: any, idx: number) => (
+                          <div key={idx} className="bg-white p-3 rounded border border-green-300">
+                            <p className="font-medium text-green-800">
+                              {decoration.type || decoration.name || `Decoration ${idx + 1}`}
+                            </p>
+                            {decoration.description && (
+                              <p className="text-sm text-gray-600 mt-1">
+                                {decoration.description}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Special Instructions */}
-                {requestDetails.request.special_instructions && (
+                {/* Special Instructions & Notes */}
+                {(requestDetails.request.special_instructions || requestDetails.request.baker_notes || requestDetails.request.dietary_restrictions) && (
                   <>
                     <Divider />
-                    <div>
-                      <h3 className="font-semibold text-lg mb-2">
-                        Special Instructions
+                    <div className="space-y-4">
+                      <h3 className="font-semibold text-lg flex items-center gap-2">
+                        <span className="text-2xl">📝</span>
+                        Special Instructions & Notes
                       </h3>
-                      <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">
-                        {requestDetails.request.special_instructions}
-                      </p>
-                    </div>
-                  </>
-                )}
 
-                {/* Dietary Restrictions */}
-                {requestDetails.request.dietary_restrictions && (
-                  <>
-                    <Divider />
-                    <div>
-                      <h3 className="font-semibold text-lg mb-2">
-                        Dietary Restrictions
-                      </h3>
-                      <p className="text-gray-700 bg-amber-50 p-3 rounded-lg border-2 border-amber-200">
-                        {requestDetails.request.dietary_restrictions}
-                      </p>
+                      {requestDetails.request.special_instructions && (
+                        <div className="bg-gray-50 p-4 rounded-lg border-2 border-gray-300">
+                          <h4 className="font-semibold text-gray-800 mb-2">Customer Instructions</h4>
+                          <p className="text-gray-700 whitespace-pre-wrap">
+                            {requestDetails.request.special_instructions}
+                          </p>
+                        </div>
+                      )}
+
+                      {requestDetails.request.baker_notes && (
+                        <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-300">
+                          <h4 className="font-semibold text-blue-800 mb-2">👨‍🍳 Baker Notes</h4>
+                          <p className="text-gray-700 whitespace-pre-wrap">
+                            {requestDetails.request.baker_notes}
+                          </p>
+                        </div>
+                      )}
+
+                      {requestDetails.request.dietary_restrictions && (
+                        <div className="bg-amber-50 p-4 rounded-lg border-2 border-amber-300">
+                          <h4 className="font-semibold text-amber-900 mb-2">⚠️ Dietary Restrictions</h4>
+                          <p className="text-gray-700 font-medium whitespace-pre-wrap">
+                            {requestDetails.request.dietary_restrictions}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </>
                 )}
@@ -737,72 +943,21 @@ export default function CustomCakesPage() {
                   <>
                     <Divider />
                     <div>
-                      <h3 className="font-semibold text-lg mb-3">
+                      <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                        <span className="text-2xl">📸</span>
                         Customer Reference Image
                       </h3>
-                      <div className="bg-amber-50 p-4 rounded-lg border-2 border-amber-200">
-                        <p className="text-sm text-amber-800 mb-3 font-medium">
-                          📸 Customer provided this reference image for design
-                          inspiration
+                      <div className="bg-amber-50 p-4 rounded-lg border-2 border-amber-300">
+                        <p className="text-sm text-amber-900 mb-3 font-medium">
+                          Customer provided this reference image for design inspiration
                         </p>
-                        <img
-                          alt="Customer reference design"
-                          className="max-w-full max-h-96 rounded-lg shadow-lg border-2 border-amber-300 mx-auto"
-                          src={requestDetails.request.reference_image}
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* 3D Preview Images */}
-                {requestDetails.images.length > 0 && (
-                  <>
-                    <Divider />
-                    <div>
-                      <h3 className="font-semibold text-lg mb-3">
-                        3D Preview Images
-                        <span className="text-sm font-normal text-gray-500 ml-2">
-                          (Click to view with zoom & rotate)
-                        </span>
-                      </h3>
-                      <div className="grid grid-cols-3 gap-4">
-                        {requestDetails.images.map((img, index) => (
-                          <button
-                            key={img.image_id}
-                            className="relative group cursor-pointer hover:scale-105 transition-transform"
-                            type="button"
-                            onClick={() => {
-                              setImageViewerIndex(index);
-                              setShowImageViewer(true);
-                            }}
-                          >
-                            <img
-                              alt={`${img.view_angle} view`}
-                              className="w-full h-32 object-cover rounded-lg border-2 border-gray-200 group-hover:border-amber-500"
-                              src={img.image_url}
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src =
-                                  "/placeholder-cake.png";
-                                (e.target as HTMLImageElement).alt =
-                                  "Image not available";
-                              }}
-                            />
-                            <div className="absolute bottom-2 left-2 right-2">
-                              <Chip
-                                className="bg-black/70 text-white"
-                                size="sm"
-                                variant="solid"
-                              >
-                                {img.view_angle}
-                              </Chip>
-                            </div>
-                            {/* Hover overlay */}
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                              <EyeIcon className="w-8 h-8 text-white" />
-                            </div>
-                          </button>
-                        ))}
+                        <div className="flex justify-center">
+                          <img
+                            alt="Customer reference design"
+                            className="max-w-full max-h-96 rounded-lg shadow-lg border-4 border-amber-400"
+                            src={requestDetails.request.reference_image}
+                          />
+                        </div>
                       </div>
                     </div>
                   </>
@@ -904,6 +1059,77 @@ export default function CustomCakesPage() {
                       </p>
                     </div>
                   )}
+                </div>
+
+                {/* Request Timeline & Metadata */}
+                <Divider />
+                <div>
+                  <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                    <span className="text-2xl">📅</span>
+                    Request Timeline & Metadata
+                  </h3>
+                  <div className="bg-gray-50 p-4 rounded-lg border-2 border-gray-300">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Created At</p>
+                        <p className="text-sm font-medium">
+                          {formatDate(requestDetails.request.created_at)}
+                        </p>
+                      </div>
+                      {requestDetails.request.submitted_at && (
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">Submitted At</p>
+                          <p className="text-sm font-medium text-blue-700">
+                            {formatDate(requestDetails.request.submitted_at)}
+                          </p>
+                        </div>
+                      )}
+                      {requestDetails.request.reviewed_at && (
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">Reviewed At</p>
+                          <p className="text-sm font-medium text-green-700">
+                            {formatDate(requestDetails.request.reviewed_at)}
+                          </p>
+                        </div>
+                      )}
+                      {requestDetails.request.reviewed_by_name && (
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">Reviewed By</p>
+                          <p className="text-sm font-medium">
+                            {requestDetails.request.reviewed_by_name}
+                          </p>
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Last Updated</p>
+                        <p className="text-sm font-medium">
+                          {formatDate(requestDetails.request.updated_at)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Request ID</p>
+                        <p className="text-sm font-mono font-bold text-purple-700">
+                          #{requestDetails.request.request_id}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Status</p>
+                        <Chip
+                          color={
+                            CustomCakeRequestService.getStatusColor(
+                              requestDetails.request.status,
+                            ) as any
+                          }
+                          size="sm"
+                          variant="flat"
+                        >
+                          {CustomCakeRequestService.getStatusLabel(
+                            requestDetails.request.status,
+                          )}
+                        </Chip>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Messaging Panel */}
