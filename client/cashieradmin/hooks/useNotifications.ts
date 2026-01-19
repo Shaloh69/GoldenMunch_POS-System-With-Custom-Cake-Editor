@@ -5,7 +5,10 @@ import { useCallback } from 'react';
 import { useSSE } from './useSSE';
 import { NotificationsService, Notification, NotificationsResponse, UnreadCountResponse } from '@/services/notifications.service';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+// IMPORTANT: All server routes are mounted at /api prefix
+const API_URL = process.env.NEXT_PUBLIC_API_URL
+  ? `${process.env.NEXT_PUBLIC_API_URL}/api`
+  : 'http://localhost:5000/api';
 
 /**
  * Get auth token from localStorage

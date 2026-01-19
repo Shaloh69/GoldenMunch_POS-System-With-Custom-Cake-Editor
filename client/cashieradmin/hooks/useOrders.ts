@@ -36,8 +36,10 @@ export function useOrders(status?: string) {
   }, []);
 
   // Set up SSE connection for real-time order updates
+  // IMPORTANT: All server routes are mounted at /api prefix
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
   useSSE({
-    url: `${process.env.NEXT_PUBLIC_API_URL}/sse/orders`,
+    url: `${apiUrl}/api/sse/orders`,
     token: getToken(),
     enabled: true,
     events: {
@@ -119,8 +121,10 @@ export function useOrder(orderId: number | null) {
   }, []);
 
   // Listen for updates to this specific order
+  // IMPORTANT: All server routes are mounted at /api prefix
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
   useSSE({
-    url: `${process.env.NEXT_PUBLIC_API_URL}/sse/orders`,
+    url: `${apiUrl}/api/sse/orders`,
     token: getToken(),
     enabled: orderId !== null,
     events: {

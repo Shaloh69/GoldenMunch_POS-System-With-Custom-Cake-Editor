@@ -4,7 +4,10 @@ import useSWR from 'swr';
 import { useSSE } from './useSSE';
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+// IMPORTANT: All server routes are mounted at /api prefix
+const API_URL = process.env.NEXT_PUBLIC_API_URL
+  ? `${process.env.NEXT_PUBLIC_API_URL}/api`
+  : 'http://localhost:5000/api';
 
 /**
  * Get auth token from localStorage
@@ -50,7 +53,7 @@ export function useMessages(requestId: number | string | undefined) {
 
       const token = localStorage.getItem('auth_token');
       const response = await axios.get(
-        `${API_URL}/api/admin/custom-cakes/${requestId}/messages`,
+        `${API_URL}/admin/custom-cakes/${requestId}/messages`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
