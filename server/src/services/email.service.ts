@@ -1,4 +1,4 @@
-import nodemailer, { Transporter } from 'nodemailer';
+import { Resend } from 'resend';
 import * as dotenv from 'dotenv';
 import { pool } from '../config/database';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
@@ -24,61 +24,36 @@ interface NotificationRecord {
 }
 
 class EmailService {
-  private transporter: Transporter | null = null;
+  private resend: Resend | null = null;
   private isConfigured: boolean = false;
+  private fromEmail: string = '';
 
   constructor() {
     this.initialize();
   }
 
   private initialize(): void {
-    // Check if email is properly configured
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
-      console.warn('⚠️  Email service not configured. Set EMAIL_USER and EMAIL_PASSWORD in .env');
+    // Check if Resend API key is configured
+    if (!process.env.RESEND_API_KEY) {
+      console.warn('⚠️  Email service not configured. Set RESEND_API_KEY in .env');
       this.isConfigured = false;
       return;
     }
 
     try {
-      // IMPORTANT: Based on AutoHub_ project - proven working on Render free tier
-      // Port 587 with STARTTLS works on Render (port 465 with SSL may be blocked)
-      // Configuration matches AutoHub_: port 587, secure: false, requireTLS: true
+      // Initialize Resend client with API key
+      this.resend = new Resend(process.env.RESEND_API_KEY);
 
-      const emailConfig = {
-        host: process.env.EMAIL_HOST || 'smtp.gmail.com',
-        port: parseInt(process.env.EMAIL_PORT || '587'),
-        // CRITICAL: For port 587, use secure: false with requireTLS: true (STARTTLS)
-        // For port 465, use secure: true with requireTLS: false (implicit SSL)
-        secure: parseInt(process.env.EMAIL_PORT || '587') === 465,
-        requireTLS: parseInt(process.env.EMAIL_PORT || '587') !== 465,
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASSWORD,
-        },
-        // Connection timeout settings (important for cloud platforms)
-        connectionTimeout: 10000, // 10 seconds
-        greetingTimeout: 10000,
-        socketTimeout: 20000,
-        // Enable debug output to troubleshoot connection issues
-        logger: process.env.NODE_ENV === 'development',
-        debug: process.env.NODE_ENV === 'development',
-        // Pool configuration for better performance
-        pool: true,
-        maxConnections: 5,
-        maxMessages: 100,
-      };
+      // Set from email (must be verified domain in Resend)
+      // Format: "Name <email@domain.com>" or just "email@domain.com"
+      const fromName = process.env.EMAIL_FROM_NAME || 'GoldenMunch POS';
+      const fromAddress = process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER || '[email protected]';
+      this.fromEmail = `${fromName} <${fromAddress}>`;
 
-      this.transporter = nodemailer.createTransport(emailConfig);
       this.isConfigured = true;
-      console.log('✅ Email service initialized successfully');
-      console.log(`📧 SMTP Config: ${emailConfig.host}:${emailConfig.port} (secure: ${emailConfig.secure}, requireTLS: ${emailConfig.requireTLS})`);
-
-      // Log configuration mode
-      if (emailConfig.port === 587) {
-        console.log('📧 Using port 587 with STARTTLS (proven working on Render free tier)');
-      } else if (emailConfig.port === 465) {
-        console.log('📧 Using port 465 with SSL (may be blocked on some cloud platforms)');
-      }
+      console.log('✅ Email service initialized successfully with Resend');
+      console.log(`📧 From address: ${this.fromEmail}`);
+      console.log('📧 Using Resend API for reliable email delivery');
     } catch (error) {
       console.error('❌ Failed to initialize email service:', error);
       this.isConfigured = false;
@@ -86,42 +61,41 @@ class EmailService {
   }
 
   /**
-   * Send an email with timeout protection
+   * Send an email using Resend API
    */
   async sendEmail(options: EmailOptions): Promise<boolean> {
-    if (!this.isConfigured || !this.transporter) {
+    if (!this.isConfigured || !this.resend) {
       console.warn('Email service not configured. Email not sent to:', options.to);
       return false;
     }
 
     try {
-      const mailOptions = {
-        from: `"${process.env.EMAIL_FROM_NAME || 'GoldenMunch POS'}" <${process.env.EMAIL_USER}>`,
-        to: options.to,
+      // Send email using Resend SDK
+      const { data, error } = await this.resend.emails.send({
+        from: this.fromEmail,
+        to: [options.to],
         subject: options.subject,
-        text: options.text || '',
         html: options.html,
-      };
-
-      // Add timeout wrapper to prevent hanging connections
-      const sendPromise = this.transporter.sendMail(mailOptions);
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Email send timeout after 30 seconds')), 30000);
+        text: options.text || this.stripHtml(options.html),
       });
 
-      const info = await Promise.race([sendPromise, timeoutPromise]);
-      console.log('✅ Email sent successfully:', info.messageId);
+      if (error) {
+        console.error('❌ Resend API error:', error);
+        return false;
+      }
+
+      console.log('✅ Email sent successfully via Resend:', data?.id);
       return true;
     } catch (error: any) {
       console.error('❌ Failed to send email:', error);
 
       // Provide helpful error messages
-      if (error.code === 'ETIMEDOUT' || error.code === 'ECONNECTION') {
-        console.error('   💡 Connection timeout - SMTP ports may be blocked by your hosting provider');
-        console.error('   💡 Render free tier blocks SMTP - upgrade to paid or use SendGrid/Mailgun API');
-      } else if (error.code === 'EAUTH') {
-        console.error('   💡 Authentication failed - check EMAIL_USER and EMAIL_PASSWORD');
-        console.error('   💡 For Gmail, use App Password (not regular password)');
+      if (error.message?.includes('API key')) {
+        console.error('   💡 Invalid API key - check RESEND_API_KEY in .env');
+      } else if (error.message?.includes('domain')) {
+        console.error('   💡 Domain not verified - verify your domain in Resend dashboard');
+      } else if (error.message?.includes('rate limit')) {
+        console.error('   💡 Rate limit exceeded - wait before sending more emails');
       }
 
       return false;
@@ -329,7 +303,7 @@ class EmailService {
           Best regards,<br>
           <strong>GoldenMunch Team</strong><br>
           📞 ${process.env.BUSINESS_PHONE || 'Contact us'}<br>
-          📧 ${process.env.EMAIL_USER || 'Email us'}
+          📧 ${process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER || 'Email us'}
         </p>
       </div>
     `;
@@ -370,7 +344,7 @@ class EmailService {
       return;
     }
 
-    const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
+    const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER;
     if (!adminEmail) {
       console.warn('No admin email configured');
       return;
@@ -550,7 +524,7 @@ class EmailService {
 
         <div style="background-color: #f5f5f5; padding: 20px; text-align: center; color: #666; font-size: 12px; border-radius: 0 0 10px 10px;">
           <p style="margin: 0 0 10px 0;">Best regards,<br><strong>The GoldenMunch Team</strong></p>
-          <p style="margin: 0;">📧 ${process.env.EMAIL_USER || 'goldenmunch@example.com'}</p>
+          <p style="margin: 0;">📧 ${process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER || 'goldenmunch@example.com'}</p>
           <p style="margin: 5px 0 0 0;">📞 ${process.env.BUSINESS_PHONE || 'Contact us'}</p>
         </div>
       </div>
@@ -615,7 +589,7 @@ class EmailService {
 
         <div style="background-color: #f5f5f5; padding: 20px; text-align: center; color: #666; font-size: 12px; border-radius: 0 0 10px 10px;">
           <p style="margin: 0 0 10px 0;">Best regards,<br><strong>The GoldenMunch Team</strong></p>
-          <p style="margin: 0;">📧 ${process.env.EMAIL_USER || 'goldenmunch@example.com'}</p>
+          <p style="margin: 0;">📧 ${process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER || 'goldenmunch@example.com'}</p>
           <p style="margin: 5px 0 0 0;">📞 ${process.env.BUSINESS_PHONE || 'Contact us'}</p>
         </div>
       </div>
@@ -693,7 +667,7 @@ class EmailService {
 
         <div style="background-color: #f5f5f5; padding: 20px; text-align: center; color: #666; font-size: 12px; border-radius: 0 0 10px 10px;">
           <p style="margin: 0 0 10px 0;">Best regards,<br><strong>The GoldenMunch Team</strong></p>
-          <p style="margin: 0;">📧 ${process.env.EMAIL_USER || 'goldenmunch@example.com'}</p>
+          <p style="margin: 0;">📧 ${process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER || 'goldenmunch@example.com'}</p>
           <p style="margin: 5px 0 0 0;">📞 ${process.env.BUSINESS_PHONE || 'Contact us'}</p>
         </div>
       </div>
@@ -738,17 +712,35 @@ class EmailService {
    * Test email configuration
    */
   async testConnection(): Promise<boolean> {
-    if (!this.isConfigured || !this.transporter) {
+    if (!this.isConfigured || !this.resend) {
       console.error('Email service not configured');
       return false;
     }
 
     try {
-      await this.transporter.verify();
-      console.log('✅ Email connection verified');
+      // Test by attempting to send a test email to the admin
+      const testEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_FROM_ADDRESS;
+      if (!testEmail) {
+        console.error('No test email configured');
+        return false;
+      }
+
+      const { data, error } = await this.resend.emails.send({
+        from: this.fromEmail,
+        to: [testEmail],
+        subject: 'Resend Email Service Test',
+        html: '<p>This is a test email to verify Resend integration is working correctly.</p>',
+      });
+
+      if (error) {
+        console.error('❌ Email connection test failed:', error);
+        return false;
+      }
+
+      console.log('✅ Email connection verified - Test email sent:', data?.id);
       return true;
     } catch (error) {
-      console.error('❌ Email connection failed:', error);
+      console.error('❌ Email connection test failed:', error);
       return false;
     }
   }
