@@ -132,7 +132,7 @@ function CakeEditorContent() {
       }
 
       // Call real API to validate session
-      const response = await fetch(`${apiUrl}/custom-cake/session/${sessionToken}`);
+      const response = await fetch(`${apiUrl}/api/custom-cake/session/${sessionToken}`);
 
       console.log('📡 Session validation response status:', response.status);
 
