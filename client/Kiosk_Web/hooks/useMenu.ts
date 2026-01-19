@@ -2,6 +2,7 @@ import useSWR from 'swr';
 import { MenuService } from '@/services/menu.service';
 import { useSSE } from './useSSE';
 import type { MenuItem, Category, MenuQueryParams } from '@/types/api';
+import { API_BASE_URL } from '@/config/api';
 
 /**
  * SWR + SSE hook for real-time menu items
@@ -26,7 +27,7 @@ export function useMenuItems(params?: MenuQueryParams) {
 
   // Set up SSE connection for real-time menu updates
   useSSE({
-    url: `${process.env.NEXT_PUBLIC_API_URL}/sse/menu`,
+    url: `${API_BASE_URL}/sse/menu`,
     enabled: true,
     events: {
       // When menu items are created/updated/deleted
@@ -90,7 +91,7 @@ export function useCategories() {
 
   // Listen for menu updates (categories might be affected)
   useSSE({
-    url: `${process.env.NEXT_PUBLIC_API_URL}/sse/menu`,
+    url: `${API_BASE_URL}/sse/menu`,
     enabled: true,
     events: {
       'menu.item.created': () => mutate(),

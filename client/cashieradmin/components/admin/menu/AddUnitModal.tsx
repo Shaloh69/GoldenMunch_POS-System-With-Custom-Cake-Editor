@@ -16,7 +16,7 @@ import toast from "react-hot-toast";
 interface AddUnitModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (unitId?: number) => void;
 }
 
 export default function AddUnitModal({
@@ -39,7 +39,7 @@ export default function AddUnitModal({
       // Generate name from display name (lowercase, underscores)
       const name = displayName.toLowerCase().replace(/\s+/g, "_");
 
-      await MenuService.createUnit({
+      const response = await MenuService.createUnit({
         name,
         display_name: displayName,
         abbreviation: abbreviation.trim() || undefined,
@@ -48,7 +48,7 @@ export default function AddUnitModal({
       toast.success("Unit of measure created successfully");
       setDisplayName("");
       setAbbreviation("");
-      onSuccess();
+      onSuccess(response.data?.unit_id);
       onClose();
     } catch (error: any) {
       console.error("Failed to create unit:", error);
