@@ -182,9 +182,11 @@ export const handleXenditWebhook = asyncHandler(async (req: AuthRequest, res: Re
   if (status === 'PAID' || status === 'SETTLED' || status === 'COMPLETED') {
     const conn = await pool.getConnection();
     try {
+      await conn.beginTransaction();
+
       // Find order by external_id (order_number) or invoice ID
       const [orderRows] = await conn.query(
-        `SELECT order_id, order_number, final_amount, payment_status
+        `SELECT order_id, order_number, final_amount, payment_status, payment_method, order_status
          FROM customer_order
          WHERE (order_number = ? OR payment_reference_number = ?)
          AND is_deleted = FALSE`,
@@ -194,19 +196,136 @@ export const handleXenditWebhook = asyncHandler(async (req: AuthRequest, res: Re
       const orders = Array.isArray(orderRows) ? orderRows : [orderRows];
       if (orders.length > 0) {
         const order: any = orders[0];
+        const orderId = order.order_id;
+        const orderNumber = order.order_number;
+        const paymentMethod = order.payment_method;
+        const finalAmount = parseFloat(order.final_amount || 0);
 
-        // Update payment status
-        await conn.query(
-          `UPDATE customer_order
-           SET payment_status = 'paid',
-               payment_verified_at = NOW(),
-               payment_reference_number = ?
-           WHERE order_id = ?`,
-          [id, order.order_id]
-        );
+        logger.info(`📦 Processing payment for order ${orderNumber}`);
+        logger.info(`   Order ID: ${orderId}, Payment Method: ${paymentMethod}, Amount: ₱${amount}`);
 
-        logger.info(`✅ Payment completed via webhook for order ${order.order_number} - Amount: ₱${amount}`);
+        // Only auto-complete cashless orders (Xendit QR payments)
+        if (paymentMethod === 'cashless') {
+          logger.info(`💳 Cashless payment detected - Auto-completing order ${orderNumber}`);
+
+          // ✅ STOCK DEDUCTION: Get order items and deduct stock quantities
+          const [orderItemsRows] = await conn.query(
+            'SELECT menu_item_id, quantity FROM order_item WHERE order_id = ?',
+            [orderId]
+          );
+          const orderItems = orderItemsRows as any[];
+
+          logger.info(`   Processing ${orderItems.length} items for stock deduction`);
+
+          for (const item of orderItems) {
+            // Get menu item details including stock info
+            const [menuItemRows] = await conn.query(
+              'SELECT is_infinite_stock, stock_quantity, name FROM menu_item WHERE menu_item_id = ?',
+              [item.menu_item_id]
+            );
+            const menuItems = menuItemRows as any[];
+
+            if (menuItems.length === 0) {
+              logger.warn(`   ⚠️  Menu item ${item.menu_item_id} not found - skipping stock deduction`);
+              continue;
+            }
+
+            const menuItem = menuItems[0];
+
+            // Skip stock deduction for infinite stock items
+            if (menuItem.is_infinite_stock) {
+              logger.info(`   ♾️  ${menuItem.name} - Infinite stock, skipping deduction`);
+              continue;
+            }
+
+            const currentStock = parseInt(menuItem.stock_quantity || 0);
+            const requestedQty = parseInt(item.quantity || 0);
+
+            // Check sufficient stock
+            if (currentStock < requestedQty) {
+              logger.error(`   ❌ Insufficient stock for ${menuItem.name}. Available: ${currentStock}, Required: ${requestedQty}`);
+              // Don't throw error in webhook - just log and continue
+              continue;
+            }
+
+            // Deduct stock quantity
+            await conn.query(
+              'UPDATE menu_item SET stock_quantity = stock_quantity - ? WHERE menu_item_id = ?',
+              [requestedQty, item.menu_item_id]
+            );
+
+            const newStock = currentStock - requestedQty;
+            logger.info(`   📉 ${menuItem.name} - Stock: ${currentStock} → ${newStock}`);
+
+            // Auto-update status to 'sold_out' if stock reaches 0
+            if (newStock === 0) {
+              await conn.query(
+                'UPDATE menu_item SET status = ? WHERE menu_item_id = ? AND status != ?',
+                ['sold_out', item.menu_item_id, 'discontinued']
+              );
+              logger.info(`   🚫 Auto-updated ${menuItem.name} to 'sold_out' (stock: 0)`);
+            }
+          }
+
+          // Update payment status and order status to completed
+          await conn.query(
+            `UPDATE customer_order
+             SET payment_status = 'paid',
+                 payment_verified_at = NOW(),
+                 payment_reference_number = ?,
+                 amount_paid = ?,
+                 change_amount = 0,
+                 order_status = 'completed'
+             WHERE order_id = ?`,
+            [id, finalAmount, orderId]
+          );
+
+          logger.info(`   ✅ Payment verified - Order status: ${order.order_status} → completed`);
+
+          // Insert payment transaction record
+          await conn.query(
+            `INSERT INTO payment_transaction
+             (order_id, transaction_type, payment_method, amount, reference_number, status, processed_by, completed_at)
+             VALUES (?, 'payment', 'cashless', ?, ?, 'completed', NULL, NOW())`,
+            [orderId, finalAmount, id]
+          );
+
+          logger.info(`   💰 Payment transaction recorded`);
+
+          // Add order timeline entry for auto-completion
+          await conn.query(
+            `INSERT INTO order_timeline
+             (order_id, status, changed_by, notes, created_at)
+             VALUES (?, 'completed', NULL, ?, NOW())`,
+            [orderId, `Auto-completed via Xendit payment verification (Invoice: ${id})`]
+          );
+
+          logger.info(`   📝 Order timeline updated`);
+
+          await conn.commit();
+          logger.info(`✅ Order ${orderNumber} auto-completed successfully via Xendit webhook - Amount: ₱${amount}`);
+        } else {
+          // For non-cashless orders, just update payment status (shouldn't happen with Xendit)
+          await conn.query(
+            `UPDATE customer_order
+             SET payment_status = 'paid',
+                 payment_verified_at = NOW(),
+                 payment_reference_number = ?
+             WHERE order_id = ?`,
+            [id, orderId]
+          );
+
+          await conn.commit();
+          logger.info(`✅ Payment completed via webhook for order ${orderNumber} - Amount: ₱${amount} (Manual verification required for ${paymentMethod} orders)`);
+        }
+      } else {
+        await conn.commit();
+        logger.warn(`⚠️  No order found for external_id: ${external_id} or invoice: ${id}`);
       }
+    } catch (error) {
+      await conn.rollback();
+      logger.error('❌ Error processing Xendit webhook:', error);
+      // Still return 200 to prevent Xendit from retrying
     } finally {
       conn.release();
     }
