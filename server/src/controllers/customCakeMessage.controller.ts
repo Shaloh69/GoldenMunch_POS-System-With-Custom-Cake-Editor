@@ -106,7 +106,8 @@ export const sendAdminMessage = async (req: AuthRequest, res: Response) => {
     }
 
     const request = requests[0];
-    const messageSubject = subject || `Re: Custom Cake Request #${requestId}`;
+    // Always include request ID in subject for email reply tracking
+    const messageSubject = subject || `Custom Cake Request #${requestId} - Message from GoldenMunch`;
 
     // Insert message into database
     const [result] = await pool.query<ResultSetHeader>(
@@ -166,9 +167,10 @@ export const sendAdminMessage = async (req: AuthRequest, res: Response) => {
             ${message_body}
           </div>
 
-          <p style="font-size: 14px; color: #666; margin-top: 30px;">
-            This is an automated notification. You can reply to this email or contact us directly for any questions.
-          </p>
+          <div style="background-color: #DBEAFE; padding: 15px; border-radius: 8px; margin-top: 30px; border-left: 4px solid #3B82F6;">
+            <p style="margin: 0; color: #1E3A8A; font-size: 14px;"><strong>💬 You can reply to this email!</strong></p>
+            <p style="margin: 10px 0 0 0; color: #1E3A8A; font-size: 14px;">Simply hit "Reply" and your message will be sent directly to our team. We'll see it in the admin panel and respond quickly.</p>
+          </div>
         </div>
 
         <div style="background-color: #f5f5f5; padding: 20px; text-align: center; color: #666; font-size: 12px; border-radius: 0 0 10px 10px;">
