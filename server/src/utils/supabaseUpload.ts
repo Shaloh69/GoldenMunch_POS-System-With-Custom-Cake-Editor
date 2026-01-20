@@ -51,7 +51,20 @@ export const uploadToSupabase = async (
       });
 
     if (error) {
-      console.error('Supabase upload error:', error);
+      console.error('❌ Supabase upload error:', error);
+
+      // Provide helpful error messages
+      if (error.message?.includes('Invalid API key') || error.message?.includes('JWT')) {
+        console.error('   💡 Invalid Supabase credentials');
+        console.error('   Check SUPABASE_URL and SUPABASE_SERVICE_KEY in .env.production');
+      } else if (error.message?.includes('Bucket') || error.message?.includes('bucket')) {
+        console.error('   💡 Bucket "custom-cakes" not found or not accessible');
+        console.error('   Create it in Supabase Dashboard: Storage → Buckets → New Bucket');
+        console.error('   Name: custom-cakes, Public: YES');
+      } else if (error.message?.includes('not found')) {
+        console.error('   💡 Supabase project not found - check SUPABASE_URL');
+      }
+
       return {
         success: false,
         error: error.message,
@@ -236,7 +249,20 @@ export const uploadBase64Image = async (
       });
 
     if (error) {
-      console.error('Supabase upload error:', error);
+      console.error('❌ Supabase upload error:', error);
+
+      // Provide helpful error messages
+      if (error.message?.includes('Invalid API key') || error.message?.includes('JWT')) {
+        console.error('   💡 Invalid Supabase credentials');
+        console.error('   Check SUPABASE_URL and SUPABASE_SERVICE_KEY in .env.production');
+      } else if (error.message?.includes('Bucket') || error.message?.includes('bucket')) {
+        console.error('   💡 Bucket "custom-cakes" not found or not accessible');
+        console.error('   Create it in Supabase Dashboard: Storage → Buckets → New Bucket');
+        console.error('   Name: custom-cakes, Public: YES');
+      } else if (error.message?.includes('not found')) {
+        console.error('   💡 Supabase project not found - check SUPABASE_URL');
+      }
+
       return {
         success: false,
         error: error.message,
