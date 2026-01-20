@@ -182,22 +182,21 @@ class InboundEmailService {
 
     try {
       // Use Resend SDK to fetch email content
-      // The 'receiving.get' method returns the raw email content
-      const response = await this.resend.emails.receiving.get(emailId);
+      const { data, error } = await this.resend.emails.get(emailId);
 
-      if (!response.data || !response.data.raw) {
-        logger.error('❌ No raw email data in Resend API response', { emailId });
+      if (error || !data) {
+        logger.error('❌ Failed to fetch email content from Resend:', { error, emailId });
         return null;
       }
 
-      // Resend's receiving.get provides 'raw' which is the full MIME message.
-      // For simplicity, we'll assume 'text' and 'html' fields might be present
-      // or we'd need a more sophisticated MIME parser here.
-      // For now, we'll use the provided text/html fields if they exist, otherwise raw.
+      if (!data.html && !data.text) {
+        logger.error('❌ No text or html content in Resend API response', { emailId });
+        return null;
+      }
+
       return {
-        html: response.data.html || response.data.raw, // Fallback to raw if html is missing
-        text: response.data.text || response.data.raw, // Fallback to raw if text is missing
-        headers: response.data.headers as Record<string, string | string[]>,
+        html: data.html ?? undefined,
+        text: data.text ?? undefined,
       };
     } catch (error) {
       logger.error('❌ Failed to fetch email content from Resend:', { error: error instanceof Error ? error.message : error, emailId });
@@ -251,7 +250,10 @@ class InboundEmailService {
     // Use email-reply-parser to clean the content
     // It handles both plain text and HTML content intelligently
     const replyParser = new EmailReplyParser();
-    const cleanText = replyParser.parse(content).getVisibleText();
+    // The .read() method returns an Email object, on which we can call .getVisibleText()
+    // to extract only the new reply text, stripping signatures and quoted history.
+    const email = new EmailReplyParser().read(content);
+    const cleanText = email.getVisibleText();
 
     return cleanText.trim();
   }
