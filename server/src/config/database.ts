@@ -1,7 +1,6 @@
 import mysql from 'mysql2/promise';
-import dotenv from 'dotenv';
 
-dotenv.config();
+// NOTE: dotenv is configured in app.ts - do NOT configure it here to avoid race conditions
 
 // Database connection pool configuration
 // Trim all environment variables to prevent DNS errors from trailing whitespace/newlines
