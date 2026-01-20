@@ -3,7 +3,7 @@ import { pool } from '../config/database';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { Webhook, WebhookRequiredHeaders } from 'svix';
 import { sseService, SSEChannels, SSEEvents } from './sse.service';
-import logger from '../utils/logger'; // Fix: Changed 'email-reply-parser' to 'EmailReplyParser'
+import logger from '../utils/logger';
 import EmailReplyParser from 'email-reply-parser';
 
 // NOTE: dotenv is configured in app.ts - do NOT configure it here to avoid race conditions
