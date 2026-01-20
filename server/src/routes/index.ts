@@ -26,6 +26,7 @@ import * as capacityController from '../controllers/capacity.controller';
 import * as sseController from '../controllers/sse.controller';
 import * as notificationsController from '../controllers/notifications.controller';
 import * as emailController from '../controllers/email.controller';
+import * as webhookController from '../controllers/webhook.controller';
 
 const router = Router();
 
@@ -414,6 +415,10 @@ router.get('/payment/failed', paymentController.paymentFailedPage);
 // Webhooks - Xendit Payment Notifications
 router.post('/webhooks/xendit/qr-payment', paymentController.handleXenditWebhook);
 router.post('/webhooks/xendit/invoice', paymentController.handleXenditWebhook);
+
+// Webhooks - Resend Inbound Email
+router.post('/webhooks/resend/inbound', asyncHandler(webhookController.handleResendInboundWebhook));
+router.get('/webhooks/resend/health', asyncHandler(webhookController.webhookHealthCheck));
 
 // Custom Cake Sessions (for QR code customization flow)
 // DEPRECATED: Old in-memory API - migrating to database-backed NEW API below
