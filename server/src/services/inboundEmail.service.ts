@@ -1,7 +1,10 @@
 import { Resend } from 'resend';
 import { pool } from '../config/database';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
+import { Webhook, WebhookRequiredHeaders } from 'svix';
 import { sseService, SSEChannels, SSEEvents } from './sse.service';
+import logger from '../utils/logger'; // Fix: Changed 'email-reply-parser' to 'EmailReplyParser'
+import EmailReplyParser from 'email-reply-parser';
 
 // NOTE: dotenv is configured in app.ts - do NOT configure it here to avoid race conditions
 
@@ -27,12 +30,30 @@ interface InboundEmailEvent {
   };
 }
 
+// Consolidated and more comprehensive type for Resend email.received events
+export interface ResendEmailReceivedEvent {
+  type: 'email.received';
+  created_at: string;
+  data: {
+    attachments: any[];
+    bcc: any[];
+    cc: any[];
+    created_at: string;
+    email_id: string;
+    from: string;
+    message_id: string;
+    subject: string;
+    to: string[];
+    text?: string; // Full plain text content of the email
+    html?: string; // Full HTML content of the email
+  };
+}
+
 interface EmailContent {
   html?: string;
   text?: string;
   headers?: Record<string, string | string[]>;
 }
-
 class InboundEmailService {
   private resend: Resend | null = null;
   private isConfigured: boolean = false;
@@ -43,7 +64,7 @@ class InboundEmailService {
 
   private initialize(): void {
     if (!process.env.RESEND_API_KEY) {
-      console.warn('⚠️  Inbound email service not configured. Set RESEND_API_KEY in .env');
+      logger.warn('⚠️  Inbound email service not configured. Set RESEND_API_KEY in .env');
       this.isConfigured = false;
       return;
     }
@@ -51,9 +72,9 @@ class InboundEmailService {
     try {
       this.resend = new Resend(process.env.RESEND_API_KEY);
       this.isConfigured = true;
-      console.log('✅ Inbound email service initialized');
+      logger.info('✅ Inbound email service initialized');
     } catch (error) {
-      console.error('❌ Failed to initialize inbound email service:', error);
+      logger.error('❌ Failed to initialize inbound email service:', error);
       this.isConfigured = false;
     }
   }
@@ -61,25 +82,25 @@ class InboundEmailService {
   /**
    * Process inbound email webhook event
    */
-  async processInboundEmail(event: InboundEmailEvent): Promise<void> {
-    if (!this.isConfigured || !this.resend) {
-      console.warn('Inbound email service not configured');
+  async processInboundEmail(event: ResendEmailReceivedEvent): Promise<void> {
+    if (!this.isConfigured) {
+      logger.warn('Inbound email service not configured. Skipping inbound email processing.');
       return;
     }
 
     try {
-      console.log('📨 Processing inbound email:', event.data.email_id);
-      console.log('   From:', event.data.from);
-      console.log('   Subject:', event.data.subject);
+      logger.info('📨 Processing inbound email:', {
+        email_id: event.data.email_id,
+        from: event.data.from,
+        subject: event.data.subject,
+      });
 
       // Extract request ID from subject line
       const requestId = this.extractRequestId(event.data.subject);
       if (!requestId) {
-        console.log('⚠️  Could not extract request ID from subject:', event.data.subject);
-        return;
+        throw new Error(`Could not extract request ID from subject: ${event.data.subject}`);
       }
-
-      console.log('   Extracted Request ID:', requestId);
+      logger.info('   Extracted Request ID:', { requestId, email_id: event.data.email_id });
 
       // Verify the request exists
       const [requests] = await pool.query<RowDataPacket[]>(
@@ -88,76 +109,98 @@ class InboundEmailService {
       );
 
       if (requests.length === 0) {
-        console.log('⚠️  Request not found:', requestId);
+        logger.warn('⚠️  Custom cake request not found for extracted ID. Ignoring email.', { requestId, subject: event.data.subject });
         return;
       }
 
       const request = requests[0];
 
       // Fetch full email content from Resend API
-      const emailContent = await this.fetchEmailContent(event.data.email_id);
-      if (!emailContent) {
-        console.error('❌ Failed to fetch email content');
-        return;
+      // Prioritize content directly from the webhook event if available, otherwise fetch
+      let emailContent: EmailContent | null = null;
+      if (event.data.text || event.data.html) {
+        emailContent = { text: event.data.text, html: event.data.html };
+      } else {
+        emailContent = await this.fetchEmailContent(event.data.email_id);
+      }
+
+      if (!emailContent || (!emailContent.text && !emailContent.html)) {
+        logger.error('❌ Failed to fetch email content or content is empty.', { email_id: event.data.email_id });
+        throw new Error('Failed to fetch email content or content is empty.');
       }
 
       // Extract sender email
       const senderEmail = this.extractEmail(event.data.from);
 
       // Verify sender is the customer
-      if (senderEmail.toLowerCase() !== request.customer_email.toLowerCase()) {
-        console.log('⚠️  Email from unauthorized sender:', senderEmail);
-        return;
+      if (request.customer_email && senderEmail.toLowerCase() !== request.customer_email.toLowerCase()) {
+        logger.warn('⚠️  Email from unauthorized sender. Ignoring email.', {
+          senderEmail, customerEmail: request.customer_email, email_id: event.data.email_id
+        });
+        throw new Error('Email from unauthorized sender.');
       }
 
       // Parse the email body to extract the actual reply (remove quoted text)
       const replyText = this.extractReplyText(emailContent.text || emailContent.html || '');
 
       if (!replyText || replyText.trim().length === 0) {
-        console.log('⚠️  No reply text found in email');
-        return;
+        throw new Error('No reply text found in email after parsing.');
       }
+      logger.info('Successfully parsed reply from email body', {
+        email_id: event.data.email_id,
+        originalLength: (emailContent.text || emailContent.html || '').length,
+        parsedLength: replyText.length,
+      });
 
       // Save customer reply to database
       await this.saveCustomerReply({
         requestId,
         customerName: request.customer_name,
         customerEmail: request.customer_email,
-        subject: `Re: Custom Cake Request #${requestId}`,
+        subject: `Re: Custom Cake Request #${requestId}`, // Subject for the notification record
         messageBody: replyText,
       });
 
-      console.log('✅ Customer reply saved successfully');
+      logger.info('✅ Customer reply saved successfully', {
+        email_id: event.data.email_id, requestId, customerEmail: request.customer_email
+      });
     } catch (error) {
-      console.error('❌ Error processing inbound email:', error);
-      throw error;
+      logger.error('❌ Error processing inbound email:', { error: error instanceof Error ? error.message : error, email_id: event.data.email_id });
+      throw error; // Re-throw to ensure the webhook controller's catch block also logs it
     }
   }
 
   /**
    * Fetch full email content from Resend API
+   * This is a fallback if the webhook event itself doesn't contain full text/html.
    */
   private async fetchEmailContent(emailId: string): Promise<EmailContent | null> {
     if (!this.resend) {
+      logger.warn('Resend service not initialized. Cannot fetch email content.', { emailId });
       return null;
     }
 
     try {
       // Use Resend SDK to fetch email content
+      // The 'receiving.get' method returns the raw email content
       const response = await this.resend.emails.receiving.get(emailId);
 
-      if (!response.data) {
-        console.error('❌ No data in Resend API response');
+      if (!response.data || !response.data.raw) {
+        logger.error('❌ No raw email data in Resend API response', { emailId });
         return null;
       }
 
+      // Resend's receiving.get provides 'raw' which is the full MIME message.
+      // For simplicity, we'll assume 'text' and 'html' fields might be present
+      // or we'd need a more sophisticated MIME parser here.
+      // For now, we'll use the provided text/html fields if they exist, otherwise raw.
       return {
-        html: response.data.html,
-        text: response.data.text,
+        html: response.data.html || response.data.raw, // Fallback to raw if html is missing
+        text: response.data.text || response.data.raw, // Fallback to raw if text is missing
         headers: response.data.headers as Record<string, string | string[]>,
       };
     } catch (error) {
-      console.error('❌ Failed to fetch email content from Resend:', error);
+      logger.error('❌ Failed to fetch email content from Resend:', { error: error instanceof Error ? error.message : error, emailId });
       return null;
     }
   }
@@ -167,11 +210,11 @@ class InboundEmailService {
    * Looks for patterns like "#123" or "Request #123" or "Custom Cake Request #123"
    */
   private extractRequestId(subject: string): number | null {
+    if (!subject) return null;
     // Try multiple patterns
     const patterns = [
-      /#(\d+)/,                           // #123
-      /Request\s+#?(\d+)/i,               // Request #123 or Request 123
-      /Custom\s+Cake\s+Request\s+#?(\d+)/i, // Custom Cake Request #123
+      /request\s*#?(\d+)/i,               // Request #123 or Request 123
+      /#(\d+)/,                           // #123 (less specific, put after more specific ones)
     ];
 
     for (const pattern of patterns) {
@@ -200,65 +243,17 @@ class InboundEmailService {
 
   /**
    * Extract the actual reply text, removing quoted previous messages
-   * This handles common email client quote patterns
+   * This handles common email client quote patterns using email-reply-parser.
    */
   private extractReplyText(content: string): string {
-    if (!content) {
-      return '';
-    }
+    if (!content) return '';
 
-    // Strip HTML tags if HTML content
-    let textContent = content;
-    if (content.includes('<') && content.includes('>')) {
-      textContent = this.stripHtml(content);
-    }
+    // Use email-reply-parser to clean the content
+    // It handles both plain text and HTML content intelligently
+    const replyParser = new EmailReplyParser();
+    const cleanText = replyParser.parse(content).getVisibleText();
 
-    // Common quote markers to split on
-    const quoteMarkers = [
-      /^On .+ wrote:$/m,                    // "On Mon, Jan 1, 2024 at 10:00 AM, John wrote:"
-      /^From:.+Sent:.+To:.+Subject:/ms,     // Outlook-style headers
-      /^[-_]{3,}/m,                          // Horizontal lines (---, ___)
-      /^>{1,}/m,                             // Quote markers (>, >>)
-      /^\s*Original Message\s*$/mi,         // "Original Message"
-      /^\s*-{3,}\s*Forwarded message\s*-{3,}/mi, // Forwarded message
-    ];
-
-    let replyText = textContent;
-
-    // Find the first quote marker and take everything before it
-    for (const marker of quoteMarkers) {
-      const match = replyText.match(marker);
-      if (match && match.index !== undefined) {
-        replyText = replyText.substring(0, match.index);
-        break;
-      }
-    }
-
-    // Clean up the text
-    replyText = replyText
-      .trim()
-      .replace(/\n{3,}/g, '\n\n')  // Replace multiple newlines with double
-      .replace(/^\s+|\s+$/gm, '')  // Trim each line
-      .trim();
-
-    return replyText;
-  }
-
-  /**
-   * Strip HTML tags for plain text extraction
-   */
-  private stripHtml(html: string): string {
-    return html
-      .replace(/<style[^>]*>.*?<\/style>/gis, '')  // Remove style tags
-      .replace(/<script[^>]*>.*?<\/script>/gis, '') // Remove script tags
-      .replace(/<[^>]+>/g, '')                       // Remove all HTML tags
-      .replace(/&nbsp;/g, ' ')                       // Replace &nbsp;
-      .replace(/&amp;/g, '&')                        // Replace &amp;
-      .replace(/&lt;/g, '<')                         // Replace &lt;
-      .replace(/&gt;/g, '>')                         // Replace &gt;
-      .replace(/&quot;/g, '"')                       // Replace &quot;
-      .replace(/\s+/g, ' ')                          // Collapse whitespace
-      .trim();
+    return cleanText.trim();
   }
 
   /**
@@ -278,11 +273,11 @@ class InboundEmailService {
       const [result] = await pool.query<ResultSetHeader>(
         `INSERT INTO custom_cake_notifications
         (request_id, notification_type, sender_type, sender_name, recipient_email, subject, message_body, status, is_read)
-        VALUES (?, 'message', 'customer', ?, ?, ?, ?, 'sent', FALSE)`,
+        VALUES (?, 'message', 'customer', ?, ?, ?, ?, 'received', FALSE)`, // Status 'received' for inbound messages
         [
           data.requestId,
           data.customerName,
-          adminEmail,
+          adminEmail, // Recipient is the admin system
           data.subject,
           data.messageBody,
         ]
@@ -290,7 +285,7 @@ class InboundEmailService {
 
       const notificationId = result.insertId;
 
-      // Get the newly created message
+      // Get the newly created message for broadcasting
       const [newMessage] = await pool.query<RowDataPacket[]>(
         `SELECT
           n.notification_id,
@@ -315,60 +310,46 @@ class InboundEmailService {
         [notificationId]
       );
 
-      // Broadcast SSE event for real-time updates
+      // Broadcast SSE event for real-time updates to relevant admin/cashier users
       sseService.broadcast(SSEChannels.CUSTOM_CAKES, SSEEvents.CUSTOM_CAKE_MESSAGE_RECEIVED, {
         request_id: data.requestId,
         message: newMessage[0],
         timestamp: new Date().toISOString(),
       });
 
-      console.log(`✅ Customer reply saved to database (ID: ${notificationId})`);
+      logger.info(`✅ Customer reply saved to database (ID: ${notificationId})`, { requestId: data.requestId, notificationId });
     } catch (error) {
-      console.error('❌ Failed to save customer reply:', error);
-      throw error;
+      logger.error('❌ Failed to save customer reply to database:', { error: error instanceof Error ? error.message : error, data });
+      throw error; // Re-throw to ensure the calling function handles it
     }
   }
 
   /**
    * Verify webhook signature (for security)
-   * Uses Svix webhook verification
-   */
-  verifyWebhookSignature(payload: string, headers: {
-    'svix-id'?: string;
-    'svix-timestamp'?: string;
-    'svix-signature'?: string;
-  }): boolean {
+   * Uses Svix webhook verification.
+   * @param payload The raw request body string.
+   * @param headers The Svix headers from the request.
+   * @returns True if the signature is valid, false otherwise.
+   */  
+  verifyWebhookSignature(payload: string, headers: WebhookRequiredHeaders): boolean {
     const webhookSecret = process.env.RESEND_WEBHOOK_SECRET;
 
     if (!webhookSecret) {
-      console.warn('⚠️  RESEND_WEBHOOK_SECRET not configured - skipping signature verification');
-      return true; // Allow in development, but warn
+      logger.warn('⚠️  RESEND_WEBHOOK_SECRET is not configured. Webhook signature verification is skipped. THIS IS A SECURITY RISK IN PRODUCTION!');
+      // In development, we might allow this for easier testing. In production, it should always fail.
+      return process.env.NODE_ENV !== 'production';
     }
 
     try {
-      // Resend uses Svix for webhook signatures
-      // The signature verification is done by Svix library
-      // For now, we'll implement basic verification
-      // In production, use the Svix SDK for proper verification
-
-      const svixId = headers['svix-id'];
-      const svixTimestamp = headers['svix-timestamp'];
-      const svixSignature = headers['svix-signature'];
-
-      if (!svixId || !svixTimestamp || !svixSignature) {
-        console.error('❌ Missing required Svix headers');
-        return false;
-      }
-
-      // TODO: Implement proper Svix signature verification using @svix/svix library
-      // For now, we'll accept all requests if the headers are present
-      // This is a security risk in production!
-      console.log('⚠️  Webhook signature verification not fully implemented');
-      console.log('   Install @svix/svix package for production use');
-
+      const wh = new Webhook(webhookSecret);
+      wh.verify(payload, headers); // This will throw an error if verification fails
+      logger.info('✅ Webhook signature verified successfully.');
       return true;
     } catch (error) {
-      console.error('❌ Webhook signature verification failed:', error);
+      logger.error('❌ Webhook signature verification failed:', {
+        error: error instanceof Error ? error.message : error,
+        svixId: headers['svix-id'],
+      });
       return false;
     }
   }

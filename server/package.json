@@ -35,6 +35,7 @@
     "compression": "^1.7.4",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
+    "email-reply-parser": "^2.3.5",
     "express": "^4.18.2",
     "express-fileupload": "^1.4.3",
     "express-rate-limit": "^7.1.5",
