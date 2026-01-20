@@ -33,6 +33,7 @@ export const STORAGE_BUCKETS = {
   PRODUCTS: 'products',        // Menu items, categories, cake flavors, themes
   PAYMENT_QR: 'payment-qr',    // Payment QR codes (GCash, PayMaya)
   SESSION_QR: 'session-qr',    // Custom cake session QR codes
+  CUSTOM_CAKES: 'custom-cakes', // Custom cake 3D renders and reference images
 } as const;
 
 // Check if Supabase is properly configured

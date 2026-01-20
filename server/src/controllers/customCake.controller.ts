@@ -595,24 +595,68 @@ export const uploadImages = async (req: AuthRequest, res: Response) => {
     throw new AppError('Custom cake request not found', 404);
   }
 
-  // Insert images
-  const imageInsertPromises = images.map((img: any) =>
-    query(
-      `INSERT INTO custom_cake_request_images
-       (request_id, image_url, image_type, view_angle)
-       VALUES (?, ?, ?, ?)`,
-      [
-        request_id,
+  // Upload images to Supabase and get URLs
+  const uploadedImages: Array<{ url: string; type: string; view_angle: string }> = [];
+  const uploadErrors: Array<{ view_angle: string; error: string }> = [];
+
+  for (const img of images) {
+    try {
+      const imageType = img.type || '3d_render';
+      const viewAngle = img.view_angle || 'front';
+
+      // Upload base64 image to Supabase
+      const { uploadBase64Image } = require('../utils/supabaseUpload');
+      const uploadResult = await uploadBase64Image(
         img.url,
-        img.type || '3d_render',
-        img.view_angle || 'front',
-      ]
-    )
+        request_id,
+        viewAngle,
+        imageType
+      );
+
+      if (uploadResult.success && uploadResult.url) {
+        uploadedImages.push({
+          url: uploadResult.url,
+          type: imageType,
+          view_angle: viewAngle,
+        });
+      } else {
+        uploadErrors.push({
+          view_angle: viewAngle,
+          error: uploadResult.error || 'Upload failed',
+        });
+      }
+    } catch (error: any) {
+      console.error(`Failed to upload image (${img.view_angle}):`, error);
+      uploadErrors.push({
+        view_angle: img.view_angle || 'unknown',
+        error: error.message || 'Unknown error',
+      });
+    }
+  }
+
+  // Insert successfully uploaded images to database
+  if (uploadedImages.length > 0) {
+    const imageInsertPromises = uploadedImages.map((img) =>
+      query(
+        `INSERT INTO custom_cake_request_images
+         (request_id, image_url, image_type, view_angle)
+         VALUES (?, ?, ?, ?)`,
+        [request_id, img.url, img.type, img.view_angle]
+      )
+    );
+
+    await Promise.all(imageInsertPromises);
+  }
+
+  // Return result with details
+  res.json(
+    successResponse('Images processed', {
+      uploaded: uploadedImages.length,
+      failed: uploadErrors.length,
+      errors: uploadErrors.length > 0 ? uploadErrors : undefined,
+      urls: uploadedImages.map((img) => img.url),
+    })
   );
-
-  await Promise.all(imageInsertPromises);
-
-  res.json(successResponse('Images uploaded successfully', { count: images.length }));
 };
 
 // ============================================================================
