@@ -180,7 +180,7 @@ class InboundEmailService {
       return null;
     }
 
-    const maxRetries = 3;
+    const maxRetries = 5;
     const retryDelay = 2000; // 2 seconds
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
