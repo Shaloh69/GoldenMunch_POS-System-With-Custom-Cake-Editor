@@ -200,7 +200,7 @@ class InboundEmailService {
         },
         // 2. Configuration for the retry logic
         {
-          retries: 5,
+          retries: 2,
           initialDelay: 2000,
           // Only retry if the error is a 'not_found' error. Other errors will fail immediately.
           shouldRetry: (error: any) => error.name === 'not_found',

@@ -18,7 +18,7 @@ export async function retryWithBackoff<T>(
   options: RetryOptions = {}
 ): Promise<T> {
   const {
-    retries = 3,
+    retries = 2,
     initialDelay = 1000,
     shouldRetry = () => true,
     onRetry,
