@@ -15,7 +15,11 @@ export const streamOrders = async (req: AuthRequest, res: Response) => {
   const clientId = `orders-${req.user?.id || 'anonymous'}-${crypto.randomBytes(8).toString('hex')}`;
   const lastEventId = req.headers['last-event-id'] as string | undefined;
 
-  logger.info(`SSE orders stream requested by user: ${req.user?.id}`);
+  logger.info('SSE stream requested', {
+    channel: SSEChannels.ORDERS,
+    userId: req.user?.id,
+    clientId,
+  });
 
   sseService.registerClient(
     clientId,
@@ -33,7 +37,10 @@ export const streamMenu = async (req: AuthRequest, res: Response) => {
   const clientId = `menu-${crypto.randomBytes(8).toString('hex')}`;
   const lastEventId = req.headers['last-event-id'] as string | undefined;
 
-  logger.info('SSE menu stream requested');
+  logger.info('SSE stream requested', {
+    channel: SSEChannels.MENU,
+    clientId,
+  });
 
   sseService.registerClient(
     clientId,
@@ -51,7 +58,11 @@ export const streamInventory = async (req: AuthRequest, res: Response) => {
   const clientId = `inventory-${req.user?.id || 'anonymous'}-${crypto.randomBytes(8).toString('hex')}`;
   const lastEventId = req.headers['last-event-id'] as string | undefined;
 
-  logger.info(`SSE inventory stream requested by user: ${req.user?.id}`);
+  logger.info('SSE stream requested', {
+    channel: SSEChannels.INVENTORY,
+    userId: req.user?.id,
+    clientId,
+  });
 
   sseService.registerClient(
     clientId,
@@ -69,7 +80,11 @@ export const streamCustomCakes = async (req: AuthRequest, res: Response) => {
   const clientId = `custom-cakes-${req.user?.id || 'anonymous'}-${crypto.randomBytes(8).toString('hex')}`;
   const lastEventId = req.headers['last-event-id'] as string | undefined;
 
-  logger.info(`SSE custom cakes stream requested by user: ${req.user?.id}`);
+  logger.info('SSE stream requested', {
+    channel: SSEChannels.CUSTOM_CAKES,
+    userId: req.user?.id,
+    clientId,
+  });
 
   sseService.registerClient(
     clientId,
@@ -87,7 +102,11 @@ export const streamNotifications = async (req: AuthRequest, res: Response) => {
   const clientId = `notifications-${req.user?.id || 'anonymous'}-${crypto.randomBytes(8).toString('hex')}`;
   const lastEventId = req.headers['last-event-id'] as string | undefined;
 
-  logger.info(`SSE notifications stream requested by user: ${req.user?.id}`);
+  logger.info('SSE stream requested', {
+    channel: SSEChannels.NOTIFICATIONS,
+    userId: req.user?.id,
+    clientId,
+  });
 
   sseService.registerClient(
     clientId,

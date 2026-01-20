@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { inboundEmailService } from '../services/inboundEmail.service';
+import logger from '../utils/logger';
 import { successResponse, errorResponse } from '../utils/helpers';
 
 /**
@@ -8,7 +9,10 @@ import { successResponse, errorResponse } from '../utils/helpers';
  */
 export const handleResendInboundWebhook = async (req: Request, res: Response) => {
   try {
-    console.log('📨 Received Resend inbound email webhook');
+    logger.info('📨 Received Resend inbound webhook request', {
+      ip: req.ip,
+      headers: req.headers,
+    });
 
     // Get raw body for signature verification
     const rawBody = JSON.stringify(req.body);
@@ -20,10 +24,15 @@ export const handleResendInboundWebhook = async (req: Request, res: Response) =>
       'svix-signature': req.headers['svix-signature'] as string,
     };
 
+    logger.info('Verifying webhook signature...');
+
     // Verify webhook signature
     const isValid = inboundEmailService.verifyWebhookSignature(rawBody, svixHeaders);
     if (!isValid) {
-      console.error('❌ Invalid webhook signature');
+      logger.warn('❌ Invalid webhook signature. Rejecting request.', {
+        svix_id: svixHeaders['svix-id'],
+        ip: req.ip,
+      });
       return res.status(401).json(errorResponse('Invalid webhook signature'));
     }
 
@@ -31,15 +40,24 @@ export const handleResendInboundWebhook = async (req: Request, res: Response) =>
 
     // Check if this is an email.received event
     if (event.type !== 'email.received') {
-      console.log(`⚠️  Ignoring webhook event type: ${event.type}`);
+      logger.info(`⚠️  Ignoring webhook event type: ${event.type}`, {
+        event_type: event.type,
+        email_id: event.data?.email_id,
+      });
       return res.json(successResponse('Event type ignored', { type: event.type }));
     }
+
+    logger.info('✅ Webhook signature verified. Processing email.received event.', {
+      email_id: event.data?.email_id,
+      from: event.data?.from,
+      subject: event.data?.subject,
+    });
 
     // Process the inbound email asynchronously
     // We respond immediately to avoid timeouts, then process in background
     inboundEmailService.processInboundEmail(event).catch((error) => {
       // Add more context to background processing errors for easier debugging
-      console.error('❌ Error processing inbound email in background:', {
+      logger.error('❌ Error processing inbound email in background:', {
         message: error instanceof Error ? error.message : 'Unknown error',
         email_id: event.data?.email_id,
         subject: event.data?.subject,
@@ -54,7 +72,10 @@ export const handleResendInboundWebhook = async (req: Request, res: Response) =>
       subject: event.data?.subject,
     }));
   } catch (error) {
-    console.error('❌ Error in webhook handler:', error);
+    logger.error('❌ Unhandled error in webhook handler', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      error_details: error,
+    });
 
     // Still respond with 200 to prevent Resend from retrying
     // Log the error but acknowledge receipt
