@@ -1,10 +1,9 @@
 import { Resend } from 'resend';
-import * as dotenv from 'dotenv';
 import { pool } from '../config/database';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { sseService, SSEChannels, SSEEvents } from './sse.service';
 
-dotenv.config();
+// NOTE: dotenv is configured in app.ts - do NOT configure it here to avoid race conditions
 
 interface InboundEmailEvent {
   type: 'email.received';

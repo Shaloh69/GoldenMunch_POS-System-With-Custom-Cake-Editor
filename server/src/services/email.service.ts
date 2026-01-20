@@ -1,9 +1,8 @@
 import { Resend } from 'resend';
-import * as dotenv from 'dotenv';
 import { pool } from '../config/database';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
-dotenv.config();
+// NOTE: dotenv is configured in app.ts - do NOT configure it here to avoid race conditions
 
 interface EmailOptions {
   to: string;
