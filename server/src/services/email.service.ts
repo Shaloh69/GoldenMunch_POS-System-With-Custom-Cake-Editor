@@ -65,7 +65,8 @@ class EmailService {
    */
   async sendEmail(options: EmailOptions): Promise<boolean> {
     if (!this.isConfigured || !this.resend) {
-      console.warn('Email service not configured. Email not sent to:', options.to);
+      console.warn('❌ Email service not configured. Email not sent to:', options.to);
+      console.warn('   💡 Check RESEND_API_KEY and EMAIL_FROM_ADDRESS in .env.production');
       return false;
     }
 
@@ -81,6 +82,22 @@ class EmailService {
 
       if (error) {
         console.error('❌ Resend API error:', error);
+
+        // Provide specific error guidance
+        if (error.name === 'validation_error') {
+          console.error('   💡 Validation error - check email addresses are valid');
+        } else if (error.message?.includes('Domain') || error.message?.includes('domain')) {
+          console.error('   ⚠️  DOMAIN NOT VERIFIED!');
+          console.error('   💡 Go to https://resend.com/domains and verify:', this.fromEmail.split('@')[1]);
+          console.error('   💡 Quick fix: Use "onboarding@resend.dev" in EMAIL_FROM_ADDRESS');
+        } else if (error.message?.includes('Unable to fetch') || error.message?.includes('could not be resolved')) {
+          console.error('   ⚠️  CONNECTION ERROR - Possible causes:');
+          console.error('   1. Domain "' + this.fromEmail.split('@')[1] + '" not verified in Resend');
+          console.error('   2. Network/firewall blocking Resend API');
+          console.error('   3. Invalid API key');
+          console.error('   💡 QUICK FIX: Change EMAIL_FROM_ADDRESS to "onboarding@resend.dev"');
+        }
+
         return false;
       }
 
@@ -96,6 +113,8 @@ class EmailService {
         console.error('   💡 Domain not verified - verify your domain in Resend dashboard');
       } else if (error.message?.includes('rate limit')) {
         console.error('   💡 Rate limit exceeded - wait before sending more emails');
+      } else if (error.message?.includes('fetch')) {
+        console.error('   💡 Network error - check internet connection or use onboarding@resend.dev');
       }
 
       return false;
