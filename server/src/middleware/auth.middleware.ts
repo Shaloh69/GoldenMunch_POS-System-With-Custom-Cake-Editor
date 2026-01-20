@@ -3,6 +3,20 @@ import jwt from 'jsonwebtoken';
 import { AuthRequest, JwtPayload } from '../models/types';
 import { AppError } from './error.middleware';
 
+// Helper function to extract token from request
+const getTokenFromRequest = (req: AuthRequest): string | undefined => {
+  const authHeader = req.headers.authorization;
+  let token: string | undefined;
+
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.substring(7).trim(); // Remove 'Bearer ' prefix and trim whitespace
+  } else if (req.query.token && typeof req.query.token === 'string') {
+    // For SSE connections which cannot set custom headers
+    token = req.query.token.trim();
+  }
+  return token;
+};
+
 // Verify JWT token
 export const authenticate = (
   req: AuthRequest,
@@ -10,16 +24,7 @@ export const authenticate = (
   next: NextFunction
 ) => {
   try {
-    // Get token from header or query parameter (for SSE endpoints)
-    const authHeader = req.headers.authorization;
-    let token: string | undefined;
-
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.substring(7).trim(); // Remove 'Bearer ' prefix and trim whitespace
-    } else if (req.query.token && typeof req.query.token === 'string') {
-      // For SSE connections which cannot set custom headers
-      token = req.query.token.trim();
-    }
+    const token = getTokenFromRequest(req);
 
     if (!token) {
       throw new AppError('No token provided', 401);
@@ -57,16 +62,7 @@ export const authenticateAdmin = (
   next: NextFunction
 ) => {
   try {
-    // Get token from header or query parameter (for SSE endpoints)
-    const authHeader = req.headers.authorization;
-    let token: string | undefined;
-
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.substring(7).trim(); // Remove 'Bearer ' prefix and trim whitespace
-    } else if (req.query.token && typeof req.query.token === 'string') {
-      // For SSE connections which cannot set custom headers
-      token = req.query.token.trim();
-    }
+    const token = getTokenFromRequest(req);
 
     if (!token) {
       throw new AppError('No token provided', 401);
@@ -106,16 +102,7 @@ export const authenticateCashier = (
   next: NextFunction
 ) => {
   try {
-    // Get token from header or query parameter (for SSE endpoints)
-    const authHeader = req.headers.authorization;
-    let token: string | undefined;
-
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.substring(7).trim(); // Remove 'Bearer ' prefix and trim whitespace
-    } else if (req.query.token && typeof req.query.token === 'string') {
-      // For SSE connections which cannot set custom headers
-      token = req.query.token.trim();
-    }
+    const token = getTokenFromRequest(req);
 
     if (!token) {
       throw new AppError('No token provided', 401);
@@ -156,16 +143,7 @@ export const optionalAuth = (
   next: NextFunction
 ) => {
   try {
-    // Get token from header or query parameter (for SSE endpoints)
-    const authHeader = req.headers.authorization;
-    let token: string | undefined;
-
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.substring(7);
-    } else if (req.query.token && typeof req.query.token === 'string') {
-      // For SSE connections which cannot set custom headers
-      token = req.query.token.trim();
-    }
+    const token = getTokenFromRequest(req);
 
     if (token) {
       const decoded = jwt.verify(
