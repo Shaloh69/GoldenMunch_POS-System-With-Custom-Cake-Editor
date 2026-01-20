@@ -376,9 +376,14 @@ class EmailService {
       let imageGalleryHtml = '';
       if (images.length > 0) {
         const imageRows = images.map((img: any) => {
-          const fullImageUrl = img.image_url.startsWith('http')
-            ? img.image_url
-            : `${backendUrl}${img.image_url}`;
+          // Handle different image URL formats:
+          // 1. data: URLs (base64-encoded images) - use directly
+          // 2. http/https URLs - use directly
+          // 3. Relative paths - prepend backend URL
+          let fullImageUrl = img.image_url;
+          if (!fullImageUrl.startsWith('data:') && !fullImageUrl.startsWith('http')) {
+            fullImageUrl = `${backendUrl}${img.image_url}`;
+          }
 
           return `
             <div style="display: inline-block; margin: 10px; text-align: center; vertical-align: top;">
@@ -403,9 +408,11 @@ class EmailService {
       // Add reference image if exists
       let referenceImageHtml = '';
       if (request.reference_image) {
-        const refImageUrl = request.reference_image.startsWith('http')
-          ? request.reference_image
-          : `${backendUrl}${request.reference_image}`;
+        // Handle different image URL formats (data:, http, or relative path)
+        let refImageUrl = request.reference_image;
+        if (!refImageUrl.startsWith('data:') && !refImageUrl.startsWith('http')) {
+          refImageUrl = `${backendUrl}${request.reference_image}`;
+        }
 
         referenceImageHtml = `
           <div style="background-color: #fff7ed; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #fed7aa;">
