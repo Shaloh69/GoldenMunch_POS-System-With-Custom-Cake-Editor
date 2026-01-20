@@ -72,7 +72,10 @@ class InboundEmailService {
     try {
       this.resend = new Resend(process.env.RESEND_API_KEY);
       this.isConfigured = true;
-      logger.info('✅ Inbound email service initialized');
+      // Log a non-sensitive part of the API key to help verify the correct key is loaded.
+      const apiKeyIdentifier = process.env.RESEND_API_KEY.substring(0, 8); // e.g., "re_xxxxxx"
+      logger.info(`✅ Inbound email service initialized with API key starting with: ${apiKeyIdentifier}...`);
+      logger.info('   Ensure this API key has "Full access" permissions in Resend for fetching email content.');
     } catch (error) {
       logger.error('❌ Failed to initialize inbound email service:', error);
       this.isConfigured = false;
