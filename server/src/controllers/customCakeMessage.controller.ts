@@ -109,11 +109,16 @@ export const sendAdminMessage = async (req: AuthRequest, res: Response) => {
     // Always include request ID in subject for email reply tracking
     const messageSubject = subject || `Custom Cake Request #${requestId} - Message from GoldenMunch`;
 
-    // Insert message into database
+    console.log(`📤 Admin sending message to customer for request #${requestId}`);
+    console.log(`   Customer: ${request.customer_name} <${request.customer_email}>`);
+    console.log(`   Sender: ${userName}`);
+    console.log(`   Message length: ${message_body.length} chars`);
+
+    // Insert message into database with status='pending' initially
     const [result] = await pool.query<ResultSetHeader>(
       `INSERT INTO custom_cake_notifications
       (request_id, notification_type, sender_type, sender_name, recipient_email, subject, message_body, status, parent_notification_id)
-      VALUES (?, 'message', 'admin', ?, ?, ?, ?, 'sent', ?)`,
+      VALUES (?, 'message', 'admin', ?, ?, ?, ?, 'pending', ?)`,
       [requestId, userName, request.customer_email, messageSubject, message_body, parent_notification_id || null]
     );
 
@@ -143,13 +148,6 @@ export const sendAdminMessage = async (req: AuthRequest, res: Response) => {
       WHERE n.notification_id = ?`,
       [notificationId]
     );
-
-    // Broadcast SSE event for real-time updates
-    sseService.broadcast(SSEChannels.CUSTOM_CAKES, SSEEvents.CUSTOM_CAKE_MESSAGE_RECEIVED, {
-      request_id: parseInt(requestId, 10),
-      message: newMessage[0],
-      timestamp: new Date().toISOString(),
-    });
 
     // Send email notification to customer with beautiful template
     const emailTemplate = `
@@ -181,15 +179,66 @@ export const sendAdminMessage = async (req: AuthRequest, res: Response) => {
       </div>
     `;
 
-    await emailService.sendEmail({
+    console.log(`📧 Attempting to send email to ${request.customer_email}...`);
+
+    // Send email and wait for result
+    const emailSent = await emailService.sendEmail({
       to: request.customer_email,
       subject: messageSubject,
       html: emailTemplate,
-    }).catch((error) => {
-      console.error('Failed to send message email notification:', error);
     });
 
-    res.status(201).json(successResponse('Message sent successfully', newMessage[0]));
+    // Update message status based on email send result
+    if (emailSent) {
+      await pool.query(
+        `UPDATE custom_cake_notifications SET status = 'sent', sent_at = NOW() WHERE notification_id = ?`,
+        [notificationId]
+      );
+      console.log(`✅ Message sent successfully to ${request.customer_email} (notification_id: ${notificationId})`);
+
+      // Refresh the message with updated status
+      const [updatedMessage] = await pool.query<Message[]>(
+        `SELECT
+          n.notification_id,
+          n.request_id,
+          n.notification_type,
+          n.sender_type,
+          n.sender_name,
+          n.recipient_email,
+          n.subject,
+          n.message_body,
+          n.status,
+          n.is_read,
+          n.sent_at,
+          n.read_at,
+          n.parent_notification_id,
+          ccr.customer_name,
+          ccr.customer_email,
+          ccr.status as request_status
+        FROM custom_cake_notifications n
+        INNER JOIN custom_cake_request ccr ON n.request_id = ccr.request_id
+        WHERE n.notification_id = ?`,
+        [notificationId]
+      );
+
+      // Broadcast SSE event for real-time updates
+      sseService.broadcast(SSEChannels.CUSTOM_CAKES, SSEEvents.CUSTOM_CAKE_MESSAGE_RECEIVED, {
+        request_id: parseInt(requestId, 10),
+        message: updatedMessage[0],
+        timestamp: new Date().toISOString(),
+      });
+
+      return res.status(201).json(successResponse('Message sent successfully', updatedMessage[0]));
+    } else {
+      await pool.query(
+        `UPDATE custom_cake_notifications SET status = 'failed', error_message = 'Failed to send email' WHERE notification_id = ?`,
+        [notificationId]
+      );
+      console.error(`❌ Failed to send message email to ${request.customer_email} (notification_id: ${notificationId})`);
+      console.error(`   Check email service configuration (RESEND_API_KEY, EMAIL_FROM_ADDRESS)`);
+
+      return res.status(500).json(errorResponse('Failed to send message email. Please check email configuration.'));
+    }
   } catch (error) {
     console.error('Error sending message:', error);
     res.status(500).json(errorResponse('Failed to send message'));
