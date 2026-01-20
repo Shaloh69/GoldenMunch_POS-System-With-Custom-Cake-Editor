@@ -5,6 +5,7 @@ import { Webhook, WebhookRequiredHeaders } from 'svix';
 import { sseService, SSEChannels, SSEEvents } from './sse.service';
 import logger from '../utils/logger';
 import EmailReplyParser from 'email-reply-parser';
+import { retryWithBackoff } from '../utils/retry';
 
 // NOTE: dotenv is configured in app.ts - do NOT configure it here to avoid race conditions
 
@@ -186,54 +187,50 @@ class InboundEmailService {
       return null;
     }
 
-    const maxRetries = 5; // Increased from 3 to 5 for more resilience
-    const initialDelay = 2000; // Increased initial delay to 2 seconds
-
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        const { data, error } = await this.resend.emails.get(emailId);
-
-        if (error) {
-          // Retry only for the specific 'not_found' error, which can be transient.
-          if (error.name === 'not_found' && attempt < maxRetries) {
-            // Use exponential backoff with jitter for the delay.
-            const delay = initialDelay * Math.pow(2, attempt - 1) + (Math.random() * 500);
-            logger.warn(`Attempt ${attempt}: Email not found via API, retrying in ~${Math.round(delay / 1000)}s...`, { emailId });
-            await new Promise(resolve => setTimeout(resolve, delay));
-            continue; // Next attempt
+    try {
+      const data = await retryWithBackoff(
+        // 1. The function to execute and retry
+        async () => {
+          const { data, error } = await this.resend.emails.get(emailId);
+          if (error) {
+            // Throwing the error signals to the retry utility that it should retry or fail.
+            throw error;
           }
-          
-          // For other API errors, or on the last 'not_found' attempt, log the failure and exit.
-          logger.error('❌ Failed to fetch email content from Resend:', { error, emailId, attempt });
-          return null;
+          return data;
+        },
+        // 2. Configuration for the retry logic
+        {
+          retries: 5,
+          initialDelay: 2000,
+          // Only retry if the error is a 'not_found' error. Other errors will fail immediately.
+          shouldRetry: (error: any) => error.name === 'not_found',
+          // A callback to log each retry attempt.
+          onRetry: (error, attempt) => {
+            const delay = 2000 * Math.pow(2, attempt - 1); // Approximate delay for logging
+            logger.warn(`Attempt ${attempt}: Email not found via API, retrying in ~${Math.round(delay / 1000)}s...`, { emailId });
+          },
         }
+      );
 
-        // If we get a response but it has no data or no content
-        if (!data || (!data.html && !data.text)) {
-          logger.error('❌ No text or html content in Resend API response', { emailId });
-          return null;
-        }
-
-        // Success!
-        logger.info(`✅ Successfully fetched email content on attempt ${attempt}`, { emailId });
-        return {
-          html: data.html ?? undefined,
-          text: data.text ?? undefined,
-        };
-
-      } catch (exception) {
-        // This handles unexpected exceptions (e.g., network issues). These are typically not recoverable.
-        logger.error('❌ Exception while fetching email content from Resend:', { 
-            error: exception instanceof Error ? exception.message : String(exception), 
-            emailId 
-        });
+      // If we get here, the retry logic was successful.
+      if (!data || (!data.html && !data.text)) {
+        logger.error('❌ No text or html content in Resend API response', { emailId });
         return null;
       }
-    }
 
-    // This line is reached only if all retries for 'not_found' fail.
-    logger.error(`❌ Failed to fetch email content after ${maxRetries} attempts due to 'not_found' error.`, { emailId });
-    return null;
+      logger.info(`✅ Successfully fetched email content`, { emailId });
+      return {
+        html: data.html ?? undefined,
+        text: data.text ?? undefined,
+      };
+    } catch (error: any) {
+      // This catch block now handles the final error after all retries have failed.
+      logger.error('❌ Failed to fetch email content from Resend after all retries:', {
+        error: { name: error.name, message: error.message, statusCode: error.statusCode },
+        emailId,
+      });
+      return null;
+    }
   }
 
   /**
