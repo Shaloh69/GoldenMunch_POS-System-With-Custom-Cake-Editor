@@ -180,28 +180,50 @@ class InboundEmailService {
       return null;
     }
 
-    try {
-      // Use Resend SDK to fetch email content
-      const { data, error } = await this.resend.emails.get(emailId);
+    const maxRetries = 3;
+    const retryDelay = 2000; // 2 seconds
 
-      if (error || !data) {
-        logger.error('❌ Failed to fetch email content from Resend:', { error, emailId });
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const { data, error } = await this.resend.emails.get(emailId);
+
+        // If there's an error from the API
+        if (error) {
+          // If it's a 404 (not_found) and we haven't exhausted retries, wait and try again.
+          // This handles a potential race condition where the webhook arrives before the email is queryable via API.
+          if (error.name === 'not_found' && attempt < maxRetries) {
+            logger.warn(`Attempt ${attempt}: Email not found via API, retrying in ${retryDelay / 1000}s...`, { emailId });
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+            continue; // Next attempt
+          }
+          // For other errors or on the last attempt, log and exit the loop.
+          logger.error('❌ Failed to fetch email content from Resend:', { error, emailId });
+          return null;
+        }
+
+        // If we get a response but it has no data or no content
+        if (!data || (!data.html && !data.text)) {
+          logger.error('❌ No text or html content in Resend API response', { emailId });
+          return null;
+        }
+
+        // Success!
+        logger.info(`✅ Successfully fetched email content on attempt ${attempt}`, { emailId });
+        return {
+          html: data.html ?? undefined,
+          text: data.text ?? undefined,
+        };
+
+      } catch (exception) {
+        logger.error('❌ Exception while fetching email content from Resend:', { error: exception instanceof Error ? exception.message : exception, emailId });
+        // If an unexpected exception occurs, it's probably not recoverable by retrying, so we exit.
         return null;
       }
-
-      if (!data.html && !data.text) {
-        logger.error('❌ No text or html content in Resend API response', { emailId });
-        return null;
-      }
-
-      return {
-        html: data.html ?? undefined,
-        text: data.text ?? undefined,
-      };
-    } catch (error) {
-      logger.error('❌ Failed to fetch email content from Resend:', { error: error instanceof Error ? error.message : error, emailId });
-      return null;
     }
+
+    // This line is reached only if all retries fail with a 404.
+    logger.error(`❌ Failed to fetch email content after ${maxRetries} attempts.`, { emailId });
+    return null;
   }
 
   /**
