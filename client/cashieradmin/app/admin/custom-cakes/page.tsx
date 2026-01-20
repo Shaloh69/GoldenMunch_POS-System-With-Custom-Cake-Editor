@@ -1133,13 +1133,13 @@ export default function CustomCakesPage() {
                 </div>
 
                 {/* Messaging Panel */}
-                {/* <Divider className="my-6" />
+                <Divider className="my-6" />
                 <div className="mt-6">
                   <MessagingPanel
                     requestId={requestDetails.request.request_id}
                     customerName={requestDetails.request.customer_name}
                   />
-                </div> */}
+                </div>
               </div>
             ) : (
               <p>No details available</p>
