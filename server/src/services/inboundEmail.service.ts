@@ -125,8 +125,10 @@ class InboundEmailService {
       // Prioritize content directly from the webhook event if available, otherwise fetch
       let emailContent: EmailContent | null = null;
       if (event.data.text || event.data.html) {
+        logger.info('   Email content found directly in webhook payload. Skipping API fetch.');
         emailContent = { text: event.data.text, html: event.data.html };
       } else {
+        logger.info('   Email content not in payload. Attempting to retrieve from Resend API...');
         emailContent = await this.fetchEmailContent(emailId);
       }
 

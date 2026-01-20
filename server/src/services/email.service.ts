@@ -18,7 +18,7 @@ interface NotificationRecord {
   recipient_email: string;
   subject: string;
   message_body: string;
-  status: 'pending' | 'sent' | 'failed';
+  status: 'pending' | 'sent' | 'failed' | 'received'; // Added 'received' for inbound messages
   error_message?: string;
 }
 
