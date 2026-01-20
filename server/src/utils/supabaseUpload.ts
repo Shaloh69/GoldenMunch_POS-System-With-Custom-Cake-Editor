@@ -189,3 +189,93 @@ export const replaceProductImage = async (
 ): Promise<UploadResult> => {
   return replaceImage(oldImageUrl, newFile, STORAGE_BUCKETS.PRODUCTS, 'products', 'product');
 };
+/**
+ * Upload base64 image data to Supabase Storage
+ * Converts base64 data URL to buffer and uploads
+ */
+export const uploadBase64Image = async (
+  base64Data: string,
+  requestId: number,
+  viewAngle: string,
+  imageType: string = '3d_render'
+): Promise<UploadResult> => {
+  try {
+    // Extract base64 content from data URL
+    // Format: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+    const matches = base64Data.match(/^data:(.+);base64,(.*)$/);
+    
+    if (!matches || matches.length !== 3) {
+      return {
+        success: false,
+        error: 'Invalid base64 data format',
+      };
+    }
+
+    const mimeType = matches[1]; // e.g., "image/png"
+    const base64Content = matches[2];
+
+    // Convert base64 to buffer
+    const buffer = Buffer.from(base64Content, 'base64');
+
+    // Determine file extension from MIME type
+    const extension = mimeType.split('/')[1] || 'png';
+
+    // Generate unique filename
+    const timestamp = Date.now();
+    const randomSuffix = Math.round(Math.random() * 1E9);
+    const filename = `cake-${requestId}-${viewAngle}-${timestamp}-${randomSuffix}.${extension}`;
+    const filePath = `request-${requestId}/${filename}`;
+
+    // Upload to Supabase
+    const { data, error } = await supabase.storage
+      .from(STORAGE_BUCKETS.CUSTOM_CAKES)
+      .upload(filePath, buffer, {
+        contentType: mimeType,
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (error) {
+      console.error('Supabase upload error:', error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+
+    // Get public URL
+    const publicUrl = getPublicUrl(STORAGE_BUCKETS.CUSTOM_CAKES, data.path);
+
+    return {
+      success: true,
+      url: publicUrl,
+    };
+  } catch (error: any) {
+    console.error('Base64 upload error:', error);
+    return {
+      success: false,
+      error: error.message || 'Unknown upload error',
+    };
+  }
+};
+
+/**
+ * Upload custom cake 3D render image
+ */
+export const uploadCustomCakeImage = async (
+  base64Data: string,
+  requestId: number,
+  viewAngle: string
+): Promise<UploadResult> => {
+  return uploadBase64Image(base64Data, requestId, viewAngle, '3d_render');
+};
+
+/**
+ * Upload custom cake reference image
+ */
+export const uploadCustomCakeReferenceImage = async (
+  base64Data: string,
+  requestId: number
+): Promise<UploadResult> => {
+  return uploadBase64Image(base64Data, requestId, 'reference', 'reference');
+};

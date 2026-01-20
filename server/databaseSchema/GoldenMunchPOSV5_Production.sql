@@ -490,7 +490,7 @@ CREATE TABLE custom_cake_request (
 CREATE TABLE custom_cake_request_images (
     image_id INT AUTO_INCREMENT PRIMARY KEY,
     request_id INT NOT NULL,
-    image_url MEDIUMTEXT NOT NULL COMMENT 'URL or base64 data',
+    image_url VARCHAR(500) NOT NULL COMMENT 'Supabase storage URL',
     image_type ENUM('3d_render', 'reference', 'final_photo') DEFAULT '3d_render',
     view_angle ENUM('front', 'side', 'top', '3d_perspective') DEFAULT 'front',
     uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

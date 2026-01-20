@@ -40,6 +40,13 @@ async function setupStorageBuckets() {
       fileSizeLimit: 2 * 1024 * 1024, // 2MB
       allowedMimeTypes: ['image/png'],
     },
+    {
+      name: STORAGE_BUCKETS.CUSTOM_CAKES,
+      description: 'Custom cake 3D renders and reference images',
+      public: true,
+      fileSizeLimit: 15 * 1024 * 1024, // 15MB (supports multiple high-quality images)
+      allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+    },
   ];
 
   for (const bucket of buckets) {
