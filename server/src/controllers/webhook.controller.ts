@@ -38,7 +38,13 @@ export const handleResendInboundWebhook = async (req: Request, res: Response) =>
     // Process the inbound email asynchronously
     // We respond immediately to avoid timeouts, then process in background
     inboundEmailService.processInboundEmail(event).catch((error) => {
-      console.error('❌ Error processing inbound email in background:', error);
+      // Add more context to background processing errors for easier debugging
+      console.error('❌ Error processing inbound email in background:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        email_id: event.data?.email_id,
+        subject: event.data?.subject,
+        error_details: error,
+      });
     });
 
     // Respond quickly to Resend (they expect a 200 response within a few seconds)
