@@ -183,8 +183,8 @@ class InboundEmailService {
       return null;
     }
 
-    const maxRetries = 3;
-    const initialDelay = 1000; // Start with 1 second
+    const maxRetries = 5; // Increased from 3 to 5 for more resilience
+    const initialDelay = 2000; // Increased initial delay to 2 seconds
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
