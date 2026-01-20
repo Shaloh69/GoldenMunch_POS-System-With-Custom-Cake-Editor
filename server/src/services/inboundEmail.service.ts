@@ -89,8 +89,9 @@ class InboundEmailService {
     }
 
     try {
+      const emailId = event.data.email_id;
       logger.info('📨 Processing inbound email:', {
-        email_id: event.data.email_id,
+        email_id: emailId,
         from: event.data.from,
         subject: event.data.subject,
       });
@@ -98,9 +99,10 @@ class InboundEmailService {
       // Extract request ID from subject line
       const requestId = this.extractRequestId(event.data.subject);
       if (!requestId) {
-        throw new Error(`Could not extract request ID from subject: ${event.data.subject}`);
+        logger.warn(`Could not extract request ID from subject. Ignoring email.`, { subject: event.data.subject, email_id: emailId });
+        return; // Exit gracefully
       }
-      logger.info('   Extracted Request ID:', { requestId, email_id: event.data.email_id });
+      logger.info('   Extracted Request ID:', { requestId, email_id: emailId });
 
       // Verify the request exists
       const [requests] = await pool.query<RowDataPacket[]>(
@@ -109,8 +111,8 @@ class InboundEmailService {
       );
 
       if (requests.length === 0) {
-        logger.warn('⚠️  Custom cake request not found for extracted ID. Ignoring email.', { requestId, subject: event.data.subject });
-        return;
+        logger.warn('⚠️  Custom cake request not found for extracted ID. Ignoring email.', { requestId, subject: event.data.subject, email_id: emailId });
+        return; // Exit gracefully
       }
 
       const request = requests[0];
@@ -121,12 +123,13 @@ class InboundEmailService {
       if (event.data.text || event.data.html) {
         emailContent = { text: event.data.text, html: event.data.html };
       } else {
-        emailContent = await this.fetchEmailContent(event.data.email_id);
+        emailContent = await this.fetchEmailContent(emailId);
       }
 
       if (!emailContent || (!emailContent.text && !emailContent.html)) {
-        logger.error('❌ Failed to fetch email content or content is empty.', { email_id: event.data.email_id });
-        throw new Error('Failed to fetch email content or content is empty.');
+        // fetchEmailContent already logs the detailed error. This is the conclusion.
+        logger.error(`❌ Aborting email processing: content could not be fetched or is empty.`, { email_id: emailId });
+        return; // Exit gracefully, preventing the server crash.
       }
 
       // Extract sender email
@@ -135,38 +138,38 @@ class InboundEmailService {
       // Verify sender is the customer
       if (request.customer_email && senderEmail.toLowerCase() !== request.customer_email.toLowerCase()) {
         logger.warn('⚠️  Email from unauthorized sender. Ignoring email.', {
-          senderEmail, customerEmail: request.customer_email, email_id: event.data.email_id
+          senderEmail, customerEmail: request.customer_email, email_id: emailId
         });
-        throw new Error('Email from unauthorized sender.');
+        return; // Exit gracefully
       }
 
       // Parse the email body to extract the actual reply (remove quoted text)
       const replyText = this.extractReplyText(emailContent.text || emailContent.html || '');
 
       if (!replyText || replyText.trim().length === 0) {
-        throw new Error('No reply text found in email after parsing.');
+        logger.warn('No reply text found in email after parsing. Ignoring email.', { email_id: emailId });
+        return; // Exit gracefully
       }
       logger.info('Successfully parsed reply from email body', {
-        email_id: event.data.email_id,
+        email_id: emailId,
         originalLength: (emailContent.text || emailContent.html || '').length,
         parsedLength: replyText.length,
       });
 
       // Save customer reply to database
       await this.saveCustomerReply({
-        requestId,
+        requestId: requestId,
         customerName: request.customer_name,
         customerEmail: request.customer_email,
         subject: `Re: Custom Cake Request #${requestId}`, // Subject for the notification record
         messageBody: replyText,
       });
 
-      logger.info('✅ Customer reply saved successfully', {
-        email_id: event.data.email_id, requestId, customerEmail: request.customer_email
-      });
+      logger.info('✅ Customer reply saved successfully', { email_id: emailId, requestId, customerEmail: request.customer_email });
     } catch (error) {
-      logger.error('❌ Error processing inbound email:', { error: error instanceof Error ? error.message : error, email_id: event.data.email_id });
-      throw error; // Re-throw to ensure the webhook controller's catch block also logs it
+      // This catch block now only handles truly unexpected errors (e.g., database issues).
+      // By not re-throwing, we prevent the server from crashing.
+      logger.error('❌ Unhandled error processing inbound email. This may indicate a bug.', { error: error instanceof Error ? error.message : String(error), email_id: event.data.email_id });
     }
   }
 
@@ -180,24 +183,25 @@ class InboundEmailService {
       return null;
     }
 
-    const maxRetries = 5;
-    const retryDelay = 2000; // 2 seconds
+    const maxRetries = 3;
+    const initialDelay = 1000; // Start with 1 second
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const { data, error } = await this.resend.emails.get(emailId);
 
-        // If there's an error from the API
         if (error) {
-          // If it's a 404 (not_found) and we haven't exhausted retries, wait and try again.
-          // This handles a potential race condition where the webhook arrives before the email is queryable via API.
+          // Retry only for the specific 'not_found' error, which can be transient.
           if (error.name === 'not_found' && attempt < maxRetries) {
-            logger.warn(`Attempt ${attempt}: Email not found via API, retrying in ${retryDelay / 1000}s...`, { emailId });
-            await new Promise(resolve => setTimeout(resolve, retryDelay));
+            // Use exponential backoff with jitter for the delay.
+            const delay = initialDelay * Math.pow(2, attempt - 1) + (Math.random() * 500);
+            logger.warn(`Attempt ${attempt}: Email not found via API, retrying in ~${Math.round(delay / 1000)}s...`, { emailId });
+            await new Promise(resolve => setTimeout(resolve, delay));
             continue; // Next attempt
           }
-          // For other errors or on the last attempt, log and exit the loop.
-          logger.error('❌ Failed to fetch email content from Resend:', { error, emailId });
+          
+          // For other API errors, or on the last 'not_found' attempt, log the failure and exit.
+          logger.error('❌ Failed to fetch email content from Resend:', { error, emailId, attempt });
           return null;
         }
 
@@ -215,14 +219,17 @@ class InboundEmailService {
         };
 
       } catch (exception) {
-        logger.error('❌ Exception while fetching email content from Resend:', { error: exception instanceof Error ? exception.message : exception, emailId });
-        // If an unexpected exception occurs, it's probably not recoverable by retrying, so we exit.
+        // This handles unexpected exceptions (e.g., network issues). These are typically not recoverable.
+        logger.error('❌ Exception while fetching email content from Resend:', { 
+            error: exception instanceof Error ? exception.message : String(exception), 
+            emailId 
+        });
         return null;
       }
     }
 
-    // This line is reached only if all retries fail with a 404.
-    logger.error(`❌ Failed to fetch email content after ${maxRetries} attempts.`, { emailId });
+    // This line is reached only if all retries for 'not_found' fail.
+    logger.error(`❌ Failed to fetch email content after ${maxRetries} attempts due to 'not_found' error.`, { emailId });
     return null;
   }
 
