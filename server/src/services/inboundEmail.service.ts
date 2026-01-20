@@ -191,7 +191,7 @@ class InboundEmailService {
       const data = await retryWithBackoff(
         // 1. The function to execute and retry
         async () => {
-          const { data, error } = await this.resend.emails.get(emailId);
+          const { data, error } = await this.resend.emails.receiving.get(emailId); // Correct SDK method for inbound emails
           if (error) {
             // Throwing the error signals to the retry utility that it should retry or fail.
             throw error;
