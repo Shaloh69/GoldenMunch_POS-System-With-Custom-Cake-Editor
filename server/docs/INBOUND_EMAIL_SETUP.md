@@ -76,8 +76,8 @@ Before starting, ensure you have:
 2. Click **"Create Webhook"**
 
 3. Configure the webhook:
-   - **Endpoint URL**: `https://your-server.com/api/webhooks/resend/inbound`
-     - Replace `your-server.com` with your actual domain
+   - **Endpoint URL**: `https://goldenmunchserver.onrender.com/api/webhooks/resend/inbound`
+     - Replace `goldenmunchserver.onrender.com` with your actual domain
      - For local testing with ngrok: `https://abc123.ngrok.io/api/webhooks/resend/inbound`
 
    - **Events**: Select **`email.received`** only
@@ -111,7 +111,7 @@ npm run dev
 Test that your webhook endpoint is accessible:
 
 ```bash
-curl https://your-server.com/api/webhooks/resend/health
+curl https://goldenmunchserver.onrender.com/api/webhooks/resend/health
 ```
 
 Expected response:
@@ -149,7 +149,7 @@ If you want replies to `noreply@goldenmunch.dpdns.org` to work:
 ### Test 1: Health Check
 
 ```bash
-curl https://your-server.com/api/webhooks/resend/health
+curl https://goldenmunchserver.onrender.com/api/webhooks/resend/health
 ```
 
 Should return `200 OK` with status "ready".
@@ -232,7 +232,7 @@ Only the customer's new reply text is saved.
 **Solutions:**
 ```bash
 # 1. Test endpoint accessibility
-curl https://your-server.com/api/webhooks/resend/health
+curl https://goldenmunchserver.onrender.com/api/webhooks/resend/health
 
 # 2. Check Resend webhook logs in dashboard
 # Navigate to: Webhooks → Your Webhook → Logs

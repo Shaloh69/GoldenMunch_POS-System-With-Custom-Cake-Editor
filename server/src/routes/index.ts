@@ -652,10 +652,10 @@ router.post('/admin/custom-cakes/:requestId/reject', authenticateAdmin, asyncHan
 router.post('/admin/custom-cakes/:requestId/notify-in-progress', authenticateAdmin, asyncHandler(customCakeController.notifyInProgress));
 
 // Custom Cake Messaging (Admin/Cashier)
-router.get('/admin/custom-cakes/messages/unread-count', authenticateAdmin, asyncHandler(customCakeMessageController.getUnreadMessageCount));
-router.get('/admin/custom-cakes/:requestId/messages', authenticateAdmin, asyncHandler(customCakeMessageController.getMessagesByRequest));
-router.post('/admin/custom-cakes/:requestId/messages', authenticateAdmin, asyncHandler(customCakeMessageController.sendAdminMessage));
-router.put('/admin/custom-cakes/:requestId/messages/mark-read', authenticateAdmin, asyncHandler(customCakeMessageController.markMessagesAsRead));
+router.get('/admin/custom-cakes/messages/unread-count', authenticate, asyncHandler(customCakeMessageController.getUnreadMessageCount));
+router.get('/admin/custom-cakes/:requestId/messages', authenticate, asyncHandler(customCakeMessageController.getMessagesByRequest));
+router.post('/admin/custom-cakes/:requestId/messages', authenticate, asyncHandler(customCakeMessageController.sendAdminMessage));
+router.put('/admin/custom-cakes/:requestId/messages/mark-read', authenticate, asyncHandler(customCakeMessageController.markMessagesAsRead));
 
 // Custom Cake Messaging (Customer-facing)
 router.get('/custom-cake/messages/:requestId', asyncHandler(customCakeMessageController.getCustomerMessages));

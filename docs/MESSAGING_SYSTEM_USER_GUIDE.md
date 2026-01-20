@@ -323,7 +323,7 @@ grep "Email service initialized" logs/server.log
 
 # Check API URL in .env.production
 cat client/cashieradmin/.env.production
-# Should show: NEXT_PUBLIC_API_URL=https://goldenmunch.dpdns.org
+# Should show: NEXT_PUBLIC_API_URL=https://goldenmunchserver.onrender.com
 ```
 
 ### "Customer replies not appearing"
@@ -336,14 +336,14 @@ cat client/cashieradmin/.env.production
 **Solutions:**
 ```bash
 # Test webhook health
-curl https://goldenmunch.dpdns.org/api/webhooks/resend/health
+curl https://goldenmunchserver.onrender.com/api/webhooks/resend/health
 
 # Check webhook logs
 tail -f logs/server.log | grep "inbound email"
 
 # Verify webhook in Resend Dashboard
 # Go to: https://resend.com/webhooks
-# Check endpoint: https://goldenmunch.dpdns.org/api/webhooks/resend/inbound
+# Check endpoint: https://goldenmunchserver.onrender.com/api/webhooks/resend/inbound
 ```
 
 ### "No messages showing"
