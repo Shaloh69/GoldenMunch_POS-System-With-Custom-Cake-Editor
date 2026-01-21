@@ -1371,6 +1371,7 @@ export default function AdminMenuPage() {
                     setIsAddItemTypeModalOpen(true);
                   } else {
                     setFormData({ ...formData, item_type_id: parseInt(value) });
+                    setFormData({ ...formData, item_type_id: parseInt(value, 10) });
                   }
                 }}
               >
@@ -1405,7 +1406,7 @@ export default function AdminMenuPage() {
                     + Add New Unit of Measure
                   </SelectItem>,
                   ...units.map((unit) => (
-                    <SelectItem key={unit.unit_id.toString()}>
+                    <SelectItem key={unit.unit_id.toString()} textValue={`${unit.display_name} ${unit.abbreviation ? `(${unit.abbreviation})` : ""}`}>
                       {unit.display_name} {unit.abbreviation ? `(${unit.abbreviation})` : ""}
                     </SelectItem>
                   ))
