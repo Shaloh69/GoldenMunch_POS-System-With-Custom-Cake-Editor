@@ -1,10 +1,11 @@
 import { Response } from 'express';
 import { AuthRequest } from '../models/types';
-import { query, callProcedure } from '../config/database';
+import { query, callProcedure, transaction } from '../config/database';
 import { successResponse, buildSafeUpdateQuery, validateDateRange } from '../utils/helpers';
 import { AppError } from '../middleware/error.middleware';
 import { getFirstRow, getInsertId } from '../utils/typeGuards';
 import { uploadProductImage, replaceProductImage } from '../utils/supabaseUpload';
+import { PoolConnection } from 'mysql2/promise';
 
 // ==== MENU MANAGEMENT ====
 
@@ -219,14 +220,26 @@ export const addItemPrice = async (req: AuthRequest, res: Response) => {
   const { menu_item_id, unit_price, valid_from, valid_until, price_type } = req.body;
   const admin_id = req.user?.id;
 
-  await query(
-    `INSERT INTO menu_item_price
-     (menu_item_id, unit_price, valid_from, valid_until, price_type, is_active)
-     VALUES (?, ?, ?, ?, ?, TRUE)`,
-    [menu_item_id, unit_price, valid_from, valid_until, price_type || 'base']
-  );
+  await transaction(async (conn: PoolConnection) => {
+    // 1. Deactivate any existing active 'base' prices for this menu_item_id
+    // This ensures only one 'base' price is active and current at any given time.
+    if (price_type === 'base' || !price_type) {
+      await conn.query(
+        `UPDATE menu_item_price
+         SET is_active = FALSE, valid_until = CURDATE() - INTERVAL 1 DAY
+         WHERE menu_item_id = ? AND price_type = 'base' AND is_active = TRUE`,
+        [menu_item_id]
+      );
+    }
 
-  res.status(201).json(successResponse('Price added'));
+    // 2. Insert the new price record
+    await conn.query(
+      `INSERT INTO menu_item_price (menu_item_id, unit_price, valid_from, valid_until, price_type, is_active) VALUES (?, ?, ?, ?, ?, TRUE)`,
+      [menu_item_id, unit_price, valid_from, valid_until, price_type || 'base']
+    );
+  });
+
+  res.status(201).json(successResponse('Price added successfully'));
 };
 
 // ==== INVENTORY MANAGEMENT ====

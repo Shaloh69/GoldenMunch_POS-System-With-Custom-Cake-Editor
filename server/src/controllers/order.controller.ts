@@ -668,12 +668,21 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response) => {
     console.log('✓ Timeline entry added successfully');
   });
 
+  // Fetch the updated order to broadcast its full state
+  const [updatedOrderRows] = await query(
+    'SELECT * FROM customer_order WHERE order_id = ?',
+    [id]
+  );
+  const updatedOrder = getFirstRow<any>(updatedOrderRows);
+
   // Broadcast order status change event
   sseService.broadcast(SSEChannels.ORDERS, SSEEvents.ORDER_STATUS_CHANGED, {
     order_id: parseInt(id, 10),
     order_status,
     updated_by: user_id,
     timestamp: new Date().toISOString(),
+    // Include the full updated order object in the payload
+    order: updatedOrder,
   });
 
   res.json(successResponse('Order status updated', { order_status }));
