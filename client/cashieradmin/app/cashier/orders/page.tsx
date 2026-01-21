@@ -446,7 +446,7 @@ export default function UnifiedCashierPage() {
         reference_number: referenceNumber || undefined,
         amount_paid: selectedOrder.payment_method === "cash" ? parseAmount(amountTendered) : undefined,
         change_amount: selectedOrder.payment_method === "cash" ? calculatedChange : undefined,
-      });
+      } as any);
 
       if (!response.success) {
         throw new Error(response.error || "Payment verification failed");
