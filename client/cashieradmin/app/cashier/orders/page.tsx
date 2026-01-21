@@ -175,6 +175,26 @@ export default function UnifiedCashierPage() {
     };
   }, []);
 
+  // Separated logic to detect newly confirmed cashless orders and trigger auto-printing
+  const handleNewlyConfirmedCashlessOrders = (
+    activeOrders: CustomerOrder[],
+    pendingOrders: CustomerOrder[],
+  ) => {
+    // Only run if we have a previous set of pending orders to compare against
+    if (prevPendingOrderIds.current.size > 0) {
+      const newlyConfirmed = activeOrders.filter(
+        (order) =>
+          order.payment_method === "cashless" &&
+          prevPendingOrderIds.current.has(order.order_id),
+      );
+      for (const order of newlyConfirmed) {
+        handleAutoPrint(order);
+      }
+    }
+    // Update the ref with the new set of pending IDs for the next poll
+    prevPendingOrderIds.current = new Set(pendingOrders.map((o) => o.order_id));
+  };
+
   const loadAllData = async (showLoading = true) => {
     try {
       // Only show loading spinner on first load or manual refresh
@@ -213,18 +233,7 @@ export default function UnifiedCashierPage() {
             return orderDate.toDateString() === today.toDateString();
           }).length,
         });
-
-        // Check for newly auto-completed cashless orders to trigger printing
-        if (prevPendingOrderIds.current.size > 0) {
-          const newlyConfirmedCashless = active.filter(order =>
-            order.payment_method === 'cashless' && prevPendingOrderIds.current.has(order.order_id)
-          );
-          for (const order of newlyConfirmedCashless) {
-            handleAutoPrint(order);
-          }
-        }
-        // Update the ref with the new set of pending IDs for the next poll
-        prevPendingOrderIds.current = new Set(pending.map(o => o.order_id));
+        handleNewlyConfirmedCashlessOrders(active, pending);
 
         setPendingOrders(pending);
         setActiveOrders(active);

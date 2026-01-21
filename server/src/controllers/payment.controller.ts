@@ -141,8 +141,47 @@ export const checkPaymentStatus = asyncHandler(async (req: AuthRequest, res: Res
            WHERE order_id = ?`,
           [order.order_id]
         );
+        // BUG FIX: The original code only updated payment_status.
+        // The logic from the webhook handler is now used here to ensure
+        // the order is fully processed (stock deduction, status update, etc.).
+        logger.info(`[Polling] Payment for order ${order.order_number} is PAID. Processing...`);
+        
+        await conn.beginTransaction();
+        try {
+          // 1. STOCK DEDUCTION
+          const [orderItemsRows] = await conn.query(
+            'SELECT menu_item_id, quantity FROM order_item WHERE order_id = ?',
+            [order.order_id]
+          );
+          const orderItems = orderItemsRows as any[];
+          for (const item of orderItems) {
+            const [menuItemRows] = await conn.query(
+              'SELECT is_infinite_stock, stock_quantity, name FROM menu_item WHERE menu_item_id = ?',
+              [item.menu_item_id]
+            );
+            const menuItem = (menuItemRows as any[])[0];
+            if (menuItem && !menuItem.is_infinite_stock) {
+              await conn.query(
+                'UPDATE menu_item SET stock_quantity = stock_quantity - ? WHERE menu_item_id = ?',
+                [item.quantity, item.menu_item_id]
+              );
+            }
+          }
+          logger.info(`   ✓ Stock deducted for order ${order.order_number}`);
 
         logger.info(`✓ Payment verified for order ${order.order_number}`);
+          // 2. UPDATE ORDER STATUS
+          await conn.query(
+            `UPDATE customer_order
+             SET payment_status = 'paid',
+                 order_status = 'confirmed',
+                 payment_verified_at = NOW(),
+                 amount_paid = ?,
+                 change_amount = 0
+             WHERE order_id = ?`,
+            [order.final_amount, order.order_id]
+          );
+          logger.info(`   ✓ Order status updated to 'confirmed' for order ${order.order_number}`);
 
         return res.json(successResponse('Payment completed', {
           paid: true,
@@ -150,6 +189,35 @@ export const checkPaymentStatus = asyncHandler(async (req: AuthRequest, res: Res
           order_number: order.order_number,
           payment_status: 'paid',
         }));
+          // 3. RECORD TRANSACTION
+          await conn.query(
+            `INSERT INTO payment_transaction
+             (order_id, transaction_type, payment_method, amount, reference_number, status, processed_by, completed_at)
+             VALUES (?, 'payment', 'cashless', ?, ?, 'completed', NULL, NOW())`,
+            [order.order_id, order.final_amount, order.payment_reference_number]
+          );
+          logger.info(`   ✓ Payment transaction recorded for order ${order.order_number}`);
+
+          // 4. ADD TIMELINE ENTRY
+          await conn.query(
+            `INSERT INTO order_timeline (order_id, status, notes) VALUES (?, 'confirmed', ?)`,
+            [order.order_id, `Auto-confirmed via payment polling (Invoice: ${order.payment_reference_number})`]
+          );
+          logger.info(`   ✓ Timeline entry added for order ${order.order_number}`);
+
+          await conn.commit();
+          logger.info(`✅ Order ${order.order_number} auto-completed successfully via Polling.`);
+
+          return res.json(successResponse('Payment completed', {
+            paid: true,
+            order_id: order.order_id,
+            payment_status: 'paid',
+          }));
+        } catch (error) {
+          await conn.rollback();
+          logger.error(`❌ Error processing polled payment for order ${order.order_number}:`, error);
+          // Do not throw error to client, allow polling to retry.
+        }
       }
     }
 

@@ -907,9 +907,9 @@ export default function CartPage() {
                         📱 How to Pay:
                       </h3>
                       <ol className="text-black space-y-2 list-decimal list-inside text-base">
-                        <li>Open your GCash, PayMaya, or banking app</li>
-                        <li>Tap "Scan QR" or "Pay via QR"</li>
-                        <li>Scan the QR code above</li>
+                        <li>Open your camera app and scan QR code shown above it will redirect you to an invoice page</li>
+                        <li>Download QRPH code and open your desired payment method app GCash/Paymaya/Bank</li>
+                        <li>Pay the specified amount</li>
                         <li>Verify the amount and complete payment</li>
                         <li>
                           <strong>This screen will close automatically!</strong>
