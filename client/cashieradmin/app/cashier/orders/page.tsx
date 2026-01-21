@@ -406,13 +406,11 @@ export default function UnifiedCashierPage() {
   const handleVerifyPayment = async () => {
     if (!selectedOrder) return;
 
-    // Use the memoized final amount for consistency.
+    const tendered = parseAmount(amountTendered);
     const finalAmount = finalAmountForDisplay;
 
     // Validate payment based on method
     if (selectedOrder.payment_method === "cash") {
-      const tendered = parseAmount(amountTendered);
-
       if (!tendered || tendered < finalAmount) {
         setVerifyError(
           `Insufficient amount. Required: ₱${finalAmount.toFixed(2)}`,
@@ -433,16 +431,15 @@ export default function UnifiedCashierPage() {
     setVerifying(true);
     setVerifyError("");
 
-    // Calculate change directly here to avoid stale state issues.
-    const tenderedAmount = parseAmount(amountTendered);
-    const changeAmount = calculateChange(tenderedAmount, finalAmount);
+    // Calculate change from the consistently used 'tendered' variable.
+    const changeAmount = calculateChange(tendered, finalAmount);
 
     try {
       const response = await OrderService.verifyPayment({
         order_id: selectedOrder.order_id,
         payment_method: selectedOrder.payment_method,
         reference_number: referenceNumber || undefined,
-        amount_paid: selectedOrder.payment_method === "cash" ? tenderedAmount : undefined,
+        amount_paid: selectedOrder.payment_method === "cash" ? tendered : undefined,
         change_amount: selectedOrder.payment_method === "cash" ? changeAmount : undefined,
       } as any);
 
@@ -492,10 +489,13 @@ export default function UnifiedCashierPage() {
 
         const receiptData = printerService.formatOrderForPrint({
           ...fullOrderData,
-          final_amount: finalAmount,
+          // Pass the correct calculated values to the printer
+          final_amount: finalAmount, // This is the final amount after discount
+          amountPaid: selectedOrder.payment_method === "cash" ? tendered : finalAmount,
+          changeAmount: selectedOrder.payment_method === "cash" ? changeAmount : 0,
           discount_amount: selectedDiscount
             ? calculateDiscount(
-                Number(selectedOrder.final_amount || 0),
+                parseAmount(selectedOrder.final_amount), // Use original amount for discount calculation
                 selectedDiscount,
               )
             : 0,
