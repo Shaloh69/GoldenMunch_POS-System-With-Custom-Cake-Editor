@@ -1396,7 +1396,7 @@ export default function AdminMenuPage() {
                   if (value === "add_new") {
                     setIsAddUnitModalOpen(true);
                   } else {
-                    setFormData({ ...formData, unit_of_measure_id: parseInt(value) });
+                    setFormData({ ...formData, unit_of_measure_id: parseInt(value, 10) });
                   }
                 }}
               >
