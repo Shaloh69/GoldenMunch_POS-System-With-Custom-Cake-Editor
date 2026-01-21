@@ -534,7 +534,7 @@ class EmailService {
             <div style="background-color: #EFF6FF; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3B82F6;">
               <h3 style="margin-top: 0; color: #1D4ED8;">🎂 Cake Specifications:</h3>
               <p style="margin: 10px 0;"><strong>Number of Layers:</strong> ${request.num_layers}</p>
-              <p style="margin: 10px 0;"><strong>💰 Estimated Price:</strong> ₱${request.estimated_price ? Number(request.estimated_price).toFixed(2) : '0.00'}</p>
+              <p style="margin: 10px 0;"><strong>💰 Estima ted Price:</strong> ₱${request.estimated_price ? Number(request.estimated_price).toFixed(2) : '0.00'}</p>
               ${request.total_height_cm ? `<p style="margin: 10px 0;"><strong>Height:</strong> ${request.total_height_cm} cm</p>` : ''}
               ${request.base_diameter_cm ? `<p style="margin: 10px 0;"><strong>Base Diameter:</strong> ${request.base_diameter_cm} cm</p>` : ''}
             </div>
