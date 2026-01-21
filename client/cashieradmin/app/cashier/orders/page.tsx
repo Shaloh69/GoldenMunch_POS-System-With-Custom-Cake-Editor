@@ -104,7 +104,6 @@ export default function UnifiedCashierPage() {
   // Payment verification
   const [referenceNumber, setReferenceNumber] = useState("");
   const [amountTendered, setAmountTendered] = useState("");
-  const [calculatedChange, setCalculatedChange] = useState(0);
   const [verifying, setVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState("");
 
@@ -122,7 +121,6 @@ export default function UnifiedCashierPage() {
     setOrderTimeline([]);
     setReferenceNumber("");
     setAmountTendered("");
-    setCalculatedChange(0);
     setVerifyError("");
     setSelectedDiscount(null);
     setVerifying(false);  // Reset verifying state
@@ -408,20 +406,16 @@ export default function UnifiedCashierPage() {
   const handleVerifyPayment = async () => {
     if (!selectedOrder) return;
 
-    const finalAmount = selectedDiscount
-      ? calculateFinalAmount(
-          Number(selectedOrder.final_amount || 0),
-          selectedDiscount,
-        )
-      : Number(selectedOrder.final_amount || 0);
+    // Use the memoized final amount for consistency.
+    const finalAmount = finalAmountForDisplay;
 
     // Validate payment based on method
     if (selectedOrder.payment_method === "cash") {
-      const tendered = Number(amountTendered);
+      const tendered = parseAmount(amountTendered);
 
       if (!tendered || tendered < finalAmount) {
         setVerifyError(
-          `Insufficient amount. Required: ₱${finalAmount.toFixed(2)}, Tendered: ₱${tendered.toFixed(2)}`,
+          `Insufficient amount. Required: ₱${finalAmount.toFixed(2)}`,
         );
 
         return;
@@ -439,13 +433,17 @@ export default function UnifiedCashierPage() {
     setVerifying(true);
     setVerifyError("");
 
+    // Calculate change directly here to avoid stale state issues.
+    const tenderedAmount = parseAmount(amountTendered);
+    const changeAmount = calculateChange(tenderedAmount, finalAmount);
+
     try {
       const response = await OrderService.verifyPayment({
         order_id: selectedOrder.order_id,
         payment_method: selectedOrder.payment_method,
         reference_number: referenceNumber || undefined,
-        amount_paid: selectedOrder.payment_method === "cash" ? parseAmount(amountTendered) : undefined,
-        change_amount: selectedOrder.payment_method === "cash" ? calculatedChange : undefined,
+        amount_paid: selectedOrder.payment_method === "cash" ? tenderedAmount : undefined,
+        change_amount: selectedOrder.payment_method === "cash" ? changeAmount : undefined,
       } as any);
 
       if (!response.success) {
@@ -667,21 +665,23 @@ export default function UnifiedCashierPage() {
     return Math.max(0, tendered - amount);
   }, []);
 
-  // Update change when amount tendered changes
-  useEffect(() => {
-    if (selectedOrder && amountTendered) {
-      const orderTotal = parseAmount(selectedOrder.final_amount) ||
-                        parseAmount(selectedOrder.total_amount) ||
-                        parseAmount(selectedOrder.subtotal) || 0;
-      const finalAmount = selectedDiscount
-        ? calculateFinalAmount(orderTotal, selectedDiscount)
-        : orderTotal;
+  // Memoized calculation for finalAmount (for display in modal)
+  const finalAmountForDisplay = useMemo(() => {
+    if (!selectedOrder) return 0;
+    const orderTotal = parseAmount(selectedOrder.final_amount) ||
+                       parseAmount(selectedOrder.total_amount) ||
+                       parseAmount(selectedOrder.subtotal) || 0;
+    return selectedDiscount
+      ? calculateFinalAmount(orderTotal, selectedDiscount)
+      : orderTotal;
+  }, [selectedOrder, selectedDiscount, calculateFinalAmount]);
 
-      setCalculatedChange(calculateChange(parseAmount(amountTendered), finalAmount));
-    } else {
-      setCalculatedChange(0);
-    }
-  }, [amountTendered, selectedOrder, selectedDiscount]);
+  // Calculate change for display purposes, derived from state
+  const displayChange = useMemo(() => {
+    if (!amountTendered) return 0;
+    const tendered = parseAmount(amountTendered);
+    return calculateChange(tendered, finalAmountForDisplay);
+  }, [amountTendered, finalAmountForDisplay, calculateChange]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString("en-US", {
@@ -807,24 +807,13 @@ export default function UnifiedCashierPage() {
     const isPending = selectedOrder.order_status === OrderStatus.PENDING;
     const isActive = selectedOrder.order_status === OrderStatus.CONFIRMED;
 
-    // Calculate final amount with robust parsing for database string values
-    const orderTotal = parseAmount(selectedOrder.final_amount) ||
-                      parseAmount(selectedOrder.total_amount) ||
-                      parseAmount(selectedOrder.subtotal) || 0;
-    const finalAmount = selectedDiscount
-      ? calculateFinalAmount(orderTotal, selectedDiscount)
-      : orderTotal;
-
     // Debug logging for total calculation
     console.log('💰 Total calculation:', {
       final_amount: selectedOrder.final_amount,
       total_amount: selectedOrder.total_amount,
       subtotal: selectedOrder.subtotal,
-      parsed_final: parseAmount(selectedOrder.final_amount),
-      parsed_total: parseAmount(selectedOrder.total_amount),
-      parsed_subtotal: parseAmount(selectedOrder.subtotal),
-      orderTotal,
-      finalAmount,
+      // Use the memoized value for logging consistency
+      finalAmountForDisplay,
       hasDiscount: !!selectedDiscount,
     });
 
@@ -1009,7 +998,7 @@ export default function UnifiedCashierPage() {
                       Total:
                     </span>
                     <span className="text-3xl text-black bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text">
-                      ₱{(finalAmount || 0).toFixed(2)}
+                      ₱{(finalAmountForDisplay || 0).toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -1109,8 +1098,8 @@ export default function UnifiedCashierPage() {
                                 Change:
                               </span>
                             </div>
-                            <span className="text-4xl font-black bg-gradient-to-r from-success-600 to-green-600 bg-clip-text text-transparent">
-                              ₱{calculatedChange.toFixed(2)}
+                            <span className="text-4xl font-black bg-gradient-to-r from-success-600 to-green-600 bg-clip-text text-transparent" data-testid="change-amount">
+                              ₱{displayChange.toFixed(2)}
                             </span>
                           </div>
                         </div>
