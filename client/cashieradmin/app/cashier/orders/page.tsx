@@ -788,22 +788,8 @@ export default function UnifiedCashierPage() {
     if (!selectedOrder) return null;
 
     const isPending = selectedOrder.order_status === OrderStatus.PENDING;
-    const isActive = selectedOrder.order_status === OrderStatus.CONFIRMED;
-
-    // Calculate final amount with robust parsing for database string values
-    const orderTotal = parseAmount(selectedOrder.final_amount) ||
-                      parseAmount(selectedOrder.total_amount) ||
-                      parseAmount(selectedOrder.subtotal) || 0;
-    const finalAmount = selectedDiscount
-      ? calculateFinalAmount(orderTotal, selectedDiscount)
-      : orderTotal;
+    const isActive = selectedOrder.order_status === OrderStatus.CONFIRMED;    
     
-    // Calculate change for display purposes
-    const displayChange = useMemo(() => {
-      if (!selectedOrder || !amountTendered) return 0;
-      return calculateChange(parseAmount(amountTendered), finalAmount);
-    }, [amountTendered, finalAmount, calculateChange]);
-
     // Debug logging for total calculation
     console.log('💰 Total calculation:', {
       final_amount: selectedOrder.final_amount,
@@ -812,8 +798,8 @@ export default function UnifiedCashierPage() {
       parsed_final: parseAmount(selectedOrder.final_amount),
       parsed_total: parseAmount(selectedOrder.total_amount),
       parsed_subtotal: parseAmount(selectedOrder.subtotal),
-      orderTotal,
-      finalAmount,
+      orderTotal: finalAmountForDisplay,
+      finalAmount: finalAmountForDisplay,
       hasDiscount: !!selectedDiscount,
     });
 
@@ -998,7 +984,7 @@ export default function UnifiedCashierPage() {
                       Total:
                     </span>
                     <span className="text-3xl text-black bg-gradient-to-r from-golden-orange to-deep-amber bg-clip-text">
-                      ₱{(finalAmount || 0).toFixed(2)}
+                      ₱{(finalAmountForDisplay || 0).toFixed(2)}
                     </span>
                   </div>
                 </div>
