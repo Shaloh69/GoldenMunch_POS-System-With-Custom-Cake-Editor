@@ -104,7 +104,6 @@ export default function UnifiedCashierPage() {
   // Payment verification
   const [referenceNumber, setReferenceNumber] = useState("");
   const [amountTendered, setAmountTendered] = useState("");
-  const [calculatedChange, setCalculatedChange] = useState(0);
   const [verifying, setVerifying] = useState(false);
   const [verifyError, setVerifyError] = useState("");
 
@@ -121,8 +120,7 @@ export default function UnifiedCashierPage() {
     setSelectedOrder(null);
     setOrderTimeline([]);
     setReferenceNumber("");
-    setAmountTendered("");
-    setCalculatedChange(0);
+    setAmountTendered(""); // Reset amount tendered
     setVerifyError("");
     setSelectedDiscount(null);
     setVerifying(false);  // Reset verifying state
@@ -393,7 +391,6 @@ export default function UnifiedCashierPage() {
         loadOrderTimeline(order.order_id);
         setVerifyError("");
         setReferenceNumber("");
-        setAmountTendered("");
         setSelectedDiscount(null);
         setVerifying(false);  // Reset loading states
         setUpdatingStatus(false);
@@ -408,16 +405,14 @@ export default function UnifiedCashierPage() {
   const handleVerifyPayment = async () => {
     if (!selectedOrder) return;
 
+    const orderTotal = parseAmount(selectedOrder.final_amount);
     const finalAmount = selectedDiscount
-      ? calculateFinalAmount(
-          Number(selectedOrder.final_amount || 0),
-          selectedDiscount,
-        )
-      : Number(selectedOrder.final_amount || 0);
+      ? calculateFinalAmount(orderTotal, selectedDiscount)
+      : orderTotal;
 
     // Validate payment based on method
     if (selectedOrder.payment_method === "cash") {
-      const tendered = Number(amountTendered);
+      const tendered = parseAmount(amountTendered);
 
       if (!tendered || tendered < finalAmount) {
         setVerifyError(
@@ -439,13 +434,17 @@ export default function UnifiedCashierPage() {
     setVerifying(true);
     setVerifyError("");
 
+    // Calculate change directly here to avoid stale state from useEffect
+    const tenderedAmount = parseAmount(amountTendered);
+    const change = calculateChange(tenderedAmount, finalAmount);
+
     try {
       const response = await OrderService.verifyPayment({
         order_id: selectedOrder.order_id,
         payment_method: selectedOrder.payment_method,
         reference_number: referenceNumber || undefined,
-        amount_paid: selectedOrder.payment_method === "cash" ? parseAmount(amountTendered) : undefined,
-        change_amount: selectedOrder.payment_method === "cash" ? calculatedChange : undefined,
+        amount_paid: selectedOrder.payment_method === "cash" ? tenderedAmount : undefined,
+        change_amount: selectedOrder.payment_method === "cash" ? change : undefined,
       } as any);
 
       if (!response.success) {
@@ -667,22 +666,6 @@ export default function UnifiedCashierPage() {
     return Math.max(0, tendered - amount);
   }, []);
 
-  // Update change when amount tendered changes
-  useEffect(() => {
-    if (selectedOrder && amountTendered) {
-      const orderTotal = parseAmount(selectedOrder.final_amount) ||
-                        parseAmount(selectedOrder.total_amount) ||
-                        parseAmount(selectedOrder.subtotal) || 0;
-      const finalAmount = selectedDiscount
-        ? calculateFinalAmount(orderTotal, selectedDiscount)
-        : orderTotal;
-
-      setCalculatedChange(calculateChange(parseAmount(amountTendered), finalAmount));
-    } else {
-      setCalculatedChange(0);
-    }
-  }, [amountTendered, selectedOrder, selectedDiscount]);
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString("en-US", {
       month: "short",
@@ -814,6 +797,12 @@ export default function UnifiedCashierPage() {
     const finalAmount = selectedDiscount
       ? calculateFinalAmount(orderTotal, selectedDiscount)
       : orderTotal;
+    
+    // Calculate change for display purposes
+    const displayChange = useMemo(() => {
+      if (!selectedOrder || !amountTendered) return 0;
+      return calculateChange(parseAmount(amountTendered), finalAmount);
+    }, [amountTendered, finalAmount, calculateChange]);
 
     // Debug logging for total calculation
     console.log('💰 Total calculation:', {
@@ -1109,8 +1098,8 @@ export default function UnifiedCashierPage() {
                                 Change:
                               </span>
                             </div>
-                            <span className="text-4xl font-black bg-gradient-to-r from-success-600 to-green-600 bg-clip-text text-transparent">
-                              ₱{calculatedChange.toFixed(2)}
+                            <span className="text-4xl font-black bg-gradient-to-r from-success-600 to-green-600 bg-clip-text text-transparent" data-testid="change-amount">
+                              ₱{displayChange.toFixed(2)}
                             </span>
                           </div>
                         </div>
