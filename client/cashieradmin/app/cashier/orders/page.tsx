@@ -119,8 +119,7 @@ export default function UnifiedCashierPage() {
   const onClose = () => {
     setSelectedOrder(null);
     setOrderTimeline([]);
-    setReferenceNumber("");
-    setAmountTendered(""); // Reset amount tendered
+    setReferenceNumber("");    setAmountTendered(""); // Reset amount tendered
     setVerifyError("");
     setSelectedDiscount(null);
     setVerifying(false);  // Reset verifying state
@@ -405,14 +404,16 @@ export default function UnifiedCashierPage() {
   const handleVerifyPayment = async () => {
     if (!selectedOrder) return;
 
-    const orderTotal = parseAmount(selectedOrder.final_amount);
     const finalAmount = selectedDiscount
-      ? calculateFinalAmount(orderTotal, selectedDiscount)
-      : orderTotal;
+      ? calculateFinalAmount(
+          Number(selectedOrder.final_amount || 0),
+          selectedDiscount,
+        )
+      : Number(selectedOrder.final_amount || 0);
 
     // Validate payment based on method
     if (selectedOrder.payment_method === "cash") {
-      const tendered = parseAmount(amountTendered);
+      const tendered = Number(amountTendered);
 
       if (!tendered || tendered < finalAmount) {
         setVerifyError(
@@ -434,17 +435,13 @@ export default function UnifiedCashierPage() {
     setVerifying(true);
     setVerifyError("");
 
-    // Calculate change directly here to avoid stale state from useEffect
-    const tenderedAmount = parseAmount(amountTendered);
-    const change = calculateChange(tenderedAmount, finalAmount);
-
     try {
       const response = await OrderService.verifyPayment({
         order_id: selectedOrder.order_id,
         payment_method: selectedOrder.payment_method,
         reference_number: referenceNumber || undefined,
-        amount_paid: selectedOrder.payment_method === "cash" ? tenderedAmount : undefined,
-        change_amount: selectedOrder.payment_method === "cash" ? change : undefined,
+        amount_paid: selectedOrder.payment_method === "cash" ? parseAmount(amountTendered) : undefined,
+        change_amount: selectedOrder.payment_method === "cash" ? calculatedChange : undefined,
       } as any);
 
       if (!response.success) {
@@ -666,6 +663,23 @@ export default function UnifiedCashierPage() {
     return Math.max(0, tendered - amount);
   }, []);
 
+  // Memoized calculation for finalAmount (for display in modal)
+  const finalAmountForDisplay = useMemo(() => {
+    if (!selectedOrder) return 0;
+    const orderTotal = parseAmount(selectedOrder.final_amount) ||
+                       parseAmount(selectedOrder.total_amount) ||
+                       parseAmount(selectedOrder.subtotal) || 0;
+    return selectedDiscount
+      ? calculateFinalAmount(orderTotal, selectedDiscount)
+      : orderTotal;
+  }, [selectedOrder, selectedDiscount, calculateFinalAmount]);
+
+  // Calculate change for display purposes
+  const displayChange = useMemo(() => {
+    if (!selectedOrder || !amountTendered) return 0;
+    return calculateChange(parseAmount(amountTendered), finalAmountForDisplay);
+  }, [amountTendered, finalAmountForDisplay, calculateChange]);
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleString("en-US", {
       month: "short",
@@ -788,8 +802,16 @@ export default function UnifiedCashierPage() {
     if (!selectedOrder) return null;
 
     const isPending = selectedOrder.order_status === OrderStatus.PENDING;
-    const isActive = selectedOrder.order_status === OrderStatus.CONFIRMED;    
-    
+    const isActive = selectedOrder.order_status === OrderStatus.CONFIRMED;
+
+    // Calculate final amount with robust parsing for database string values
+    const orderTotal = parseAmount(selectedOrder.final_amount) ||
+                      parseAmount(selectedOrder.total_amount) ||
+                      parseAmount(selectedOrder.subtotal) || 0;
+    const finalAmount = selectedDiscount
+      ? calculateFinalAmount(orderTotal, selectedDiscount)
+      : orderTotal;
+
     // Debug logging for total calculation
     console.log('💰 Total calculation:', {
       final_amount: selectedOrder.final_amount,
@@ -1084,7 +1106,7 @@ export default function UnifiedCashierPage() {
                                 Change:
                               </span>
                             </div>
-                            <span className="text-4xl font-black bg-gradient-to-r from-success-600 to-green-600 bg-clip-text text-transparent" data-testid="change-amount">
+                            <span className="text-4xl font-black bg-gradient-to-r from-success-600 to-green-600 bg-clip-text text-transparent">
                               ₱{displayChange.toFixed(2)}
                             </span>
                           </div>
