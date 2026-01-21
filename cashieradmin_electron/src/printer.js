@@ -303,6 +303,21 @@ function generateReceiptHTML(receiptData) {
 
   <div class="divider"></div>
 
+  ${receiptData.paymentMethod === 'Cash' && receiptData.amountPaid > 0 ? `
+    <table>
+      <tr>
+        <td></td>
+        <td class="bold" style="text-align: right; width: 30%;">Amount Paid:</td>
+        <td class="right" style="width: 35%;">₱${receiptData.amountPaid.toFixed(2)}</td>
+      </tr>
+      <tr>
+        <td></td>
+        <td class="bold" style="text-align: right;">Change:</td>
+        <td class="right">₱${receiptData.changeGiven.toFixed(2)}</td>
+      </tr>
+    </table>
+    <div class="divider"></div>` : ''}
+
   <div style="margin-top: 5px;">Payment: <span class="bold">${receiptData.paymentMethod}</span></div>
   ${receiptData.referenceNumber ? `<div>Reference #: ${receiptData.referenceNumber}</div>` : ''}
 
