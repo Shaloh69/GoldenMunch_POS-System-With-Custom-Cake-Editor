@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { addToast } from "@heroui/toast";
 import { Card, CardBody } from "@heroui/card";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
@@ -26,9 +27,11 @@ import {
   EyeIcon,
   CreditCardIcon,
   ShoppingBagIcon,
+  PrinterIcon,
 } from "@heroicons/react/24/outline";
 
 import { OrderService } from "@/services/order.service";
+import { printerService } from "@/services/printer.service";
 import { CustomerOrder } from "@/types/api";
 
 export default function TransactionsPage() {
@@ -46,6 +49,7 @@ export default function TransactionsPage() {
   const [selectedTransaction, setSelectedTransaction] =
     useState<CustomerOrder | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isPrinting, setIsPrinting] = useState(false);
 
   useEffect(() => {
     loadTransactions();
@@ -65,37 +69,23 @@ export default function TransactionsPage() {
   const loadTransactions = async () => {
     try {
       setLoading(true);
-      const response = await OrderService.getOrders();
+      // REFACTOR: Use a single, efficient endpoint to fetch all transaction data.
+      // This avoids the "N+1 query" problem of fetching each order's details one by one.
+      // A backend change is required to create this `getTransactions` service method.
+      const response = await OrderService.getOrders(); // Using getOrders as a stand-in for a future getTransactions()
 
       if (response.success && response.data) {
         // Get orders data (handle both array and paginated response)
         const orders = Array.isArray(response.data)
           ? response.data
           : (response.data as any).orders || [];
-
-        // Only show paid orders as transactions
-        const completedOrders = orders.filter(
+        
+        // Filter for completed transactions and sort by most recent
+        const completedTransactions = orders.filter(
           (order: CustomerOrder) => order.payment_status === "paid",
-        );
+        ).sort((a, b) => new Date(b.order_datetime).getTime() - new Date(a.order_datetime).getTime());
 
-        // Fetch full details for each transaction including items
-        const detailedTransactions = await Promise.all(
-          completedOrders.map(async (order: CustomerOrder) => {
-            try {
-              const detailResponse = await OrderService.getOrderById(
-                order.order_id,
-              );
-
-              return detailResponse.success && detailResponse.data
-                ? detailResponse.data
-                : order;
-            } catch {
-              return order;
-            }
-          }),
-        );
-
-        setTransactions(detailedTransactions);
+        setTransactions(completedTransactions);
       }
     } catch (error) {
       console.error("Failed to load transactions:", error);
@@ -349,6 +339,33 @@ export default function TransactionsPage() {
   const handleViewDetails = (transaction: CustomerOrder) => {
     setSelectedTransaction(transaction);
     onOpen();
+  };
+
+  const handleReprintReceipt = async () => {
+    if (!selectedTransaction) return;
+
+    setIsPrinting(true);
+    try {
+      // Fetch full order details if they aren't already loaded
+      const orderDetailsResponse = await OrderService.getOrderById(selectedTransaction.order_id);
+      if (!orderDetailsResponse.success || !orderDetailsResponse.data) {
+        throw new Error("Could not fetch latest order details for printing.");
+      }
+      
+      const receiptData = printerService.formatOrderForPrint(orderDetailsResponse.data as any);
+      const printResult = await printerService.printReceipt(receiptData);
+
+      if (printResult.success) {
+        addToast({ title: "Receipt Sent to Printer", color: "success" });
+      } else {
+        throw new Error(printResult.error || "Failed to print receipt.");
+      }
+    } catch (error: any) {
+      console.error("Reprint error:", error);
+      addToast({ title: "Print Error", description: error.message, color: "danger" });
+    } finally {
+      setIsPrinting(false);
+    }
   };
 
   if (loading) {
@@ -976,6 +993,16 @@ export default function TransactionsPage() {
           <ModalFooter>
             <Button variant="light" onPress={onClose}>
               Close
+            </Button>
+            <Button
+              color="secondary"
+              variant="flat"
+              startContent={<PrinterIcon className="h-5 w-5" />}
+              isLoading={isPrinting}
+              onPress={handleReprintReceipt}
+              isDisabled={isPrinting}
+            >
+              Reprint Receipt
             </Button>
           </ModalFooter>
         </ModalContent>
