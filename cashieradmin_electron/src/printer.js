@@ -303,7 +303,7 @@ function generateReceiptHTML(receiptData) {
 
   <div class="divider"></div>
 
-  ${receiptData.paymentMethod === 'Cash' && receiptData.amountPaid > 0 ? `
+  ${receiptData.paymentMethod === 'Cash' && receiptData.amountPaid > 0 && receiptData.changeAmount !== undefined ? `
     <table>
       <tr>
         <td></td>
@@ -313,7 +313,7 @@ function generateReceiptHTML(receiptData) {
       <tr>
         <td></td>
         <td class="bold" style="text-align: right;">Change:</td>
-        <td class="right">₱${receiptData.changeGiven.toFixed(2)}</td>
+        <td class="right">₱${receiptData.changeAmount.toFixed(2)}</td>
       </tr>
     </table>
     <div class="divider"></div>` : ''}

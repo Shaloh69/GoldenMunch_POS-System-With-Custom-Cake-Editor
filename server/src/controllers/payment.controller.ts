@@ -274,7 +274,7 @@ export const handleXenditWebhook = asyncHandler(async (req: AuthRequest, res: Re
                  payment_verified_at = NOW(),
                  payment_reference_number = ?,
                  amount_paid = ?,
-                 change_given = 0,
+                 change_amount = 0,
                  order_status = 'confirmed'
              WHERE order_id = ?`,
             [id, finalAmount, orderId]

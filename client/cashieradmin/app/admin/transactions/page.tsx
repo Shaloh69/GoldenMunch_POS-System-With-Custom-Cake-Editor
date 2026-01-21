@@ -190,7 +190,7 @@ export default function TransactionsPage() {
       "Discount Amount",
       "Final Amount",
       "Amount Paid",
-      "Change Given", // Header is already correct
+      "Change Amount",
 
       // Payment References
       "GCash Reference",
@@ -264,7 +264,7 @@ export default function TransactionsPage() {
         Number(t.discount_amount || 0).toFixed(2),
         Number(t.final_amount || 0).toFixed(2),
         Number(transaction.amount_paid || 0).toFixed(2),
-        Number(transaction.change_given || 0).toFixed(2),
+        Number(transaction.change_amount || 0).toFixed(2),
 
         // Payment References
         t.gcash_reference_number || "N/A",
@@ -329,7 +329,7 @@ export default function TransactionsPage() {
   const getTotalChangeGiven = () => {
     return filteredTransactions
       .filter((t) => t.payment_method === "cash")
-      .reduce((sum, t) => sum + Number((t as any).change_given || 0), 0);
+      .reduce((sum, t) => sum + Number((t as any).change_amount || 0), 0);
   };
 
   const formatCurrency = (amount: number | string) => {
@@ -632,13 +632,13 @@ export default function TransactionsPage() {
                                 {transaction.payment_method}
                               </Chip> 
                               {transaction.payment_method === "cash" && 
-                                (transaction as any).change_given &&
-                                Number((transaction as any).change_given) >
+                                (transaction as any).change_amount &&
+                                Number((transaction as any).change_amount) >
                                   0 && (
                                   <p className="text-xs text-default-500">
                                     Change:{" "}
                                     {formatCurrency(
-                                      (transaction as any).change_given,
+                                      (transaction as any).change_amount,
                                     )}
                                   </p>
                                 )}
@@ -670,13 +670,13 @@ export default function TransactionsPage() {
                                   </p>
                                 )}
                               {transaction.payment_method === "cash" &&
-                                (transaction as any).change_given &&
-                                Number((transaction as any).change_given) >
+                                (transaction as any).change_amount &&
+                                Number((transaction as any).change_amount) >
                                   0 && (
                                   <p className="text-xs text-warning">
                                     Change:{" "}
                                     {formatCurrency(
-                                      (transaction as any).change_given,
+                                      (transaction as any).change_amount,
                                     )}
                                   </p>
                                 )}
@@ -885,7 +885,7 @@ export default function TransactionsPage() {
                             <span className="text-sm">Change Given:</span>
                             <span className="font-semibold">
                               {formatCurrency(
-                                (selectedTransaction as any).change_given,
+                                (selectedTransaction as any).change_amount,
                               )}
                             </span>
                           </div>

@@ -331,7 +331,7 @@ export const getOrderByVerificationCode = async (req: AuthRequest, res: Response
 
 // Verify payment
 export const verifyPayment = async (req: AuthRequest, res: Response) => {
-  const { order_id, reference_number, payment_method, amount_paid, change_given, customer_discount_type_id } = req.body;
+  const { order_id, reference_number, payment_method, amount_paid, change_amount, customer_discount_type_id } = req.body;
   const cashier_id = req.user?.id;
 
   // Handle cash and cashless payments
@@ -385,7 +385,7 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
 
     // Use amount_paid and change_given directly from the frontend for cash transactions
     const finalAmountPaid = payment_method === 'cash' ? (amount_paid || finalAmount) : finalAmount;
-    const finalChangeGiven = payment_method === 'cash' ? (change_given || 0) : 0;
+    const finalChangeAmount = payment_method === 'cash' ? (change_amount || 0) : 0;
 
     // ✅ STOCK DEDUCTION: Get order items and deduct stock quantities
     const [orderItemsRows] = await conn.query(
@@ -442,7 +442,7 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
     console.log('💰 Updating payment status to PAID:', {
       order_id,
       amount_paid: finalAmountPaid,
-      change_given: finalChangeGiven,
+      change_amount: finalChangeAmount,
       cashier_id,
       payment_method
     });
@@ -451,11 +451,11 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
       `UPDATE customer_order
        SET payment_status = 'paid',
            amount_paid = ?,
-           change_given = ?,
+           change_amount = ?,
            payment_verified_by = ?,
            payment_verified_at = NOW()
        WHERE order_id = ?`,
-      [finalAmountPaid, finalChangeGiven, cashier_id, order_id]
+      [finalAmountPaid, finalChangeAmount, cashier_id, order_id]
     );
 
     console.log('✓ Payment status updated successfully');

@@ -24,7 +24,7 @@ export interface ReceiptData {
   estimatedPrepTime?: number;
   cashierName?: string;
   amountPaid?: number; // Added for receipt
-  changeGiven?: number; // Added for receipt
+  changeAmount?: number; // Added for receipt
 }
 
 export interface ReportData {
@@ -276,8 +276,8 @@ class PrinterService {
       referenceNumber: getReferenceNumber(),
       estimatedPrepTime: order.estimatedPrepTime,
       cashierName: order.cashier_name || undefined,
-      amountPaid: parseAmount(order.amount_paid), // Map amount paid
-      changeGiven: parseAmount(order.change_amount), // Map change amount
+      amountPaid: parseAmount(order.amount_paid),
+      changeAmount: parseAmount(order.change_amount), // Map change amount
     };
   }
 }
