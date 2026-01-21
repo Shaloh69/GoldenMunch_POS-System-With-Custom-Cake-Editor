@@ -830,7 +830,42 @@ class EmailService {
     customer_name: string;
     submitted_at: string;
     estimated_review_hours?: number;
-  }): Promise<void> {
+  }): Promise<void> {    
+    // Get associated images to show the customer a preview
+    const [images] = await pool.query<RowDataPacket[]>(
+      `SELECT image_url, view_angle FROM custom_cake_images
+       WHERE request_id = ? AND image_type = 'preview' ORDER BY uploaded_at ASC`,
+      [requestId]
+    );
+
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+
+    // Build image gallery HTML for customer confirmation
+    let imageGalleryHtml = '';
+    if (images.length > 0) {
+      const imageRows = images.map((img: any) => {
+        let fullImageUrl = img.image_url;
+        if (!fullImageUrl.startsWith('data:') && !fullImageUrl.startsWith('http')) {
+          fullImageUrl = `${backendUrl}${img.image_url}`;
+        }
+
+        return `
+          <div style="display: inline-block; margin: 5px; text-align: center; vertical-align: top;">
+            <img src="${fullImageUrl}"
+                 alt="${img.view_angle} view"
+                 style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; display: block;" />
+          </div>
+        `;
+      }).join('');
+
+      imageGalleryHtml = `
+        <div style="background-color: #f9f9f9; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #1D4ED8;">Your Cake Design Preview:</h3>
+          <div style="text-align: center;">${imageRows}</div>
+        </div>
+      `;
+    }
+
     const submittedDate = new Date(requestData.submitted_at).toLocaleString('en-US', {
       weekday: 'long',
       year: 'numeric',
@@ -869,6 +904,8 @@ class EmailService {
             <p style="margin: 10px 0;"><strong>⏱️ Estimated Review Time:</strong> ${reviewHours} hours</p>
             <p style="margin: 10px 0;"><strong>📆 Expected Response By:</strong> ${estimatedDate}</p>
           </div>
+
+          ${imageGalleryHtml}
 
           <h3 style="color: #1D4ED8; margin-top: 30px;">What's Next:</h3>
           <ol style="line-height: 1.8; font-size: 15px;">
