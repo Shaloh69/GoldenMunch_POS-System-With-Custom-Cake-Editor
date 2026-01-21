@@ -281,7 +281,22 @@ export default function UnifiedCashierPage() {
       }
 
       const fullOrderData = orderDetailsResponse.data as any;
-      const receiptData = printerService.formatOrderForPrint(fullOrderData);
+
+      // Calculate estimated preparation time
+      const estimatedPrepTime =
+        fullOrderData.items?.length > 0
+          ? Math.max(
+              0,
+              ...fullOrderData.items.map(
+                (item: any) => item.preparation_time_minutes || 0,
+              ),
+            )
+          : 0;
+
+      const receiptData = printerService.formatOrderForPrint({
+        ...fullOrderData,
+        estimatedPrepTime: estimatedPrepTime,
+      });
       const printResult = await printerService.printReceipt(receiptData);
 
       if (printResult.success) {
@@ -466,6 +481,17 @@ export default function UnifiedCashierPage() {
         const fullOrderData = orderDetailsResponse.data as any;
         console.log("📦 Order items for receipt:", fullOrderData.items);
 
+        // Calculate estimated preparation time
+        const estimatedPrepTime =
+          fullOrderData.items?.length > 0
+            ? Math.max(
+                0,
+                ...fullOrderData.items.map(
+                  (item: any) => item.preparation_time_minutes || 0,
+                ),
+              )
+            : 0;
+
         const receiptData = printerService.formatOrderForPrint({
           ...fullOrderData,
           final_amount: finalAmount,
@@ -475,6 +501,7 @@ export default function UnifiedCashierPage() {
                 selectedDiscount,
               )
             : 0,
+          estimatedPrepTime: estimatedPrepTime,
         });
 
         console.log("🖨️ Printing receipt with", receiptData.items?.length || 0, "items...");

@@ -261,6 +261,14 @@ function generateReceiptHTML(receiptData) {
     <div class="divider" style="margin-top: 5px;"></div>
   ` : ''}
 
+  ${receiptData.estimatedPrepTime ? `
+    <div class="center mt-10">
+      <div style="font-size: 10px;">Estimated Prep Time:</div>
+      <div class="bold medium">${receiptData.estimatedPrepTime} MINS</div>
+    </div>
+    <div class="divider" style="margin-top: 5px;"></div>
+  ` : ''}
+
   <div class="bold mt-10 mb-5">ITEMS:</div>
   <div class="divider"></div>
 
