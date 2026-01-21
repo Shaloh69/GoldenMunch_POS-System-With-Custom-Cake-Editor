@@ -429,6 +429,8 @@ export default function UnifiedCashierPage() {
         order_id: selectedOrder.order_id,
         payment_method: selectedOrder.payment_method,
         reference_number: referenceNumber || undefined,
+        amount_paid: selectedOrder.payment_method === "cash" ? parseAmount(amountTendered) : undefined,
+        change_amount: selectedOrder.payment_method === "cash" ? calculatedChange : undefined,
       });
 
       if (!response.success) {
