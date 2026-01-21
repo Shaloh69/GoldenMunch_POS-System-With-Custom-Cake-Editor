@@ -133,14 +133,6 @@ export const checkPaymentStatus = asyncHandler(async (req: AuthRequest, res: Res
       const paymentStatus = await paymentService.getInvoiceStatus(order.payment_reference_number);
 
       if (paymentStatus.success && paymentStatus.status === 'completed') {
-        // Update order payment status
-        await conn.query(
-          `UPDATE customer_order
-           SET payment_status = 'paid',
-               payment_verified_at = NOW()
-           WHERE order_id = ?`,
-          [order.order_id]
-        );
         // BUG FIX: The original code only updated payment_status.
         // The logic from the webhook handler is now used here to ensure
         // the order is fully processed (stock deduction, status update, etc.).
@@ -169,7 +161,6 @@ export const checkPaymentStatus = asyncHandler(async (req: AuthRequest, res: Res
           }
           logger.info(`   ✓ Stock deducted for order ${order.order_number}`);
 
-        logger.info(`✓ Payment verified for order ${order.order_number}`);
           // 2. UPDATE ORDER STATUS
           await conn.query(
             `UPDATE customer_order
@@ -183,12 +174,6 @@ export const checkPaymentStatus = asyncHandler(async (req: AuthRequest, res: Res
           );
           logger.info(`   ✓ Order status updated to 'confirmed' for order ${order.order_number}`);
 
-        return res.json(successResponse('Payment completed', {
-          paid: true,
-          order_id: order.order_id,
-          order_number: order.order_number,
-          payment_status: 'paid',
-        }));
           // 3. RECORD TRANSACTION
           await conn.query(
             `INSERT INTO payment_transaction
