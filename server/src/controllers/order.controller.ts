@@ -331,7 +331,7 @@ export const getOrderByVerificationCode = async (req: AuthRequest, res: Response
 
 // Verify payment
 export const verifyPayment = async (req: AuthRequest, res: Response) => {
-  const { order_id, reference_number, payment_method, amount_tendered, customer_discount_type_id } = req.body;
+  const { order_id, reference_number, payment_method, amount_paid, change_given, customer_discount_type_id } = req.body;
   const cashier_id = req.user?.id;
 
   // Handle cash and cashless payments
@@ -383,24 +383,9 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
       );
     }
 
-    let amountPaid = finalAmount;
-    let changeAmount = 0;
-
-    // For cash payments, calculate change
-    if (payment_method === 'cash' && amount_tendered) {
-      const tendered = parseFloat(amount_tendered);
-
-      // Validate that amount tendered is sufficient
-      if (tendered < finalAmount) {
-        throw new AppError(
-          `Insufficient amount. Need ₱${finalAmount.toFixed(2)}, received ₱${tendered.toFixed(2)}`,
-          400
-        );
-      }
-
-      amountPaid = tendered;
-      changeAmount = tendered - finalAmount;
-    }
+    // Use amount_paid and change_given directly from the frontend for cash transactions
+    const finalAmountPaid = payment_method === 'cash' ? (amount_paid || finalAmount) : finalAmount;
+    const finalChangeGiven = payment_method === 'cash' ? (change_given || 0) : 0;
 
     // ✅ STOCK DEDUCTION: Get order items and deduct stock quantities
     const [orderItemsRows] = await conn.query(
@@ -456,8 +441,8 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
 
     console.log('💰 Updating payment status to PAID:', {
       order_id,
-      amount_paid: amountPaid,
-      change_amount: changeAmount,
+      amount_paid: finalAmountPaid,
+      change_given: finalChangeGiven,
       cashier_id,
       payment_method
     });
@@ -466,11 +451,11 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
       `UPDATE customer_order
        SET payment_status = 'paid',
            amount_paid = ?,
-           change_amount = ?,
+           change_given = ?,
            payment_verified_by = ?,
            payment_verified_at = NOW()
        WHERE order_id = ?`,
-      [amountPaid, changeAmount, cashier_id, order_id]
+      [finalAmountPaid, finalChangeGiven, cashier_id, order_id]
     );
 
     console.log('✓ Payment status updated successfully');
@@ -479,7 +464,7 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
       `INSERT INTO payment_transaction
        (order_id, transaction_type, payment_method, amount, reference_number, status, processed_by, completed_at)
        VALUES (?, 'payment', ?, ?, ?, 'completed', ?, NOW())`,
-      [order_id, payment_method, amountPaid, reference_number || null, cashier_id]
+      [order_id, payment_method, finalAmountPaid, reference_number || null, cashier_id]
     );
 
     console.log('✓ Payment transaction recorded');
@@ -740,7 +725,8 @@ export const getOrders = async (req: AuthRequest, res: Response) => {
     date_from,
     date_to,
     page = '1',
-    limit = '20',
+    limit = '20', // Default limit
+    include_items = 'false', // New parameter
   } = req.query;
 
   // Parse and validate pagination parameters
@@ -793,13 +779,46 @@ export const getOrders = async (req: AuthRequest, res: Response) => {
 
   const orders = await query(sql, params);
 
+  // Optionally include items for each order to solve N+1 problem on client
+  if (include_items === 'true' && Array.isArray(orders) && orders.length > 0) {
+    const orderIds = orders.map((o: any) => o.order_id);
+
+    const [items] = await query<any[]>(
+      `SELECT
+         oi.order_id,
+         oi.order_item_id,
+         oi.quantity,
+         oi.unit_price,
+         oi.subtotal as item_total,
+         mi.name as item_name
+       FROM order_item oi
+       JOIN menu_item mi ON oi.menu_item_id = mi.menu_item_id
+       WHERE oi.order_id IN (?)`,
+      [orderIds]
+    );
+
+    // Group items by order_id for efficient mapping
+    const itemsByOrderId = items.reduce((acc, item) => {
+      if (!acc[item.order_id]) {
+        acc[item.order_id] = [];
+      }
+      acc[item.order_id].push(item);
+      return acc;
+    }, {} as Record<number, any[]>);
+
+    // Attach items to their respective orders
+    for (const order of orders as any[]) {
+      order.items = itemsByOrderId[order.order_id] || [];
+    }
+  }
+
   res.json(successResponse('Orders retrieved', {
     orders,
     pagination: {
       page: pageNum,
       limit: limitNum,
       total,
-      totalPages: Math.ceil(total / limitNum)
+      totalPages: Math.ceil(total / limitNum),
     }
   }));
 };

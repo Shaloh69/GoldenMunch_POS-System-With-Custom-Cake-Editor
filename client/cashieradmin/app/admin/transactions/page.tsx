@@ -263,7 +263,7 @@ export default function TransactionsPage() {
         Number(t.total_amount || 0).toFixed(2),
         Number(t.discount_amount || 0).toFixed(2),
         Number(t.final_amount || 0).toFixed(2),
-        Number(transaction.amount_paid || t.final_amount || 0).toFixed(2),
+        Number(transaction.amount_paid || 0).toFixed(2),
         Number(transaction.change_given || 0).toFixed(2),
 
         // Payment References
@@ -323,10 +323,7 @@ export default function TransactionsPage() {
   const getTotalCashCollected = () => {
     return filteredTransactions
       .filter((t) => t.payment_method === "cash")
-      .reduce(
-        (sum, t) => sum + Number((t as any).amount_paid || t.final_amount || 0),
-        0,
-      );
+      .reduce((sum, t) => sum + Number((t as any).amount_paid || 0), 0);
   };
 
   const getTotalChangeGiven = () => {
