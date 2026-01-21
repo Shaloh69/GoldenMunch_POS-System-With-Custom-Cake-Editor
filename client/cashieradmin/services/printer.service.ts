@@ -21,7 +21,7 @@ export interface ReceiptData {
   customerName?: string;
   specialInstructions?: string;
   referenceNumber?: string;
-  estimatedPreparationMinutes?: number;
+  estimatedPrepTime?: number;
   cashierName?: string;
 }
 
@@ -272,7 +272,7 @@ class PrinterService {
       specialInstructions:
         order.special_instructions || order.specialInstructions,
       referenceNumber: getReferenceNumber(),
-      estimatedPreparationMinutes: order.estimated_preparation_minutes,
+      estimatedPrepTime: order.estimatedPrepTime,
       cashierName: order.cashier_name || undefined,
     };
   }
