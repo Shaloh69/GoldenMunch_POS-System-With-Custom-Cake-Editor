@@ -383,7 +383,7 @@ class EmailService {
 
       // Get associated images
       const [images] = await pool.query<RowDataPacket[]>(
-        `SELECT image_url, image_type, view_angle FROM custom_cake_images
+        `SELECT image_url, image_type, view_angle FROM custom_cake_request_images
          WHERE request_id = ? ORDER BY uploaded_at ASC`,
         [requestId]
       );
@@ -833,7 +833,7 @@ class EmailService {
   }): Promise<void> {    
     // Get associated images to show the customer a preview
     const [images] = await pool.query<RowDataPacket[]>(
-      `SELECT image_url, view_angle FROM custom_cake_images
+      `SELECT image_url, view_angle FROM custom_cake_request_images
        WHERE request_id = ? AND image_type = 'preview' ORDER BY uploaded_at ASC`,
       [requestId]
     );
