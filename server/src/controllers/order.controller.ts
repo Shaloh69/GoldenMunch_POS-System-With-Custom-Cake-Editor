@@ -265,7 +265,7 @@ export const getOrderById = async (req: AuthRequest, res: Response) => {
 
   // Get order items
   const items = await query(
-    `SELECT oi.*, oi.subtotal as item_total, mi.name as menu_item_name, mi.preparation_time_minutes
+    `SELECT oi.*, oi.subtotal as item_total, mi.name as menu_item_name, mi.preparation_time_minutes, mi.allergen_info, mi.nutritional_info
      FROM order_item oi
      LEFT JOIN menu_item mi ON oi.menu_item_id = mi.menu_item_id
      WHERE oi.order_id = ?`,
@@ -319,7 +319,7 @@ export const getOrderByVerificationCode = async (req: AuthRequest, res: Response
 
   // Get order items
   const items = await query(
-    `SELECT oi.*, oi.subtotal as item_total, mi.name as menu_item_name, mi.preparation_time_minutes
+    `SELECT oi.*, oi.subtotal as item_total, mi.name as menu_item_name, mi.preparation_time_minutes, mi.allergen_info, mi.nutritional_info
      FROM order_item oi
      LEFT JOIN menu_item mi ON oi.menu_item_id = mi.menu_item_id
      WHERE oi.order_id = ?`,
@@ -527,6 +527,8 @@ export const getOrderDetails = async (req: AuthRequest, res: Response) => {
             oi.subtotal as item_total,
             mi.name as menu_item_name,
             mi.name as item_name,
+            mi.allergen_info,
+            mi.nutritional_info,
             mi.preparation_time_minutes,
             mi.image_url,
             oi.unit_price,
