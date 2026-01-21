@@ -158,6 +158,9 @@ export default function UnifiedCashierPage() {
   // Track first load to prevent loading state on auto-refresh
   const isFirstLoad = useRef(true);
 
+  // Ref to track pending order IDs from the previous fetch for auto-printing
+  const prevPendingOrderIds = useRef<Set<number>>(new Set());
+
   // Load data on mount and refresh at optimized intervals to reduce API load
   useEffect(() => {
     loadAllData();
@@ -188,7 +191,7 @@ export default function UnifiedCashierPage() {
       if (response.success && response.data) {
         const allOrders = (response.data as any).orders || [];
 
-        // Separate orders by status
+        // Separate orders by status FIRST to ensure variables are defined
         const pending = allOrders.filter(
           (o: CustomerOrder) => o.order_status === OrderStatus.PENDING,
         );
@@ -201,10 +204,6 @@ export default function UnifiedCashierPage() {
           ),
         );
 
-        setPendingOrders(pending);
-        setActiveOrders(active);
-        setCompletedOrders(completed);
-
         // Update stats
         setStats({
           pendingPayments: pending.length,
@@ -216,6 +215,22 @@ export default function UnifiedCashierPage() {
             return orderDate.toDateString() === today.toDateString();
           }).length,
         });
+
+        // Check for newly auto-completed cashless orders to trigger printing
+        if (prevPendingOrderIds.current.size > 0) {
+          const newlyConfirmedCashless = active.filter(order =>
+            order.payment_method === 'cashless' && prevPendingOrderIds.current.has(order.order_id)
+          );
+          for (const order of newlyConfirmedCashless) {
+            handleAutoPrint(order);
+          }
+        }
+        // Update the ref with the new set of pending IDs for the next poll
+        prevPendingOrderIds.current = new Set(pending.map(o => o.order_id));
+
+        setPendingOrders(pending);
+        setActiveOrders(active);
+        setCompletedOrders(completed);
       }
     } catch (error) {
       console.error("Failed to load orders:", error);
@@ -253,6 +268,47 @@ export default function UnifiedCashierPage() {
       });
     } finally {
       setLoadingPrinterStatus(false);
+    }
+  };
+
+  const handleAutoPrint = async (order: CustomerOrder) => {
+    try {
+      console.log(`🖨️ Auto-printing receipt for auto-completed order #${order.order_number}`);
+
+      const orderDetailsResponse = await OrderService.getOrderById(order.order_id);
+      if (!orderDetailsResponse.success || !orderDetailsResponse.data) {
+        throw new Error(`Failed to fetch details for order #${order.order_number}`);
+      }
+
+      const fullOrderData = orderDetailsResponse.data as any;
+      const receiptData = printerService.formatOrderForPrint(fullOrderData);
+      const printResult = await printerService.printReceipt(receiptData);
+
+      if (printResult.success) {
+        addToast({
+          title: "Receipt Auto-Printed",
+          description: `Receipt for Order #${order.order_number} has been printed.`,
+          color: "success",
+          timeout: 5000,
+        });
+        // Mark order as printed in database
+        try {
+          await OrderService.markOrderPrinted(order.order_id);
+          console.log(`✓ Order #${order.order_number} marked as printed in database`);
+        } catch (printMarkError) {
+          console.warn("Failed to mark order as printed:", printMarkError);
+        }
+      } else {
+        throw new Error(printResult.error || "Auto-printing failed");
+      }
+    } catch (error: any) {
+      console.error(`Auto-print error for order #${order.order_number}:`, error);
+      addToast({
+        title: "Auto-Print Failed",
+        description: `Could not auto-print receipt for Order #${order.order_number}. Please print manually.`,
+        color: "danger",
+        timeout: 10000,
+      });
     }
   };
 

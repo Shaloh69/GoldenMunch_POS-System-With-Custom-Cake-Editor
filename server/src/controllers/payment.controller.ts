@@ -275,12 +275,12 @@ export const handleXenditWebhook = asyncHandler(async (req: AuthRequest, res: Re
                  payment_reference_number = ?,
                  amount_paid = ?,
                  change_amount = 0,
-                 order_status = 'completed'
+                 order_status = 'confirmed'
              WHERE order_id = ?`,
             [id, finalAmount, orderId]
           );
 
-          logger.info(`   ✅ Payment verified - Order status: ${order.order_status} → completed`);
+          logger.info(`   ✅ Payment verified - Order status: ${order.order_status} → confirmed`);
 
           // Insert payment transaction record
           await conn.query(
@@ -295,8 +295,8 @@ export const handleXenditWebhook = asyncHandler(async (req: AuthRequest, res: Re
           // Add order timeline entry for auto-completion
           await conn.query(
             `INSERT INTO order_timeline
-             (order_id, status, changed_by, notes, created_at)
-             VALUES (?, 'completed', NULL, ?, NOW())`,
+             (order_id, status, changed_by, notes)
+             VALUES (?, 'confirmed', NULL, ?)`,
             [orderId, `Auto-completed via Xendit payment verification (Invoice: ${id})`]
           );
 
@@ -304,7 +304,7 @@ export const handleXenditWebhook = asyncHandler(async (req: AuthRequest, res: Re
 
           await conn.commit();
           logger.info(`✅ Order ${orderNumber} auto-completed successfully via Xendit webhook - Amount: ₱${amount}`);
-        } else {
+        } else { // For non-cashless orders, just update payment status (shouldn't happen with Xendit)
           // For non-cashless orders, just update payment status (shouldn't happen with Xendit)
           await conn.query(
             `UPDATE customer_order
