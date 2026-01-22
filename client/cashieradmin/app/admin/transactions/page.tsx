@@ -893,7 +893,7 @@ export default function TransactionsPage() {
                             <span className="text-sm">Amount Received:</span>
                             <span className="font-semibold">
                               {formatCurrency(
-                                (selectedTransaction as any).amount_paid ||
+                                (selectedTransaction as any).amount_paid ??
                                   selectedTransaction.final_amount,
                               )}
                             </span>
@@ -902,7 +902,7 @@ export default function TransactionsPage() {
                             <span className="text-sm">Change Given:</span>
                             <span className="font-semibold">
                               {formatCurrency(
-                                (selectedTransaction as any).change_amount,
+                                (selectedTransaction as any).change_amount ?? 0,
                               )}
                             </span>
                           </div>
