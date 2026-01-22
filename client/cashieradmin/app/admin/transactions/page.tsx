@@ -33,6 +33,7 @@ import {
 import { OrderService } from "@/services/order.service";
 import { printerService } from "@/services/printer.service";
 import { CustomerOrder } from "@/types/api";
+import { exportTransactionsToPDF } from "@/utils/pdfExport";
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<CustomerOrder[]>([]);
@@ -167,165 +168,22 @@ export default function TransactionsPage() {
     setExpandedRows(newExpanded);
   };
 
-  const exportToCSV = () => {
-    // Create date/time header (Row 1)
-    const exportDateTime = new Date().toLocaleString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true,
-    });
-    const dateTimeHeader = [`GoldenMunch Transactions Report - Generated: ${exportDateTime}`];
-
-    // Create group headers (Row 2) - each group label appears once, followed by empty strings
-    const groupHeaders = [
-      // Order Details (7 columns) - label appears once
-      "ORDER DETAILS", "", "", "", "", "", "",
-      // Customer Information (4 columns) - label appears once
-      "CUSTOMER INFORMATION", "", "", "",
-      // Items (2 columns) - label appears once
-      "ITEMS", "",
-      // Payment Information (7 columns) - label appears once
-      "PAYMENT INFORMATION", "", "", "", "", "", "",
-      // Staff & Verification (4 columns) - label appears once
-      "STAFF & VERIFICATION", "", "", "",
-      // System Information (4 columns) - label appears once
-      "SYSTEM INFORMATION", "", "", "",
-    ];
-
-    // Create column headers (Row 3) - actual column names
-    const columnHeaders = [
-      // Order Details
-      "Order ID",
-      "Order Number",
-      "Verification Code",
-      "Order Date & Time",
-      "Order Type",
-      "Order Source",
-      "Order Status",
-      // Customer Information
-      "Customer Name",
-      "Customer Phone",
-      "Discount Type",
-      "Discount Percentage",
-      // Items
-      "Total Items",
-      "Items Detail",
-      // Payment Information
-      "Payment Method",
-      "Payment Status",
-      "Subtotal (₱)",
-      "Discount Amount (₱)",
-      "Final Amount (₱)",
-      "Amount Paid (₱)",
-      "Change Given (₱)",
-      // Staff & Verification
-      "Cashier Name",
-      "Cashier ID",
-      "Verified By",
-      "Verified At",
-      // System Information
-      "Special Instructions",
-      "Is Printed",
-      "Created At",
-      "Updated At",
-    ];
-
-    const rows = filteredTransactions.map((t) => {
-      const transaction = t as any;
-      const itemsDetail = transaction.items
-        ?.map((item) => {
-          const itemData = item as any;
-          const itemName = itemData.item_name || itemData.menu_item_name || "Item";
-          const unitPrice = Number(item.unit_price || 0);
-          const quantity = Number(item.quantity || 0);
-          const itemTotal = Number(item.item_total || unitPrice * quantity);
-          return `${itemName} (₱${unitPrice.toFixed(2)} x${quantity} = ₱${itemTotal.toFixed(2)})`;
-        })
-        .join(" | ") || "N/A";
-
-      return [
-        // Order Identification
-        transaction.order_id,
-        transaction.order_number || "N/A",
-        transaction.verification_code || "N/A",
-        new Date(transaction.order_datetime).toLocaleString("en-US", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        }),
-        transaction.order_type?.replace("_", " ").toUpperCase() || "N/A",
-        transaction.order_source?.toUpperCase() || "N/A",
-        transaction.order_status?.toUpperCase() || "N/A",
-        // Customer Information
-        transaction.name || "Walk-in Customer",
-        transaction.phone || "N/A",
-        transaction.customer_discount?.name || "None",
-        transaction.customer_discount_percentage
-          ? Number(transaction.customer_discount_percentage).toFixed(2) + "%"
-          : "0%",
-        // Items
-        transaction.items?.length || 0,
-        itemsDetail,
-        // Payment Information
-        transaction.payment_method?.toUpperCase() || "N/A",
-        transaction.payment_status?.toUpperCase() || "N/A",
-        Number(transaction.subtotal || 0).toFixed(2),
-        Number(transaction.discount_amount || 0).toFixed(2),
-        Number(transaction.final_amount || 0).toFixed(2),
-        Number(transaction.amount_paid || 0).toFixed(2),
-        Number(transaction.change_amount || 0).toFixed(2),
-        // Staff & Verification
-        transaction.cashier_name || "N/A",
-        transaction.cashier_id || "N/A",
-        transaction.verified_by_name || "N/A",
-        transaction.payment_verified_at
-          ? new Date(transaction.payment_verified_at).toLocaleString()
-          : "N/A",
-        // System Information
-        transaction.special_instructions || "None",
-        transaction.is_printed ? "Yes" : "No",
-        new Date(transaction.created_at).toLocaleString(),
-        new Date(transaction.updated_at).toLocaleString(),
-      ];
-    });
-
-    const csvContent = [
-      // Row 1: Date/Time header
-      dateTimeHeader.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
-      // Row 2: Group headers
-      groupHeaders.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
-      // Row 3: Column headers
-      columnHeaders.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
-      // Data rows
-      ...rows.map((row) =>
-        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
-      ),
-    ].join("\n");
-
-    // Add BOM for Excel UTF-8 compatibility
-    const BOM = "\uFEFF";
-    const blob = new Blob([BOM + csvContent], {
-      type: "text/csv;charset=utf-8;",
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-
-    const dateRange =
-      dateFrom && dateTo
-        ? `${dateFrom}_to_${dateTo}`
-        : new Date().toISOString().split("T")[0];
-
-    link.href = url;
-    link.download = `GoldenMunch_Transactions_${dateRange}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+  const exportToPDF = () => {
+    try {
+      exportTransactionsToPDF(filteredTransactions, dateFrom, dateTo);
+      addToast({
+        title: "PDF Generated",
+        description: "Transactions report has been downloaded successfully",
+        color: "success",
+      });
+    } catch (error) {
+      console.error("Failed to generate PDF:", error);
+      addToast({
+        title: "Export Failed",
+        description: "Failed to generate PDF report. Please try again.",
+        color: "danger",
+      });
+    }
   };
 
   const getTotalAmount = () => {
@@ -418,9 +276,9 @@ export default function TransactionsPage() {
           color="primary"
           isDisabled={filteredTransactions.length === 0}
           startContent={<DocumentArrowDownIcon className="h-5 w-5" />}
-          onPress={exportToCSV}
+          onPress={exportToPDF}
         >
-          Export CSV
+          Export PDF
         </Button>
       </div>
 
