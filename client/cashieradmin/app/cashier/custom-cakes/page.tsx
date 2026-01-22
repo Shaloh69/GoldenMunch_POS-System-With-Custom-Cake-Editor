@@ -102,7 +102,7 @@ export default function CashierCustomCakesPage() {
     setSelectedCake(cake);
     setPaymentForm({
       payment_method: "cash",
-      amount_paid: cake.approved_price,
+      amount_paid: Number(cake.approved_price) || 0,
     });
     setShowPaymentModal(true);
   };
@@ -122,7 +122,7 @@ export default function CashierCustomCakesPage() {
     if (
       !CustomCakeCashierService.isValidPayment(
         paymentForm.amount_paid,
-        selectedCake.approved_price,
+        Number(selectedCake.approved_price) || 0,
       )
     ) {
       setErrorMessage(
@@ -159,7 +159,7 @@ export default function CashierCustomCakesPage() {
 
     return CustomCakeCashierService.calculateChange(
       paymentForm.amount_paid,
-      selectedCake.approved_price,
+      Number(selectedCake.approved_price) || 0,
     );
   };
 
@@ -249,7 +249,7 @@ export default function CashierCustomCakesPage() {
                 <p className="text-2xl font-bold text-rich-brown">
                   {CustomCakeCashierService.formatPrice(
                     approvedCakes.reduce(
-                      (sum, cake) => sum + cake.approved_price,
+                      (sum, cake) => sum + (Number(cake.approved_price) || 0),
                       0,
                     ),
                   )}
@@ -423,7 +423,7 @@ export default function CashierCustomCakesPage() {
                     <TableCell>
                       <p className="text-lg font-bold text-success">
                         {CustomCakeCashierService.formatPrice(
-                          cake.approved_price,
+                          Number(cake.approved_price) || 0,
                         )}
                       </p>
                     </TableCell>
@@ -478,7 +478,7 @@ export default function CashierCustomCakesPage() {
                         </span>
                         <span className="font-medium">
                           {CustomCakeCashierService.formatPrice(
-                            selectedCake.approved_price,
+                            Number(selectedCake.approved_price) || 0,
                           )}
                         </span>
                       </div>
@@ -489,7 +489,7 @@ export default function CashierCustomCakesPage() {
                         </span>
                         <span className="font-bold text-success">
                           {CustomCakeCashierService.formatPrice(
-                            selectedCake.approved_price,
+                            Number(selectedCake.approved_price) || 0,
                           )}
                         </span>
                       </div>
