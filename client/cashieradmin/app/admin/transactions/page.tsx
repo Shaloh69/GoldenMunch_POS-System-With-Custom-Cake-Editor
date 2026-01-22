@@ -168,22 +168,22 @@ export default function TransactionsPage() {
   };
 
   const exportToCSV = () => {
-    // Create group headers (Row 1) - each group label repeats for its columns
+    // Create group headers (Row 1) - each group label appears once, followed by empty strings
     const groupHeaders = [
-      // Order Details (4 columns)
-      "ORDER DETAILS", "ORDER DETAILS", "ORDER DETAILS", "ORDER DETAILS", "ORDER DETAILS", "ORDER DETAILS", "ORDER DETAILS",
-      // Customer Information (4 columns)
-      "CUSTOMER INFORMATION", "CUSTOMER INFORMATION", "CUSTOMER INFORMATION", "CUSTOMER INFORMATION",
-      // Items (2 columns)
-      "ITEMS", "ITEMS",
-      // Payment Information (7 columns)
-      "PAYMENT INFORMATION", "PAYMENT INFORMATION", "PAYMENT INFORMATION", "PAYMENT INFORMATION", "PAYMENT INFORMATION", "PAYMENT INFORMATION", "PAYMENT INFORMATION",
-      // Payment References (3 columns)
-      "PAYMENT REFERENCES", "PAYMENT REFERENCES", "PAYMENT REFERENCES",
-      // Staff & Verification (4 columns)
-      "STAFF & VERIFICATION", "STAFF & VERIFICATION", "STAFF & VERIFICATION", "STAFF & VERIFICATION",
-      // System Information (4 columns)
-      "SYSTEM INFORMATION", "SYSTEM INFORMATION", "SYSTEM INFORMATION", "SYSTEM INFORMATION",
+      // Order Details (7 columns) - label appears once
+      "ORDER DETAILS", "", "", "", "", "", "",
+      // Customer Information (4 columns) - label appears once
+      "CUSTOMER INFORMATION", "", "", "",
+      // Items (2 columns) - label appears once
+      "ITEMS", "",
+      // Payment Information (7 columns) - label appears once
+      "PAYMENT INFORMATION", "", "", "", "", "", "",
+      // Payment References (3 columns) - label appears once
+      "PAYMENT REFERENCES", "", "",
+      // Staff & Verification (4 columns) - label appears once
+      "STAFF & VERIFICATION", "", "", "",
+      // System Information (4 columns) - label appears once
+      "SYSTEM INFORMATION", "", "", "",
     ];
 
     // Create column headers (Row 2) - actual column names
