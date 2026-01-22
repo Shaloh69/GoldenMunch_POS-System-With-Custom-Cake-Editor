@@ -5,7 +5,7 @@
   "framework": "nextjs",
   "rootDirectory": "client/Kiosk_Web",
   "env": {
-    "NEXT_PUBLIC_API_URL": "https://goldenmunchserver.onrender.com/api",
+    "NEXT_PUBLIC_API_URL": "https://goldenmunchserver.onrender.com",
     "NEXT_PUBLIC_API_TIMEOUT": "60000",
     "NEXT_PUBLIC_APP_NAME": "GoldenMunch Kiosk",
     "NEXT_PUBLIC_ENVIRONMENT": "production"

@@ -20,7 +20,7 @@ services:
       - key: NEXT_TELEMETRY_DISABLED
         value: 1
       - key: NEXT_PUBLIC_API_URL
-        value: https://goldenmunchserver.onrender.com/api
+        value: https://goldenmunchserver.onrender.com
     healthCheckPath: /
     autoDeploy: true
 
@@ -76,7 +76,7 @@ services:
       - key: NEXT_TELEMETRY_DISABLED
         value: 1
       - key: NEXT_PUBLIC_API_URL
-        value: https://goldenmunchserver.onrender.com/api
+        value: https://goldenmunchserver.onrender.com
     healthCheckPath: /
     autoDeploy: true
 

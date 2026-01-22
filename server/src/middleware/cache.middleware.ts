@@ -152,6 +152,27 @@ export const autoInvalidateCache = () => {
           patterns.push('orders:*');
         }
 
+        // Payment verification affects stock, so invalidate menu cache
+        if (path.includes('/payment/verify')) {
+          patterns.push('cache:/api/kiosk/menu*');
+          patterns.push('cache:/api/admin/menu*');
+          patterns.push('cache:/api/admin/inventory*');
+          patterns.push('menu:*');
+          patterns.push('inventory:*');
+        }
+
+        // Xendit webhook auto-completes orders and deducts stock
+        if (path.includes('/webhooks/xendit')) {
+          patterns.push('cache:/api/kiosk/menu*');
+          patterns.push('cache:/api/admin/menu*');
+          patterns.push('cache:/api/admin/inventory*');
+          patterns.push('cache:/api/kiosk/orders*');
+          patterns.push('cache:/api/cashier/orders*');
+          patterns.push('menu:*');
+          patterns.push('inventory:*');
+          patterns.push('orders:*');
+        }
+
         if (path.includes('/promotion')) {
           patterns.push('cache:/api/kiosk/promotions*');
           patterns.push('cache:/api/admin/promotions*');
