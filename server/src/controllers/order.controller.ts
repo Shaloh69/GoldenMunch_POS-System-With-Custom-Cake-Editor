@@ -250,9 +250,9 @@ export const getOrderById = async (req: AuthRequest, res: Response) => {
       co.*,
       c.name,
       c.phone,
-      COALESCE(a.name, ca.name) AS cashier_name,
+      COALESCE(a.name, ca.name, 'Unknown Cashier') AS cashier_name,
       COALESCE(a.username, ca.cashier_code) AS cashier_username,
-      COALESCE(verifier_admin.name, verifier_cashier.name) AS verified_by_name
+      COALESCE(verifier_admin.name, verifier_cashier.name, 'Unknown Verifier') AS verified_by_name
     FROM customer_order co
     LEFT JOIN customer c ON co.customer_id = c.customer_id
     LEFT JOIN admin a ON co.cashier_id = a.admin_id
@@ -768,9 +768,9 @@ export const getOrders = async (req: AuthRequest, res: Response) => {
       co.*,
       c.name,
       c.phone,
-      COALESCE(a.name, ca.name) AS cashier_name,
+      COALESCE(a.name, ca.name, 'Unknown Cashier') AS cashier_name,
       COALESCE(a.username, ca.cashier_code) AS cashier_username,
-      COALESCE(verifier_admin.name, verifier_cashier.name) AS verified_by_name
+      COALESCE(verifier_admin.name, verifier_cashier.name, 'Unknown Verifier') AS verified_by_name
     FROM customer_order co
     LEFT JOIN customer c ON co.customer_id = c.customer_id
     LEFT JOIN admin a ON co.cashier_id = a.admin_id
