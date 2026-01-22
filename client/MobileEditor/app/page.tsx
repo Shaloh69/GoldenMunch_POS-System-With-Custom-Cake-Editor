@@ -425,20 +425,36 @@ function CakeEditorMain({ sessionToken, debugMode }: { sessionToken: string; deb
   const captureScreenshots = async (): Promise<string[]> => {
     const screenshots: string[] = [];
 
-    if (canvasRef.current && canvasRef.current.captureScreenshot) {
-      try {
-        // Capture from different angles
-        const angles = ['front', 'side', 'top', '3d_perspective'];
+    if (!canvasRef.current) {
+      console.warn('⚠️ Canvas ref not available - cannot capture screenshots');
+      return screenshots;
+    }
 
-        for (const angle of angles) {
-          const screenshot = await canvasRef.current.captureScreenshot(angle);
-          if (screenshot) {
-            screenshots.push(screenshot);
-          }
+    if (!canvasRef.current.captureScreenshot) {
+      console.warn('⚠️ captureScreenshot method not available on canvas');
+      return screenshots;
+    }
+
+    try {
+      // Capture from different angles
+      const angles = ['front', 'side', 'top', '3d_perspective'];
+      console.log('📸 Capturing 3D screenshots from', angles.length, 'angles...');
+
+      for (const angle of angles) {
+        console.log(`  📷 Capturing ${angle} view...`);
+        const screenshot = await canvasRef.current.captureScreenshot(angle);
+        if (screenshot) {
+          const sizeKB = Math.round((screenshot.length * 3) / 4 / 1024);
+          console.log(`  ✅ ${angle} captured (${sizeKB} KB)`);
+          screenshots.push(screenshot);
+        } else {
+          console.warn(`  ⚠️ ${angle} capture returned null`);
         }
-      } catch (error) {
-        console.error('Failed to capture screenshots:', error);
       }
+
+      console.log(`✅ Total screenshots captured: ${screenshots.length}/${angles.length}`);
+    } catch (error) {
+      console.error('❌ Failed to capture screenshots:', error);
     }
 
     return screenshots;
@@ -492,7 +508,9 @@ function CakeEditorMain({ sessionToken, debugMode }: { sessionToken: string; deb
             view_angle: ['front', 'side', 'top', '3d_perspective'][index] || 'front',
           }));
 
-          await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/custom-cake/upload-images`, {
+          console.log(`📤 Uploading ${imageUploads.length} images to server...`);
+
+          const uploadResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/custom-cake/upload-images`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -502,10 +520,21 @@ function CakeEditorMain({ sessionToken, debugMode }: { sessionToken: string; deb
               images: imageUploads,
             }),
           });
+
+          if (!uploadResponse.ok) {
+            const errorData = await uploadResponse.json().catch(() => ({ message: 'Upload failed' }));
+            console.error('❌ Image upload failed:', errorData);
+            console.warn('⚠️ Continuing without images - admin won\'t see preview');
+          } else {
+            const uploadResult = await uploadResponse.json();
+            console.log('✅ Images uploaded successfully:', uploadResult);
+          }
         } catch (error) {
-          console.error('Failed to upload images:', error);
-          // Continue even if image upload fails
+          console.error('❌ Failed to upload images:', error);
+          console.warn('⚠️ Continuing without images - admin won\'t see preview');
         }
+      } else if (screenshots.length === 0) {
+        console.warn('⚠️ No screenshots captured - admin won\'t see 3D preview');
       }
 
       // Step 4: Submit for review

@@ -246,17 +246,20 @@ export const getOrderById = async (req: AuthRequest, res: Response) => {
   }
 
   const orders = await query(
-    `SELECT co.*, c.name, c.phone,
-     COALESCE(a.name, ca.name) as cashier_name,
-     COALESCE(a.username, ca.cashier_code) as cashier_username,
-     COALESCE(verifier_admin.name, verifier_cashier.name) as verified_by_name
-     FROM customer_order co
-     LEFT JOIN customer c ON co.customer_id = c.customer_id
-     LEFT JOIN admin a ON co.cashier_id = a.admin_id
-     LEFT JOIN cashier ca ON co.cashier_id = ca.cashier_id
-     LEFT JOIN admin verifier_admin ON co.payment_verified_by = verifier_admin.admin_id
-     LEFT JOIN cashier verifier_cashier ON co.payment_verified_by = verifier_cashier.cashier_id
-     WHERE co.order_id = ?`,
+    `SELECT
+      co.*,
+      c.name,
+      c.phone,
+      COALESCE(a.name, ca.name) AS cashier_name,
+      COALESCE(a.username, ca.cashier_code) AS cashier_username,
+      COALESCE(verifier_admin.name, verifier_cashier.name) AS verified_by_name
+    FROM customer_order co
+    LEFT JOIN customer c ON co.customer_id = c.customer_id
+    LEFT JOIN admin a ON co.cashier_id = a.admin_id
+    LEFT JOIN cashier ca ON co.cashier_id = ca.cashier_id
+    LEFT JOIN admin verifier_admin ON co.payment_verified_by = verifier_admin.admin_id
+    LEFT JOIN cashier verifier_cashier ON co.payment_verified_by = verifier_cashier.cashier_id
+    WHERE co.order_id = ?`,
     [orderId]
   );
 
@@ -761,10 +764,13 @@ export const getOrders = async (req: AuthRequest, res: Response) => {
   const offset = (pageNum - 1) * limitNum;
 
   let sql = `
-    SELECT co.*, c.name, c.phone,
-    COALESCE(a.name, ca.name) as cashier_name,
-    COALESCE(a.username, ca.cashier_code) as cashier_username,
-    COALESCE(verifier_admin.name, verifier_cashier.name) as verified_by_name
+    SELECT
+      co.*,
+      c.name,
+      c.phone,
+      COALESCE(a.name, ca.name) AS cashier_name,
+      COALESCE(a.username, ca.cashier_code) AS cashier_username,
+      COALESCE(verifier_admin.name, verifier_cashier.name) AS verified_by_name
     FROM customer_order co
     LEFT JOIN customer c ON co.customer_id = c.customer_id
     LEFT JOIN admin a ON co.cashier_id = a.admin_id
@@ -811,6 +817,19 @@ export const getOrders = async (req: AuthRequest, res: Response) => {
   params.push(limitNum, offset);
 
   const orders = await query(sql, params);
+
+  // Debug: Log first order to verify cashier fields are present
+  if (Array.isArray(orders) && orders.length > 0) {
+    const firstOrder = orders[0] as any;
+    console.log('📋 Sample order data:', {
+      order_id: firstOrder.order_id,
+      cashier_id: firstOrder.cashier_id,
+      cashier_name: firstOrder.cashier_name,
+      cashier_username: firstOrder.cashier_username,
+      verified_by_name: firstOrder.verified_by_name,
+      payment_verified_by: firstOrder.payment_verified_by,
+    });
+  }
 
   // Optionally include items for each order to solve N+1 problem on client
   if (include_items === 'true' && Array.isArray(orders) && orders.length > 0) {
