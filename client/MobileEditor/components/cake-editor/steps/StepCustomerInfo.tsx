@@ -74,7 +74,8 @@ export default function StepCustomerInfo({ design, updateDesign }: StepCustomerI
         </Select>
 
         <Input
-          label="Event Date (Optional)"
+          label="Pick Up Time"
+          placeholder="Pick up time (-Optional- This Can Change During verification)"
           type="date"
           value={design.event_date}
           onChange={(e) => updateDesign({ event_date: e.target.value })}
