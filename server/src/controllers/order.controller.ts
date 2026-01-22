@@ -516,10 +516,20 @@ export const getOrderDetails = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
 
   const order = getFirstRow<any>(await query(
-    `SELECT co.*, c.name, c.phone
-     FROM customer_order co
-     LEFT JOIN customer c ON co.customer_id = c.customer_id
-     WHERE co.order_id = ? AND co.is_deleted = FALSE`,
+    `SELECT
+      co.*,
+      c.name,
+      c.phone,
+      COALESCE(a.name, ca.name) AS cashier_name,
+      COALESCE(a.username, ca.cashier_code) AS cashier_username,
+      COALESCE(verifier_admin.name, verifier_cashier.name) AS verified_by_name
+    FROM customer_order co
+    LEFT JOIN customer c ON co.customer_id = c.customer_id
+    LEFT JOIN admin a ON co.cashier_id = a.admin_id
+    LEFT JOIN cashier ca ON co.cashier_id = ca.cashier_id
+    LEFT JOIN admin verifier_admin ON co.payment_verified_by = verifier_admin.admin_id
+    LEFT JOIN cashier verifier_cashier ON co.payment_verified_by = verifier_cashier.cashier_id
+    WHERE co.order_id = ? AND co.is_deleted = FALSE`,
     [id]
   ));
 
