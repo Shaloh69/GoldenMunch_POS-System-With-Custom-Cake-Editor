@@ -493,8 +493,6 @@ export default function TransactionsPage() {
               <SelectItem key="all">All Methods</SelectItem>
               <SelectItem key="cash">Cash</SelectItem>
               <SelectItem key="cashless">Cashless</SelectItem>
-              <SelectItem key="gcash">GCash</SelectItem>
-              <SelectItem key="paymaya">PayMaya</SelectItem>
             </Select>
 
             <Select

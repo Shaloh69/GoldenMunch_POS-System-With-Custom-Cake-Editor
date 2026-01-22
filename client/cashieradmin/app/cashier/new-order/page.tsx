@@ -607,9 +607,10 @@ export default function NewOrderPage() {
                 {/* Payment Method */}
                 <div>
                   <label className="block text-sm font-medium text-rich-brown mb-2">
-                    Payment Method
+                    Payment Method -Cashier Only has Cash-
                   </label>
                   <Select
+                    isDisabled
                     selectedKeys={[orderForm.payment_method]}
                     onSelectionChange={(keys) => {
                       const value = Array.from(keys)[0] as
