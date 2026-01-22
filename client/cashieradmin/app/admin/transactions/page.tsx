@@ -69,23 +69,43 @@ export default function TransactionsPage() {
   const loadTransactions = async () => {
     try {
       setLoading(true);
-      // REFACTOR: Use a single, efficient endpoint to fetch all transaction data.
-      // This avoids the "N+1 query" problem of fetching each order's details one by one.
-      // A backend change is required to create this `getTransactions` service method.
-      const response = await OrderService.getOrders(); // Using getOrders as a stand-in for a future getTransactions()
+      // Step 1: Fetch the list of all orders. This list contains basic info but not detailed items.
+      const response = await OrderService.getOrders();
 
       if (response.success && response.data) {
         // Get orders data (handle both array and paginated response)
-        const orders = Array.isArray(response.data)
+        const allOrders = Array.isArray(response.data)
           ? response.data
           : (response.data as any).orders || [];
-        
-        // Filter for completed transactions and sort by most recent
-        const completedTransactions = orders.filter(
-          (order: CustomerOrder) => order.payment_status === "paid",
-        ).sort((a, b) => new Date(b.order_datetime).getTime() - new Date(a.order_datetime).getTime());
 
-        setTransactions(completedTransactions);
+        // Step 2: Filter for only 'paid' transactions.
+        const paidOrders = allOrders.filter(
+          (order: CustomerOrder) => order.payment_status === "paid",
+        );
+
+        // Step 3: Fetch full details for each paid transaction to get the item list.
+        // NOTE: This creates an "N+1" query pattern, which can be slow if there are many transactions.
+        // The ideal long-term solution is a dedicated backend endpoint that returns all this data in one call.
+        const detailedTransactions = await Promise.all(
+          paidOrders.map(async (order: CustomerOrder) => {
+            try {
+              const detailResponse = await OrderService.getOrderById(
+                order.order_id,
+              );
+              // Return the detailed order if successful, otherwise return the original basic order.
+              return detailResponse.success && detailResponse.data
+                ? detailResponse.data
+                : order;
+            } catch {
+              // If fetching details fails, fall back to the basic order data.
+              return order;
+            }
+          }),
+        );
+
+        // Step 4: Sort by most recent and update the state.
+        const sortedTransactions = detailedTransactions.sort((a, b) => new Date(b.order_datetime).getTime() - new Date(a.order_datetime).getTime());
+        setTransactions(sortedTransactions);
       }
     } catch (error) {
       console.error("Failed to load transactions:", error);
