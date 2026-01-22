@@ -248,11 +248,14 @@ export const getOrderById = async (req: AuthRequest, res: Response) => {
   const orders = await query(
     `SELECT co.*, c.name, c.phone,
      COALESCE(a.name, ca.name) as cashier_name,
-     COALESCE(a.username, ca.username) as cashier_username
+     COALESCE(a.username, ca.cashier_code) as cashier_username,
+     COALESCE(verifier_admin.name, verifier_cashier.name) as verified_by_name
      FROM customer_order co
      LEFT JOIN customer c ON co.customer_id = c.customer_id
      LEFT JOIN admin a ON co.cashier_id = a.admin_id
      LEFT JOIN cashier ca ON co.cashier_id = ca.cashier_id
+     LEFT JOIN admin verifier_admin ON co.payment_verified_by = verifier_admin.admin_id
+     LEFT JOIN cashier verifier_cashier ON co.payment_verified_by = verifier_cashier.cashier_id
      WHERE co.order_id = ?`,
     [orderId]
   );
@@ -758,9 +761,16 @@ export const getOrders = async (req: AuthRequest, res: Response) => {
   const offset = (pageNum - 1) * limitNum;
 
   let sql = `
-    SELECT co.*, c.name, c.phone
+    SELECT co.*, c.name, c.phone,
+    COALESCE(a.name, ca.name) as cashier_name,
+    COALESCE(a.username, ca.cashier_code) as cashier_username,
+    COALESCE(verifier_admin.name, verifier_cashier.name) as verified_by_name
     FROM customer_order co
     LEFT JOIN customer c ON co.customer_id = c.customer_id
+    LEFT JOIN admin a ON co.cashier_id = a.admin_id
+    LEFT JOIN cashier ca ON co.cashier_id = ca.cashier_id
+    LEFT JOIN admin verifier_admin ON co.payment_verified_by = verifier_admin.admin_id
+    LEFT JOIN cashier verifier_cashier ON co.payment_verified_by = verifier_cashier.cashier_id
     WHERE co.is_deleted = FALSE
   `;
 

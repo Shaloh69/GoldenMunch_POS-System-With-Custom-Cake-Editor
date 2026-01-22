@@ -168,7 +168,19 @@ export default function TransactionsPage() {
   };
 
   const exportToCSV = () => {
-    // Create group headers (Row 1) - each group label appears once, followed by empty strings
+    // Create date/time header (Row 1)
+    const exportDateTime = new Date().toLocaleString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
+    const dateTimeHeader = [`GoldenMunch Transactions Report - Generated: ${exportDateTime}`];
+
+    // Create group headers (Row 2) - each group label appears once, followed by empty strings
     const groupHeaders = [
       // Order Details (7 columns) - label appears once
       "ORDER DETAILS", "", "", "", "", "", "",
@@ -178,8 +190,6 @@ export default function TransactionsPage() {
       "ITEMS", "",
       // Payment Information (7 columns) - label appears once
       "PAYMENT INFORMATION", "", "", "", "", "", "",
-      // Payment References (3 columns) - label appears once
-      "PAYMENT REFERENCES", "", "",
       // Staff & Verification (4 columns) - label appears once
       "STAFF & VERIFICATION", "", "", "",
       // System Information (4 columns) - label appears once
@@ -212,10 +222,6 @@ export default function TransactionsPage() {
       "Final Amount (₱)",
       "Amount Paid (₱)",
       "Change Given (₱)",
-      // Payment References
-      "GCash Reference",
-      "PayMaya Reference",
-      "Card Reference",
       // Staff & Verification
       "Cashier Name",
       "Cashier ID",
@@ -279,15 +285,10 @@ export default function TransactionsPage() {
         Number(transaction.amount_paid || 0).toFixed(2),
         Number(transaction.change_amount || 0).toFixed(2),
 
-        // Payment References
-        transaction.gcash_reference_number || "N/A",
-        transaction.paymaya_reference_number || "N/A",
-        transaction.card_transaction_ref || "N/A",
-
         // Staff & Verification
         transaction.cashier_name || "N/A",
         transaction.cashier_id || "N/A",
-        transaction.payment_verified_by || "N/A",
+        transaction.verified_by_name || "N/A",
         transaction.payment_verified_at
           ? new Date(transaction.payment_verified_at).toLocaleString()
           : "N/A",
@@ -300,11 +301,13 @@ export default function TransactionsPage() {
       ];
     });
 
-    // Build CSV with group headers, column headers, and data rows
+    // Build CSV with date/time header, group headers, column headers, and data rows
     const csvContent = [
-      // Row 1: Group headers
+      // Row 1: Date/Time header
+      dateTimeHeader.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
+      // Row 2: Group headers
       groupHeaders.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
-      // Row 2: Column headers
+      // Row 3: Column headers
       columnHeaders.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
       // Data rows
       ...rows.map((row) =>

@@ -253,6 +253,9 @@ export interface CustomerOrder {
   // Fields from customer JOIN (from backend queries)
   name?: string; // Customer name from customer table JOIN
   phone?: string; // Customer phone from customer table JOIN
+  cashier_name?: string; // Cashier name from cashier/admin JOIN
+  cashier_username?: string; // Cashier username/code from cashier/admin JOIN
+  verified_by_name?: string; // Name of person who verified payment
   items?: OrderItem[];
   customer?: Customer;
   cashier?: Cashier;
