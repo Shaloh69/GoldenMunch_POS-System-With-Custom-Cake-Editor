@@ -179,7 +179,7 @@ export const checkPaymentStatus = asyncHandler(async (req: AuthRequest, res: Res
   const conn = await pool.getConnection();
   try {
     const [orderRows] = await conn.query(
-      `SELECT order_id, order_number, payment_status, payment_reference_number, final_amount
+      `SELECT order_id, order_number, order_status, payment_status, payment_reference_number, final_amount, created_at
        FROM customer_order
        WHERE order_id = ? AND is_deleted = FALSE`,
       [orderId]
@@ -195,14 +195,28 @@ export const checkPaymentStatus = asyncHandler(async (req: AuthRequest, res: Res
     // If order is already confirmed or beyond, it's fully processed.
     // This is safer than just checking `payment_status` as it handles partially-updated orders.
     if (order.order_status !== 'pending') {
-      return res.json(successResponse('Payment already completed', {
-        paid: true,
-        order_id: order.order_id,
-        order_number: order.order_number,
-        // The payment_status is guaranteed to be 'paid' if the order_status is not 'pending'
-        // for a successfully processed order.
-        payment_status: 'paid', 
-      }));
+      // KIOSK BUG FIX: If an order is confirmed very quickly (e.g., by a webhook before the first poll),
+      // returning `paid: true` immediately would close the Kiosk's QR modal before the user can see it.
+      // We introduce a grace period (e.g., 15 seconds) to prevent this.
+      const orderCreatedAt = new Date(order.created_at);
+      const now = new Date();
+      const ageInSeconds = (now.getTime() - orderCreatedAt.getTime()) / 1000;
+
+      if (ageInSeconds < 15) {
+        // The order is very new. Lie to the Kiosk and say it's still pending to keep the modal open.
+        return res.json(successResponse('Payment pending (grace period)', {
+          paid: false,
+          order_id: order.order_id,
+          payment_status: 'paid', // Technically true, but paid=false is what matters to the poller
+        }));
+      } else {
+        // The order is older, so it's safe to assume it was already completed.
+        return res.json(successResponse('Payment already completed', {
+          paid: true,
+          order_id: order.order_id,
+          payment_status: 'paid',
+        }));
+      }
     }
 
     // Check with Xendit if we have an invoice ID
