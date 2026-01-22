@@ -907,12 +907,11 @@ export default function CartPage() {
                         📱 How to Pay:
                       </h3>
                       <ol className="text-black space-y-2 list-decimal list-inside text-base">
-                        <li>Open your camera app and scan QR code shown above it will redirect you to an invoice page</li>
-                        <li>Download QRPH code and open your desired payment method app GCash/Paymaya/Bank</li>
-                        <li>Pay the specified amount</li>
-                        <li>Verify the amount and complete payment</li>
+                        <li>Scan the QR code above with your phone's camera.</li>
+                        <li>You will be taken to a secure Xendit invoice page.</li>
+                        <li>On that page, use the QRPH code with your GCash, PayMaya, or bank app to pay.</li>
                         <li>
-                          <strong>This screen will close automatically!</strong>
+                          Once paid, <strong>this screen will close automatically.</strong>
                         </li>
                       </ol>
                     </div>

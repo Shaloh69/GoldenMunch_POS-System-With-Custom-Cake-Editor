@@ -10,6 +10,7 @@ import { successResponse, errorResponse } from '../utils/helpers';
 import { AppError, asyncHandler } from '../middleware/error.middleware';
 import pool from '../config/database';
 import logger from '../utils/logger';
+import { PoolConnection } from 'mysql2/promise';
 
 /**
  * Create payment invoice with QR code for order payment
@@ -96,6 +97,79 @@ export const createPaymentQR = asyncHandler(async (req: AuthRequest, res: Respon
 });
 
 /**
+ * Reusable helper function to process a paid order within a transaction.
+ * This function handles stock deduction, order status updates, and logging.
+ * @param conn - The database connection.
+ * @param order - The order object to be processed.
+ * @param paymentReference - The payment gateway's reference number (e.g., invoice ID).
+ * @param source - The source of the payment confirmation ('webhook' or 'polling').
+ */
+async function processPaidOrder(conn: PoolConnection, order: any, paymentReference: string, source: 'webhook' | 'polling') {
+  logger.info(`[${source}] Payment for order ${order.order_number} is PAID. Processing...`);
+
+  await conn.beginTransaction();
+  try {
+    // 1. STOCK DEDUCTION
+    const [orderItemsRows] = await conn.query(
+      'SELECT menu_item_id, quantity FROM order_item WHERE order_id = ?',
+      [order.order_id]
+    );
+    const orderItems = orderItemsRows as any[];
+    for (const item of orderItems) {
+      const [menuItemRows] = await conn.query(
+        'SELECT is_infinite_stock, stock_quantity, name FROM menu_item WHERE menu_item_id = ?',
+        [item.menu_item_id]
+      );
+      const menuItem = (menuItemRows as any[])[0];
+      if (menuItem && !menuItem.is_infinite_stock) {
+        await conn.query(
+          'UPDATE menu_item SET stock_quantity = stock_quantity - ? WHERE menu_item_id = ?',
+          [item.quantity, item.menu_item_id]
+        );
+      }
+    }
+    logger.info(`   ✓ Stock deducted for order ${order.order_number}`);
+
+    // 2. UPDATE ORDER STATUS
+    await conn.query(
+      `UPDATE customer_order
+       SET payment_status = 'paid',
+           order_status = 'confirmed',
+           payment_verified_at = NOW(),
+           amount_paid = ?,
+           change_amount = 0
+       WHERE order_id = ?`,
+      [order.final_amount, order.order_id]
+    );
+    logger.info(`   ✓ Order status updated to 'confirmed' for order ${order.order_number}`);
+
+    // 3. RECORD TRANSACTION
+    await conn.query(
+      `INSERT INTO payment_transaction
+       (order_id, transaction_type, payment_method, amount, reference_number, status, processed_by, completed_at)
+       VALUES (?, 'payment', 'cashless', ?, ?, 'completed', NULL, NOW())`,
+      [order.order_id, order.final_amount, paymentReference]
+    );
+    logger.info(`   ✓ Payment transaction recorded for order ${order.order_number}`);
+
+    // 4. ADD TIMELINE ENTRY
+    await conn.query(
+      `INSERT INTO order_timeline (order_id, status, notes) VALUES (?, 'confirmed', ?)`,
+      [order.order_id, `Auto-confirmed via ${source} (Ref: ${paymentReference})`]
+    );
+    logger.info(`   ✓ Timeline entry added for order ${order.order_number}`);
+
+    await conn.commit();
+    logger.info(`✅ Order ${order.order_number} auto-completed successfully via ${source}.`);
+  } catch (error) {
+    await conn.rollback();
+    logger.error(`❌ Error processing paid order ${order.order_number} via ${source}:`, error);
+    // Re-throw the error to be handled by the calling function
+    throw error;
+  }
+}
+
+/**
  * Check payment status for an order
  * GET /api/payment/status/:orderId
  */
@@ -118,13 +192,16 @@ export const checkPaymentStatus = asyncHandler(async (req: AuthRequest, res: Res
 
     const order: any = orders[0];
 
-    // If already paid, return success
-    if (order.payment_status === 'paid') {
+    // If order is already confirmed or beyond, it's fully processed.
+    // This is safer than just checking `payment_status` as it handles partially-updated orders.
+    if (order.order_status !== 'pending') {
       return res.json(successResponse('Payment already completed', {
         paid: true,
         order_id: order.order_id,
         order_number: order.order_number,
-        payment_status: 'paid',
+        // The payment_status is guaranteed to be 'paid' if the order_status is not 'pending'
+        // for a successfully processed order.
+        payment_status: 'paid', 
       }));
     }
 
@@ -133,65 +210,9 @@ export const checkPaymentStatus = asyncHandler(async (req: AuthRequest, res: Res
       const paymentStatus = await paymentService.getInvoiceStatus(order.payment_reference_number);
 
       if (paymentStatus.success && paymentStatus.status === 'completed') {
-        // BUG FIX: The original code only updated payment_status.
-        // The logic from the webhook handler is now used here to ensure
-        // the order is fully processed (stock deduction, status update, etc.).
-        logger.info(`[Polling] Payment for order ${order.order_number} is PAID. Processing...`);
-        
-        await conn.beginTransaction();
         try {
-          // 1. STOCK DEDUCTION
-          const [orderItemsRows] = await conn.query(
-            'SELECT menu_item_id, quantity FROM order_item WHERE order_id = ?',
-            [order.order_id]
-          );
-          const orderItems = orderItemsRows as any[];
-          for (const item of orderItems) {
-            const [menuItemRows] = await conn.query(
-              'SELECT is_infinite_stock, stock_quantity, name FROM menu_item WHERE menu_item_id = ?',
-              [item.menu_item_id]
-            );
-            const menuItem = (menuItemRows as any[])[0];
-            if (menuItem && !menuItem.is_infinite_stock) {
-              await conn.query(
-                'UPDATE menu_item SET stock_quantity = stock_quantity - ? WHERE menu_item_id = ?',
-                [item.quantity, item.menu_item_id]
-              );
-            }
-          }
-          logger.info(`   ✓ Stock deducted for order ${order.order_number}`);
-
-          // 2. UPDATE ORDER STATUS
-          await conn.query(
-            `UPDATE customer_order
-             SET payment_status = 'paid',
-                 order_status = 'confirmed',
-                 payment_verified_at = NOW(),
-                 amount_paid = ?,
-                 change_amount = 0
-             WHERE order_id = ?`,
-            [order.final_amount, order.order_id]
-          );
-          logger.info(`   ✓ Order status updated to 'confirmed' for order ${order.order_number}`);
-
-          // 3. RECORD TRANSACTION
-          await conn.query(
-            `INSERT INTO payment_transaction
-             (order_id, transaction_type, payment_method, amount, reference_number, status, processed_by, completed_at)
-             VALUES (?, 'payment', 'cashless', ?, ?, 'completed', NULL, NOW())`,
-            [order.order_id, order.final_amount, order.payment_reference_number]
-          );
-          logger.info(`   ✓ Payment transaction recorded for order ${order.order_number}`);
-
-          // 4. ADD TIMELINE ENTRY
-          await conn.query(
-            `INSERT INTO order_timeline (order_id, status, notes) VALUES (?, 'confirmed', ?)`,
-            [order.order_id, `Auto-confirmed via payment polling (Invoice: ${order.payment_reference_number})`]
-          );
-          logger.info(`   ✓ Timeline entry added for order ${order.order_number}`);
-
-          await conn.commit();
-          logger.info(`✅ Order ${order.order_number} auto-completed successfully via Polling.`);
+          // Use the refactored helper function to process the paid order
+          await processPaidOrder(conn, order, order.payment_reference_number, 'polling');
 
           return res.json(successResponse('Payment completed', {
             paid: true,
@@ -199,8 +220,6 @@ export const checkPaymentStatus = asyncHandler(async (req: AuthRequest, res: Res
             payment_status: 'paid',
           }));
         } catch (error) {
-          await conn.rollback();
-          logger.error(`❌ Error processing polled payment for order ${order.order_number}:`, error);
           // Do not throw error to client, allow polling to retry.
         }
       }
@@ -235,148 +254,27 @@ export const handleXenditWebhook = asyncHandler(async (req: AuthRequest, res: Re
   if (status === 'PAID' || status === 'SETTLED' || status === 'COMPLETED') {
     const conn = await pool.getConnection();
     try {
-      await conn.beginTransaction();
-
       // Find order by external_id (order_number) or invoice ID
       const [orderRows] = await conn.query(
-        `SELECT order_id, order_number, final_amount, payment_status, payment_method, order_status
+        `SELECT *
          FROM customer_order
          WHERE (order_number = ? OR payment_reference_number = ?)
          AND is_deleted = FALSE`,
         [external_id, id]
       );
 
-      const orders = Array.isArray(orderRows) ? orderRows : [orderRows];
-      if (orders.length > 0) {
-        const order: any = orders[0];
-        const orderId = order.order_id;
-        const orderNumber = order.order_number;
-        const paymentMethod = order.payment_method;
-        const finalAmount = parseFloat(order.final_amount || 0);
+      const order: any = (orderRows as any[])[0];
 
-        logger.info(`📦 Processing payment for order ${orderNumber}`);
-        logger.info(`   Order ID: ${orderId}, Payment Method: ${paymentMethod}, Amount: ₱${amount}`);
-
-        // Only auto-complete cashless orders (Xendit QR payments)
-        if (paymentMethod === 'cashless') {
-          logger.info(`💳 Cashless payment detected - Auto-completing order ${orderNumber}`);
-
-          // ✅ STOCK DEDUCTION: Get order items and deduct stock quantities
-          const [orderItemsRows] = await conn.query(
-            'SELECT menu_item_id, quantity FROM order_item WHERE order_id = ?',
-            [orderId]
-          );
-          const orderItems = orderItemsRows as any[];
-
-          logger.info(`   Processing ${orderItems.length} items for stock deduction`);
-
-          for (const item of orderItems) {
-            // Get menu item details including stock info
-            const [menuItemRows] = await conn.query(
-              'SELECT is_infinite_stock, stock_quantity, name FROM menu_item WHERE menu_item_id = ?',
-              [item.menu_item_id]
-            );
-            const menuItems = menuItemRows as any[];
-
-            if (menuItems.length === 0) {
-              logger.warn(`   ⚠️  Menu item ${item.menu_item_id} not found - skipping stock deduction`);
-              continue;
-            }
-
-            const menuItem = menuItems[0];
-
-            // Skip stock deduction for infinite stock items
-            if (menuItem.is_infinite_stock) {
-              logger.info(`   ♾️  ${menuItem.name} - Infinite stock, skipping deduction`);
-              continue;
-            }
-
-            const currentStock = parseInt(menuItem.stock_quantity || 0);
-            const requestedQty = parseInt(item.quantity || 0);
-
-            // Check sufficient stock
-            if (currentStock < requestedQty) {
-              logger.error(`   ❌ Insufficient stock for ${menuItem.name}. Available: ${currentStock}, Required: ${requestedQty}`);
-              // Don't throw error in webhook - just log and continue
-              continue;
-            }
-
-            // Deduct stock quantity
-            await conn.query(
-              'UPDATE menu_item SET stock_quantity = stock_quantity - ? WHERE menu_item_id = ?',
-              [requestedQty, item.menu_item_id]
-            );
-
-            const newStock = currentStock - requestedQty;
-            logger.info(`   📉 ${menuItem.name} - Stock: ${currentStock} → ${newStock}`);
-
-            // Auto-update status to 'sold_out' if stock reaches 0
-            if (newStock === 0) {
-              await conn.query(
-                'UPDATE menu_item SET status = ? WHERE menu_item_id = ? AND status != ?',
-                ['sold_out', item.menu_item_id, 'discontinued']
-              );
-              logger.info(`   🚫 Auto-updated ${menuItem.name} to 'sold_out' (stock: 0)`);
-            }
-          }
-
-          // Update payment status and order status to completed
-          await conn.query(
-            `UPDATE customer_order
-             SET payment_status = 'paid',
-                 payment_verified_at = NOW(),
-                 payment_reference_number = ?,
-                 amount_paid = ?,
-                 change_amount = 0,
-                 order_status = 'confirmed'
-             WHERE order_id = ?`,
-            [id, finalAmount, orderId]
-          );
-
-          logger.info(`   ✅ Payment verified - Order status: ${order.order_status} → confirmed`);
-
-          // Insert payment transaction record
-          await conn.query(
-            `INSERT INTO payment_transaction
-             (order_id, transaction_type, payment_method, amount, reference_number, status, processed_by, completed_at)
-             VALUES (?, 'payment', 'cashless', ?, ?, 'completed', NULL, NOW())`,
-            [orderId, finalAmount, id]
-          );
-
-          logger.info(`   💰 Payment transaction recorded`);
-
-          // Add order timeline entry for auto-completion
-          await conn.query(
-            `INSERT INTO order_timeline
-             (order_id, status, changed_by, notes)
-             VALUES (?, 'confirmed', NULL, ?)`,
-            [orderId, `Auto-completed via Xendit payment verification (Invoice: ${id})`]
-          );
-
-          logger.info(`   📝 Order timeline updated`);
-
-          await conn.commit();
-          logger.info(`✅ Order ${orderNumber} auto-completed successfully via Xendit webhook - Amount: ₱${amount}`);
-        } else { // For non-cashless orders, just update payment status (shouldn't happen with Xendit)
-          // For non-cashless orders, just update payment status (shouldn't happen with Xendit)
-          await conn.query(
-            `UPDATE customer_order
-             SET payment_status = 'paid',
-                 payment_verified_at = NOW(),
-                 payment_reference_number = ?
-             WHERE order_id = ?`,
-            [id, orderId]
-          );
-
-          await conn.commit();
-          logger.info(`✅ Payment completed via webhook for order ${orderNumber} - Amount: ₱${amount} (Manual verification required for ${paymentMethod} orders)`);
-        }
+      // Process if the order exists, is cashless, and is still in 'pending' state.
+      // This is safer than checking payment_status, as it handles cases where
+      // a previous partial update may have occurred.
+      if (order && order.order_status === 'pending' && order.payment_method === 'cashless') {
+        // Use the refactored helper function to process the paid order
+        await processPaidOrder(conn, order, id, 'webhook');
       } else {
-        await conn.commit();
-        logger.warn(`⚠️  No order found for external_id: ${external_id} or invoice: ${id}`);
+        logger.warn(`⚠️  Webhook for order ${external_id} skipped. Reason: Order not found, already paid, or not a cashless payment.`);
       }
     } catch (error) {
-      await conn.rollback();
       logger.error('❌ Error processing Xendit webhook:', error);
       // Still return 200 to prevent Xendit from retrying
     } finally {
