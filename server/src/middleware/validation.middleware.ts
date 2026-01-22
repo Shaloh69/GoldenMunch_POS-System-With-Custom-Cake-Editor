@@ -124,6 +124,9 @@ export const schemas = {
     payment_method: Joi.string()
       .valid(...ENUMS.payment_method)
       .required(),
+    amount_paid: Joi.number().min(0).optional(),
+    change_amount: Joi.number().min(0).optional(),
+    customer_discount_type_id: Joi.number().integer().positive().optional(),
   }),
 
   verifyOrder: Joi.object({

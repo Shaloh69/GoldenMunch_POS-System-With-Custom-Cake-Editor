@@ -56,6 +56,15 @@ export class OrderService {
       if (data.reference_number) {
         formData.append("reference_number", data.reference_number);
       }
+      if (data.amount_paid !== undefined) {
+        formData.append("amount_paid", data.amount_paid.toString());
+      }
+      if (data.change_amount !== undefined) {
+        formData.append("change_amount", data.change_amount.toString());
+      }
+      if (data.customer_discount_type_id) {
+        formData.append("customer_discount_type_id", data.customer_discount_type_id.toString());
+      }
       formData.append("qr_code", qrCodeFile);
 
       return apiClient.postFormData("/cashier/payment/verify", formData);
