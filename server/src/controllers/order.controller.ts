@@ -383,9 +383,23 @@ export const verifyPayment = async (req: AuthRequest, res: Response) => {
       );
     }
 
-    // Use amount_paid and change_given directly from the frontend for cash transactions
-    const finalAmountPaid = payment_method === 'cash' ? (amount_paid || finalAmount) : finalAmount;
-    const finalChangeAmount = payment_method === 'cash' ? (change_amount || 0) : 0;
+    // Log what we received from the client for debugging
+    console.log('💵 Payment data received from client:', {
+      payment_method,
+      amount_paid,
+      change_amount,
+      finalAmount,
+    });
+
+    // Use amount_paid and change_amount directly from the frontend for cash transactions
+    // Use ?? (nullish coalescing) instead of || to properly handle 0 values
+    const finalAmountPaid = payment_method === 'cash' ? (amount_paid ?? finalAmount) : finalAmount;
+    const finalChangeAmount = payment_method === 'cash' ? (change_amount ?? 0) : 0;
+
+    console.log('💵 Calculated payment values:', {
+      finalAmountPaid,
+      finalChangeAmount,
+    });
 
     // ✅ STOCK DEDUCTION: Get order items and deduct stock quantities
     const [orderItemsRows] = await conn.query(

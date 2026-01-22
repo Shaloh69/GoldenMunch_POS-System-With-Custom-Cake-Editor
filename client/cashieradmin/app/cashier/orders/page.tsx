@@ -443,6 +443,13 @@ export default function UnifiedCashierPage() {
     // Calculate change from the consistently used 'tendered' variable.
     const changeAmount = calculateChange(tendered, finalAmount);
 
+    console.log('💰 Payment verification data:', {
+      tendered,
+      finalAmount,
+      changeAmount,
+      payment_method: selectedOrder.payment_method,
+    });
+
     try {
       const response = await OrderService.verifyPayment({
         order_id: selectedOrder.order_id,
@@ -450,7 +457,8 @@ export default function UnifiedCashierPage() {
         reference_number: referenceNumber || undefined,
         amount_paid: selectedOrder.payment_method === "cash" ? tendered : undefined,
         change_amount: selectedOrder.payment_method === "cash" ? changeAmount : undefined,
-      } as any);
+        customer_discount_type_id: selectedDiscount?.discount_type_id,
+      });
 
       if (!response.success) {
         throw new Error(response.error || "Payment verification failed");
