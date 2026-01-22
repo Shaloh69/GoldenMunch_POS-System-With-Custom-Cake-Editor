@@ -168,25 +168,65 @@ export default function TransactionsPage() {
   };
 
   const exportToCSV = () => {
-    // Restructured headers for better readability in CSV
-    const headers = [
-      // Section: Order Identification
-      "SECTION", "Order ID", "Order Number", "Verification Code", "Order Date & Time",
-      // Section: Order Details
-      "SECTION", "Order Type", "Order Source", "Order Status", "Is Pre-order", "Scheduled Pickup", "Actual Pickup",
-      // Section: Customer Information
-      "SECTION", "Customer Name", "Customer Phone", "Customer Discount Type", "Customer Discount %",
-      // Section: Items Summary
-      "SECTION", "Total Items", "Items Detail",
-      // Section: Payment Information
-      "SECTION", "Payment Method", "Payment Status", "Subtotal", "Discount Amount", "Final Amount", "Amount Paid", "Change Amount",
-      // Section: Payment References
-      "SECTION", "GCash Reference", "PayMaya Reference", "Card Transaction Ref",
-      // Section: Staff & Verification
-      "SECTION", "Cashier Name", "Cashier ID", "Payment Verified By", "Payment Verified At",
-      // Section: Additional Info
-      "SECTION", "Special Instructions", "Is Printed", "Created At", "Updated At",
-    ].map(h => h === 'SECTION' ? '' : h); // Replace SECTION with empty string for visual separation
+    // Create group headers (Row 1) - each group label appears once, followed by empty strings
+    const groupHeaders = [
+      // Order Details (7 columns) - label appears once
+      "ORDER DETAILS", "", "", "", "", "", "",
+      // Customer Information (4 columns) - label appears once
+      "CUSTOMER INFORMATION", "", "", "",
+      // Items (2 columns) - label appears once
+      "ITEMS", "",
+      // Payment Information (7 columns) - label appears once
+      "PAYMENT INFORMATION", "", "", "", "", "", "",
+      // Payment References (3 columns) - label appears once
+      "PAYMENT REFERENCES", "", "",
+      // Staff & Verification (4 columns) - label appears once
+      "STAFF & VERIFICATION", "", "", "",
+      // System Information (4 columns) - label appears once
+      "SYSTEM INFORMATION", "", "", "",
+    ];
+
+    // Create column headers (Row 2) - actual column names
+    const columnHeaders = [
+      // Order Details
+      "Order ID",
+      "Order Number",
+      "Verification Code",
+      "Order Date & Time",
+      "Order Type",
+      "Order Source",
+      "Order Status",
+      // Customer Information
+      "Customer Name",
+      "Customer Phone",
+      "Discount Type",
+      "Discount Percentage",
+      // Items
+      "Total Items",
+      "Items Detail",
+      // Payment Information
+      "Payment Method",
+      "Payment Status",
+      "Subtotal (₱)",
+      "Discount Amount (₱)",
+      "Final Amount (₱)",
+      "Amount Paid (₱)",
+      "Change Given (₱)",
+      // Payment References
+      "GCash Reference",
+      "PayMaya Reference",
+      "Card Reference",
+      // Staff & Verification
+      "Cashier Name",
+      "Cashier ID",
+      "Verified By",
+      "Verified At",
+      // System Information
+      "Special Instructions",
+      "Is Printed",
+      "Created At",
+      "Updated At",
+    ];
 
     const rows = filteredTransactions.map((t) => {
       const transaction = t as any;
@@ -202,8 +242,7 @@ export default function TransactionsPage() {
         .join(" | ") || "N/A";
 
       return [
-        // Order Identification
-        "ORDER",
+        // Order Details
         transaction.order_id,
         transaction.order_number || "N/A",
         transaction.verification_code || "N/A",
@@ -215,36 +254,23 @@ export default function TransactionsPage() {
           minute: "2-digit",
           second: "2-digit",
         }),
-
-        // Order Details
-        "DETAILS",
         transaction.order_type?.replace("_", " ").toUpperCase() || "N/A",
         transaction.order_source?.toUpperCase() || "N/A",
         transaction.order_status?.toUpperCase() || "N/A",
-        transaction.is_preorder ? "Yes" : "No",
-        transaction.scheduled_pickup_datetime
-          ? new Date(transaction.scheduled_pickup_datetime).toLocaleString()
-          : "N/A",
-        transaction.actual_pickup_datetime
-          ? new Date(transaction.actual_pickup_datetime).toLocaleString()
-          : "N/A",
 
         // Customer Information
-        "CUSTOMER",
-        transaction.name || "Walk-in Customer", // The detailed order has name at the top level
+        transaction.name || "Walk-in Customer",
         transaction.phone || "N/A",
         transaction.customer_discount?.name || "None",
         transaction.customer_discount_percentage
           ? Number(transaction.customer_discount_percentage).toFixed(2) + "%"
           : "0%",
 
-        // Items Summary
-        "ITEMS",
+        // Items
         transaction.items?.length || 0,
         itemsDetail,
 
         // Payment Information
-        "PAYMENT",
         transaction.payment_method?.toUpperCase() || "N/A",
         transaction.payment_status?.toUpperCase() || "N/A",
         Number(transaction.subtotal || 0).toFixed(2),
@@ -254,31 +280,33 @@ export default function TransactionsPage() {
         Number(transaction.change_amount || 0).toFixed(2),
 
         // Payment References
-        "REFERENCES",
         transaction.gcash_reference_number || "N/A",
         transaction.paymaya_reference_number || "N/A",
         transaction.card_transaction_ref || "N/A",
 
-        // Cashier & Verification
-        "STAFF",
-        transaction.cashier_name || "N/A", // Correctly access cashier_name
+        // Staff & Verification
+        transaction.cashier_name || "N/A",
         transaction.cashier_id || "N/A",
         transaction.payment_verified_by || "N/A",
         transaction.payment_verified_at
           ? new Date(transaction.payment_verified_at).toLocaleString()
           : "N/A",
 
-        // Additional Info
-        "EXTRA",
+        // System Information
         transaction.special_instructions || "None",
         transaction.is_printed ? "Yes" : "No",
         new Date(transaction.created_at).toLocaleString(),
         new Date(transaction.updated_at).toLocaleString(),
-      ].map(c => c === "ORDER" || c === "DETAILS" || c === "CUSTOMER" || c === "ITEMS" || c === "PAYMENT" || c === "REFERENCES" || c === "STAFF" || c === "EXTRA" ? '' : c); // Replace section markers with empty string
+      ];
     });
 
+    // Build CSV with group headers, column headers, and data rows
     const csvContent = [
-      headers.join(","),
+      // Row 1: Group headers
+      groupHeaders.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
+      // Row 2: Column headers
+      columnHeaders.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
+      // Data rows
       ...rows.map((row) =>
         row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
       ),
