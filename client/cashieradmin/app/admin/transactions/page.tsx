@@ -168,73 +168,46 @@ export default function TransactionsPage() {
   };
 
   const exportToCSV = () => {
+    // Restructured headers for better readability in CSV
     const headers = [
-      // Order Identification
-      "Order ID",
-      "Order Number",
-      "Verification Code",
-      "Order Date & Time",
-
-      // Order Details
-      "Order Type",
-      "Order Source",
-      "Order Status",
-      "Is Pre-order",
-      "Scheduled Pickup",
-      "Actual Pickup",
-
-      // Customer Information
-      "Customer Name",
-      "Customer Phone",
-      "Customer Discount Type",
-      "Customer Discount %",
-
-      // Items Summary
-      "Total Items",
-      "Items Detail",
-
-      // Payment Information
-      "Payment Method",
-      "Payment Status",
-      "Subtotal",
-      "Discount Amount",
-      "Final Amount",
-      "Amount Paid",
-      "Change Amount",
-
-      // Payment References
-      "GCash Reference",
-      "PayMaya Reference",
-      "Card Transaction Ref",
-
-      // Cashier & Verification
-      "Cashier Name",
-      "Cashier ID",
-      "Payment Verified By",
-      "Payment Verified At",
-
-      // Additional Info
-      "Special Instructions",
-      "Is Printed",
-      "Created At",
-      "Updated At",
-    ];
+      // Section: Order Identification
+      "SECTION", "Order ID", "Order Number", "Verification Code", "Order Date & Time",
+      // Section: Order Details
+      "SECTION", "Order Type", "Order Source", "Order Status", "Is Pre-order", "Scheduled Pickup", "Actual Pickup",
+      // Section: Customer Information
+      "SECTION", "Customer Name", "Customer Phone", "Customer Discount Type", "Customer Discount %",
+      // Section: Items Summary
+      "SECTION", "Total Items", "Items Detail",
+      // Section: Payment Information
+      "SECTION", "Payment Method", "Payment Status", "Subtotal", "Discount Amount", "Final Amount", "Amount Paid", "Change Amount",
+      // Section: Payment References
+      "SECTION", "GCash Reference", "PayMaya Reference", "Card Transaction Ref",
+      // Section: Staff & Verification
+      "SECTION", "Cashier Name", "Cashier ID", "Payment Verified By", "Payment Verified At",
+      // Section: Additional Info
+      "SECTION", "Special Instructions", "Is Printed", "Created At", "Updated At",
+    ].map(h => h === 'SECTION' ? '' : h); // Replace SECTION with empty string for visual separation
 
     const rows = filteredTransactions.map((t) => {
       const transaction = t as any;
       const itemsDetail = t.items
         ?.map((item) => {
           const itemData = item as any;
-          return `${itemData.item_name || "Item"} (₱${Number(item.unit_price || 0).toFixed(2)} x${item.quantity} = ₱${Number(item.item_total || Number(item.unit_price || 0) * Number(item.quantity || 0)).toFixed(2)})`;
+          const itemName = itemData.item_name || itemData.menu_item_name || "Item";
+          const unitPrice = Number(item.unit_price || 0);
+          const quantity = Number(item.quantity || 0);
+          const itemTotal = Number(item.item_total || unitPrice * quantity);
+          return `${itemName} (₱${unitPrice.toFixed(2)} x${quantity} = ₱${itemTotal.toFixed(2)})`;
         })
         .join(" | ") || "N/A";
 
       return [
         // Order Identification
-        t.order_id,
-        t.order_number || "N/A",
-        t.verification_code || "N/A",
-        new Date(t.order_datetime).toLocaleString("en-US", {
+        "ORDER",
+        transaction.order_id,
+        transaction.order_number || "N/A",
+        transaction.verification_code || "N/A",
+        new Date(transaction.order_datetime).toLocaleString("en-US", {
           year: "numeric",
           month: "2-digit",
           day: "2-digit",
@@ -244,57 +217,64 @@ export default function TransactionsPage() {
         }),
 
         // Order Details
-        t.order_type?.replace("_", " ").toUpperCase() || "N/A",
-        t.order_source?.toUpperCase() || "N/A",
-        t.order_status?.toUpperCase() || "N/A",
-        t.is_preorder ? "Yes" : "No",
-        t.scheduled_pickup_datetime
-          ? new Date(t.scheduled_pickup_datetime).toLocaleString()
+        "DETAILS",
+        transaction.order_type?.replace("_", " ").toUpperCase() || "N/A",
+        transaction.order_source?.toUpperCase() || "N/A",
+        transaction.order_status?.toUpperCase() || "N/A",
+        transaction.is_preorder ? "Yes" : "No",
+        transaction.scheduled_pickup_datetime
+          ? new Date(transaction.scheduled_pickup_datetime).toLocaleString()
           : "N/A",
-        t.actual_pickup_datetime
-          ? new Date(t.actual_pickup_datetime).toLocaleString()
+        transaction.actual_pickup_datetime
+          ? new Date(transaction.actual_pickup_datetime).toLocaleString()
           : "N/A",
 
         // Customer Information
-        t.customer?.name || "Walk-in Customer",
-        t.customer?.phone || t.phone || "N/A",
-        t.customer_discount?.name || "None",
-        t.customer_discount_percentage
-          ? Number(t.customer_discount_percentage).toFixed(2) + "%"
+        "CUSTOMER",
+        transaction.name || "Walk-in Customer", // The detailed order has name at the top level
+        transaction.phone || "N/A",
+        transaction.customer_discount?.name || "None",
+        transaction.customer_discount_percentage
+          ? Number(transaction.customer_discount_percentage).toFixed(2) + "%"
           : "0%",
 
         // Items Summary
-        t.items?.length || 0,
+        "ITEMS",
+        transaction.items?.length || 0,
         itemsDetail,
 
         // Payment Information
-        t.payment_method?.toUpperCase() || "N/A",
-        t.payment_status?.toUpperCase() || "N/A",
-        Number(t.total_amount || 0).toFixed(2),
-        Number(t.discount_amount || 0).toFixed(2),
-        Number(t.final_amount || 0).toFixed(2),
+        "PAYMENT",
+        transaction.payment_method?.toUpperCase() || "N/A",
+        transaction.payment_status?.toUpperCase() || "N/A",
+        Number(transaction.subtotal || 0).toFixed(2),
+        Number(transaction.discount_amount || 0).toFixed(2),
+        Number(transaction.final_amount || 0).toFixed(2),
         Number(transaction.amount_paid || 0).toFixed(2),
         Number(transaction.change_amount || 0).toFixed(2),
 
         // Payment References
-        t.gcash_reference_number || "N/A",
-        t.paymaya_reference_number || "N/A",
-        t.card_transaction_ref || "N/A",
+        "REFERENCES",
+        transaction.gcash_reference_number || "N/A",
+        transaction.paymaya_reference_number || "N/A",
+        transaction.card_transaction_ref || "N/A",
 
         // Cashier & Verification
-        transaction.cashier?.name || "N/A",
-        t.cashier_id || "N/A",
+        "STAFF",
+        transaction.cashier_name || "N/A", // Correctly access cashier_name
+        transaction.cashier_id || "N/A",
         transaction.payment_verified_by || "N/A",
-        t.payment_verified_at
-          ? new Date(t.payment_verified_at).toLocaleString()
+        transaction.payment_verified_at
+          ? new Date(transaction.payment_verified_at).toLocaleString()
           : "N/A",
 
         // Additional Info
-        t.special_instructions || "None",
-        t.is_printed ? "Yes" : "No",
-        new Date(t.created_at).toLocaleString(),
-        new Date(t.updated_at).toLocaleString(),
-      ];
+        "EXTRA",
+        transaction.special_instructions || "None",
+        transaction.is_printed ? "Yes" : "No",
+        new Date(transaction.created_at).toLocaleString(),
+        new Date(transaction.updated_at).toLocaleString(),
+      ].map(c => c === "ORDER" || c === "DETAILS" || c === "CUSTOMER" || c === "ITEMS" || c === "PAYMENT" || c === "REFERENCES" || c === "STAFF" || c === "EXTRA" ? '' : c); // Replace section markers with empty string
     });
 
     const csvContent = [
