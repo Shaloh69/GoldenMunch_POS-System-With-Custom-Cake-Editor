@@ -196,7 +196,7 @@ export default function TransactionsPage() {
       "SYSTEM INFORMATION", "", "", "",
     ];
 
-    // Create column headers (Row 2) - actual column names
+    // Create column headers (Row 3) - actual column names
     const columnHeaders = [
       // Order Details
       "Order ID",
@@ -236,7 +236,7 @@ export default function TransactionsPage() {
 
     const rows = filteredTransactions.map((t) => {
       const transaction = t as any;
-      const itemsDetail = t.items
+      const itemsDetail = transaction.items
         ?.map((item) => {
           const itemData = item as any;
           const itemName = itemData.item_name || itemData.menu_item_name || "Item";
@@ -248,7 +248,7 @@ export default function TransactionsPage() {
         .join(" | ") || "N/A";
 
       return [
-        // Order Details
+        // Order Identification
         transaction.order_id,
         transaction.order_number || "N/A",
         transaction.verification_code || "N/A",
@@ -263,7 +263,6 @@ export default function TransactionsPage() {
         transaction.order_type?.replace("_", " ").toUpperCase() || "N/A",
         transaction.order_source?.toUpperCase() || "N/A",
         transaction.order_status?.toUpperCase() || "N/A",
-
         // Customer Information
         transaction.name || "Walk-in Customer",
         transaction.phone || "N/A",
@@ -271,11 +270,9 @@ export default function TransactionsPage() {
         transaction.customer_discount_percentage
           ? Number(transaction.customer_discount_percentage).toFixed(2) + "%"
           : "0%",
-
         // Items
         transaction.items?.length || 0,
         itemsDetail,
-
         // Payment Information
         transaction.payment_method?.toUpperCase() || "N/A",
         transaction.payment_status?.toUpperCase() || "N/A",
@@ -284,7 +281,6 @@ export default function TransactionsPage() {
         Number(transaction.final_amount || 0).toFixed(2),
         Number(transaction.amount_paid || 0).toFixed(2),
         Number(transaction.change_amount || 0).toFixed(2),
-
         // Staff & Verification
         transaction.cashier_name || "N/A",
         transaction.cashier_id || "N/A",
@@ -292,7 +288,6 @@ export default function TransactionsPage() {
         transaction.payment_verified_at
           ? new Date(transaction.payment_verified_at).toLocaleString()
           : "N/A",
-
         // System Information
         transaction.special_instructions || "None",
         transaction.is_printed ? "Yes" : "No",
@@ -301,7 +296,6 @@ export default function TransactionsPage() {
       ];
     });
 
-    // Build CSV with date/time header, group headers, column headers, and data rows
     const csvContent = [
       // Row 1: Date/Time header
       dateTimeHeader.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
@@ -524,6 +518,8 @@ export default function TransactionsPage() {
               <SelectItem key="all">All Methods</SelectItem>
               <SelectItem key="cash">Cash</SelectItem>
               <SelectItem key="cashless">Cashless</SelectItem>
+              <SelectItem key="gcash">GCash</SelectItem>
+              <SelectItem key="paymaya">PayMaya</SelectItem>
             </Select>
 
             <Select
@@ -922,7 +918,7 @@ export default function TransactionsPage() {
                             <span className="text-sm">Amount Received:</span>
                             <span className="font-semibold">
                               {formatCurrency(
-                                (selectedTransaction as any).amount_paid ??
+                                (selectedTransaction as any).amount_paid ||
                                   selectedTransaction.final_amount,
                               )}
                             </span>
@@ -931,7 +927,7 @@ export default function TransactionsPage() {
                             <span className="text-sm">Change Given:</span>
                             <span className="font-semibold">
                               {formatCurrency(
-                                (selectedTransaction as any).change_amount ?? 0,
+                                (selectedTransaction as any).change_amount,
                               )}
                             </span>
                           </div>
