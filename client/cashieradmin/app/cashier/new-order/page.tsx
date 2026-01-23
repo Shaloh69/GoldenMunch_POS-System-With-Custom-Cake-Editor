@@ -605,7 +605,7 @@ export default function NewOrderPage() {
                 </div>
 
                 {/* Payment Method */}
-                <div>
+                <div> 
                   <label className="block text-sm font-medium text-rich-brown mb-2">
                     Payment Method -Cashier Only has Cash-
                   </label>
