@@ -157,11 +157,11 @@ export class TransactionsPDFExporter {
   private addSummarySection(summary: TransactionSummary): void {
     const summaryData = [
       ['Total Transactions', summary.totalTransactions.toString()],
-      ['Total Sales', `₱${summary.totalSales.toFixed(2)}`],
-      ['Cash Payments', `${summary.cashTransactions} (₱${summary.totalCash.toFixed(2)})`],
-      ['Cashless Payments', `${summary.cashlessTransactions} (₱${summary.totalCashless.toFixed(2)})`],
-      ['Total Discounts', `₱${summary.totalDiscount.toFixed(2)}`],
-      ['Total Tax', `₱${summary.totalTax.toFixed(2)}`],
+      ['Total Sales', `Php ${summary.totalSales.toFixed(2)}`],
+      ['Cash Payments', `${summary.cashTransactions} (Php ${summary.totalCash.toFixed(2)})`],
+      ['Cashless Payments', `${summary.cashlessTransactions} (Php ${summary.totalCashless.toFixed(2)})`],
+      ['Total Discounts', `Php ${summary.totalDiscount.toFixed(2)}`],
+      ['Total Tax', `Php ${summary.totalTax.toFixed(2)}`],
     ];
 
     autoTable(this.doc, {
@@ -216,7 +216,7 @@ export class TransactionsPDFExporter {
       t.name || 'Walk-in',
       t.payment_method?.toUpperCase() || 'N/A',
       t.cashier_name || 'N/A',
-      `₱${Number(t.final_amount || 0).toFixed(2)}`,
+      `Php ${Number(t.final_amount || 0).toFixed(2)}`,
     ]);
 
     autoTable(this.doc, {
@@ -296,11 +296,11 @@ export class TransactionsPDFExporter {
       this.yPosition += 5;
 
       const cashData = [
-        ['Total Cash Sales', `₱${summary.totalCash.toFixed(2)}`],
-        ['Cash Collected', `₱${summary.cashCollected.toFixed(2)}`],
-        ['Change Given', `₱${summary.changeGiven.toFixed(2)}`],
+        ['Total Cash Sales', `Php ${summary.totalCash.toFixed(2)}`],
+        ['Cash Collected', `Php ${summary.cashCollected.toFixed(2)}`],
+        ['Change Given', `Php ${summary.changeGiven.toFixed(2)}`],
         ['Number of Transactions', summary.cashTransactions.toString()],
-        ['Net Cash in Drawer', `₱${(summary.cashCollected - summary.changeGiven).toFixed(2)}`],
+        ['Net Cash in Drawer', `Php ${(summary.cashCollected - summary.changeGiven).toFixed(2)}`],
       ];
 
       autoTable(this.doc, {
@@ -337,9 +337,9 @@ export class TransactionsPDFExporter {
       this.yPosition += 5;
 
       const cashlessData = [
-        ['Total Cashless Sales', `₱${summary.totalCashless.toFixed(2)}`],
+        ['Total Cashless Sales', `Php ${summary.totalCashless.toFixed(2)}`],
         ['Number of Transactions', summary.cashlessTransactions.toString()],
-        ['Average Transaction', `₱${(summary.totalCashless / summary.cashlessTransactions).toFixed(2)}`],
+        ['Average Transaction', `Php ${(summary.totalCashless / summary.cashlessTransactions).toFixed(2)}`],
       ];
 
       autoTable(this.doc, {
@@ -372,7 +372,7 @@ export class TransactionsPDFExporter {
     this.doc.setFontSize(20);
     this.doc.setTextColor(...this.primaryColor);
     this.doc.text(
-      `₱${summary.totalSales.toFixed(2)}`,
+      `Php ${summary.totalSales.toFixed(2)}`,
       this.pageWidth - this.margin - 5,
       this.yPosition + 18,
       { align: 'right' }
