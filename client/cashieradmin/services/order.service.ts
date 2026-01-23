@@ -73,6 +73,31 @@ export class OrderService {
     return apiClient.post("/cashier/payment/verify", data);
   }
 
+  // Admin endpoints
+  static async getOrdersAdmin(status?: string) {
+    return apiClient.get<CustomerOrder[]>("/admin/orders", {
+      params: { status },
+    });
+  }
+
+  static async getOrderByIdAdmin(id: number) {
+    return apiClient.get<CustomerOrder>(`/admin/orders/${id}`);
+  }
+
+  static async getOrderTimelineAdmin(id: number) {
+    return apiClient.get<OrderTimelineEntry[]>(
+      `/admin/orders/${id}/timeline`,
+    );
+  }
+
+  static async updateOrderStatusAdmin(id: number, data: UpdateOrderStatusRequest) {
+    return apiClient.patch(`/admin/orders/${id}/status`, data);
+  }
+
+  static async deleteOrderAdmin(id: number) {
+    return apiClient.delete(`/admin/orders/${id}`);
+  }
+
   // Kiosk endpoints (for viewing)
   static async getOrderByCode(code: string) {
     return apiClient.get<CustomerOrder>(`/kiosk/orders/${code}`);

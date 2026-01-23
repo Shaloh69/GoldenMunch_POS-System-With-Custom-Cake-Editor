@@ -71,7 +71,8 @@ export default function TransactionsPage() {
     try {
       setLoading(true);
       // Step 1: Fetch the list of all orders. This list contains basic info but not detailed items.
-      const response = await OrderService.getOrders();
+      // Using admin endpoint since this is the admin transactions page
+      const response = await OrderService.getOrdersAdmin();
 
       if (response.success && response.data) {
         // Get orders data (handle both array and paginated response)
@@ -90,7 +91,8 @@ export default function TransactionsPage() {
         const detailedTransactions = await Promise.all(
           paidOrders.map(async (order: CustomerOrder) => {
             try {
-              const detailResponse = await OrderService.getOrderById(
+              // Using admin endpoint for fetching order details
+              const detailResponse = await OrderService.getOrderByIdAdmin(
                 order.order_id,
               );
               // Return the detailed order if successful, otherwise return the original basic order.
