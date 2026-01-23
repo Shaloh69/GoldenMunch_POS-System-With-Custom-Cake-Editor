@@ -170,9 +170,9 @@ export default function TransactionsPage() {
     setExpandedRows(newExpanded);
   };
 
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
     try {
-      exportTransactionsToPDF(filteredTransactions, dateFrom, dateTo);
+      await exportTransactionsToPDF(filteredTransactions, dateFrom, dateTo);
       addToast({
         title: "PDF Generated",
         description: "Transactions report has been downloaded successfully",
