@@ -67,20 +67,22 @@ export class TransactionsPDFExporter {
     this.doc.setFillColor(...this.primaryColor);
     this.doc.rect(0, 0, this.pageWidth, 35, 'F');
 
-    // Cake Icon (emoji-style)
-    this.doc.setFontSize(40);
-    this.doc.text('🎂', this.margin, 25);
+    // Cake Icon (text-based logo)
+    this.doc.setFontSize(28);
+    this.doc.setFont('helvetica', 'bold');
+    this.doc.setTextColor(255, 255, 255);
+    this.doc.text('GM', this.margin, 22);
 
     // Company Name
     this.doc.setTextColor(255, 255, 255);
     this.doc.setFontSize(24);
     this.doc.setFont('helvetica', 'bold');
-    this.doc.text('GoldenMunch', this.margin + 20, 20);
+    this.doc.text('GoldenMunch', this.margin + 15, 20);
 
     // Subtitle
     this.doc.setFontSize(12);
     this.doc.setFont('helvetica', 'normal');
-    this.doc.text('Bakery & Pastry Shop', this.margin + 20, 28);
+    this.doc.text('Bakery & Pastry Shop', this.margin + 15, 28);
 
     this.yPosition = 45;
   }
@@ -147,11 +149,11 @@ export class TransactionsPDFExporter {
   private addSummarySection(summary: TransactionSummary): void {
     const summaryData = [
       ['Total Transactions', summary.totalTransactions.toString()],
-      ['Total Sales', `₱${summary.totalSales.toFixed(2)}`],
-      ['Cash Payments', `${summary.cashTransactions} (₱${summary.totalCash.toFixed(2)})`],
-      ['Cashless Payments', `${summary.cashlessTransactions} (₱${summary.totalCashless.toFixed(2)})`],
-      ['Total Discounts', `₱${summary.totalDiscount.toFixed(2)}`],
-      ['Total Tax', `₱${summary.totalTax.toFixed(2)}`],
+      ['Total Sales', `P ${summary.totalSales.toFixed(2)}`],
+      ['Cash Payments', `${summary.cashTransactions} (P ${summary.totalCash.toFixed(2)})`],
+      ['Cashless Payments', `${summary.cashlessTransactions} (P ${summary.totalCashless.toFixed(2)})`],
+      ['Total Discounts', `P ${summary.totalDiscount.toFixed(2)}`],
+      ['Total Tax', `P ${summary.totalTax.toFixed(2)}`],
     ];
 
     autoTable(this.doc, {
@@ -164,18 +166,20 @@ export class TransactionsPDFExporter {
         textColor: [255, 255, 255],
         fontStyle: 'bold',
         fontSize: 11,
+        halign: 'center',
       },
       bodyStyles: {
         fontSize: 10,
+        cellPadding: 3,
       },
       alternateRowStyles: {
         fillColor: this.lightBg,
       },
       margin: { left: this.margin, right: this.margin },
-      tableWidth: 'wrap',
+      tableWidth: 'auto',
       columnStyles: {
-        0: { cellWidth: 60, fontStyle: 'bold' },
-        1: { cellWidth: 60, halign: 'right' },
+        0: { cellWidth: 70, fontStyle: 'bold', halign: 'left' },
+        1: { cellWidth: 80, halign: 'right', fontStyle: 'normal' },
       },
     });
 
@@ -204,7 +208,7 @@ export class TransactionsPDFExporter {
       t.name || 'Walk-in',
       t.payment_method?.toUpperCase() || 'N/A',
       t.cashier_name || 'N/A',
-      `₱${Number(t.final_amount || 0).toFixed(2)}`,
+      `P ${Number(t.final_amount || 0).toFixed(2)}`,
     ]);
 
     autoTable(this.doc, {
@@ -217,21 +221,23 @@ export class TransactionsPDFExporter {
         textColor: [255, 255, 255],
         fontStyle: 'bold',
         fontSize: 9,
+        halign: 'center',
       },
       bodyStyles: {
         fontSize: 8,
+        cellPadding: 2,
       },
       alternateRowStyles: {
         fillColor: [250, 250, 250],
       },
       margin: { left: this.margin, right: this.margin },
       columnStyles: {
-        0: { cellWidth: 25 },
-        1: { cellWidth: 35 },
-        2: { cellWidth: 30 },
+        0: { cellWidth: 25, halign: 'left' },
+        1: { cellWidth: 35, halign: 'left' },
+        2: { cellWidth: 30, halign: 'left' },
         3: { cellWidth: 25, halign: 'center' },
-        4: { cellWidth: 30 },
-        5: { cellWidth: 25, halign: 'right' },
+        4: { cellWidth: 30, halign: 'left' },
+        5: { cellWidth: 25, halign: 'right', fontStyle: 'bold' },
       },
       didDrawPage: (data) => {
         // Add page numbers
@@ -271,15 +277,15 @@ export class TransactionsPDFExporter {
       this.doc.setFontSize(12);
       this.doc.setFont('helvetica', 'bold');
       this.doc.setTextColor(...this.primaryColor);
-      this.doc.text('💵 Cash Payments', this.margin, this.yPosition);
+      this.doc.text('Cash Payments', this.margin, this.yPosition);
       this.yPosition += 5;
 
       const cashData = [
-        ['Total Cash Sales', `₱${summary.totalCash.toFixed(2)}`],
-        ['Cash Collected', `₱${summary.cashCollected.toFixed(2)}`],
-        ['Change Given', `₱${summary.changeGiven.toFixed(2)}`],
+        ['Total Cash Sales', `P ${summary.totalCash.toFixed(2)}`],
+        ['Cash Collected', `P ${summary.cashCollected.toFixed(2)}`],
+        ['Change Given', `P ${summary.changeGiven.toFixed(2)}`],
         ['Number of Transactions', summary.cashTransactions.toString()],
-        ['Net Cash in Drawer', `₱${(summary.cashCollected - summary.changeGiven).toFixed(2)}`],
+        ['Net Cash in Drawer', `P ${(summary.cashCollected - summary.changeGiven).toFixed(2)}`],
       ];
 
       autoTable(this.doc, {
@@ -288,10 +294,11 @@ export class TransactionsPDFExporter {
         theme: 'plain',
         bodyStyles: {
           fontSize: 10,
+          cellPadding: 3,
         },
         columnStyles: {
-          0: { cellWidth: 60, fontStyle: 'bold' },
-          1: { cellWidth: 60, halign: 'right', textColor: [0, 128, 0] },
+          0: { cellWidth: 80, fontStyle: 'bold', halign: 'left' },
+          1: { cellWidth: 70, halign: 'right', textColor: [0, 100, 0], fontStyle: 'bold' },
         },
         margin: { left: this.margin + 5 },
       });
@@ -304,13 +311,13 @@ export class TransactionsPDFExporter {
       this.doc.setFontSize(12);
       this.doc.setFont('helvetica', 'bold');
       this.doc.setTextColor(...this.primaryColor);
-      this.doc.text('💳 Cashless Payments', this.margin, this.yPosition);
+      this.doc.text('Cashless Payments', this.margin, this.yPosition);
       this.yPosition += 5;
 
       const cashlessData = [
-        ['Total Cashless Sales', `₱${summary.totalCashless.toFixed(2)}`],
+        ['Total Cashless Sales', `P ${summary.totalCashless.toFixed(2)}`],
         ['Number of Transactions', summary.cashlessTransactions.toString()],
-        ['Average Transaction', `₱${(summary.totalCashless / summary.cashlessTransactions).toFixed(2)}`],
+        ['Average Transaction', `P ${(summary.totalCashless / summary.cashlessTransactions).toFixed(2)}`],
       ];
 
       autoTable(this.doc, {
@@ -319,10 +326,11 @@ export class TransactionsPDFExporter {
         theme: 'plain',
         bodyStyles: {
           fontSize: 10,
+          cellPadding: 3,
         },
         columnStyles: {
-          0: { cellWidth: 60, fontStyle: 'bold' },
-          1: { cellWidth: 60, halign: 'right', textColor: [0, 0, 200] },
+          0: { cellWidth: 80, fontStyle: 'bold', halign: 'left' },
+          1: { cellWidth: 70, halign: 'right', textColor: [0, 0, 180], fontStyle: 'bold' },
         },
         margin: { left: this.margin + 5 },
       });
@@ -334,17 +342,17 @@ export class TransactionsPDFExporter {
     this.doc.setFillColor(...this.lightBg);
     this.doc.rect(this.margin, this.yPosition, this.pageWidth - 2 * this.margin, 30, 'F');
 
-    this.doc.setFontSize(12);
+    this.doc.setFontSize(14);
     this.doc.setFont('helvetica', 'bold');
     this.doc.setTextColor(...this.secondaryColor);
-    this.doc.text('GRAND TOTAL', this.margin + 5, this.yPosition + 10);
+    this.doc.text('GRAND TOTAL', this.margin + 5, this.yPosition + 15);
 
-    this.doc.setFontSize(18);
+    this.doc.setFontSize(20);
     this.doc.setTextColor(...this.primaryColor);
     this.doc.text(
-      `₱${summary.totalSales.toFixed(2)}`,
+      `P ${summary.totalSales.toFixed(2)}`,
       this.pageWidth - this.margin - 5,
-      this.yPosition + 20,
+      this.yPosition + 18,
       { align: 'right' }
     );
   }
