@@ -28,6 +28,13 @@ export class TransactionsPDFExporter {
   private readonly accentColor: [number, number, number] = [255, 140, 0]; // Dark Orange
   private readonly lightBg: [number, number, number] = [255, 248, 220]; // Cornsilk
 
+  // Base64 encoded icons
+  private readonly cakeIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAABsklEQVR4nO2Wv0oDQRDGf5qIYCC1hY2FhY2NjY2Fha2NjY2FhY2NjY2FhY2NjY2FhY2NjY2FhY2NjY2FhY2NjY2FhY2NjY2FhY2NjY2FhY2NjY2FhY2FhbGwsDDm5iZZuEvu7m65u+XuliQXJJfJfr+ZnZ3NzOx3M7OzuzszO7uzs7OzuzszO7u7uzs7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7Cwvz+Xx+v9/v9/v9fr/f7/f7/X6/3+/3+/1+v9/v9/v9fr/f7/f7/X6/3+/3+/1+v9/v9/v9fr/f7/f7/X6/3+8vLCwsLCwsLCwsLCz8HwZYAI6BU+AEOAbOgDPgDDgDzoBz4Bw4B86Bc+AcOAfOgXPgHDgHzoFz4Bw4B86Bc+AcOAfOgXPgHDgHzoFz4Bw4B86Bc+AcOAfOgXPgHDgHzoFz4Py/M3AJXABXwCVwBVwBV8AVcAVcAVfAFXAFXAFXwBVwBVwBV8AVcAVcAVfAFXAFXAFXwBVwBVwBV8AVcAVcAVfAFXAFXAFXwBVwBVwBV8AVcAVcAVf/nYEb4Ba4Be6AO+AOuAPugDvgDrgD7oA74A64A+6AO+AOuAPugDvgDrgD7oA74A64A+6AO+AOuAPugDvgDrgD7oA74A64A+6AO+AOuAPugDvgDrgD7v7KwCNwD9wDD8ADcA88AA/AA/AAPAAPAAD//wMA8pVuOeqvKlkAAAAASUVORK5CYII=';
+
+  private readonly cashIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAA70lEQVR4nO2WMQ6DMAxFfwduwS24BTfgBlyCm3ALbsEtuAW34BbcgltwC27BLbgFt+AW3IJbcAtuwS24BbfgFtyC/2gAOAKngBtwBW7AFbgCV+AKXIErcAWuwBW4AlfgClyBK3AFrsAVuAJX4ApcgStwBa7AFbgCV+AKXIErcAWuwBW4AlfgClyBK3AFrsAVuAJX4ApcgStwBa7AFfgvDQBn4AJcgStwBa7AFbgCV+AKXIErcAWuwBW4AlfgClyBK3AFrsAVuAJX4ApcgStwBa7AFbgCV+AKXIErcAWuwBW4AlfgClyBK3AFrsAVuAJX4ApcgStwBa7Af23gCXgCXgAA//8MANUDSPZBGHAhAAAAAElFTkSuQmCC';
+
+  private readonly cardIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAoklEQVR4nO3WMQrDMBBE0T9wH3qH3iF36B16h96hd+gdeofeoe7QO/QOvUPv0Dv0Dr1D79A79A69Q+/QO/QOvUPv0Dv0Dr1D79A79A69Q+/QO/ROvcMGOAMX4AJcgAtwAS7ABbgAF+ACXIALcAEuwAW4ABfgAlyAC3ABLsAFuAAX4AJcgAtwAS7ABbgAF+ACXIALcAEuwAW4ABfgAlyAC3ABLsAFuAAX4P8bGAC+AI8AAAAASUVORK5CYII=';
+
   constructor() {
     this.doc = new jsPDF('p', 'mm', 'a4');
     this.pageWidth = this.doc.internal.pageSize.getWidth();
@@ -67,11 +74,12 @@ export class TransactionsPDFExporter {
     this.doc.setFillColor(...this.primaryColor);
     this.doc.rect(0, 0, this.pageWidth, 35, 'F');
 
-    // Cake Icon (text-based logo)
-    this.doc.setFontSize(28);
-    this.doc.setFont('helvetica', 'bold');
-    this.doc.setTextColor(255, 255, 255);
-    this.doc.text('GM', this.margin, 22);
+    // Cake Icon (image-based)
+    try {
+      this.doc.addImage(this.cakeIcon, 'PNG', this.margin, 10, 12, 12);
+    } catch (error) {
+      console.warn('Failed to add cake icon:', error);
+    }
 
     // Company Name
     this.doc.setTextColor(255, 255, 255);
@@ -149,11 +157,11 @@ export class TransactionsPDFExporter {
   private addSummarySection(summary: TransactionSummary): void {
     const summaryData = [
       ['Total Transactions', summary.totalTransactions.toString()],
-      ['Total Sales', `P ${summary.totalSales.toFixed(2)}`],
-      ['Cash Payments', `${summary.cashTransactions} (P ${summary.totalCash.toFixed(2)})`],
-      ['Cashless Payments', `${summary.cashlessTransactions} (P ${summary.totalCashless.toFixed(2)})`],
-      ['Total Discounts', `P ${summary.totalDiscount.toFixed(2)}`],
-      ['Total Tax', `P ${summary.totalTax.toFixed(2)}`],
+      ['Total Sales', `₱${summary.totalSales.toFixed(2)}`],
+      ['Cash Payments', `${summary.cashTransactions} (₱${summary.totalCash.toFixed(2)})`],
+      ['Cashless Payments', `${summary.cashlessTransactions} (₱${summary.totalCashless.toFixed(2)})`],
+      ['Total Discounts', `₱${summary.totalDiscount.toFixed(2)}`],
+      ['Total Tax', `₱${summary.totalTax.toFixed(2)}`],
     ];
 
     autoTable(this.doc, {
@@ -208,7 +216,7 @@ export class TransactionsPDFExporter {
       t.name || 'Walk-in',
       t.payment_method?.toUpperCase() || 'N/A',
       t.cashier_name || 'N/A',
-      `P ${Number(t.final_amount || 0).toFixed(2)}`,
+      `₱${Number(t.final_amount || 0).toFixed(2)}`,
     ]);
 
     autoTable(this.doc, {
@@ -274,18 +282,25 @@ export class TransactionsPDFExporter {
 
     // Cash Payment Details
     if (summary.cashTransactions > 0) {
+      // Add cash icon
+      try {
+        this.doc.addImage(this.cashIcon, 'PNG', this.margin, this.yPosition - 4, 6, 6);
+      } catch (error) {
+        console.warn('Failed to add cash icon:', error);
+      }
+
       this.doc.setFontSize(12);
       this.doc.setFont('helvetica', 'bold');
       this.doc.setTextColor(...this.primaryColor);
-      this.doc.text('Cash Payments', this.margin, this.yPosition);
+      this.doc.text('Cash Payments', this.margin + 8, this.yPosition);
       this.yPosition += 5;
 
       const cashData = [
-        ['Total Cash Sales', `P ${summary.totalCash.toFixed(2)}`],
-        ['Cash Collected', `P ${summary.cashCollected.toFixed(2)}`],
-        ['Change Given', `P ${summary.changeGiven.toFixed(2)}`],
+        ['Total Cash Sales', `₱${summary.totalCash.toFixed(2)}`],
+        ['Cash Collected', `₱${summary.cashCollected.toFixed(2)}`],
+        ['Change Given', `₱${summary.changeGiven.toFixed(2)}`],
         ['Number of Transactions', summary.cashTransactions.toString()],
-        ['Net Cash in Drawer', `P ${(summary.cashCollected - summary.changeGiven).toFixed(2)}`],
+        ['Net Cash in Drawer', `₱${(summary.cashCollected - summary.changeGiven).toFixed(2)}`],
       ];
 
       autoTable(this.doc, {
@@ -308,16 +323,23 @@ export class TransactionsPDFExporter {
 
     // Cashless Payment Details
     if (summary.cashlessTransactions > 0) {
+      // Add card icon
+      try {
+        this.doc.addImage(this.cardIcon, 'PNG', this.margin, this.yPosition - 4, 6, 6);
+      } catch (error) {
+        console.warn('Failed to add card icon:', error);
+      }
+
       this.doc.setFontSize(12);
       this.doc.setFont('helvetica', 'bold');
       this.doc.setTextColor(...this.primaryColor);
-      this.doc.text('Cashless Payments', this.margin, this.yPosition);
+      this.doc.text('Cashless Payments', this.margin + 8, this.yPosition);
       this.yPosition += 5;
 
       const cashlessData = [
-        ['Total Cashless Sales', `P ${summary.totalCashless.toFixed(2)}`],
+        ['Total Cashless Sales', `₱${summary.totalCashless.toFixed(2)}`],
         ['Number of Transactions', summary.cashlessTransactions.toString()],
-        ['Average Transaction', `P ${(summary.totalCashless / summary.cashlessTransactions).toFixed(2)}`],
+        ['Average Transaction', `₱${(summary.totalCashless / summary.cashlessTransactions).toFixed(2)}`],
       ];
 
       autoTable(this.doc, {
@@ -350,7 +372,7 @@ export class TransactionsPDFExporter {
     this.doc.setFontSize(20);
     this.doc.setTextColor(...this.primaryColor);
     this.doc.text(
-      `P ${summary.totalSales.toFixed(2)}`,
+      `₱${summary.totalSales.toFixed(2)}`,
       this.pageWidth - this.margin - 5,
       this.yPosition + 18,
       { align: 'right' }
