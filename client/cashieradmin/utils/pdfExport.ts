@@ -28,12 +28,10 @@ export class TransactionsPDFExporter {
   private readonly accentColor: [number, number, number] = [255, 140, 0]; // Dark Orange
   private readonly lightBg: [number, number, number] = [255, 248, 220]; // Cornsilk
 
-  // Base64 encoded icons
-  private readonly cakeIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAABsklEQVR4nO2Wv0oDQRDGf5qIYCC1hY2FhY2NjY2Fha2NjY2FhY2NjY2FhY2NjY2FhY2NjY2FhY2NjY2FhY2NjY2FhY2NjY2FhY2NjY2FhY2NjY2FhY2FhbGwsDDm5iZZuEvu7m65u+XuliQXJJfJfr+ZnZ3NzOx3M7OzuzszO7uzs7OzuzszO7u7uzs7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7u7Cwvz+Xx+v9/v9/v9fr/f7/f7/X6/3+/3+/1+v9/v9/v9fr/f7/f7/X6/3+/3+/1+v9/v9/v9fr/f7/f7/X6/3+8vLCwsLCwsLCwsLCz8HwZYAI6BU+AEOAbOgDPgDDgDzoBz4Bw4B86Bc+AcOAfOgXPgHDgHzoFz4Bw4B86Bc+AcOAfOgXPgHDgHzoFz4Bw4B86Bc+AcOAfOgXPgHDgHzoFz4Py/M3AJXABXwCVwBVwBV8AVcAVcAVfAFXAFXAFXwBVwBVwBV8AVcAVcAVfAFXAFXAFXwBVwBVwBV8AVcAVcAVfAFXAFXAFXwBVwBVwBV8AVcAVcAVf/nYEb4Ba4Be6AO+AOuAPugDvgDrgD7oA74A64A+6AO+AOuAPugDvgDrgD7oA74A64A+6AO+AOuAPugDvgDrgD7oA74A64A+6AO+AOuAPugDvgDrgD7v7KwCNwD9wDD8ADcA88AA/AA/AAPAAPAAD//wMA8pVuOeqvKlkAAAAASUVORK5CYII=';
-
-  private readonly cashIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAA70lEQVR4nO2WMQ6DMAxFfwduwS24BTfgBlyCm3ALbsEtuAW34BbcgltwC27BLbgFt+AW3IJbcAtuwS24BbfgFtyC/2gAOAKngBtwBW7AFbgCV+AKXIErcAWuwBW4AlfgClyBK3AFrsAVuAJX4ApcgStwBa7AFbgCV+AKXIErcAWuwBW4AlfgClyBK3AFrsAVuAJX4ApcgStwBa7AFfgvDQBn4AJcgStwBa7AFbgCV+AKXIErcAWuwBW4AlfgClyBK3AFrsAVuAJX4ApcgStwBa7AFbgCV+AKXIErcAWuwBW4AlfgClyBK3AFrsAVuAJX4ApcgStwBa7Af23gCXgCXgAA//8MANUDSPZBGHAhAAAAAElFTkSuQmCC';
-
-  private readonly cardIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAoklEQVR4nO3WMQrDMBBE0T9wH3qH3iF36B16h96hd+gdeofeoe7QO/QOvUPv0Dv0Dr1D79A79A69Q+/QO/QOvUPv0Dv0Dr1D79A79A69Q+/QO/ROvcMGOAMX4AJcgAtwAS7ABbgAF+ACXIALcAEuwAW4ABfgAlyAC3ABLsAFuAAX4AJcgAtwAS7ABbgAF+ACXIALcAEuwAW4ABfgAlyAC3ABLsAFuAAX4P8bGAC+AI8AAAAASUVORK5CYII=';
+  // Icon URLs - Using reliable free CDN
+  private readonly cakeIconUrl = 'https://api.iconify.design/noto/birthday-cake.svg?color=%23d48026&width=64&height=64';
+  private readonly cashIconUrl = 'https://api.iconify.design/noto/money-with-wings.svg?color=%23d48026&width=64&height=64';
+  private readonly cardIconUrl = 'https://api.iconify.design/noto/credit-card.svg?color=%23d48026&width=64&height=64';
 
   constructor() {
     this.doc = new jsPDF('p', 'mm', 'a4');
@@ -42,15 +40,37 @@ export class TransactionsPDFExporter {
   }
 
   /**
+   * Load image from URL and convert to base64
+   */
+  private async loadImageAsBase64(url: string): Promise<string> {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('Failed to load image:', url, error);
+      throw error;
+    }
+  }
+
+  /**
    * Generate the complete PDF report
    */
-  public generateReport(
+  public async generateReport(
     transactions: CustomerOrder[],
     dateFrom?: string,
-    dateTo?: string
-  ): void {
+    dateTo?: string,
+    cakeIcon?: string,
+    cashIcon?: string,
+    cardIcon?: string
+  ): Promise<void> {
     // Page 1: Header, Summary, and Main Table
-    this.addHeader();
+    await this.addHeader(cakeIcon);
     this.addReportInfo(dateFrom, dateTo);
 
     const summary = this.calculateSummary(transactions);
@@ -61,24 +81,26 @@ export class TransactionsPDFExporter {
     if (transactions.length > 0) {
       this.doc.addPage();
       this.yPosition = 20;
-      this.addHeader();
-      this.addPaymentBreakdown(transactions, summary);
+      await this.addHeader(cakeIcon);
+      await this.addPaymentBreakdown(transactions, summary, cashIcon, cardIcon);
     }
   }
 
   /**
    * Add Golden Munch header with logo and branding
    */
-  private addHeader(): void {
+  private async addHeader(cakeIcon?: string): Promise<void> {
     // Background bar
     this.doc.setFillColor(...this.primaryColor);
     this.doc.rect(0, 0, this.pageWidth, 35, 'F');
 
     // Cake Icon (image-based)
-    try {
-      this.doc.addImage(this.cakeIcon, 'PNG', this.margin, 10, 12, 12);
-    } catch (error) {
-      console.warn('Failed to add cake icon:', error);
+    if (cakeIcon) {
+      try {
+        this.doc.addImage(cakeIcon, 'PNG', this.margin, 10, 12, 12);
+      } catch (error) {
+        console.warn('Failed to add cake icon:', error);
+      }
     }
 
     // Company Name
@@ -157,11 +179,11 @@ export class TransactionsPDFExporter {
   private addSummarySection(summary: TransactionSummary): void {
     const summaryData = [
       ['Total Transactions', summary.totalTransactions.toString()],
-      ['Total Sales', `₱${summary.totalSales.toFixed(2)}`],
-      ['Cash Payments', `${summary.cashTransactions} (₱${summary.totalCash.toFixed(2)})`],
-      ['Cashless Payments', `${summary.cashlessTransactions} (₱${summary.totalCashless.toFixed(2)})`],
-      ['Total Discounts', `₱${summary.totalDiscount.toFixed(2)}`],
-      ['Total Tax', `₱${summary.totalTax.toFixed(2)}`],
+      ['Total Sales', `Php ${summary.totalSales.toFixed(2)}`],
+      ['Cash Payments', `${summary.cashTransactions} (Php ${summary.totalCash.toFixed(2)})`],
+      ['Cashless Payments', `${summary.cashlessTransactions} (Php ${summary.totalCashless.toFixed(2)})`],
+      ['Total Discounts', `Php ${summary.totalDiscount.toFixed(2)}`],
+      ['Total Tax', `Php ${summary.totalTax.toFixed(2)}`],
     ];
 
     autoTable(this.doc, {
@@ -216,7 +238,7 @@ export class TransactionsPDFExporter {
       t.name || 'Walk-in',
       t.payment_method?.toUpperCase() || 'N/A',
       t.cashier_name || 'N/A',
-      `₱${Number(t.final_amount || 0).toFixed(2)}`,
+      `Php ${Number(t.final_amount || 0).toFixed(2)}`,
     ]);
 
     autoTable(this.doc, {
@@ -269,10 +291,12 @@ export class TransactionsPDFExporter {
   /**
    * Add detailed payment breakdown
    */
-  private addPaymentBreakdown(
+  private async addPaymentBreakdown(
     transactions: CustomerOrder[],
-    summary: TransactionSummary
-  ): void {
+    summary: TransactionSummary,
+    cashIcon?: string,
+    cardIcon?: string
+  ): Promise<void> {
     // Section title
     this.doc.setFontSize(14);
     this.doc.setFont('helvetica', 'bold');
@@ -283,10 +307,12 @@ export class TransactionsPDFExporter {
     // Cash Payment Details
     if (summary.cashTransactions > 0) {
       // Add cash icon
-      try {
-        this.doc.addImage(this.cashIcon, 'PNG', this.margin, this.yPosition - 4, 6, 6);
-      } catch (error) {
-        console.warn('Failed to add cash icon:', error);
+      if (cashIcon) {
+        try {
+          this.doc.addImage(cashIcon, 'PNG', this.margin, this.yPosition - 4, 6, 6);
+        } catch (error) {
+          console.warn('Failed to add cash icon:', error);
+        }
       }
 
       this.doc.setFontSize(12);
@@ -296,11 +322,11 @@ export class TransactionsPDFExporter {
       this.yPosition += 5;
 
       const cashData = [
-        ['Total Cash Sales', `₱${summary.totalCash.toFixed(2)}`],
-        ['Cash Collected', `₱${summary.cashCollected.toFixed(2)}`],
-        ['Change Given', `₱${summary.changeGiven.toFixed(2)}`],
+        ['Total Cash Sales', `Php ${summary.totalCash.toFixed(2)}`],
+        ['Cash Collected', `Php ${summary.cashCollected.toFixed(2)}`],
+        ['Change Given', `Php ${summary.changeGiven.toFixed(2)}`],
         ['Number of Transactions', summary.cashTransactions.toString()],
-        ['Net Cash in Drawer', `₱${(summary.cashCollected - summary.changeGiven).toFixed(2)}`],
+        ['Net Cash in Drawer', `Php ${(summary.cashCollected - summary.changeGiven).toFixed(2)}`],
       ];
 
       autoTable(this.doc, {
@@ -324,10 +350,12 @@ export class TransactionsPDFExporter {
     // Cashless Payment Details
     if (summary.cashlessTransactions > 0) {
       // Add card icon
-      try {
-        this.doc.addImage(this.cardIcon, 'PNG', this.margin, this.yPosition - 4, 6, 6);
-      } catch (error) {
-        console.warn('Failed to add card icon:', error);
+      if (cardIcon) {
+        try {
+          this.doc.addImage(cardIcon, 'PNG', this.margin, this.yPosition - 4, 6, 6);
+        } catch (error) {
+          console.warn('Failed to add card icon:', error);
+        }
       }
 
       this.doc.setFontSize(12);
@@ -337,9 +365,9 @@ export class TransactionsPDFExporter {
       this.yPosition += 5;
 
       const cashlessData = [
-        ['Total Cashless Sales', `₱${summary.totalCashless.toFixed(2)}`],
+        ['Total Cashless Sales', `Php ${summary.totalCashless.toFixed(2)}`],
         ['Number of Transactions', summary.cashlessTransactions.toString()],
-        ['Average Transaction', `₱${(summary.totalCashless / summary.cashlessTransactions).toFixed(2)}`],
+        ['Average Transaction', `Php ${(summary.totalCashless / summary.cashlessTransactions).toFixed(2)}`],
       ];
 
       autoTable(this.doc, {
@@ -372,7 +400,7 @@ export class TransactionsPDFExporter {
     this.doc.setFontSize(20);
     this.doc.setTextColor(...this.primaryColor);
     this.doc.text(
-      `₱${summary.totalSales.toFixed(2)}`,
+      `Php ${summary.totalSales.toFixed(2)}`,
       this.pageWidth - this.margin - 5,
       this.yPosition + 18,
       { align: 'right' }
@@ -390,13 +418,32 @@ export class TransactionsPDFExporter {
 /**
  * Export transactions to PDF
  */
-export function exportTransactionsToPDF(
+export async function exportTransactionsToPDF(
   transactions: CustomerOrder[],
   dateFrom?: string,
   dateTo?: string
-): void {
+): Promise<void> {
   const exporter = new TransactionsPDFExporter();
-  exporter.generateReport(transactions, dateFrom, dateTo);
+
+  // Load icons from CDN
+  let cakeIcon: string | undefined;
+  let cashIcon: string | undefined;
+  let cardIcon: string | undefined;
+
+  try {
+    console.log('Loading icons for PDF...');
+    [cakeIcon, cashIcon, cardIcon] = await Promise.all([
+      exporter['loadImageAsBase64'](exporter['cakeIconUrl']),
+      exporter['loadImageAsBase64'](exporter['cashIconUrl']),
+      exporter['loadImageAsBase64'](exporter['cardIconUrl']),
+    ]);
+    console.log('Icons loaded successfully');
+  } catch (error) {
+    console.warn('Failed to load one or more icons, PDF will generate without icons:', error);
+  }
+
+  // Generate the PDF report with loaded icons
+  await exporter.generateReport(transactions, dateFrom, dateTo, cakeIcon, cashIcon, cardIcon);
 
   const dateRange =
     dateFrom && dateTo
